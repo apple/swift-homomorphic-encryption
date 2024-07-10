@@ -1,0 +1,77 @@
+# Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+    -   id: check-case-conflict
+    -   id: check-merge-conflict
+    -   id: check-symlinks
+    -   id: fix-byte-order-marker
+    -   id: check-toml
+    -   id: check-yaml
+        args: [--allow-multiple-documents]
+    -   id: end-of-file-fixer
+    -   id: mixed-line-ending
+    -   id: no-commit-to-branch
+        args: [--branch, main]
+    -   id: trailing-whitespace
+-   repo: https://github.com/crate-ci/typos
+    rev: v1.23.1
+    hooks:
+    -   id: typos
+-   repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+    -   id: insert-license
+        name: insert-license
+        'types_or': [c, swift, proto]
+        args:
+           - --license-filepath
+           - copyright-header.txt
+           - --comment-style
+           - //
+           - --allow-past-years
+           - --use-current-year
+           - --detect-license-in-X-top-lines=10
+    -   id: insert-license
+        name: insert-license-yaml
+        'types_or': [yaml]
+        args:
+           - --license-filepath
+           - copyright-header.txt
+           - --allow-past-years
+           - --use-current-year
+-   repo: local
+    hooks:
+    # https://github.com/nicklockwood/SwiftFormat
+    -   id: lockwood-swiftformat
+        name: lockwood-swiftformat
+        entry: swiftformat
+        language: system
+        types: [swift]
+    # https://github.com/apple/swift-format
+    -   id: apple-swift-format
+        name: apple-swift-format
+        entry: ci/run-apple-swift-format.sh
+        language: script
+        pass_filenames: false
+    # https://github.com/realm/SwiftLint
+    -   id: swiftlint
+        name: swiftlint
+        entry: swiftlint lint --strict
+        language: system
+        exclude: DoubleWidthUInt.swift|.pb.swift
+        types: [swift]

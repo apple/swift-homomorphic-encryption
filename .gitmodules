@@ -1,0 +1,3 @@
+[submodule "swift-homomorphic-encryption-protobuf"]
+	path = swift-homomorphic-encryption-protobuf
+	url = git@github.com:apple/swift-homomorphic-encryption-protobuf.git

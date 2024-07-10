@@ -1,0 +1,7 @@
+{
+  "rules" : {
+    "BeginDocumentationCommentWithOneLineSummary" : true,
+    "UseTripleSlashForDocumentationComments" : true,
+    "ValidateDocumentationComments" : true
+  }
+}

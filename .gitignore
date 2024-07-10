@@ -1,0 +1,9 @@
+*.xcuserdatad
+*.xcuserstate
+.DS_Store
+.benchmarkBaselines/
+.build/
+.docc-build/
+.swiftpm
+.vscode/
+xcuserdata/

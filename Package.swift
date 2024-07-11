@@ -207,5 +207,5 @@ package.targets += [
 
 // Set the minimum macOS version for the package
 package.platforms = [
-    .macOS(.v13), // Set the minimum macOS version here
+    .macOS(.v14), // Constrained by Swift 6 support for Xcode (https://developer.apple.com/support/xcode/)
 ]

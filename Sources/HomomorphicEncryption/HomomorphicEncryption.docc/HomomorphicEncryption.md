@@ -15,9 +15,13 @@ and executables:
 * [PIRShardDatabase](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/PIRShardDatabase/PIRShardDatabase.docc/PIRShardDatabase.md)
 
 ### Background
-Homomorphic encryption (HE) is a cryptosystem which enables computation on encrypted data.
-The computation is performed directly on the encrypted data, without decryption or use of a secret key.
-HE thereby enables a client to offload computation on its sensitive data to a server by the following workflow:
+Swift Homomorphic Encryption implements a special form of cryptography called homomorphic encryption (HE).
+HE is a cryptosystem which enables computation on encrypted data.
+The computation is performed directly on the encrypted data, *without revealing the plaintext of that data to the operating process*.
+HE computations therefore happen without decryption or access to the decryption key.
+
+HE thereby allows a client to enable a server to perform operations on encrypted data, and therefore without revealing the data to server.
+A typical HE workflow might be:
 * The client encrypts its sensitive data and sends the resulting ciphertext to the server.
 * The server performs HE computation on the ciphertext (and perhaps its own plaintext inputs), without learning what any ciphertext decrypts to.
 * The server sends the resulting ciphertext response to the client.

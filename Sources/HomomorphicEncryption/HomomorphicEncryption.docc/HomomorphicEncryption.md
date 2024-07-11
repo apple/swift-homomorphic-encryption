@@ -6,6 +6,7 @@ Homomorphic Encryption (HE) enables computation on encrypted data.
 Swift Homomorphic Encryption is a collection of libraries and executables implementing homomorphic encryption (HE) and applications, such as private information retrieval (PIR).
 For more information, refer to documentation for the libraries:
 * [HomomorphicEncryptionProtobuf](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/HomomorphicEncryptionProtobuf/HomomorphicEncryptionProtobuf.docc/HomomorphicEncryptionProtobuf.md)
+* [PrivateInformationRetrieval](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/PrivateInformationRetrieval/PrivateInformationRetrieval.docc/PrivateInformationRetrieval.md)
 * [PrivateInformationRetrievalProtobuf](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/PrivateInformationRetrievalProtobuf/PrivateInformationRetrievalProtobuf.docc/PrivateInformationRetrievalProtobuf.md)
 
 and executables:

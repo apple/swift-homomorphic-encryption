@@ -20,9 +20,13 @@ and executables:
 
 ## Background
 ### Homomorphic Encryption (HE)
-Homomorphic encryption (HE) is a cryptosystem which enables computation on encrypted data.
-The computation is performed directly on the encrypted data, without decryption or use of a secret key.
-HE thereby enables a client to offload computation on its sensitive data to a server by the following workflow:
+Swift Homomorphic Encryption implements a special form of cryptography called homomorphic encryption (HE).
+HE is a cryptosystem which enables computation on encrypted data.
+The computation is performed directly on the encrypted data, *without revealing the plaintext of that data to the operating process*.
+HE computations therefore happen without decryption or access to the decryption key.
+
+HE thereby allows a client to enable a server to perform operations on encrypted data, and therefore without revealing the data to server.
+A typical HE workflow might be:
 * The client encrypts its sensitive data and sends the resulting ciphertext to the server.
 * The server performs HE computation on the ciphertext (and perhaps its own plaintext inputs), without learning what any ciphertext decrypts to.
 * The server sends the resulting ciphertext response to the client.
@@ -96,7 +100,7 @@ Additionally, developing Swift Homomorphic Encryption requires:
 * [swiftlint](https://github.com/realm/SwiftLint), v0.55.1
 
 ### Building
-You can build Swift Homomorphic Encryption either via XCode or via command line in a terminal.
+You can build Swift Homomorphic Encryption either via Xcode or via command line in a terminal.
 
 After cloning the repository, run
 ```sh
@@ -104,9 +108,9 @@ cd swift-homomorphic-encryption
 git submodule update --init --recursive
 ```
 
-#### XCode
-To build Swift Homomorphic Encryption from XCode, simply open the root directory in XCode.
-See the [XCode documentation](https://developer.apple.com/documentation/xcode) for more details on developing with XCode.
+#### Xcode
+To build Swift Homomorphic Encryption from Xcode, simply open the root directory in Xcode.
+See the [Xcode documentation](https://developer.apple.com/documentation/Xcode) for more details on developing with Xcode.
 
 #### Command line
 To build Swift Homomorphic Encryption from command line, open the root directory (i.e., the `swift-homomorphic-encryption` directory) of the cloned repository in a terminal, and run
@@ -159,8 +163,8 @@ By default, benchmarking requires the [jemalloc](http://jemalloc.net) dependency
 > For reliable execution, benchmark can be run without `jemalloc` as described [here](https://github.com/ordo-one/package-benchmark/releases/tag/1.2.0).
 
 Two ways to run the benchmarks are:
-* XCode
-  * Open the `swift-homomorphic-encryption` folder in XCode.
+* Xcode
+  * Open the `swift-homomorphic-encryption` folder in Xcode.
   * Switch to a benchmark target.
   * Run the target, e.g., via the `Product` menu.
 * Command line
@@ -174,8 +178,8 @@ If you are interested in making a contribution to Swift Homomorphic Encryption, 
 Swift Homomorphic Encryption uses DocC for documentation.
 For more information, refer to [the DocC documentation](https://www.swift.org/documentation/docc) and the [Swift-DocC Plugin](https://swiftlang.github.io/swift-docc-plugin/documentation/swiftdoccplugin/).
 
-## XCode
-The documentation can be built from XCode via `Product -> Build Documentation`.
+## Xcode
+The documentation can be built from Xcode via `Product -> Build Documentation`.
 
 ## Command line
 The documentation can be built from command line by running

@@ -162,7 +162,7 @@ If you would like to make a pull request to Swift Homomorphic Encryption, please
 
 # Documentation
 Swift Homomorphic Encryption uses DocC for documentation.
-For more information, refer to [the DocC documentation](https://www.swift.org/documentation/docc) and the [Swift-DocC Plugin](https://apple.github.io/swift-docc-plugin/documentation/swiftdoccplugin).
+For more information, refer to [the DocC documentation](https://www.swift.org/documentation/docc) and the [Swift-DocC Plugin](https://swiftlang.github.io/swift-docc-plugin/documentation/swiftdoccplugin/).
 
 ## XCode
 The documentation can be built from XCode via `Product -> Build Documentation`.

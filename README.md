@@ -9,6 +9,7 @@ Applications of Swift Homomorphic Encryption include:
 Swift Homomorphic Encryption is a collection of libraries and executables.
 For more information, refer to documentation for the libraries:
 * [HomomorphicEncryption](Sources/HomomorphicEncryption/HomomorphicEncryption.docc/HomomorphicEncryption.md)
+* [PrivateInformationRetrieval](Sources/PrivateInformationRetrieval/PrivateInformationRetrieval.docc/PrivateInformationRetrieval.md)
 * [HomomorphicEncryptionProtobuf](Sources/HomomorphicEncryptionProtobuf/HomomorphicEncryptionProtobuf.docc/HomomorphicEncryptionProtobuf.md)
 * [PrivateInformationRetrievalProtobuf](Sources/PrivateInformationRetrievalProtobuf/PrivateInformationRetrievalProtobuf.docc/PrivateInformationRetrievalProtobuf.md)
 

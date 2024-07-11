@@ -28,8 +28,10 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "HomomorphicEncryption",
-            targets: ["HomomorphicEncryption",
-                      "PrivateInformationRetrieval"]),
+            targets: ["HomomorphicEncryption"]),
+        .library(
+            name: "PrivateInformationRetrieval",
+            targets: ["PrivateInformationRetrieval"]),
         .library(
             name: "HomomorphicEncryptionProtobuf",
             targets: ["HomomorphicEncryptionProtobuf"]),

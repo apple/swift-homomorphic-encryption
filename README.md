@@ -167,7 +167,7 @@ Two ways to run the benchmarks are:
   * See the [Benchmark](https://github.com/ordo-one/package-benchmark) documentation for more information on running benchmarks.
 
 ### Contributing
-If you would like to make a pull request to Swift Homomorphic Encryption, please run `pre-commit install`. Then each commit will run some basic formatting checks.
+If you are interested in making a contribution to Swift Homomorphic Encryption, see our [contributing guide](CONTRIBUTING.md).
 
 # Documentation
 Swift Homomorphic Encryption uses DocC for documentation.

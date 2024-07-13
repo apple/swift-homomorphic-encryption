@@ -156,6 +156,7 @@ extension Array2d {
     }
 
     // Sets all the data to zero. This is useful for clearing sensitive data.
+    @inlinable
     mutating func zeroize() {
         let zeroizeSize = data.count * MemoryLayout<T>.size
         data.withUnsafeMutableBytes { dataPointer in

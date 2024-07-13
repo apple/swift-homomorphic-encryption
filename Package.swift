@@ -15,13 +15,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import PackageDescription
 
-let swiftSettings: [SwiftSetting] = [
+let librarySettings: [SwiftSetting] = [
     .enableExperimentalFeature("StrictConcurrency"),
-    .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
 ]
+
+let executableSettings: [SwiftSetting] =
+    librarySettings +
+    [.unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))]
 
 let package = Package(
     name: "swift-homomorphic-encryption",
@@ -46,7 +48,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.4.0"),
-        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
         // Keep version in sync with README
         .package(url: "https://github.com/apple/swift-protobuf", from: "1.27.0"),
@@ -68,25 +70,18 @@ let package = Package(
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 "CUtil",
             ],
-            swiftSettings: swiftSettings + [
-                SwiftSetting.unsafeFlags([
-                    "-Xllvm",
-                    "-unroll-count=8",
-                    "-Xllvm",
-                    "-unroll-threshold=64",
-                ]),
-            ]),
+            swiftSettings: librarySettings),
         .target(
             name: "HomomorphicEncryptionProtobuf",
             dependencies: ["HomomorphicEncryption",
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
             exclude: ["generated/README.md"],
-            swiftSettings: swiftSettings),
+            swiftSettings: librarySettings),
         .target(
             name: "PrivateInformationRetrieval",
             dependencies: ["HomomorphicEncryption",
                            .product(name: "Numerics", package: "swift-numerics")],
-            swiftSettings: swiftSettings),
+            swiftSettings: librarySettings),
         .target(
             name: "PrivateInformationRetrievalProtobuf",
             dependencies: ["PrivateInformationRetrieval",
@@ -94,13 +89,14 @@ let package = Package(
                            "HomomorphicEncryptionProtobuf",
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
             exclude: ["generated/README.md", "protobuf_module_mappings.txtpb"],
-            swiftSettings: swiftSettings),
+            swiftSettings: librarySettings),
         .target(
             name: "TestUtilities",
             dependencies: [
                 "HomomorphicEncryption",
                 .product(name: "Numerics", package: "swift-numerics"),
-            ]),
+            ],
+            swiftSettings: librarySettings),
         .executableTarget(
             name: "PIRGenerateDatabase",
             dependencies: [
@@ -108,7 +104,7 @@ let package = Package(
                 "HomomorphicEncryption",
                 "PrivateInformationRetrievalProtobuf",
             ],
-            swiftSettings: swiftSettings),
+            swiftSettings: executableSettings),
         .executableTarget(
             name: "PIRProcessDatabase",
             dependencies: [
@@ -118,7 +114,7 @@ let package = Package(
                 "HomomorphicEncryption",
                 .product(name: "Logging", package: "swift-log"),
             ],
-            swiftSettings: swiftSettings),
+            swiftSettings: executableSettings),
         .executableTarget(
             name: "PIRShardDatabase",
             dependencies: [
@@ -126,43 +122,43 @@ let package = Package(
                 "HomomorphicEncryption",
                 "PrivateInformationRetrievalProtobuf",
             ],
-            swiftSettings: swiftSettings),
+            swiftSettings: executableSettings),
         .testTarget(
             name: "HomomorphicEncryptionTests",
             dependencies: [
                 "HomomorphicEncryption", "TestUtilities",
                 .product(name: "Numerics", package: "swift-numerics"),
-            ]),
+            ], swiftSettings: executableSettings),
         .testTarget(
             name: "HomomorphicEncryptionProtobufTests",
             dependencies: [
                 "HomomorphicEncryption",
                 "HomomorphicEncryptionProtobuf",
                 "TestUtilities",
-            ]),
+            ], swiftSettings: executableSettings),
         .testTarget(
             name: "PrivateInformationRetrievalProtobufTests",
             dependencies: [
                 "PrivateInformationRetrieval",
                 "PrivateInformationRetrievalProtobuf",
                 "TestUtilities",
-            ]),
+            ], swiftSettings: executableSettings),
         .testTarget(
             name: "PrivateInformationRetrievalTests",
             dependencies: [
                 "PrivateInformationRetrieval", "TestUtilities",
                 .product(name: "Numerics", package: "swift-numerics"),
-            ]),
+            ], swiftSettings: executableSettings),
         .testTarget(
             name: "PIRGenerateDatabaseTests",
             dependencies: ["PIRGenerateDatabase",
                            "TestUtilities",
-                           .product(name: "Numerics", package: "swift-numerics")]),
+                           .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
         .testTarget(
             name: "PIRProcessDatabaseTests",
             dependencies: ["PIRProcessDatabase",
                            "TestUtilities",
-                           .product(name: "Numerics", package: "swift-numerics")]),
+                           .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
     ])
 
 // MARK: - Benchmarks
@@ -178,7 +174,7 @@ package.targets += [
             "HomomorphicEncryption",
         ],
         path: "Benchmarks/PolyBenchmark",
-        swiftSettings: swiftSettings,
+        swiftSettings: executableSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),
@@ -189,7 +185,7 @@ package.targets += [
             "HomomorphicEncryption",
         ],
         path: "Benchmarks/RlweBenchmark",
-        swiftSettings: swiftSettings,
+        swiftSettings: executableSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),
@@ -203,7 +199,7 @@ package.targets += [
             "PrivateInformationRetrievalProtobuf",
         ],
         path: "Benchmarks/PrivateInformationRetrievalBenchmark",
-        swiftSettings: swiftSettings,
+        swiftSettings: executableSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),
@@ -211,5 +207,5 @@ package.targets += [
 
 // Set the minimum macOS version for the package
 package.platforms = [
-    .macOS(.v14), // Constrained by Swift 6 support for Xcode (https://developer.apple.com/support/xcode/)
+    .macOS(.v14), // Constrained by Swift 5.10 support for Xcode (https://developer.apple.com/support/xcode/)
 ]

@@ -189,6 +189,7 @@ extension Context {
 
 // code for SIMD encoding/decoding
 extension Context {
+    @inlinable
     static func generateEncodingMatrix(encryptionParameters: EncryptionParameters<Scheme>) -> [Int] {
         guard encryptionParameters.plaintextModulus.isNttModulus(for: encryptionParameters.polyDegree) else {
             return [Int]()

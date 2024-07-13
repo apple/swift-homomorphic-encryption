@@ -214,6 +214,7 @@ extension ScalarType {
     ///   - variableTime: Must be `true`, indicating this value, `modulus` and `exponent` are leaked through timing.
     /// - Returns: `self^exponent mod modulus`.
     /// - Warning: Leaks `self`, `exponent`, `modulus` through timing.
+    @inlinable
     public func powMod(exponent: Self, modulus: Self, variableTime: Bool) -> Self {
         precondition(variableTime)
         if exponent == 0 {
@@ -244,6 +245,7 @@ extension ScalarType {
     ///   - variableTime: Must be `true`, indicating this value and `modulus` are leaked through timing.
     /// - Returns: `self^{-1} mod modulus`.
     /// - Throws: ``HeError/notInvertible(modulus:)`` if this value has no inverse mod `modulus`.
+    @inlinable
     public func inverseMod(modulus: Self, variableTime: Bool) throws -> Self {
         precondition(variableTime)
         guard self != 0, modulus != 0 else {
@@ -272,6 +274,7 @@ extension UInt32 {
     ///
     /// - Parameter bitCount: Number of bits to reverse. Must be in `[1, 32]`.
     /// - Returns: The reversed bits of this value.
+    @inlinable
     public func reverseBits(bitCount: Int) -> UInt32 {
         var x = self
         assert((1...32).contains(bitCount))
@@ -399,6 +402,7 @@ extension ScalarType {
     /// - Throws: ``HeError/notEnoughPrimes(significantBitCounts:preferringSmall:nttDegree:)`` if not enough primes were
     /// found.
     /// - seealso: ``PolyRq/forwardNtt()`` and ``PolyRq/inverseNtt()``.
+    @inlinable
     public static func generatePrimes(significantBitCounts: [Int], preferringSmall: Bool,
                                       nttDegree: Int = 1) throws -> [Self]
     {
@@ -445,6 +449,7 @@ extension ScalarType {
     /// Computes whether or not this value is prime.
     /// - Parameter variableTime: Must be `true`, indicating this value is leaked through timing.
     /// - Returns: Whether or not this value is prime.
+    @inlinable
     func isPrime(variableTime: Bool) -> Bool {
         precondition(variableTime)
         if self <= 1 {

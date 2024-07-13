@@ -72,6 +72,7 @@ struct RnsTool<T: ScalarType>: Sendable {
         rnsConvertQToBSk.outputContext
     }
 
+    @inlinable
     init(from inputContext: PolyContext<T>, to outputContext: PolyContext<T>) throws {
         guard inputContext.degree == outputContext.degree, outputContext.moduli.count == 1 else {
             throw HeError.invalidPolyContext(inputContext)
@@ -196,6 +197,7 @@ struct RnsTool<T: ScalarType>: Sendable {
     /// - Returns: The scaled and rounded polynomial.
     /// - seealso: Algorithm 2 from <https://eprint.iacr.org/2016/510.pdf>.
     /// - Throws: Error upon failure to compute the scaling and rounding.
+    @inlinable
     func scaleAndRound(poly: PolyRq<T, Coeff>, scalingFactor: T) throws -> PolyRq<T, Coeff> {
         var poly = poly
         poly *= prodGammaTModQ

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Benchmarks for PolyRq functions.
-// These benchmarks can be triggered with `swift package -c release benchmark --target PolyBenchmark`
+// These benchmarks can be triggered with `swift package benchmark --target PolyBenchmark`
 // for more readable results
 
 @preconcurrency import Benchmark

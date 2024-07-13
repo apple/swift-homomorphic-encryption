@@ -25,6 +25,7 @@ struct RnsBaseConverter<T: ScalarType>: Sendable {
     /// i'th entry stores `(q_i / q) % q_i``.
     @usableFromInline let inversePuncturedProducts: [MultiplyConstantModulus<T>]
 
+    @inlinable
     init(from inputContext: PolyContext<T>, to outputContext: PolyContext<T>) throws {
         precondition(inputContext.degree == outputContext.degree)
         self.inputContext = inputContext

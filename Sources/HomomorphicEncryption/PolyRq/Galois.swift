@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+@usableFromInline
 struct GaloisCoeffIterator: IteratorProtocol {
-    typealias Element = (Bool, Int)
+    @usableFromInline typealias Element = (Bool, Int)
 
     /// Degree of the RLWE polynomial.
-    let degree: Int
+    @usableFromInline let degree: Int
     /// `log2(degree)`.
-    let log2Degree: Int
+    @usableFromInline let log2Degree: Int
     /// `x % degree == x & modDegreeMask`, because `degree` is a power of two.
-    let modDegreeMask: Int
+    @usableFromInline let modDegreeMask: Int
     /// power in transformation `f(x) -> f(x^{galoisElement})`.
-    let galoisElement: Int
+    @usableFromInline let galoisElement: Int
     /// simple incrementing index of the iterator in `[0, degree)`.
-    var iterIndex: Int
+    @usableFromInline var iterIndex: Int
     /// `iterIndex * galoisElement`.
-    var rawOutIndex: Int
+    @usableFromInline var rawOutIndex: Int
     /// Raw output index mod-reduced to `[0, degree)`.
-    var outIndex: Int
+    @usableFromInline var outIndex: Int
 
+    @inlinable
     init(degree: Int, galoisElement: Int) {
         precondition(galoisElement.isValidGaloisElement(for: degree))
         self.degree = degree
@@ -41,6 +43,7 @@ struct GaloisCoeffIterator: IteratorProtocol {
         self.outIndex = 0
     }
 
+    @inlinable
     mutating func next() -> Element? {
         if iterIndex < degree {
             // Use x^degree == -1 mod (x^degree + 1)
@@ -56,19 +59,21 @@ struct GaloisCoeffIterator: IteratorProtocol {
     }
 }
 
+@usableFromInline
 struct GaloisEvalIterator: IteratorProtocol {
-    typealias Element = Int
+    @usableFromInline typealias Element = Int
     /// Degree of the RLWE polynomial.
-    let degree: Int
+    @usableFromInline let degree: Int
     /// `log2(degree)`.
-    let log2Degree: Int
+    @usableFromInline let log2Degree: Int
     /// `x % degree == x & modDegreeMask`, because `degree` is a power of two.
-    let modDegreeMask: Int
+    @usableFromInline let modDegreeMask: Int
     /// Power in transformation `f(x) -> f(x^{galoisElement})`.
-    let galoisElement: Int
+    @usableFromInline let galoisElement: Int
     /// Simple incrementing index of the iterator in `[0, degree)`.
-    var iterIndex: Int
+    @usableFromInline var iterIndex: Int
 
+    @inlinable
     init(degree: Int, galoisElement: Int) {
         precondition(galoisElement.isValidGaloisElement(for: degree))
         self.degree = degree
@@ -78,6 +83,7 @@ struct GaloisEvalIterator: IteratorProtocol {
         self.iterIndex = 0
     }
 
+    @inlinable
     mutating func next() -> Element? {
         if iterIndex < degree {
             let reversed = Int(UInt32(iterIndex &+ degree).reverseBits(bitCount: log2Degree &+ 1))
@@ -91,12 +97,14 @@ struct GaloisEvalIterator: IteratorProtocol {
 }
 
 extension FixedWidthInteger {
+    @inlinable
     func isValidGaloisElement(for degree: Int) -> Bool {
         degree.isPowerOfTwo && !isMultiple(of: 2) && (self < (degree &<< 1)) && (self > 1)
     }
 }
 
 extension PolyRq where F == Coeff {
+    @inlinable
     public func applyGalois(galoisElement: Int) -> Self {
         precondition(galoisElement.isValidGaloisElement(for: degree))
         var output = self
@@ -128,6 +136,7 @@ extension PolyRq where F == Coeff {
 }
 
 extension PolyRq where F == Eval {
+    @inlinable
     public func applyGalois(galoisElement: Int) throws -> Self {
         precondition(galoisElement.isValidGaloisElement(for: degree))
         var output = self
@@ -145,8 +154,9 @@ extension PolyRq where F == Eval {
     }
 }
 
+@usableFromInline
 enum GaloisElementGenerator {
-    static let value: UInt32 = 3
+    @usableFromInline static let value: UInt32 = 3
 }
 
 /// Utilities for generating Galois elements.
@@ -156,6 +166,7 @@ public enum GaloisElement {
     /// - Parameter degree: Polynomial degree.
     /// - Returns: The Galois element to swap rows.
     /// - seealso: ``HeScheme/swapRows(of:using:)`` for more information.
+    @inlinable
     public static func swappingRows(degree: Int) -> Int {
         (degree << 1) - 1
     }
@@ -169,6 +180,7 @@ public enum GaloisElement {
     /// ``EncryptionParameters/polyDegree``.
     /// - Returns: The Galois element for column rotation by `step`.
     /// - Throws: Error upon invalid step or degree.
+    @inlinable
     public static func rotatingColumns(by step: Int, degree: Int) throws -> Int {
         guard degree.isPowerOfTwo else {
             throw HeError.invalidDegree(degree)

@@ -350,6 +350,7 @@ struct MultiplyConstantArrayModulus<T: ScalarType>: Sendable {
     ///   - modulus: Modulus.
     ///   - variableTime: Whether or not `multiplicands` or `modulus` may be leaked through timing.
     /// - Warning: May leak `multiplicands` and `modulus` through timing.
+    @inlinable
     init(multiplicands: [T], modulus: T, variableTime: Bool) {
         assert(multiplicands.allSatisfy { $0 < modulus })
         self.multiplicands = multiplicands

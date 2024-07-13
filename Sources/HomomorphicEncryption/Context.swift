@@ -61,6 +61,7 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     ///
     /// - Parameter encryptionParameters: Encryption parameters.
     /// - Throws: Error upon failure to initialize the context.
+    @inlinable
     public init(encryptionParameters: EncryptionParameters<Scheme>) throws {
         self.encryptionParameters = encryptionParameters
         self.simdEncodingMatrix = Self.generateEncodingMatrix(encryptionParameters: encryptionParameters)
@@ -112,6 +113,7 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     ///   - lhs: A context to compare.
     ///   - rhs: Another context to compare.
     /// - Returns: Whether or not the two contexts are equal.
+    @inlinable
     public static func == (lhs: Context<Scheme>, rhs: Context<Scheme>) -> Bool {
         lhs === rhs || lhs.encryptionParameters == rhs.encryptionParameters
     }

@@ -1,5 +1,5 @@
 {
-  "originHash" : "af0ba8881dc49c9949dc67e69ce086a87a9aa3a032afdebbf8fa2500cc005e93",
+  "originHash" : "1556ae0b547f8e688ae5876b1f21579f66ce8684e7ba120f9f71ec5cc9524064",
   "pins" : [
     {
       "identity" : "hdrhistogram-swift",
@@ -58,7 +58,7 @@
     {
       "identity" : "swift-docc-plugin",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-docc-plugin",
+      "location" : "https://github.com/apple/swift-docc-plugin",
       "state" : {
         "revision" : "26ac5758409154cc448d7ab82389c520fa8a8247",
         "version" : "1.3.0"

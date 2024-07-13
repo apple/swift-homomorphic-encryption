@@ -13,6 +13,7 @@
 // limitations under the License.
 
 extension Sequence where Element: Hashable {
+    @inlinable
     func allUnique() -> Bool {
         var seen = Set<Self.Element>()
         for element in self {

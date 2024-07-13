@@ -45,6 +45,7 @@ public struct PolyRq<T: ScalarType, F: PolyFormat>: Equatable, Sendable {
 }
 
 extension PolyRq: PolyCollection {
+    @inlinable
     public func polyContext() -> PolyContext<T> {
         context
     }
@@ -109,6 +110,7 @@ extension PolyRq {
     ///
     /// - Parameter context: Context which the polynomial will have.
     /// - Returns: The zero polynomial.
+    @inlinable
     public static func zero(context: PolyContext<T>) -> Self {
         let degree = context.degree
         let moduliCount = context.moduli.count
@@ -268,6 +270,7 @@ extension PolyRq {
         return result
     }
 
+    @inlinable
     public mutating func dropContext(to context: PolyContext<T>) throws {
         if self.context == context {
             return
@@ -293,12 +296,14 @@ extension PolyRq {
     /// runtime.
     /// - Returns: Whether the polynomial is zero.
     /// - Warning: Leaks `self` through timing.
+    @inlinable
     public func isZero(variableTime: Bool) -> Bool {
         precondition(variableTime)
         return data.data.allSatisfy { coefficient in coefficient == 0 }
     }
 
     /// Clears the memory in the polynomial.
+    @inlinable
     public mutating func zeroize() {
         data.zeroize()
     }
@@ -368,6 +373,7 @@ extension PolyRq where F == Coeff {
 }
 
 extension PolyRq {
+    @inlinable
     public func convertToCoeff() throws -> PolyRq<T, Coeff> {
         switch F.self {
         case is Coeff.Type:
@@ -383,6 +389,7 @@ extension PolyRq {
         }
     }
 
+    @inlinable
     public func convertToEval() throws -> PolyRq<T, Eval> {
         switch F.self {
         case is Coeff.Type:
@@ -398,6 +405,7 @@ extension PolyRq {
         }
     }
 
+    @inlinable
     public func convertFormat<Format: PolyFormat>() throws -> PolyRq<T, Format> {
         switch Format.self {
         case is Coeff.Type:

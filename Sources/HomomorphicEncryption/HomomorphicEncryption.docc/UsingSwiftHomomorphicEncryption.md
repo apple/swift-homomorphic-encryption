@@ -6,7 +6,7 @@ Get started using Swift Homomorphic Encryption.
 Swift Homomorphic Encryption requires:
 * 64-bit processor with little-endian memory representation
 * macOS or Linux operating system
-* [Swift](https://www.swift.org/) version 6.0 or later
+* [Swift](https://www.swift.org/) version 5.10 or later
 
 > Note: Swift Homomorphic Encryption relies on [SystemRandomNumberGenerator](https://developer.apple.com/documentation/swift/systemrandomnumbergenerator) as a cryptographically secure random number generator, which may have platform-dependent behavior.
 

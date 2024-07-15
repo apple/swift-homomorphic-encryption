@@ -141,7 +141,8 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
                                with context: Context<Scheme>)
         throws -> ProcessedDatabaseWithParameters<Scheme>
     {
-        let cuckooTable = try CuckooTable(config: config.cuckooTableConfig, database: database)
+        let cuckooTableConfig = config.cuckooTableConfig
+        let cuckooTable = try CuckooTable(config: cuckooTableConfig, database: database)
         let entryTable = try cuckooTable.serializeBuckets()
         let maxEntrySize: Int
         switch cuckooTable.config.bucketCount {
@@ -151,15 +152,35 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
             }
             maxEntrySize = foundMaxEntrySize
         case .fixedSize:
-            maxEntrySize = config.cuckooTableConfig.maxSerializedBucketSize
+            maxEntrySize = cuckooTableConfig.maxSerializedBucketSize
         }
+
+        // if we would hit the client side bug, reprocess with modified `maxSerializedBucketSize`
+        if maxEntrySize.isMultiple(of: context.bytesPerPlaintext)
+            || context.bytesPerPlaintext.isMultiple(of: maxEntrySize)
+        {
+            let newCuckooTableConfig = try CuckooTableConfig(
+                hashFunctionCount: cuckooTableConfig.hashFunctionCount,
+                maxEvictionCount: cuckooTableConfig.maxEvictionCount,
+                maxSerializedBucketSize: maxEntrySize - 1,
+                bucketCount: cuckooTableConfig.bucketCount,
+                multipleTables: cuckooTableConfig.multipleTables)
+
+            let newConfig = try KeywordPirConfig(
+                dimensionCount: config.dimensionCount,
+                cuckooTableConfig: newCuckooTableConfig,
+                unevenDimensions: config.unevenDimensions)
+            return try Self.process(database: database, config: newConfig, with: context)
+        }
+
         let indexPirConfig = try IndexPirConfig(
             entryCount: cuckooTable.bucketPerTable,
             entrySizeInBytes: maxEntrySize,
             dimensionCount: config.dimensionCount,
-            batchSize: config.cuckooTableConfig.hashFunctionCount,
+            batchSize: cuckooTableConfig.hashFunctionCount,
             unevenDimensions: config.unevenDimensions)
         let indexPirParameter = PirServer.generateParameter(config: indexPirConfig, with: context)
+
         let processedDb = try PirServer.Database(plaintexts: stride(
             from: 0,
             to: entryTable.count,

@@ -63,7 +63,7 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
 
         return IndexPirParameter(
             entryCount: config.entryCount,
-            entrySizeInBytes: config.entrySizeInBytes,
+            entrySizeInBytes: entrySizeInBytes,
             dimensions: dimensions, batchSize: config.batchSize)
     }
 

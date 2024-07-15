@@ -87,6 +87,7 @@ public struct DoubleWidthUInt<Base>: Sendable
     ///
     /// - Parameter value: The tuple to use as the source of the new instance's
     ///   high and low parts.
+    @inlinable
     public init(_ value: (high: High, low: Low)) {
         #if _endian(big)
         self._storage = (high: value.0, low: value.1)
@@ -111,6 +112,7 @@ public struct DoubleWidthUInt<Base>: Sendable
         self.init((_high, low))
     }
 
+    @inlinable
     public init() {
         self.init(0, 0)
     }
@@ -129,6 +131,7 @@ extension DoubleWidthUInt: CustomDebugStringConvertible {
 }
 
 extension DoubleWidthUInt: Equatable {
+    @inlinable
     public static func == (lhs: DoubleWidthUInt, rhs: DoubleWidthUInt) -> Bool {
         lhs._storage.low == rhs._storage.low
             && lhs._storage.high == rhs._storage.high
@@ -136,6 +139,7 @@ extension DoubleWidthUInt: Equatable {
 }
 
 extension DoubleWidthUInt: Comparable {
+    @inlinable
     public static func < (lhs: DoubleWidthUInt, rhs: DoubleWidthUInt) -> Bool {
         if lhs._storage.high < rhs._storage.high { return true }
         else if lhs._storage.high > rhs._storage.high { return false }
@@ -148,6 +152,7 @@ extension DoubleWidthUInt: Hashable {
         _hashValue(for: self)
     }
 
+    @inlinable
     public func hash(into hasher: inout Hasher) {
         hasher.combine(low)
         hasher.combine(high)
@@ -165,6 +170,7 @@ extension DoubleWidthUInt: Numeric {
         self.init(High(_magnitude._storage.high), _magnitude._storage.low)
     }
 
+    @inlinable
     public init(_ source: some BinaryInteger) {
         guard let result = DoubleWidthUInt<Base>(exactly: source) else {
             preconditionFailure("Value is outside the representable range")
@@ -172,6 +178,7 @@ extension DoubleWidthUInt: Numeric {
         self = result
     }
 
+    @inlinable
     public init?<T: BinaryInteger>(exactly source: T) {
         // Can't represent a negative 'source'
         guard source >= 0 else { return nil }
@@ -197,6 +204,7 @@ extension DoubleWidthUInt {
         public var _high: High.Words
         public var _low: Low.Words
 
+        @inlinable
         public init(_ value: DoubleWidthUInt<Base>) {
             // Multiples of word size only.
             guard Base.bitWidth == Base.Magnitude.bitWidth,
@@ -228,6 +236,7 @@ extension DoubleWidthUInt.Words: RandomAccessCollection {
         return _low.count + _high.count
     }
 
+    @inlinable
     public subscript(_ i: Index) -> UInt {
         if Base.bitWidth < UInt.bitWidth {
             precondition(i == 0, "Invalid index")
@@ -355,6 +364,7 @@ extension DoubleWidthUInt: FixedWidthInteger {
         return (high, low)
     }
 
+    @inlinable
     public func dividingFullWidth(
         _ dividend: (high: DoubleWidthUInt, low: DoubleWidthUInt.Magnitude))
         -> (quotient: DoubleWidthUInt, remainder: DoubleWidthUInt)
@@ -364,6 +374,7 @@ extension DoubleWidthUInt: FixedWidthInteger {
         return (DoubleWidthUInt(quotient), DoubleWidthUInt(remainder))
     }
 
+    @inlinable
     public static func &= (
         lhs: inout DoubleWidthUInt, rhs: DoubleWidthUInt)
     {
@@ -371,6 +382,7 @@ extension DoubleWidthUInt: FixedWidthInteger {
         lhs._storage.high &= rhs._storage.high
     }
 
+    @inlinable
     public static func |= (
         lhs: inout DoubleWidthUInt, rhs: DoubleWidthUInt)
     {
@@ -378,6 +390,7 @@ extension DoubleWidthUInt: FixedWidthInteger {
         lhs._storage.high |= rhs._storage.high
     }
 
+    @inlinable
     public static func ^= (
         lhs: inout DoubleWidthUInt, rhs: DoubleWidthUInt)
     {
@@ -508,35 +521,41 @@ extension DoubleWidthUInt: FixedWidthInteger {
         lhs = result
     }
 
+    @inlinable
     public static func / (lhs: DoubleWidthUInt<Base>, rhs: DoubleWidthUInt<Base>) -> DoubleWidthUInt<Base> {
         var lhs = lhs
         lhs /= rhs
         return lhs
     }
 
+    @inlinable
     public static func /= (lhs: inout DoubleWidthUInt, rhs: DoubleWidthUInt) {
         let (result, overflow) = lhs.dividedReportingOverflow(by: rhs)
         precondition(!overflow, "Overflow in /=")
         lhs = result
     }
 
+    @inlinable
     public static func % (lhs: DoubleWidthUInt<Base>, rhs: DoubleWidthUInt<Base>) -> DoubleWidthUInt<Base> {
         var lhs = lhs
         lhs %= rhs
         return lhs
     }
 
+    @inlinable
     public static func %= (lhs: inout DoubleWidthUInt<Base>, rhs: DoubleWidthUInt<Base>) {
         let (result, overflow) = lhs.remainderReportingOverflow(dividingBy: rhs)
         precondition(!overflow, "Overflow in %=")
         lhs = result
     }
 
+    @inlinable
     public init(_truncatingBits bits: UInt) {
         _storage.low = Low(_truncatingBits: bits)
         _storage.high = High(_truncatingBits: bits >> UInt(Low.bitWidth))
     }
 
+    @inlinable
     public init(integerLiteral x: Int) {
         self.init(x)
     }
@@ -570,6 +589,7 @@ extension DoubleWidthUInt: UnsignedInteger where Base: FixedWidthInteger & Unsig
     ///
     /// This operation is conceptually that described by Burnikel and Ziegler
     /// (1998).
+    @inlinable
     static func _divide(
         _ lhs: (high: Low, mid: Low, low: Low), by rhs: Magnitude) -> (quotient: Low, remainder: Magnitude)
     {
@@ -609,6 +629,7 @@ extension DoubleWidthUInt: UnsignedInteger where Base: FixedWidthInteger & Unsig
 
     /// Returns the quotient and remainder after dividing a quadruple-width
     /// magnitude `lhs` by a double-width magnitude `rhs`.
+    @inlinable
     static func _divide(
         _ lhs: DoubleWidthUInt<Magnitude>, by rhs: Magnitude) -> (quotient: Magnitude, remainder: Magnitude)
     {
@@ -657,6 +678,7 @@ extension DoubleWidthUInt: UnsignedInteger where Base: FixedWidthInteger & Unsig
 
     /// Returns the quotient and remainder after dividing a double-width
     /// magnitude `lhs` by a double-width magnitude `rhs`.
+    @inlinable
     static func _divide(
         _ lhs: Magnitude, by rhs: Magnitude) -> (quotient: Magnitude, remainder: Magnitude)
     {

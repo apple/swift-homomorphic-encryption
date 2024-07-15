@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Benchmarks for Rlwe functions.
-// These benchmarks can be triggered with `swift package -c release benchmark --target RlweBenchmark`
+// These benchmarks can be triggered with `swift package benchmark --target RlweBenchmark`
 // for more readable results
 
 @preconcurrency import Benchmark

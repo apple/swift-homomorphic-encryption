@@ -15,6 +15,7 @@
 import Foundation
 
 extension Bfv {
+    @inlinable
     public static func decrypt(_ ciphertext: EvalCiphertext,
                                using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
     {
@@ -27,6 +28,7 @@ extension Bfv {
         return CoeffPlaintext(context: ciphertext.context, poly: plaintext)
     }
 
+    @inlinable
     public static func decrypt(_ ciphertext: CoeffCiphertext,
                                using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
     {

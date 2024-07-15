@@ -647,6 +647,7 @@ public protocol HeScheme {
 }
 
 extension HeScheme {
+    @inlinable
     public static func validateEquality(of lhs: Context<Self>, and rhs: Context<Self>) throws {
         guard lhs == rhs else {
             throw HeError.unequalContexts(got: lhs, expected: rhs)
@@ -655,6 +656,7 @@ extension HeScheme {
 }
 
 extension HeScheme {
+    @inlinable
     public static func rotateColumns(
         of ciphertext: inout CanonicalCiphertext,
         by step: Int,
@@ -664,6 +666,7 @@ extension HeScheme {
         try applyGalois(ciphertext: &ciphertext, element: element, using: evaluationKey)
     }
 
+    @inlinable
     public static func swapRows(of ciphertext: inout CanonicalCiphertext, using evaluationKey: EvaluationKey) throws {
         let element = GaloisElement.swappingRows(degree: ciphertext.context.degree)
         try applyGalois(ciphertext: &ciphertext, element: element, using: evaluationKey)
@@ -698,6 +701,7 @@ extension HeScheme {
         }).sum()
     }
 
+    @inlinable
     public static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
                                     plaintexts: some Collection<EvalPlaintext>) throws -> EvalCiphertext
     {

@@ -14,7 +14,7 @@
 
 // Benchmarks for Pir functions.
 // These benchmarks can be triggered with
-// `swift package -c release benchmark --target PIRBenchmark`
+// `swift package benchmark --target PIRBenchmark`
 // for more readable results
 
 @preconcurrency import Benchmark

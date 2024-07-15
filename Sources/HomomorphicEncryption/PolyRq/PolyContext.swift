@@ -36,6 +36,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
     ///   - moduli: Decomposition of the modulus `Q` into co-prime factors `q_0, ..., q_{L-1}`.
     ///   - next: The next context in the modulus-switching chain.
     /// - Throws: Error upon failure to initialize the context.
+    @inlinable
     required init(degree: Int, moduli: [T], next: PolyContext<T>?) throws {
         guard degree.isPowerOfTwo else {
             throw HeError.invalidDegree(degree)
@@ -94,6 +95,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
     ///   - degree: Polynomial degree.
     ///   - moduli: Decomposition of the modulus `Q` into co-prime factors `q_0, ..., q_{L-1}`.
     /// - Throws: Error upon failure to initialize the context.
+    @inlinable
     public convenience init(degree: Int, moduli: [T]) throws {
         if moduli.count == 1 {
             try self.init(degree: degree, moduli: moduli, next: nil)
@@ -106,6 +108,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
         try self.init(degree: degree, moduli: moduli, next: next)
     }
 
+    @inlinable
     func validateNttModuli() throws {
         for modulus in moduli {
             guard modulus.isNttModulus(for: degree) else {
@@ -115,6 +118,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
     }
 
     /// Computes `Q mod modulus`.
+    @inlinable
     func qRemainder(dividingBy modulus: Modulus<T>) -> T {
         var prod = T(1)
         for qi in moduli {
@@ -181,6 +185,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
 }
 
 extension PolyContext: Equatable {
+    @inlinable
     public static func == (lhs: PolyContext, rhs: PolyContext) -> Bool {
         (lhs === rhs) || (lhs.degree == rhs.degree && lhs.moduli == rhs.moduli && lhs.next == rhs.next)
     }

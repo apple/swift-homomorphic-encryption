@@ -367,7 +367,6 @@ public protocol IndexPirServer: Sendable {
     ///   - parameter: PIR parameters.
     /// - Returns: A processed database.
     /// - Throws: Error upon failure to process the database.
-    @inlinable
     static func process(database: some Collection<[UInt8]>,
                         with context: Context<Scheme>,
                         using parameter: IndexPirParameter) throws -> Database
@@ -378,7 +377,6 @@ public protocol IndexPirServer: Sendable {
     ///   - evaluationKey: Evaluation key to aid in the server computation.
     /// - Returns: The encrypted response.
     /// - Throws: Error upon failure to compute a response.
-    @inlinable
     func computeResponse(to query: Query,
                          using evaluationKey: EvaluationKey<Scheme>) throws -> Response
 }
@@ -390,6 +388,7 @@ extension IndexPirServer {
     ///   - context: Context for HE computation.
     ///   - database: Database.
     /// - Throws: Error upon failure to initialize the server.
+    @inlinable
     public init(parameter: IndexPirParameter, context: Context<Scheme>, database: Database) throws {
         try self.init(parameter: parameter, context: context, databases: [database])
     }
@@ -399,6 +398,7 @@ extension IndexPirServer {
     ///   - config: Database configuration.
     ///   - context: Context for HE computation.
     /// - Returns: The PIR parameters for the database.
+    @inlinable
     public static func generateParameter(config: IndexPirConfig, with context: Context<Scheme>) -> IndexPirParameter {
         IndexPir.generateParameter(config: config, with: context)
     }
@@ -463,6 +463,7 @@ extension IndexPirClient {
     ///   - secretKey: Secret key used for the query.
     /// - Returns: An encrypted query.
     /// - Throws: Error upon failure to generate a query.
+    @inlinable
     public func generateQuery(at queryIndex: Int, using secretKey: SecretKey<Scheme>) throws -> Query {
         try generateQuery(at: [queryIndex], using: secretKey)
     }
@@ -474,6 +475,7 @@ extension IndexPirClient {
     ///   - secretKey: Secret key used for decryption.
     /// - Returns: For each query index, the database entry at that index.
     /// - Throws: Error upon failure to decrypt.
+    @inlinable
     public func decrypt(response: Response,
                         at queryIndex: Int,
                         using secretKey: SecretKey<Scheme>) throws -> [UInt8]

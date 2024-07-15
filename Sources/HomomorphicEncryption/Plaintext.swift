@@ -23,19 +23,23 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
         self.poly = poly
     }
 
+    @inlinable
     static func += (lhs: inout Plaintext<Scheme, Format>, rhs: Plaintext<Scheme, Format>) throws where Format == Coeff {
         try Scheme.addAssign(&lhs, rhs)
     }
 
+    @inlinable
     static func += (lhs: inout Plaintext<Scheme, Format>, rhs: Plaintext<Scheme, Format>) throws where Format == Eval {
         try Scheme.addAssign(&lhs, rhs)
     }
 
+    @inlinable
     func forwardNtt() throws -> Plaintext<Scheme, Eval> where Format == Coeff {
         let poly = try poly.forwardNtt()
         return Plaintext<Scheme, Eval>(context: context, poly: poly)
     }
 
+    @inlinable
     func inverseNtt() throws -> Plaintext<Scheme, Coeff> where Format == Eval {
         let poly = try poly.inverseNtt()
         return Plaintext<Scheme, Coeff>(context: context, poly: poly)
@@ -61,18 +65,21 @@ extension Plaintext: PolyCollection {
 }
 
 extension Plaintext {
+    @inlinable
     static func + (lhs: Self, rhs: Self) throws -> Self where Format == Coeff {
         var result = lhs
         try result += rhs
         return result
     }
 
+    @inlinable
     static func + (lhs: Self, rhs: Self) throws -> Self where Format == Eval {
         var result = lhs
         try result += rhs
         return result
     }
 
+    @inlinable
     public func convertToEvalFormat(moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
         where Format == Coeff
     {
@@ -95,6 +102,7 @@ extension Plaintext {
         return try Plaintext<Scheme, Eval>(context: context, poly: poly.forwardNtt())
     }
 
+    @inlinable
     public func convertToCoeffFormat() throws -> Plaintext<Scheme, Coeff>
         where Format == Eval
     {

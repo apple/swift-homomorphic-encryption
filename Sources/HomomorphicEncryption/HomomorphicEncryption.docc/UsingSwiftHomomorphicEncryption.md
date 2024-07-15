@@ -12,23 +12,34 @@ Swift Homomorphic Encryption requires:
 
 Swift Homomorphic Encryption is available as a Swift Package Manager package.
 To use Swift Homomorphic Encryption, choose a [tag](https://github.com/apple/swift-homomorphic-encryption/tags).
-Then, add the following dependency in your `Package.swift`, adding the commit hash associated with the tag.
+Then, add the following dependency in your `Package.swift`
 ```swift
 .package(
     url: "https://github.com/apple/swift-homomorphic-encryption",
-    revision: "git-commit-associated-with-the-tag"),
+    from: "tag"),
 ```
-
-> Note:
-> Due to the use of `unsafeFlags` in Swift Homomorphic Encryption, you shouldn't depend on a git tag, which could prevent tagged releases of downstream projects.
-> In particular, without the `cross-module-optimization` flag, performance degrades dramatically.
-> One workaround is to add `SwiftHomomorphicEncryption` as a submodule rather than a package dependency.
+replacing `tag` with your chosen tag, e.g. `1.0.0-alpha.1`.
 
 To use the `HomomorphicEncryption` library, add
 ```swift
 .product(name: "HomomorphicEncryption", package: "swift-homomorphic-encryption"),
 ```
 to your target's dependencies.
+
+> Important:
+> When linking your executable, make sure to enable `cross-module-optimization`.
+> Without this flag, performance of Swift Homomorphic Encryption degrades dramatically,
+> due to failure to specialize generics. For example,
+> ```swift
+> .executableTarget(
+>    name: "YourTarget",
+>    dependencies: [
+>        .product(name: "HomomorphicEncryption", package: "swift-homomorphic-encryption"),
+>    ],
+>    swiftSettings: [.unsafeFlags(["-cross-module-optimization"],
+>       .when(configuration: .release))]
+> )
+
 You can then add
 ```swift
  import HomomorphicEncryption

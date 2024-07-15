@@ -209,6 +209,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``HeScheme/isTransparent(ciphertext:)-31w9f`` for an alternative API.
+    @inlinable
     public func isTransparent() -> Bool where Format == Coeff {
         Scheme.isTransparent(ciphertext: self)
     }
@@ -219,6 +220,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``HeScheme/isTransparent(ciphertext:)-1nwgm`` for an alternative API.
+    @inlinable
     public func isTransparent() -> Bool where Format == Eval {
         Scheme.isTransparent(ciphertext: self)
     }
@@ -229,6 +231,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``HeScheme/isTransparent(ciphertext:)-6m5nk`` for an alternative API.
+    @inlinable
     public func isTransparent() -> Bool where Format == Scheme.CanonicalCiphertextFormat {
         Scheme.isTransparent(ciphertext: self)
     }
@@ -842,6 +845,7 @@ extension Ciphertext where Format == Scheme.CanonicalCiphertextFormat {
     ///   - key: Evaluation key. Must contain Galois element `element`.
     /// - Throws: Error upon failure to apply the Galois transformation.
     /// - seealso: ``HeScheme/applyGalois(ciphertext:element:using:)`` for an alternative API and more information.
+    @inlinable
     public mutating func applyGalois(element: Int, using key: EvaluationKey<Scheme>) throws {
         try Scheme.applyGalois(ciphertext: &self, element: element, using: key)
     }
@@ -851,6 +855,7 @@ extension Ciphertext where Format == Scheme.CanonicalCiphertextFormat {
     /// - Parameter key: Evaluation key to relinearize with. Must contain a `RelinearizationKey`.
     /// - Throws: Error upon failure to relinearize.
     /// - seealso: ``HeScheme/relinearize(_:using:)`` for an alternative API and more information.
+    @inlinable
     public mutating func relinearize(using key: EvaluationKey<Scheme>) throws {
         try Scheme.relinearize(&self, using: key)
     }

@@ -15,15 +15,15 @@
 #if !canImport(Darwin)
 import CUtil
 
-// swiftlint:disable:next implicitly_unwrapped_optional
-func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
+// swiftlint:disable:next implicitly_unwrapped_optional attributes
+@inlinable func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
     c_zeroize(s, n)
 }
 #else
 import Darwin
 
-// swiftlint:disable:next implicitly_unwrapped_optional
-func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
+// swiftlint:disable:next implicitly_unwrapped_optional attributes
+@inlinable func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
     let exitCode = memset_s(s, n, 0, n)
     precondition(exitCode == 0, "memset_s returned exit code \(exitCode)")
 }

@@ -18,11 +18,13 @@ extension ScalarType {
     /// - Parameter degree: Degree of the RLWE polynomial.
     /// - Returns: whether or not the value is a value NTT modulus
     /// - Note: `self` must be prime.
+    @inlinable
     func isNttModulus(for degree: Int) -> Bool {
         assert(isPrime(variableTime: true))
         return degree.isPowerOfTwo && self % Self(2 * degree) == 1 && self != 1
     }
 
+    @inlinable
     func isPrimitiveRootOfUnity(degree: Int, modulus: Self) -> Bool {
         // For degree a power of two, it suffices to check root^(degree/2) == -1 mod p
         // This implies root^degree == 1 mod p. Also, note 2 is the only prime factor of
@@ -37,6 +39,7 @@ extension ScalarType {
     /// This value must be prime.
     /// - Parameter degree: Must be a power of two.
     /// - Returns: The primitive root of unity.
+    @inlinable
     func generatePrimitiveRootOfUnity(degree: Int) -> Self? {
         precondition(degree.isPowerOfTwo)
         precondition(isPrime(variableTime: true))
@@ -78,6 +81,7 @@ extension ScalarType {
     /// This value, `p`, must be prime.
     /// - Parameter degree: Must be a power of two that divides `p - 1`.
     /// - Returns: The primitive root of unity.
+    @inlinable
     func minPrimitiveRootOfUnity(degree: Int) -> Self? {
         guard var smallestGenerator = generatePrimitiveRootOfUnity(degree: degree) else {
             return nil
@@ -107,6 +111,7 @@ struct NttContext<T: ScalarType>: Sendable {
     // (degree)^{-1} * w^{-N} mod modulus for `w` a root of unity mod modulus
     @usableFromInline let inverseDegreeRootOfUnity: MultiplyConstantModulus<T>
 
+    @inlinable
     init(degree: Int, modulus: T) throws {
         precondition(modulus.isNttModulus(for: degree))
         guard let rootOfUnity = modulus.minPrimitiveRootOfUnity(degree: 2 * degree) else {
@@ -194,6 +199,7 @@ extension PolyRq where F == Coeff {
     /// Performs the forward number-theoretic transform (NTT).
     /// - Returns: The ``Eval`` representation of the polynomial.
     /// - Throws: Error upon failure to compute the forward NTT.
+    @inlinable
     public consuming func forwardNtt() throws -> PolyRq<T, Eval> {
         try context.validateNttModuli()
         var currentContext: PolyContext<T>? = context
@@ -340,6 +346,7 @@ extension PolyRq where F == Eval {
     /// Performs the inverse number-theoretic transform (NTT).
     /// - Returns: The ``Coeff`` representation of the polynomial.
     /// - Throws: Error upon failure to compute the inverse NTT.
+    @inlinable
     public consuming func inverseNtt() throws -> PolyRq<T, Coeff> {
         try context.validateNttModuli()
         var currentContext: PolyContext<T>? = context
@@ -353,7 +360,8 @@ extension PolyRq where F == Eval {
     /// Computes the inverse number-theoretic transform (NTT) on the last modulus in the context.
     /// - Parameter context: Context whose last modulus to use for the NTT.
     /// - Throws: Error upon failure to compute the inverse NTT.
-    private mutating func inverseNtt(using context: PolyContext<T>) throws {
+    @inlinable
+    mutating func inverseNtt(using context: PolyContext<T>) throws {
         // We modify Harvey's approach <https://arxiv.org/pdf/1205.2926> with delayed modular reduction.
         let moduli = context.moduli
         guard let modulus = moduli.last else {

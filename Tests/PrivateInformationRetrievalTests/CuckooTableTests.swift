@@ -80,9 +80,9 @@ class CuckooTableTests: XCTestCase {
         let cuckooTable = try CuckooTable(config: config, database: testDatabase, using: rng)
         let summary = CuckooTable.CuckooTableInformation(
             entryCount: 100,
-            bucketCount: 64,
-            emptyBucketCount: 4,
-            loadFactor: 0.645)
+            bucketCount: 80,
+            emptyBucketCount: 19,
+            loadFactor: 0.52)
         XCTAssertEqual(try cuckooTable.summarize(), summary)
     }
 

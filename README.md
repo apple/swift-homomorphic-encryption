@@ -57,7 +57,7 @@ The PIR implementation in Swift Homomorphic Encryption uses HE to improve upon t
 Swift Homomorphic Encryption requires:
 * 64-bit processor with little-endian memory representation
 * macOS or Linux operating system
-* [Swift](https://www.swift.org/) version 6.0 or later
+* [Swift](https://www.swift.org/) version 5.10 or later
 
 > [!NOTE]
 > Swift Homomorphic Encryption relies on [SystemRandomNumberGenerator](https://developer.apple.com/documentation/swift/systemrandomnumbergenerator) as a cryptographically secure random number generator, which may have platform-dependent behavior.
@@ -90,7 +90,7 @@ to your Swift code to access the functionality in the `HomomorphicEncryption` li
 ## Developing Swift Homomorphic Encryption
 ### Dependencies
 Building Swift Homomorphic Encryption requires:
-* [Swift](https://www.swift.org/) version 6.0 or later
+* [Swift](https://www.swift.org/) version 5.10 or later
 
 Additionally, developing Swift Homomorphic Encryption requires:
 * [Nick Lockwood swiftformat](https://github.com/nicklockwood/SwiftFormat), v0.54.0

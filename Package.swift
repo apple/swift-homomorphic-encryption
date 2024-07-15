@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 // Remember to update CI if changing
 
@@ -19,6 +19,7 @@
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
+    .enableExperimentalFeature("StrictConcurrency"),
     .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
 ]
 
@@ -177,6 +178,7 @@ package.targets += [
             "HomomorphicEncryption",
         ],
         path: "Benchmarks/PolyBenchmark",
+        swiftSettings: swiftSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),
@@ -187,6 +189,7 @@ package.targets += [
             "HomomorphicEncryption",
         ],
         path: "Benchmarks/RlweBenchmark",
+        swiftSettings: swiftSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),
@@ -200,6 +203,7 @@ package.targets += [
             "PrivateInformationRetrievalProtobuf",
         ],
         path: "Benchmarks/PrivateInformationRetrievalBenchmark",
+        swiftSettings: swiftSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),

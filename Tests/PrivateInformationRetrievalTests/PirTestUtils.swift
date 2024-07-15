@@ -49,8 +49,10 @@ package enum PirTestUtils {
         return generateRandomData(size: size, using: &rng)
     }
 
-    static func generateRandomData(size: Int, using rng: inout some RandomNumberGenerator) -> [UInt8] {
-        (0..<size).map { _ in UInt8.random(in: 0...UInt8.max, using: &rng) }
+    static func generateRandomData(size: Int, using rng: inout some PseudoRandomNumberGenerator) -> [UInt8] {
+        var data = [UInt8](repeating: 0, count: size)
+        rng.fill(&data)
+        return data
     }
 
     static func getTestTable(rowCount: Int, valueSize: Int) -> [KeywordValuePair] {
@@ -61,17 +63,21 @@ package enum PirTestUtils {
     static func getTestTable(
         rowCount: Int,
         valueSize: Int,
-        using rng: inout some RandomNumberGenerator,
+        using rng: inout some PseudoRandomNumberGenerator,
         keywordSize: Int = 30) -> [KeywordValuePair]
     {
-        var rows = [KeywordValuePair]()
+        precondition(rowCount > 0)
+        var keywords: Set<KeywordValuePair.Keyword> = []
+        var rows: [KeywordValuePair] = []
+        rows.reserveCapacity(rowCount)
         repeat {
             let keyword = PirTestUtils.generateRandomData(size: keywordSize, using: &rng)
-            if !rows.contains(where: { existingPair in keyword == existingPair.keyword }) {
-                rows.append(KeywordValuePair(
-                    keyword: keyword,
-                    value: PirTestUtils.generateRandomData(size: valueSize, using: &rng)))
+            if keywords.contains(keyword) {
+                continue
             }
+            keywords.insert(keyword)
+            let value = PirTestUtils.generateRandomData(size: valueSize, using: &rng)
+            rows.append(KeywordValuePair(keyword: keyword, value: value))
         } while rows.count < rowCount
         return rows
     }

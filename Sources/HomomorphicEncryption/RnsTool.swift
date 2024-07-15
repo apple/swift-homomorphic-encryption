@@ -34,7 +34,7 @@ struct RnsTool<T: ScalarType>: Sendable {
     @usableFromInline let tIncrement: [T]
     /// i'th entry stores `\tilde{m} mod qi`.
     @usableFromInline let mTildeModQ: [T]
-    /// `-(Q^{-1}) mod {t, gamma}`.`
+    /// `-(Q^{-1}) mod {t, gamma}`.
     @usableFromInline let negInverseQModTGamma: [T]
     /// `|gamma * t|_qi``.
     @usableFromInline let prodGammaTModQ: [T]

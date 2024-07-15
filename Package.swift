@@ -25,6 +25,8 @@ let executableSettings: [SwiftSetting] =
     librarySettings +
     [.unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))]
 
+let benchmarkSettings: [SwiftSetting] = [.unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))]
+
 let package = Package(
     name: "swift-homomorphic-encryption",
     products: [
@@ -174,7 +176,7 @@ package.targets += [
             "HomomorphicEncryption",
         ],
         path: "Benchmarks/PolyBenchmark",
-        swiftSettings: executableSettings,
+        swiftSettings: benchmarkSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),
@@ -185,7 +187,7 @@ package.targets += [
             "HomomorphicEncryption",
         ],
         path: "Benchmarks/RlweBenchmark",
-        swiftSettings: executableSettings,
+        swiftSettings: benchmarkSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),
@@ -199,7 +201,7 @@ package.targets += [
             "PrivateInformationRetrievalProtobuf",
         ],
         path: "Benchmarks/PrivateInformationRetrievalBenchmark",
-        swiftSettings: executableSettings,
+        swiftSettings: benchmarkSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),

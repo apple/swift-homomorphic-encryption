@@ -17,11 +17,11 @@
 public final class PolyContext<T: ScalarType>: Sendable {
     /// Number `N` of coefficients in the polynomial, must be a power of two.
     @usableFromInline let degree: Int
-    /// CRT-representation of the modulus `Q = q_0 * q_2 * ... * q_{L-1}`.
+    /// CRT-representation of the modulus `Q = product_{i=0}^{L-1} q_i`.
     @usableFromInline let moduli: [T]
     /// Next context, typically formed by dropping `q_{L-1}`.
     @usableFromInline let next: PolyContext<T>?
-    /// Operations mod `q_0, ..., q_{L-1}`.`
+    /// Operations mod `q_0` up to `q_{L-1}`.
     @usableFromInline let reduceModuli: [Modulus<T>]
     /// Operations mod `UInt64(q_0), ..., UInt64(q_{L-1})`.
     @usableFromInline let reduceModuliUInt64: [Modulus<UInt64>]

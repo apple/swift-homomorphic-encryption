@@ -123,7 +123,9 @@ enum PirUtil<Scheme: HeScheme> {
         }
     }
 
-    /// Convert the MulPir indices (i.e. the index of non-zero results after expansion) into plaintext.
+    /// Convert the MulPir indices into a plaintext.
+    ///
+    /// The MulPir indices are the indices of non-zero results after expansion
     static func compressInputsForOneCiphertext(totalInputCount: Int, nonZeroInputs: [Int],
                                                context: Context<Scheme>) throws -> Plaintext<Scheme, Coeff>
     {

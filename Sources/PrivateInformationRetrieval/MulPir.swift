@@ -63,7 +63,7 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
 
         return IndexPirParameter(
             entryCount: config.entryCount,
-            entrySizeInBytes: config.entrySizeInBytes,
+            entrySizeInBytes: entrySizeInBytes,
             dimensions: dimensions, batchSize: config.batchSize)
     }
 
@@ -221,6 +221,12 @@ extension MulPirClient {
                 return try CoefficientPacking.coefficientsToBytes(
                     coeffs: coefficients,
                     bitsPerCoeff: context.plaintextModulus.log2)
+            }
+
+            // this is a copy of the client side bug
+            let accessRange = computeResponseRangeInBytes(at: entryIndex)
+            guard accessRange.upperBound < bytes.count else {
+                throw PirError.validationError("Client side bug hit!")
             }
 
             return Array(bytes[computeResponseRangeInBytes(at: entryIndex)])

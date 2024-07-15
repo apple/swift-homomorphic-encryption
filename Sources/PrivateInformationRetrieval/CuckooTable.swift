@@ -52,7 +52,7 @@ public struct CuckooTableConfig: Hashable, Codable, Sendable {
     ///
     /// If enabled, this setting will store only entries using the same hash function, into the same bucket.
     /// This can help improve PIR runtime.
-    let multipleTables: Bool
+    public let multipleTables: Bool
 
     /// Initializes a ``CuckooTableConfig``.
     /// - Parameters:

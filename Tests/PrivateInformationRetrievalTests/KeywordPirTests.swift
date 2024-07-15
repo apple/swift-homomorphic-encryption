@@ -260,7 +260,7 @@ class KeywordPirTests: XCTestCase {
                 let cuckooConfig = try CuckooTableConfig(
                     hashFunctionCount: 2,
                     maxEvictionCount: 100,
-                    maxSerializedBucketSize: valueSize * 4,
+                    maxSerializedBucketSize: HashBucket.serializedSize(singleValueSize: valueSize) * 4,
                     bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.7))
                 let keywordConfig = try KeywordPirConfig(
                     dimensionCount: 2,
@@ -291,7 +291,7 @@ class KeywordPirTests: XCTestCase {
                 processed: processed)
             let client = KeywordPirClient<PirClient>(
                 keywordParameter: keywordConfig.parameter,
-                pirParameter: pirParameter,
+                pirParameter: processed.pirParameter,
                 context: testContext)
             let secretKey = try testContext.generateSecretKey()
             let evaluationKey = try client.generateEvaluationKey(using: secretKey)

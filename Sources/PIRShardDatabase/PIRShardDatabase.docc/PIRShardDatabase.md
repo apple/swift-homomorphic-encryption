@@ -4,22 +4,24 @@ Keyword PIR database sharding
 
 ## Overview
 
-`PIRShardDatabase` is a executable which divides a database into disjoint shards.
-Each resulting shard is suitable for processing with the `PIRProcessDatabase` executable.
+[PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase) is an executable which divides a database into disjoint shards.
+Each resulting shard is suitable for processing with the [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase) executable.
 
 `PIRShardDatabase` supports two sharding settings:
 * `shardCount` randomly shards the database using the specified of shards.
 * `entryCountPerShard` shards the database using enough shards such that the average shard contains the specified number of entries.
 
 ### Requirements
-Build the `PIRProcessDatabase` executable by running:
+Build the [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase) executable by running:
 ```sh
 swift build -c release --target PIRProcessDatabase
 ```
 The binary will be generated in `.build/release/PIRProcessDatabase`.
 
-
-For the example below, you'll also need to install the `PIRGenerateDatabase` executable in a similar manner as `PIRShardDatabase`.
+For the example below, you'll also need to install the
+[PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabse)
+executable in a similar manner as
+[PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase).
 
 ### Example
 

@@ -10,7 +10,7 @@ Notably, Keyword PIR's server runtime is linear in the shard size,
 independent of the keyword size, and dependent on the value size.
 Large values, such as images, should be compressed when possible.
 Parameters are read in by a JSON file as described in-detail in
-`PIRProcessDatabase.md`.
+[PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase) documentation.
 
 ```sh
 PIRProcessDatabase ~/config.json
@@ -35,7 +35,7 @@ PIRs automatically. For thin databases, smaller RLWE plaintexts in
 fits many buckets. Large plaintexts are more efficient for
 wide databases.
 
-Otherwise, the observed `noiseBudget` is an important parameter to track. If it is low,
+Otherwise, the observed [noise budget](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/hescheme/noisebudget(of:using:variabletime:)-143f3) is an important parameter to track. If it is low,
 then it is best to increase the ciphertext-to-plaintext modulus ratio.
 This can be done by either decreasing the plaintext modulus with the same ring dimension
 or increasing the ring dimension and ciphertext modulus while keeping the
@@ -48,8 +48,7 @@ Here, thin databases benefit from using one hash function, `hashFunctionCount` =
 instead of two when constructing the cuckoo table. This is because many more entries
 will fit in one ciphertext and only one ciphertext is sent back to the client.
 Response sizes are smaller as a result. Settings with
-one hash function can also have a smaller `targetLoadFactor`, e.g., something
-like 0.75 instead of the 0.9.
+one hash function can also have a smaller `targetLoadFactor`, e.g., 0.75 instead of 0.9.
 
 The parameter `bucketCount` should mostly be used in the `allowExpansion` form.
 Otherwise, `bucketCount` can be set manually with `fixedSize` and `bucketCount`
@@ -57,6 +56,12 @@ as the number of buckets per database. More buckets means smaller communication 
 larger computation times.
 
 ### Examples
+
+The examples rely on the
+[PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase)
+and
+[PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase)
+executables.
 
 #### Thin Database
 ```sh
@@ -67,7 +72,7 @@ PIRGenerateDatabase \
     --value-type random
 ```
 
-Say we run `PIRProcessDatabase` RLWE
+Say we run `PIRProcessDatabase` with RLWE
 parameters `n_4096_logq_27_28_28_logt_4`, one shard, and see the
 following:
 * An evaluation key size of 680.8 KB.

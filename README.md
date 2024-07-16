@@ -8,15 +8,15 @@ Applications of Swift Homomorphic Encryption include:
 ## Overview
 Swift Homomorphic Encryption is a collection of libraries and executables.
 For more information, refer to documentation for the libraries:
-* [HomomorphicEncryption](Sources/HomomorphicEncryption/HomomorphicEncryption.docc/HomomorphicEncryption.md)
-* [PrivateInformationRetrieval](Sources/PrivateInformationRetrieval/PrivateInformationRetrieval.docc/PrivateInformationRetrieval.md)
-* [HomomorphicEncryptionProtobuf](Sources/HomomorphicEncryptionProtobuf/HomomorphicEncryptionProtobuf.docc/HomomorphicEncryptionProtobuf.md)
-* [PrivateInformationRetrievalProtobuf](Sources/PrivateInformationRetrievalProtobuf/PrivateInformationRetrievalProtobuf.docc/PrivateInformationRetrievalProtobuf.md)
+* [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption)
+* [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval)
+* [HomomorphicEncryptionProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryptionprotobuf)
+* [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf)
 
 and executables:
-* [PIRGenerateDatabase](Sources/PIRGenerateDatabase/PIRGenerateDatabase.docc/PIRGenerateDatabase.md)
-* [PIRProcessDatabase](Sources/PIRProcessDatabase/PIRProcessDatabase.docc/PIRProcessDatabase.md)
-* [PIRShardDatabase](Sources/PIRShardDatabase/PIRShardDatabase.docc/PIRShardDatabase.md)
+* [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase)
+* [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase)
+* [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase)
 
 ## Background
 ### Homomorphic Encryption (HE)

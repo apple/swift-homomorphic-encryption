@@ -20,8 +20,8 @@
 // See https://swift.org/LICENSE.txt for license information
 // See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
-//  Taken from
-//  https://github.com/apple/swift/blob/fc23eef2d2b2e42116ac94a6cc0d0d2cc96688f5/test/Prototypes/DoubleWidth.swift.gyb
+// Taken from
+// https://github.com/swiftlang/swift/blob/fc23eef2d2b2e42116ac94a6cc0d0d2cc96688f5/test/Prototypes/DoubleWidth.swift.gyb
 // and modified to accommodate changes to `DoubleWidthUInt.swift`.
 
 @testable import HomomorphicEncryption

@@ -21,7 +21,7 @@
 // See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
 // Taken from
-// https://github.com/apple/swift/blob/fc23eef2d2b2e42116ac94a6cc0d0d2cc96688f5/test/Prototypes/DoubleWidth.swift.gyb
+// https://github.com/swiftlang/swift/blob/fc23eef2d2b2e42116ac94a6cc0d0d2cc96688f5/test/Prototypes/DoubleWidth.swift.gyb
 // and modified with the following changes:
 // * Restrict `Base` to unsigned integers only.
 // * Rename `DoubleWidth` to `DoubleWidthUInt`.

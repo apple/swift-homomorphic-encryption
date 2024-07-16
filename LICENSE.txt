@@ -202,7 +202,7 @@
 
 -------------------------------------------------------------------------
 
-This license applies to parts of Swift Homomorphic Encryption originating from the https://github.com/apple/swift/ repository:
+This license applies to parts of Swift Homomorphic Encryption originating from the https://github.com/swiftlang/swift/ repository:
 - Sources/HomomorphicEncryption/DoubleWidthUInt.swift
 - Tests/HomomorphicEncryptionTests/DoubleWidthUIntTests.swift
 

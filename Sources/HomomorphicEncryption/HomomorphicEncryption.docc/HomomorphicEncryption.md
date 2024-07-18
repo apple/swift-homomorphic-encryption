@@ -5,14 +5,14 @@ Homomorphic Encryption (HE) enables computation on encrypted data.
 ## Overview
 Swift Homomorphic Encryption is a collection of libraries and executables implementing homomorphic encryption (HE) and applications, such as private information retrieval (PIR).
 For more information, refer to documentation for the libraries:
-* [HomomorphicEncryptionProtobuf](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/HomomorphicEncryptionProtobuf/HomomorphicEncryptionProtobuf.docc/HomomorphicEncryptionProtobuf.md)
-* [PrivateInformationRetrieval](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/PrivateInformationRetrieval/PrivateInformationRetrieval.docc/PrivateInformationRetrieval.md)
-* [PrivateInformationRetrievalProtobuf](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/PrivateInformationRetrievalProtobuf/PrivateInformationRetrievalProtobuf.docc/PrivateInformationRetrievalProtobuf.md)
+* [HomomorphicEncryptionProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryptionprotobuf)
+* [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval)
+* [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf)
 
 and executables:
-* [PIRGenerateDatabase](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/PIRGenerateDatabase/PIRGenerateDatabase.docc/PIRGenerateDatabase.md)
-* [PIRProcessDatabase](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/PIRProcessDatabase/PIRProcessDatabase.docc/PIRProcessDatabase.md)
-* [PIRShardDatabase](https://github.com/apple/swift-homomorphic-encryption/blob/main/Sources/PIRShardDatabase/PIRShardDatabase.docc/PIRShardDatabase.md)
+* [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase)
+* [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase)
+* [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase)
 
 ### Background
 Swift Homomorphic Encryption implements a special form of cryptography called homomorphic encryption (HE).

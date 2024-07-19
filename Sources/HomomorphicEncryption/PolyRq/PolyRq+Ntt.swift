@@ -241,11 +241,11 @@ extension PolyContext {
         let rootOfUnityPowers = nttContext.rootOfUnityPowers
         // The forward butterfly transforms `x,y` in
         // `[0, k * modulus)` -> `[0, (k + 2) * modulus)`.
-        // We delay modular reduction until overflowing T, i.e.
-        // `(kMax + 2) * modulus > T.max`, so `kMax = floor(T.max / modulus) - 2
+        // We delay modular reduction until overflowing the maximum input to `T.subtractIfExceeds`, i.e.,
+        // we find the largest `kMax` such that `(kMax + 2) * modulus <= (Self.max >> 1) + modulus`.
+        // So, we have `kMax =  T.max / (2 * modulus) - 1`
         var lazyReductionCounter = -1 // k
-        // kMax
-        let maxLazyReductionCounter = modulusReduceFactor.singleWordModulus.factor.low &- 2
+        let maxLazyReductionCounter = T.max / (2 * modulus) - 1 // kMax
 
         func applyFinalStageOp(m: Int, op: (_ x: inout T, _ y: inout T) -> Void) {
             for i in 0..<m {
@@ -292,7 +292,9 @@ extension PolyContext {
             let timeToReduce = lazyReductionCounter > maxLazyReductionCounter
             if timeToReduce {
                 if t == 1 {
-                    lazyReductionCounter &-= 2
+                    // if lazyReductionCounter == 3, `subtractIfExceeds(twiceModulus)`
+                    // only ensures `x in [0, 2 * p - 1]`
+                    lazyReductionCounter = max(lazyReductionCounter - 2, 2)
                 } else {
                     lazyReductionCounter = 1
                 }
@@ -300,6 +302,7 @@ extension PolyContext {
             switch (t, timeToReduce) {
             case (1, true):
                 applyFinalStageOp(m: m) { x, _ in
+                    // Ensure butterfly doesn't overflow
                     x = x.subtractIfExceeds(twiceModulus)
                 }
             case (1, false):

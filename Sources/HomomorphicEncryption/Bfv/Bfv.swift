@@ -148,8 +148,8 @@ public enum Bfv<T: ScalarType>: HeScheme {
         guard let keySwitchingKey = galoisKey.keys[element] else {
             throw HeError.missingGaloisElement(element: element)
         }
-        ciphertext.polys[0] = ciphertext.polys[0].applyGalois(galoisElement: element)
-        let tempC1 = ciphertext.polys[1].applyGalois(galoisElement: element)
+        ciphertext.polys[0] = ciphertext.polys[0].applyGalois(element: element)
+        let tempC1 = ciphertext.polys[1].applyGalois(element: element)
         let update = try Self.computeKeySwitchingUpdate(
             context: ciphertext.context,
             target: tempC1,

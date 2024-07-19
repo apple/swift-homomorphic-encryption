@@ -54,10 +54,12 @@ extension PolyRq: PolyCollection {
 // MARK: computed properties
 
 extension PolyRq {
+    /// Indices of the polynomial coefficients.
     @inlinable public var coeffIndices: Range<Int> {
         0..<data.columnCount
     }
 
+    /// Indices of the RNS moduli.
     @inlinable public var rnsIndices: Range<Int> {
         0..<data.rowCount
     }
@@ -71,6 +73,7 @@ extension PolyRq {
         precondition(data.columnCount == other.data.columnCount)
     }
 
+    /// Returns true if the polynomial data is valid for its ``PolyContext``, false otherwise.
     @inlinable
     public func isValidData() -> Bool {
         for (rnsIndex, modulus) in moduli.enumerated() {
@@ -90,17 +93,23 @@ extension PolyRq {
     }
 
     @inlinable
-    public func rnsIndices(coeffIndex: Int) -> StrideTo<Int> {
+    func rnsIndices(coeffIndex: Int) -> StrideTo<Int> {
         data.columnIndices(column: coeffIndex)
     }
 
+    /// Returns a polynomial's coefficients mod a RNS modulus.
+    /// - Parameter rnsIndex: The index of the RNS modulus.
+    /// - Returns: The coefficients mod `rnsIndex`.
     @inlinable
     public func poly(rnsIndex: Int) -> [T] {
         data.row(row: rnsIndex)
     }
 
+    /// Returns a polynomial's coefficient RNS residues.
+    /// - Parameter coeffIndex: Coefficient index; must be in `0..<context.degree`
+    /// - Returns: The polynomial's coefficient in RNS form, i.e. mod `q_0, ..., q_{L-1}`.
     @inlinable
-    func coefficient(coeffIndex: Int) -> [T] {
+    public func coefficient(coeffIndex: Int) -> [T] {
         data.collectValues(indices: rnsIndices(coeffIndex: coeffIndex))
     }
 }
@@ -123,6 +132,10 @@ extension PolyRq {
 
     // MARK: Arithmetic operators
 
+    /// In-place polynomial addition: `lhs += rhs`.
+    /// - Parameters:
+    ///   - lhs: Polynomial to add to. Will store the sum.
+    ///   - rhs: Polynomial to add.
     @inlinable
     public static func += (_ lhs: inout Self, _ rhs: Self) {
         lhs.validateMetadataEquality(with: rhs)
@@ -138,6 +151,10 @@ extension PolyRq {
         }
     }
 
+    /// In-place polynomial subtraction: `lhs -= rhs`.
+    /// - Parameters:
+    ///   - lhs: Polynomial to subtract from. Will store the difference.
+    ///   - rhs: Polynomial to subtract.
     @inlinable
     public static func -= (_ lhs: inout Self, _ rhs: Self) {
         lhs.validateMetadataEquality(with: rhs)
@@ -175,6 +192,10 @@ extension PolyRq {
         }
     }
 
+    /// In-place polynomial multiplication: `lhs *= rhs`.
+    /// - Parameters:
+    ///   - lhs: Polynomial to multiply. Will store the product.
+    ///   - rhs: Polynomial to multiply.
     @inlinable
     public static func *= (_ lhs: inout Self, _ rhs: Self) where F == Eval {
         lhs.validateMetadataEquality(with: rhs)
@@ -205,20 +226,20 @@ extension PolyRq {
         }
     }
 
-    /// Computes `lhs *= rhs` for `rhs` a scalar in RNS form.
+    /// Computes `poly *= scalarResidues` for `scalarResidues` a scalar in RNS form.
     /// - Parameters:
-    ///   - lhs: Polynomial; will store the product.
-    ///   - rhs: A scalar in RNS form, i.e., `rhs[i] = y mod q_i` for scalar `y`.
+    ///   - poly: Polynomial; will store the product.
+    ///   - scalarResidues: A scalar in RNS form, i.e., `scalarResidues[i] = y mod q_i` for scalar `y`.
     @inlinable
-    public static func *= (_ lhs: inout Self, _ rhs: [T]) {
-        precondition(lhs.moduli.count == rhs.count)
+    public static func *= (_ poly: inout Self, _ scalarResidues: [T]) {
+        precondition(poly.moduli.count == scalarResidues.count)
 
-        for ((rnsIndex, modulus), rhsResidue) in zip(lhs.reduceModuli.enumerated(), rhs) {
+        for ((rnsIndex, modulus), rhsResidue) in zip(poly.reduceModuli.enumerated(), scalarResidues) {
             let multiplicationModulus = MultiplyConstantModulus(
                 multiplicand: rhsResidue,
                 divisionModulus: modulus.divisionModulus)
-            let polyIndices = lhs.polyIndices(rnsIndex: rnsIndex)
-            lhs.data.data.withUnsafeMutableBufferPointer { lhsData in
+            let polyIndices = poly.polyIndices(rnsIndex: rnsIndex)
+            poly.data.data.withUnsafeMutableBufferPointer { lhsData in
                 for index in polyIndices {
                     lhsData[index] = multiplicationModulus.multiplyMod(lhsData[index])
                 }
@@ -226,6 +247,11 @@ extension PolyRq {
         }
     }
 
+    /// Polynomial addition: `lhs + rhs`.
+    /// - Parameters:
+    ///   - lhs: Polynomial to add. Must have the same ``PolyContext`` as `rhs`.
+    ///   - rhs: Polynomial to add. Must have the same ``PolyContext`` as `lhs`.
+    /// - Returns: The sum `lhs + rhs`
     @inlinable
     public static func + (_ lhs: Self, _ rhs: Self) -> Self {
         var result = lhs
@@ -233,6 +259,11 @@ extension PolyRq {
         return result
     }
 
+    /// Polynomial subtraction: `lhs - rhs`.
+    /// - Parameters:
+    ///   - lhs: Polynomial to subtract from. Must have the same ``PolyContext`` as `rhs`.
+    ///   - rhs: Polynomial to subtract. Must have the same ``PolyContext`` as `lhs`.
+    /// - Returns: The difference `lhs - rhs`.
     @inlinable
     public static func - (_ lhs: Self, _ rhs: Self) -> Self {
         var result = lhs
@@ -240,6 +271,11 @@ extension PolyRq {
         return result
     }
 
+    /// Polynomial multiplication: `lhs * rhs`.
+    /// - Parameters:
+    ///   - lhs: Polynomial to multiply. Must have the same ``PolyContext`` as `rhs`.
+    ///   - rhs: Polynomial to multiply. Must have the same ``PolyContext`` as `lhs`.
+    /// - Returns: The product `lhs * rhs`.
     @inlinable
     public static func * (_ lhs: Self, _ rhs: Self) -> Self where F == Eval {
         var result = lhs
@@ -247,20 +283,28 @@ extension PolyRq {
         return result
     }
 
+    /// Polynomial multiplication with a scalar: `self * scalar`.
+    /// - Parameters:
+    ///   - poly: Polynomial to multiply.
+    ///   - scalarResidues: Scalar multiplicand in RNS form, i.e., mod `q_0, ..., q{L-1}`.
+    /// - Returns: The polynomial product: `self * scalar`.
     @inlinable
-    public static func * (_ lhs: Self, _ rhs: [T]) -> Self {
-        var result = lhs
-        result *= rhs
+    public static func * (_ poly: Self, _ scalarResidues: [T]) -> Self {
+        var result = poly
+        result *= scalarResidues
         return result
     }
 
+    /// Polynomial negation: `-poly`.
+    /// - Parameter poly: Polynomial to negate.
+    /// - Returns: The negated value, `-poly`.
     @inlinable
-    public static prefix func - (_ rhs: Self) -> Self {
-        var result = Self.zero(context: rhs.context)
+    public static prefix func - (_ poly: Self) -> Self {
+        var result = Self.zero(context: poly.context)
         result.data.data.withUnsafeMutableBufferPointer { resultData in
-            rhs.data.data.withUnsafeBufferPointer { rhsData in
-                for (rnsIndex, modulus) in rhs.moduli.enumerated() {
-                    for index in rhs.polyIndices(rnsIndex: rnsIndex) {
+            poly.data.data.withUnsafeBufferPointer { rhsData in
+                for (rnsIndex, modulus) in poly.moduli.enumerated() {
+                    for index in poly.polyIndices(rnsIndex: rnsIndex) {
                         resultData[index] = rhsData[index].negateMod(modulus: modulus)
                     }
                 }
@@ -270,6 +314,12 @@ extension PolyRq {
         return result
     }
 
+    /// Drops the polynomial context to a child context.
+    ///
+    /// A context is a parent of a child context if the child context is a *next* context of the parent or one of its
+    /// children. The next context typically drops the last modulus in the modulus chain.
+    /// - Parameter context: the `this` must be equal to or a child context of `this` context.
+    /// - Throws: Error upon failure to drop context.
     @inlinable
     public mutating func dropContext(to context: PolyContext<T>) throws {
         if self.context == context {
@@ -373,6 +423,10 @@ extension PolyRq where F == Coeff {
 }
 
 extension PolyRq {
+    /// Converts the polynomial to ``Coeff`` format.
+    ///
+    /// If the polynomial is already in ``Coeff`` format, the input polynomial is returned with no conversion.
+    /// - Returns: The polynomial in ``Coeff`` format.
     @inlinable
     public func convertToCoeff() throws -> PolyRq<T, Coeff> {
         switch F.self {
@@ -389,6 +443,10 @@ extension PolyRq {
         }
     }
 
+    /// Converts the polynomial to ``Eval`` format.
+    ///
+    /// If the polynomial is already in ``Eval`` format, the input polynomial is returned with no conversion.
+    /// - Returns: The polynomial in ``Eval`` format.
     @inlinable
     public func convertToEval() throws -> PolyRq<T, Eval> {
         switch F.self {
@@ -405,6 +463,10 @@ extension PolyRq {
         }
     }
 
+    /// Converts the polynomial to the specified ``PolyFormat``.
+    ///
+    /// If the polynomial is already in ``PolyFormat``, the input polynomial is returned with no conversion.
+    /// - Returns: The polynomial in ``PolyFormat`` format.
     @inlinable
     public func convertFormat<Format: PolyFormat>() throws -> PolyRq<T, Format> {
         switch Format.self {

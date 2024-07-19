@@ -104,12 +104,17 @@ extension FixedWidthInteger {
 }
 
 extension PolyRq where F == Coeff {
+    /// Applies a Galois transformation, also known as a Frobenius transformation.
+    ///
+    /// The Galois transformation with Galois element `p` transforms the polynomial `f(x)` to `f(x^p)`.
+    /// - Parameter element: Galois element of the transformation.
+    /// - Returns: The polynomial after applying the Galois transformation.
     @inlinable
-    public func applyGalois(galoisElement: Int) -> Self {
-        precondition(galoisElement.isValidGaloisElement(for: degree))
+    public func applyGalois(element: Int) -> Self {
+        precondition(element.isValidGaloisElement(for: degree))
         var output = self
         for (rnsIndex, modulus) in moduli.enumerated() {
-            var iterator = GaloisCoeffIterator(degree: degree, galoisElement: galoisElement)
+            var iterator = GaloisCoeffIterator(degree: degree, galoisElement: element)
             let dataIndices = data.rowIndices(row: rnsIndex)
             func outputIndex(column: Int) -> Int {
                 data.index(row: rnsIndex, column: column)
@@ -136,12 +141,18 @@ extension PolyRq where F == Coeff {
 }
 
 extension PolyRq where F == Eval {
+    /// Applies a Galois transformation, also known as a Frobenius transformation.
+    ///
+    /// The Galois transformation with Galois element `p` transforms the polynomial `f(x)` to `f(x^p)`.
+    /// - Parameter element: Galois element of the transformation.
+    /// - Returns: The polynomial after applying the Galois transformation.
+    /// - Throws: Error upon failure to perform the transoromation.
     @inlinable
-    public func applyGalois(galoisElement: Int) throws -> Self {
-        precondition(galoisElement.isValidGaloisElement(for: degree))
+    public func applyGalois(element: Int) throws -> Self {
+        precondition(element.isValidGaloisElement(for: degree))
         var output = self
 
-        var iterator = GaloisEvalIterator(degree: degree, galoisElement: galoisElement)
+        var iterator = GaloisEvalIterator(degree: degree, galoisElement: element)
         for dataIndex in coeffIndices {
             guard let inIndex = iterator.next() else {
                 preconditionFailure("GaloisEvalIterator goes out of index")

@@ -60,21 +60,21 @@ final class GaloisTests: XCTestCase {
         PolyRq<T, Coeff>)) throws
     {
         let (poly, expectedPoly) = try getFunc()
-        XCTAssertEqual(poly.applyGalois(galoisElement: 3), expectedPoly)
-        XCTAssertEqual(try poly.forwardNtt().applyGalois(galoisElement: 3).inverseNtt(), expectedPoly)
+        XCTAssertEqual(poly.applyGalois(element: 3), expectedPoly)
+        XCTAssertEqual(try poly.forwardNtt().applyGalois(element: 3).inverseNtt(), expectedPoly)
         for index in 1..<poly.degree {
             let element = index * 2 + 1
-            XCTAssertEqual(try poly.applyGalois(galoisElement: element).forwardNtt(),
-                           try poly.forwardNtt().applyGalois(galoisElement: element))
+            XCTAssertEqual(try poly.applyGalois(element: element).forwardNtt(),
+                           try poly.forwardNtt().applyGalois(element: element))
         }
 
         let forwardElement = GaloisElement.swappingRows(degree: poly.degree)
         XCTAssertEqual(
-            poly.applyGalois(galoisElement: forwardElement).applyGalois(galoisElement: forwardElement),
+            poly.applyGalois(element: forwardElement).applyGalois(element: forwardElement),
             poly)
         XCTAssertEqual(
-            try poly.forwardNtt().applyGalois(galoisElement: forwardElement)
-                .applyGalois(galoisElement: forwardElement),
+            try poly.forwardNtt().applyGalois(element: forwardElement)
+                .applyGalois(element: forwardElement),
             try poly.forwardNtt())
 
         for step in 1..<(poly.degree >> 1) {
@@ -82,12 +82,12 @@ final class GaloisTests: XCTestCase {
             let forwardElement = try GaloisElement.rotatingColumns(by: step, degree: poly.degree)
             let backwardElement = try GaloisElement.rotatingColumns(by: inverseStep, degree: poly.degree)
             XCTAssertEqual(
-                poly.applyGalois(galoisElement: forwardElement).applyGalois(galoisElement: backwardElement),
+                poly.applyGalois(element: forwardElement).applyGalois(element: backwardElement),
                 poly)
 
             XCTAssertEqual(
-                try poly.forwardNtt().applyGalois(galoisElement: forwardElement)
-                    .applyGalois(galoisElement: backwardElement),
+                try poly.forwardNtt().applyGalois(element: forwardElement)
+                    .applyGalois(element: backwardElement),
                 try poly.forwardNtt())
         }
     }

@@ -14,6 +14,7 @@
 
 extension Bfv {
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func mulAssign(_ lhs: inout CanonicalCiphertext, _ rhs: CanonicalCiphertext) throws {
         let evalCiphertext = try multiplyWithoutScaling(lhs, rhs)
         lhs = try dropExtendedBase(from: evalCiphertext)

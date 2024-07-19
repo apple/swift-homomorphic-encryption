@@ -28,6 +28,18 @@ extension CoefficientPacking {
         return (bitsPerByte * byteCount).dividingCeil(serializedBitsPerCoeff, variableTime: true)
     }
 
+    /// Converts a sequence of bytes to a vector of fixed bit-width coefficients.
+    /// - Parameters:
+    ///   - bytes: Serialized coefficients.
+    ///   - bitsPerCoeff: Number of bits in each coefficient.
+    ///   - decode: If `true`, then it is assumed that `bytes` is a a sequence of serialized coefficients and we are
+    /// transforming these back to coefficients. In that case, the coefficient bit-size and byte bit-size might not
+    /// match up, which would mean that the last byte will only contain partial information, and we do not need an extra
+    /// coefficient to store the remaining bits of the last byte.
+    ///   - skipLSBs: How many least-significant bits from each coefficient are assumed to be 0, and not present in
+    /// `bytes`.
+    /// - Returns: The deserialized coefficients.
+    /// - seealso: ``CoefficientPacking/coefficientsToBytes(coeffs:bitsPerCoeff:skipLSBs:)``
     @inlinable
     public static func bytesToCoefficients<T: ScalarType>(bytes: [UInt8], bitsPerCoeff: Int, decode: Bool,
                                                           skipLSBs: Int = 0) -> [T]
@@ -43,7 +55,7 @@ extension CoefficientPacking {
         return coeffs
     }
 
-    ///  Convert an sequence of bytes into coefficients, unused bits in the last coefficient will be set to zero.
+    ///  Converts an sequence of bytes into coefficients, unused bits in the last coefficient will be set to zero.
     @inlinable
     static func bytesToCoefficientsInplace<T, C>(
         bytes: some Sequence<UInt8>,
@@ -97,6 +109,14 @@ extension CoefficientPacking {
         return (coeffCount * serializedBitsPerCoeff).dividingCeil(UInt8.bitWidth, variableTime: true)
     }
 
+    /// Converts a sequence of fixed bit-width coefficients to bytes.
+    /// - Parameters:
+    ///   - coeffs: Coefficients
+    ///   - bitsPerCoeff: Number of bits in each coefficient.
+    ///   - skipLSBs: How many least-significant bits from each coefficient to omit from serialization.
+    /// - Returns: The serialized coefficients.
+    /// - Throws: Error upon failure to convert the coefficients.
+    /// - seealso ``CoefficientPacking/bytesToCoefficients(bytes:bitsPerCoeff:decode:skipLSBs:)``.
     @inlinable
     public static func coefficientsToBytes(coeffs: [some ScalarType], bitsPerCoeff: Int,
                                            skipLSBs: Int = 0) throws -> [UInt8]

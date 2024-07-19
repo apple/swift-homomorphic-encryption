@@ -46,6 +46,9 @@ public struct KeywordPirConfig: Hashable, Codable {
         guard validDimensionsCount.contains(dimensionCount) else {
             throw PirError.invalidDimensionCount(dimensionCount: dimensionCount, expected: validDimensionsCount)
         }
+        guard cuckooTableConfig.multipleTables else {
+            throw PirError.invalidCuckooConfig(config: cuckooTableConfig)
+        }
         self.dimensionCount = dimensionCount
         self.cuckooTableConfig = cuckooTableConfig
         self.unevenDimensions = unevenDimensions

@@ -106,6 +106,55 @@ final class NttTests: XCTestCase {
             ])
     }
 
+    func testNtt16() throws {
+        // modulus near top of range
+        try runNttTest(
+            moduli: [UInt32(536_870_849)],
+            coeffData: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+            evalData: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+        try runNttTest(
+            moduli: [UInt32(536_870_849)],
+            coeffData: [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+            evalData: [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+        try runNttTest(
+            moduli: [UInt32(536_870_849)],
+            coeffData: [[
+                477_051_601,
+                421_524_611,
+                456_257_859,
+                247_136_825,
+                128_775_020,
+                76_785_070,
+                49_764_016,
+                525_812_772,
+                325_605_371,
+                88_935_943,
+                255_470_762,
+                39_507_048,
+                404_978_219,
+                379_383_003,
+                244_420_585,
+                346_826_612,
+            ]], evalData: [[
+                230_846_094,
+                480_599_401,
+                157_364_576,
+                360_442_736,
+                531_052_463,
+                294_311_347,
+                432_899_854,
+                219_721_533,
+                286_807_067,
+                260_650_843,
+                362_842_688,
+                315_862_017,
+                493_042_020,
+                520_739_674,
+                167_758_416,
+                370_401_491,
+            ]])
+    }
+
     func testNtt32() throws {
         let modulus = UInt32(769)
 
@@ -175,8 +224,11 @@ final class NttTests: XCTestCase {
             return try xEval.inverseNtt()
         }
 
-        let moduli = [UInt64(576_460_752_303_436_801)]
         let degree = 128
+        let moduli = try UInt32.generatePrimes(
+            significantBitCounts: [30],
+            preferringSmall: false,
+            nttDegree: degree)
         let context = try PolyContext(degree: degree, moduli: moduli)
         let x = PolyRq<_, Coeff>.random(context: context)
         let y = PolyRq<_, Coeff>.random(context: context)

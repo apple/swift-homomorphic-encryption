@@ -169,11 +169,12 @@ extension ScalarType {
     ///
     /// Computes a conditional subtraction, `if self >= modulus ? self - modulus : self`, which can be used for modular
     /// reduction of `self` from range `[0, 2 * modulus - 1]` to `[0, modulus - 1]`. The computation is constant-time.
+    /// `self` must be less than or equal to `(Self.max >> 1) + modulus``
     /// - Parameter modulus: Modulus.
     /// - Returns: `self >= modulus ? self - modulus : self`.
     @inlinable
     public func subtractIfExceeds(_ modulus: Self) -> Self {
-        assert(self < 2 * modulus)
+        assert(self <= (Self.max &>> 1) + modulus) // difference mask fails otherwise
         let difference = self &- modulus
         let mask = Self(0) &- (difference >> (bitWidth - 1))
         return difference &+ (modulus & mask)

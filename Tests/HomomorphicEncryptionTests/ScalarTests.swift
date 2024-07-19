@@ -17,6 +17,20 @@ import TestUtilities
 import XCTest
 
 class ScalarTests: XCTestCase {
+    func testSubtractIfExceeds() {
+        do {
+            let modulus: UInt32 = (1 << 29) - 63
+            XCTAssertEqual(UInt32(2 * modulus + 1).subtractIfExceeds(modulus), modulus + 1)
+            XCTAssertEqual(UInt32(modulus - 1).subtractIfExceeds(modulus), modulus - 1)
+        }
+        do {
+            let modulus: UInt32 = (1 << 31) - 10
+            let max = (UInt32.max >> 1) + modulus
+            XCTAssertEqual(UInt32(max).subtractIfExceeds(modulus), max - modulus)
+            XCTAssertEqual(UInt32(modulus - 1).subtractIfExceeds(modulus), modulus - 1)
+        }
+    }
+
     func testAddMod() {
         XCTAssertEqual(UInt32(0).addMod(1, modulus: 3), 1)
         XCTAssertEqual(UInt32(1).addMod(2, modulus: 3), 0)

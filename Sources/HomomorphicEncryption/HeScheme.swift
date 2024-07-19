@@ -173,6 +173,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
+    /// - seealso: ``Plaintext/decode(format:)-9l5kz`` for an alternative API.
     static func decode<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Decodes a plaintext in ``Eval`` format.
@@ -181,6 +182,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
+    /// - seealso: ``Plaintext/decode(format:)-i9hh`` for an alternative API.
     static func decode<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Symmetric secret key encryption of a plaintext.
@@ -189,6 +191,7 @@ public protocol HeScheme {
     ///   - secretKey: Secret key to encrypt with.
     /// - Returns: A ciphertext encrypting `plaintext`.
     /// - Throws: Error upon failure to encrypt the plaintext.
+    /// - seealso: ``Plaintext/encrypt(using:)`` for an alternative API.
     static func encrypt(_ plaintext: CoeffPlaintext, using secretKey: SecretKey) throws -> CanonicalCiphertext
 
     /// Generates a ciphertext of zeros in ``Coeff`` format.
@@ -648,6 +651,7 @@ public protocol HeScheme {
 
 extension HeScheme {
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func validateEquality(of lhs: Context<Self>, and rhs: Context<Self>) throws {
         guard lhs == rhs else {
             throw HeError.unequalContexts(got: lhs, expected: rhs)
@@ -657,6 +661,7 @@ extension HeScheme {
 
 extension HeScheme {
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func rotateColumns(
         of ciphertext: inout CanonicalCiphertext,
         by step: Int,
@@ -667,6 +672,7 @@ extension HeScheme {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func swapRows(of ciphertext: inout CanonicalCiphertext, using evaluationKey: EvaluationKey) throws {
         let element = GaloisElement.swappingRows(degree: ciphertext.context.degree)
         try applyGalois(ciphertext: &ciphertext, element: element, using: evaluationKey)
@@ -675,6 +681,7 @@ extension HeScheme {
 
 extension HeScheme {
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func innerProduct(_ lhs: some Collection<CanonicalCiphertext>,
                                     _ rhs: some Collection<CanonicalCiphertext>) throws -> CanonicalCiphertext
     {
@@ -685,6 +692,7 @@ extension HeScheme {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
                                     plaintexts: some Collection<EvalPlaintext?>) throws -> EvalCiphertext
     {
@@ -702,6 +710,7 @@ extension HeScheme {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
                                     plaintexts: some Collection<EvalPlaintext>) throws -> EvalCiphertext
     {

@@ -120,7 +120,7 @@ public enum NoOpScheme: HeScheme {
         using _: EvaluationKey<NoOpScheme>) throws
     {
         let element = try GaloisElement.rotatingColumns(by: step, degree: ciphertext.context.degree)
-        ciphertext.polys[0] = ciphertext.polys[0].applyGalois(galoisElement: element)
+        ciphertext.polys[0] = ciphertext.polys[0].applyGalois(element: element)
     }
 
     public static func swapRows(
@@ -128,7 +128,7 @@ public enum NoOpScheme: HeScheme {
         using _: EvaluationKey<NoOpScheme>) throws
     {
         let element = GaloisElement.swappingRows(degree: ciphertext.context.degree)
-        ciphertext.polys[0] = ciphertext.polys[0].applyGalois(galoisElement: element)
+        ciphertext.polys[0] = ciphertext.polys[0].applyGalois(element: element)
     }
 
     // MARK: plaintext += plaintext
@@ -270,7 +270,7 @@ public enum NoOpScheme: HeScheme {
         using _: EvaluationKey<Self>) throws
     {
         for index in ciphertext.polys.indices {
-            ciphertext.polys[index] = ciphertext.polys[index].applyGalois(galoisElement: element)
+            ciphertext.polys[index] = ciphertext.polys[index].applyGalois(element: element)
         }
     }
 

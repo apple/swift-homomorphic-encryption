@@ -129,7 +129,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
 
     /// Returns whether or not this context is a strict parent of `context`.
     ///
-    /// A context is a parent of a child context if the child context is a *next* context of the parent of one of its
+    /// A context is a parent of a child context if the child context is a *next* context of the parent or one of its
     /// children. The next context typically drops the last modulus in the modulus chain.
     /// - Parameter context: Context to compare against.
     /// - Returns: Whether this context is a parent of or equal to `context`.
@@ -147,7 +147,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
 
     /// Returns whether or not this context is a parent of or equal to `context`.
     ///
-    /// A context is a parent of a child context if the child context is a *next* context of the parent of one of its
+    /// A context is a parent of a child context if the child context is a *next* context of the parent or one of its
     /// children. The next context typically drops the last modulus in the modulus chain.
     /// - Parameter context: Context to compare against.
     /// - Returns: Whether this context is a parent of or equal to `context`.

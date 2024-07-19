@@ -13,28 +13,38 @@
 // limitations under the License.
 
 extension Bfv {
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func encode(context: Context<Bfv<T>>, values: [some ScalarType],
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(values: values, format: format)
     }
 
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func encode(context: Context<Bfv<T>>, values: [some ScalarType], format: EncodeFormat,
                               moduliCount: Int) throws -> EvalPlaintext
     {
         try context.encode(values: values, format: format, moduliCount: moduliCount)
     }
 
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func encode(context: Context<Bfv<T>>, values: [some ScalarType],
                               format: EncodeFormat) throws -> EvalPlaintext
     {
         try context.encode(values: values, format: format, moduliCount: nil)
     }
 
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func decode<V>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] where V: ScalarType {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func decode<V>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] where V: ScalarType {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }

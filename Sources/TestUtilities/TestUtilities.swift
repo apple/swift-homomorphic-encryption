@@ -292,7 +292,7 @@ extension TestUtils {
 
         var sum = Int64(0)
         for coeffIndex in poly.coeffIndices {
-            let crtForm = poly.data.collectValues(indices: poly.rnsIndices(coeffIndex: coeffIndex))
+            let crtForm = poly.coefficient(coeffIndex: coeffIndex)
             if let bigint = crtToInt[crtForm] {
                 valueCounts[bigint, default: 0] += 1
                 sum += bigint
@@ -316,8 +316,7 @@ extension TestUtils {
         let crtOne = crtDecompose(value: 1, moduli: poly.moduli)
 
         for coeffIndex in poly.coeffIndices {
-            let indices = poly.rnsIndices(coeffIndex: coeffIndex)
-            let crt = poly.data.collectValues(indices: indices)
+            let crt = poly.coefficient(coeffIndex: coeffIndex)
             switch crt {
             case crtMinusOne: valueCounts[-1, default: 0] += 1
             case crtZero: valueCounts[0, default: 0] += 1

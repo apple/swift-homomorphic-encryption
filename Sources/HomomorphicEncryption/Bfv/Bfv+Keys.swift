@@ -13,8 +13,8 @@
 // limitations under the License.
 
 extension Bfv {
-    // keygen APIs
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func generateSecretKey(context: Context<Self>) throws -> SecretKey<Bfv<T>> {
         var s = PolyRq<Scalar, Coeff>.zero(context: context.secretKeyContext)
         var rng = SystemRandomNumberGenerator()
@@ -24,6 +24,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func generateEvaluationKey(
         context: Context<Bfv<T>>,
         configuration: EvaluationKeyConfiguration,
@@ -34,7 +35,7 @@ extension Bfv {
         }
         var galoisKeys: [Int: KeySwitchKey<Self>] = [:]
         for element in configuration.galoisElements {
-            let switchedKey = try secretKey.poly.applyGalois(galoisElement: element)
+            let switchedKey = try secretKey.poly.applyGalois(element: element)
             galoisKeys[element] = try generateKeySwitchKey(
                 context: context,
                 currentKey: switchedKey,

@@ -16,6 +16,7 @@ import Foundation
 
 extension Bfv {
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func decrypt(_ ciphertext: EvalCiphertext,
                                using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
     {
@@ -29,6 +30,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func decrypt(_ ciphertext: CoeffCiphertext,
                                using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
     {
@@ -36,6 +38,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func noiseBudget(
         of ciphertext: EvalCiphertext,
         using secretKey: SecretKey<Bfv<T>>,
@@ -86,6 +89,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func noiseBudget(of ciphertext: CoeffCiphertext,
                                    using secretKey: SecretKey<Bfv<T>>, variableTime: Bool) throws -> Double
     {

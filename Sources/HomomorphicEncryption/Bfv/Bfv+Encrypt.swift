@@ -20,6 +20,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func zeroCiphertext(context: Context<Self>, moduliCount: Int) throws -> CoeffCiphertext {
         let zeroPoly = try PolyRq<Scalar, Coeff>.zero(
             context: context.ciphertextContext
@@ -29,6 +30,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func zeroCiphertext(context: Context<Self>, moduliCount: Int) throws -> EvalCiphertext {
         let zeroPoly = try PolyRq<Scalar, Eval>.zero(
             context: context.ciphertextContext
@@ -38,6 +40,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func isTransparent(ciphertext: CoeffCiphertext) -> Bool {
         // Decryption multiplies all the polynomials except the first with powers of the secret key.
         // So the ciphertext is transparent if all polynomials except the first are zeros.
@@ -47,6 +50,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func isTransparent(ciphertext: EvalCiphertext) -> Bool {
         // Decryption multiplies all the polynomials except the first with powers of the secret key.
         // So the ciphertext is transparent if all polynomials except the first are zeros.
@@ -54,6 +58,7 @@ extension Bfv {
     }
 
     @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func encrypt(_ plaintext: Plaintext<Self, Coeff>,
                                using secretKey: SecretKey<Bfv<T>>) throws -> CanonicalCiphertext
     {

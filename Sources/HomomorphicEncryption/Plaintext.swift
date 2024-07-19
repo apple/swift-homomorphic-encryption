@@ -79,6 +79,12 @@ extension Plaintext {
         return result
     }
 
+    /// Converts the plaintext to ``Eval`` format.
+    ///
+    /// This makes the plaintext suitable for operations with ciphertexts in ``Eval`` format, with `moduliCount` moduli.
+    /// - Parameter moduliCount: Number of coefficient moduli in the context.
+    /// - Returns: The convertext plaintext.
+    /// - throws: Error upon failure to convert the plaintext.
     @inlinable
     public func convertToEvalFormat(moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
         where Format == Coeff
@@ -102,6 +108,9 @@ extension Plaintext {
         return try Plaintext<Scheme, Eval>(context: context, poly: poly.forwardNtt())
     }
 
+    /// Converts the plaintext to ``Coeff`` format.
+    /// - Returns: The converted plaintext.
+    /// - throws: Error upon failure to convert the plaintext.
     @inlinable
     public func convertToCoeffFormat() throws -> Plaintext<Scheme, Coeff>
         where Format == Eval
@@ -122,16 +131,31 @@ extension Plaintext {
         return Plaintext<Scheme, Coeff>(context: context, poly: coeffPoly)
     }
 
+    /// Decodes a plaintext in ``Coeff`` format.
+    /// - Parameter format: Encoding format of the plaintext.
+    /// - Returns: The decoded values.
+    /// - Throws: Error upon failure to decode the plaintext.
+    /// - seealso: ``HeScheme/decode(plaintext:format:)-h6vl`` for an alternative API.
     @inlinable
     public func decode(format: EncodeFormat) throws -> [Scheme.Scalar] where Format == Coeff {
         try context.decode(plaintext: self, format: format)
     }
 
+    /// Decodes a plaintext in ``Eval`` format.
+    /// - Parameter format: Encoding format of the plaintext.
+    /// - Returns: The decoded values.
+    /// - Throws: Error upon failure to decode the plaintext.
+    /// - seealso: ``HeScheme/decode(plaintext:format:)-663x4`` for an alternative API.
     @inlinable
     public func decode(format: EncodeFormat) throws -> [Scheme.Scalar] where Format == Eval {
         try context.decode(plaintext: self, format: format)
     }
 
+    /// Symmetric secret key encryption of the plaintext.
+    /// - Parameter secretKey: Secret key to encrypt with.
+    /// - Returns: A ciphertext encrypting the plaintext.
+    /// - Throws: Error upon failure to encrypt the plaintext.
+    /// - seealso: ``HeScheme/encrypt(_:using:)`` for an alternative API.
     @inlinable
     public func encrypt(using secretKey: SecretKey<Scheme>) throws -> Scheme.CanonicalCiphertext where Format == Coeff {
         try Scheme.encrypt(self, using: secretKey)

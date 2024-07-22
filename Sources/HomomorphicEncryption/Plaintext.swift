@@ -23,29 +23,54 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
         self.poly = poly
     }
 
+    /// In-place plaintext addition: `lhs += rhs`.
+    /// - Parameters:
+    ///   - lhs: Plaintext to add to; will store the sum.
+    ///   - rhs: Plaintext to add.
+    /// - Throws: Error upon failure to add the plaintexts.
+    /// - seealso: ``HeScheme/addAssign(_:_:)-3bv7g`` for an alternative API.
     @inlinable
-    static func += (lhs: inout Plaintext<Scheme, Format>, rhs: Plaintext<Scheme, Format>) throws where Format == Coeff {
+    public static func += (lhs: inout Plaintext<Scheme, Format>, rhs: Plaintext<Scheme, Format>) throws
+        where Format == Coeff
+    {
         try Scheme.addAssign(&lhs, rhs)
     }
 
+    /// In-place plaintext addition: `lhs += rhs`.
+    /// - Parameters:
+    ///   - lhs: Plaintext to add to; will store the sum.
+    ///   - rhs: Plaintext to add.
+    /// - Throws: Error upon failure to add the plaintexts.
+    /// - seealso: ``HeScheme/addAssign(_:_:)-1osb9`` for an alternative API.
     @inlinable
-    static func += (lhs: inout Plaintext<Scheme, Format>, rhs: Plaintext<Scheme, Format>) throws where Format == Eval {
+    public static func += (lhs: inout Plaintext<Scheme, Format>, rhs: Plaintext<Scheme, Format>) throws
+        where Format == Eval
+    {
         try Scheme.addAssign(&lhs, rhs)
     }
 
+    /// Computes the forward number-theoretic transform (NTT) on the plaintext.
+    /// - Returns: The plaintext in ``Eval`` format.
+    /// - Throws: Error upon failure to compute the forward NTT
+    /// - seealso: ``PolyRq/forwardNtt()``
     @inlinable
-    func forwardNtt() throws -> Plaintext<Scheme, Eval> where Format == Coeff {
+    public func forwardNtt() throws -> Plaintext<Scheme, Eval> where Format == Coeff {
         let poly = try poly.forwardNtt()
         return Plaintext<Scheme, Eval>(context: context, poly: poly)
     }
 
+    /// Computes the inverse number-theoretic transform (NTT) on the plaintext.
+    /// - Returns: The plaintext in ``Coeff`` format.
+    /// - Throws: Error upon failure to compute the inverse NTT
+    /// - seealso: ``PolyRq/inverseNtt()``
     @inlinable
-    func inverseNtt() throws -> Plaintext<Scheme, Coeff> where Format == Eval {
+    public func inverseNtt() throws -> Plaintext<Scheme, Coeff> where Format == Eval {
         let poly = try poly.inverseNtt()
         return Plaintext<Scheme, Coeff>(context: context, poly: poly)
     }
 
-    @inlinable subscript(_ index: Int) -> Scheme.Scalar {
+    @inlinable
+    subscript(_ index: Int) -> Scheme.Scalar {
         get {
             poly.data[index]
         }
@@ -65,15 +90,29 @@ extension Plaintext: PolyCollection {
 }
 
 extension Plaintext {
+    /// Plaintext addition: `lhs + rhs`.
+    /// - Parameters:
+    ///   - lhs: Plaintext to add.
+    ///   - rhs: Plaintext add.
+    /// - Returns: The sum `lhs + rhs`.
+    /// - throws: Error upon failure to add the plaintexts.
+    /// - seealso: ``HeScheme/addAssign(_:_:)-3bv7g`` for an alternative API.
     @inlinable
-    static func + (lhs: Self, rhs: Self) throws -> Self where Format == Coeff {
+    public static func + (lhs: Self, rhs: Self) throws -> Self where Format == Coeff {
         var result = lhs
         try result += rhs
         return result
     }
 
+    /// Plaintext addition: `lhs + rhs`.
+    /// - Parameters:
+    ///   - lhs: Plaintext to add.
+    ///   - rhs: Plaintext add.
+    /// - Returns: The sum `lhs + rhs`.
+    /// - throws: Error upon failure to add the plaintexts.
+    /// - seealso: ``HeScheme/addAssign(_:_:)-q7m3`` for an alternative API.
     @inlinable
-    static func + (lhs: Self, rhs: Self) throws -> Self where Format == Eval {
+    public static func + (lhs: Self, rhs: Self) throws -> Self where Format == Eval {
         var result = lhs
         try result += rhs
         return result

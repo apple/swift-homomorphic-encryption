@@ -251,7 +251,7 @@ extension PolyRq {
     /// - Parameters:
     ///   - lhs: Polynomial to add. Must have the same ``PolyContext`` as `rhs`.
     ///   - rhs: Polynomial to add. Must have the same ``PolyContext`` as `lhs`.
-    /// - Returns: The sum `lhs + rhs`
+    /// - Returns: The sum `lhs + rhs`.
     @inlinable
     public static func + (_ lhs: Self, _ rhs: Self) -> Self {
         var result = lhs

@@ -12,7 +12,7 @@ Plaintexts, ciphertexts, and keys need a serialization protocol, as they are sto
 
 ### Polynomial Representation
 
-The ``PolyRq`` struct represents a polynomial in `R_q = Z_q(X)^N / (X^N + 1)`, that is, degree `N` polynomials where each coefficient is an integer mod `q`. The polynomial is represented either as coefficients (``Coeff``) or as evaluations (``Eval``), called terms. Each of these individual terms (i.e., a coefficient or an evaluation) is represented as residues relative to a given list of moduli.
+The ``PolyRq`` struct represents a polynomial in `R_q = Z_q[X] / (X^N + 1)`, that is, degree `N` polynomials where each coefficient is an integer mod `q`. The polynomial is represented either as coefficients (``Coeff``) or as evaluations (``Eval``), called terms. Each of these individual terms (i.e., a coefficient or an evaluation) is represented as residues relative to a given list of moduli.
 
 During an execution, many polynomials contained in plaintexts, ciphertexts and keys share a lot of information. These polynomials have distinct coefficients, but they can have the same degree, moduli basis, etc. There are also common parameters used during computation. From a serialization perspective, it is wasteful to serialize this information for all polynomials, so redundant elements are separated out into a `context` as described next.
 

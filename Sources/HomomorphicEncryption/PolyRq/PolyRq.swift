@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// Represents a polynomial in `R_q = Z_q(X)^N / (X^N + 1)` for `N` a power of
+/// Represents a polynomial in `R_q = Z_q[X] / (X^N + 1)` for `N` a power of
 /// two and `q` a (possibly) multi-word integer.
 ///
 /// The number-theoretic transform is used for efficient arithmetic.

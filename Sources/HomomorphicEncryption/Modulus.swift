@@ -256,7 +256,8 @@ struct ReduceModulus<T: ScalarType>: Equatable, Sendable {
         let nPlusBeta = n &+ reduceModulusBeta
         let xShift = x &>> nPlusBeta
         assert(xShift <= T.max)
-        let qHat = T(xShift).multipliedFullWidth(by: factor.low).high
+        assert(xShift.high == 0)
+        let qHat = xShift.low.multipliedFullWidth(by: factor.low).high
         let z = x.low &- qHat &* modulus
         return z.subtractIfExceeds(modulus)
     }

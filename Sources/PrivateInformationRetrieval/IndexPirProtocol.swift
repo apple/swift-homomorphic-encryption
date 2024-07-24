@@ -277,12 +277,12 @@ public struct Query<Scheme: HeScheme>: Sendable {
 /// An index PIR response.
 public struct Response<Scheme: HeScheme>: Sendable {
     /// Ciphertexts in the response.
-    public let ciphertexts: [[Scheme.CanonicalCiphertext]]
+    public let ciphertexts: [[Scheme.CoeffCiphertext]]
 
     /// Initializes an index PIR ``Response``.
     /// - Parameter ciphertexts: Ciphertexts in the response.
     @inlinable
-    public init(ciphertexts: [[Scheme.CanonicalCiphertext]]) {
+    public init(ciphertexts: [[Scheme.CoeffCiphertext]]) {
         self.ciphertexts = ciphertexts
     }
 }

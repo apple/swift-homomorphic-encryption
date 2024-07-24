@@ -22,10 +22,10 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_PIRResponse {
     /// - Returns: The converted native type.
     /// - Throws: Error upon invalid protobuf object.
     public func native<Scheme: HeScheme>(context: Context<Scheme>) throws -> Response<Scheme> {
-        let ciphertexts: [[Scheme.CanonicalCiphertext]] = try replies.map { reply in
+        let ciphertexts: [[Scheme.CoeffCiphertext]] = try replies.map { reply in
             let serializedCiphertexts: [SerializedCiphertext<Scheme.Scalar>] = try reply.native()
             return try serializedCiphertexts.map { serialized in
-                try Scheme.CanonicalCiphertext(deserialize: serialized, context: context, moduliCount: 1)
+                try Scheme.CoeffCiphertext(deserialize: serialized, context: context, moduliCount: 1)
             }
         }
         return Response(ciphertexts: ciphertexts)

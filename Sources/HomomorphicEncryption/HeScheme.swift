@@ -274,7 +274,7 @@ public protocol HeScheme {
     ///  - seealso: The noise budget can be computed using
     ///  ``HeScheme/noiseBudget(of:using:variableTime:)-143f3``.
     ///  - seealso: ``Ciphertext/decrypt(using:)-4n5b2`` for an alternative API.
-    static func decrypt(_ ciphertext: CoeffCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
+    static func decryptCoeff(_ ciphertext: CoeffCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
 
     /// Decryption of a ciphertext in evaluation format.
     /// - Parameters:
@@ -286,19 +286,7 @@ public protocol HeScheme {
     ///  - seealso: The noise budget can be computed using
     ///  ``HeScheme/noiseBudget(of:using:variableTime:)-7vpza``.
     ///  - seealso: ``Ciphertext/decrypt(using:)-62y2c`` for an alternative API.
-    static func decrypt(_ ciphertext: EvalCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
-
-    /// Decryption of a ciphertext in canonical format.
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to decrypt.
-    ///   - secretKey: Secret key to decrypt with.
-    /// - Returns: The plaintext decryption of the ciphertext.
-    /// - Throws: Error upon failure to decrypt.
-    /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
-    ///  - seealso: The noise budget can be computed using
-    ///  ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``.
-    ///  - seealso: ``Ciphertext/decrypt(using:)-9qn9g`` for an alternative API.
-    static func decrypt(_ ciphertext: CanonicalCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
+    static func decryptEval(_ ciphertext: EvalCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
 
     /// Rotates the columns of a ciphertext.
     ///
@@ -395,7 +383,7 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext to add; will store the sum.
     ///   - plaintext: Plaintext to add.
     /// - Throws: Error upon failure to add.
-    static func addAssign(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws
+    static func addAssignCoeff(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws
 
     /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
     ///
@@ -403,7 +391,23 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext to add; will store the sum.
     ///   - plaintext: Plaintext to add.
     /// - Throws: Error upon failure to add.
-    static func addAssign(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws
+    static func addAssignCoeffEval(_ ciphertext: inout CoeffCiphertext, _ plaintext: EvalPlaintext) throws
+
+    /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
+    ///
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to add; will store the sum.
+    ///   - plaintext: Plaintext to add.
+    /// - Throws: Error upon failure to add.
+    static func addAssignEval(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws
+
+    /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
+    ///
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to add; will store the sum.
+    ///   - plaintext: Plaintext to add.
+    /// - Throws: Error upon failure to add.
+    static func addAssignEvalCoeff(_ ciphertext: inout EvalCiphertext, _ plaintext: CoeffPlaintext) throws
 
     /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
     ///
@@ -497,22 +501,6 @@ public protocol HeScheme {
     ///   - rhs: Ciphertext to add.
     /// - Throws: Error upon failure to add.
     static func addAssign(_ lhs: inout CanonicalCiphertext, _ rhs: CanonicalCiphertext) throws
-
-    /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
-    ///
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to add; will store the sum.
-    ///   - plaintext: Plaintext to add.
-    /// - Throws: Error upon failure to add.
-    static func addAssign(_ ciphertext: inout CanonicalCiphertext, _ plaintext: CoeffPlaintext) throws
-
-    /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
-    ///
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to add; will store the sum.
-    ///   - plaintext: Plaintext to add.
-    /// - Throws: Error upon failure to add.
-    static func addAssign(_ ciphertext: inout CanonicalCiphertext, _ plaintext: EvalPlaintext) throws
 
     /// In-place ciphertext subtraction: `lhs -= rhs`.
     ///
@@ -647,6 +635,71 @@ public protocol HeScheme {
     /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)-39n1i`` for an alternative API.
     static func noiseBudget(of ciphertext: EvalCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
         -> Double
+}
+
+extension HeScheme {
+    /// Decryption of a ciphertext.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to decrypt.
+    ///   - secretKey: Secret key to decrypt with.
+    /// - Returns: The plaintext decryption of the ciphertext.
+    /// - Throws: Error upon failure to decrypt.
+    /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
+    ///  - seealso: The noise budget can be computed using
+    ///  ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``.
+    ///  - seealso: ``Ciphertext/decrypt(using:)-9qn9g`` for an alternative API.
+    @inlinable
+    public static func decrypt<Format: PolyFormat>(_ ciphertext: Ciphertext<Self, Format>,
+                                                   using secretKey: SecretKey) throws -> CoeffPlaintext
+    {
+        if Format.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            return try decryptCoeff(ciphertext as! CoeffCiphertext, using: secretKey)
+        }
+        if Format.self == Eval.self {
+            // swiftlint:disable:next force_cast
+            return try decryptEval(ciphertext as! EvalCiphertext, using: secretKey)
+        }
+        fatalError("Unsupported Format \(Format.description)")
+    }
+
+    /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
+    ///
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to add; will store the sum.
+    ///   - plaintext: Plaintext to add.
+    /// - Throws: Error upon failure to add.
+    @inlinable
+    public static func addAssign<CiphertextFormat: PolyFormat, PlaintextFormat: PolyFormat>(
+        _ ciphertext: inout Ciphertext<Self, CiphertextFormat>,
+        _ plaintext: Plaintext<Self, PlaintextFormat>) throws
+    {
+        // swiftlint:disable force_cast
+        if CiphertextFormat.self == Coeff.self {
+            var coeffCiphertext = ciphertext as! Ciphertext<Self, Coeff>
+            if PlaintextFormat.self == Coeff.self {
+                try addAssignCoeff(&coeffCiphertext, plaintext as! CoeffPlaintext)
+            } else if PlaintextFormat.self == Eval.self {
+                try addAssignCoeffEval(&coeffCiphertext, plaintext as! EvalPlaintext)
+            } else {
+                fatalError("Unsupported PlaintextFormat \(PlaintextFormat.description)")
+            }
+            ciphertext = coeffCiphertext as! Ciphertext<Self, CiphertextFormat>
+        } else if CiphertextFormat.self == Eval.self {
+            var evalCiphertext = ciphertext as! Ciphertext<Self, Eval>
+            if PlaintextFormat.self == Coeff.self {
+                try addAssignEvalCoeff(&evalCiphertext, plaintext as! CoeffPlaintext)
+            } else if PlaintextFormat.self == Eval.self {
+                try addAssignEval(&evalCiphertext, plaintext as! EvalPlaintext)
+            } else {
+                fatalError("Unsupported PlaintextFormat \(PlaintextFormat.description)")
+            }
+            ciphertext = evalCiphertext as! Ciphertext<Self, CiphertextFormat>
+        } else {
+            fatalError("Unsupported CiphertextFormat \(CiphertextFormat.description)")
+        }
+        // swiftlint:enable force_cast
+    }
 }
 
 extension HeScheme {

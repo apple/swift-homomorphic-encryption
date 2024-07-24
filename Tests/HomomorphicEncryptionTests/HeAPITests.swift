@@ -77,12 +77,12 @@ class HeAPITests: XCTestCase {
         {
             if let coeffCiphertext = ciphertext as? Scheme.CoeffCiphertext {
                 let decryptedData: [Scheme.Scalar] = try context.decode(
-                    plaintext: Scheme.decrypt(coeffCiphertext, using: secretKey),
+                    plaintext: coeffCiphertext.decrypt(using: secretKey),
                     format: format)
                 XCTAssertEqual(decryptedData, expected, message(), file: file, line: line)
             } else if let evalCiphertext = ciphertext as? Scheme.EvalCiphertext {
                 let decryptedData: [Scheme.Scalar] = try context.decode(
-                    plaintext: Scheme.decrypt(evalCiphertext, using: secretKey),
+                    plaintext: evalCiphertext.decrypt(using: secretKey),
                     format: format)
                 XCTAssertEqual(decryptedData, expected, message(), file: file, line: line)
             } else {
@@ -240,7 +240,7 @@ class HeAPITests: XCTestCase {
 
         try testEnv.checkDecryptsDecodes(ciphertext: sum1, format: .coefficient, expected: expected)
         try testEnv.checkDecryptsDecodes(ciphertext: sum2, format: .coefficient, expected: testEnv.data1)
-        XCTAssertEqual(try Scheme.decrypt(sum3, using: testEnv.secretKey), testEnv.coeffPlaintext1)
+        XCTAssertEqual(try sum3.decrypt(using: testEnv.secretKey), testEnv.coeffPlaintext1)
     }
 
     private func schemeEncryptZeroMultiplyDecryptTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
@@ -522,47 +522,98 @@ class HeAPITests: XCTestCase {
         let coeffPlaintext = testEnv.coeffPlaintext2
         let evalPlaintext = try coeffPlaintext.forwardNtt()
 
-        // canonicalCiphertext + coeffPlaintext
-        try testEnv.checkDecryptsDecodes(
-            ciphertext: canonicalCiphertext + coeffPlaintext,
-            format: .simd,
-            expected: sumData)
-
-        // canonicalCiphertext + evalPlaintext
+        // canonicalCiphertext
         do {
+            // coeffPlaintext + canonicalCiphertext
             try testEnv.checkDecryptsDecodes(
-                ciphertext: canonicalCiphertext + evalPlaintext,
+                ciphertext: coeffPlaintext + canonicalCiphertext,
                 format: .simd,
                 expected: sumData)
-        } catch HeError.unsupportedHeOperation(_) {}
 
-        // evalCiphertext + evalPlaintext
-        do {
+            // canonicalCiphertext + coeffPlaintext
             try testEnv.checkDecryptsDecodes(
-                ciphertext: evalCiphertext + evalPlaintext,
+                ciphertext: canonicalCiphertext + coeffPlaintext,
                 format: .simd,
                 expected: sumData)
-        } catch HeError.unsupportedHeOperation(_) {}
 
-        // evalPlaintext + evalCiphertext
+            // canonicalCiphertext += coeffPlaintext
+            do {
+                var sum = canonicalCiphertext
+                try sum += coeffPlaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .simd, expected: sumData)
+            }
+
+            // evalPlaintext + canonicalCiphertext
+            do {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: evalPlaintext + canonicalCiphertext,
+                    format: .simd,
+                    expected: sumData)
+            } catch HeError.unsupportedHeOperation(_) {}
+
+            // canonicalCiphertext + evalPlaintext
+            do {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: canonicalCiphertext + evalPlaintext,
+                    format: .simd,
+                    expected: sumData)
+            } catch HeError.unsupportedHeOperation(_) {}
+
+            // canonicalCiphertext += evalPlaintext
+            do {
+                var sum = canonicalCiphertext
+                try sum += evalPlaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .simd, expected: sumData)
+            } catch HeError.unsupportedHeOperation(_) {}
+        }
+
+        // coeffCiphertext
         do {
+            // coeffPlaintext + coeffCiphertext
             try testEnv.checkDecryptsDecodes(
-                ciphertext: evalPlaintext + evalCiphertext,
+                ciphertext: coeffPlaintext + coeffCiphertext,
                 format: .simd,
                 expected: sumData)
-        } catch HeError.unsupportedHeOperation(_) {}
 
-        // coeffCiphertext + coeffPlaintext
-        try testEnv.checkDecryptsDecodes(
-            ciphertext: coeffCiphertext + coeffPlaintext,
-            format: .simd,
-            expected: sumData)
+            // coeffCiphertext + coeffPlaintext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: coeffCiphertext + coeffPlaintext,
+                format: .simd,
+                expected: sumData)
 
-        // coeffPlaintext + coeffCiphertext
-        try testEnv.checkDecryptsDecodes(
-            ciphertext: coeffPlaintext + coeffCiphertext,
-            format: .simd,
-            expected: sumData)
+            // coeffCiphertext += coeffPlaintext
+            do {
+                var sum = coeffCiphertext
+                try sum += coeffPlaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .simd, expected: sumData)
+            }
+        }
+
+        // evalCiphertext
+        do {
+            // evalPlaintext + evalCiphertext
+            do {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: evalPlaintext + evalCiphertext,
+                    format: .simd,
+                    expected: sumData)
+            } catch HeError.unsupportedHeOperation(_) {}
+
+            // evalCiphertext + evalPlaintext
+            do {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: evalCiphertext + evalPlaintext,
+                    format: .simd,
+                    expected: sumData)
+            } catch HeError.unsupportedHeOperation(_) {}
+
+            // evalCiphertext += evalPlaintext
+            do {
+                var sum = evalCiphertext
+                try sum += evalPlaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .simd, expected: sumData)
+            } catch HeError.unsupportedHeOperation(_) {}
+        }
     }
 
     private func schemeCiphertextPlaintextSubtractionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {

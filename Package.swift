@@ -162,6 +162,19 @@ let package = Package(
                            .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
     ])
 
+// MARK: - Examples
+
+package.targets += [
+    .executableTarget(
+        name: "HomomorphicEncryptionExamples",
+        dependencies: [
+            "HomomorphicEncryption",
+            .product(name: "ArgumentParser", package: "swift-argument-parser"),
+        ],
+        path: "Examples/HomomorphicEncryption",
+        swiftSettings: executableSettings),
+]
+
 // MARK: - Benchmarks
 
 package.dependencies += [

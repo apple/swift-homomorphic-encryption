@@ -311,7 +311,7 @@ extension MulPirServer {
                                                                 expandedRemainingQuery: ExpandedQueries,
                                                                 dataChunk: DataChunk,
                                                                 using evaluationKey: EvaluationKey<Scheme>) throws
-        -> CanonicalCiphertext
+        -> Ciphertext<Scheme, Coeff>
         where ExpandedQueries: Collection<CanonicalCiphertext>, DataChunk: Collection<Plaintext<Scheme, Eval>?>,
         ExpandedQueries.Index == Int, DataChunk.Index == Int
     {
@@ -341,7 +341,7 @@ extension MulPirServer {
             intermediateResults.count == 1,
             "There should be only 1 ciphertext in the final result for each chunk")
         try intermediateResults[0].modSwitchDownToSingle()
-        return intermediateResults[0]
+        return try intermediateResults[0].convertToCoeffFormat()
     }
 
     @inlinable

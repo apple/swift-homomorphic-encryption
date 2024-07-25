@@ -85,12 +85,12 @@ public enum NoOpScheme: HeScheme {
     }
 
     @inlinable
-    public static func isTransparent(ciphertext _: CoeffCiphertext) -> Bool {
+    public static func isTransparentCoeff(ciphertext _: CoeffCiphertext) -> Bool {
         true
     }
 
     @inlinable
-    public static func isTransparent(ciphertext _: EvalCiphertext) -> Bool {
+    public static func isTransparentEval(ciphertext _: EvalCiphertext) -> Bool {
         true
     }
 
@@ -213,11 +213,11 @@ public enum NoOpScheme: HeScheme {
 
     // MARK: ciphertext =- ciphertext
 
-    public static func negAssign(_ ciphertext: inout EvalCiphertext) {
+    public static func negAssignCoeff(_ ciphertext: inout CoeffCiphertext) {
         ciphertext.polys[0] = -ciphertext.polys[0]
     }
 
-    public static func negAssign(_ ciphertext: inout CoeffCiphertext) {
+    public static func negAssignEval(_ ciphertext: inout EvalCiphertext) {
         ciphertext.polys[0] = -ciphertext.polys[0]
     }
 

@@ -93,27 +93,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     // MARK: ciphertext = -ciphertext
 
     @inlinable
-    public static prefix func - (_ ciphertext: Ciphertext<Scheme, Format>) -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        var result = ciphertext
-        Scheme.negAssign(&result)
-        return result
-    }
-
-    @inlinable
-    public static prefix func - (_ ciphertext: Ciphertext<Scheme, Format>) -> Self
-        where Format == Eval
-    {
-        var result = ciphertext
-        Scheme.negAssign(&result)
-        return result
-    }
-
-    @inlinable
-    public static prefix func - (_ ciphertext: Ciphertext<Scheme, Format>) -> Self
-        where Format == Coeff
-    {
+    public static prefix func - (_ ciphertext: Ciphertext<Scheme, Format>) -> Self {
         var result = ciphertext
         Scheme.negAssign(&result)
         return result
@@ -124,31 +104,9 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
     /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
     /// - Returns: Whether the ciphertext is transparent.
-    /// - seealso: ``HeScheme/isTransparent(ciphertext:)-31w9f`` for an alternative API.
+    /// - seealso: ``HeScheme/isTransparent(ciphertext:)`` for an alternative API.
     @inlinable
-    public func isTransparent() -> Bool where Format == Coeff {
-        Scheme.isTransparent(ciphertext: self)
-    }
-
-    /// Computes whether a ciphertext is transparent.
-    ///
-    /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
-    /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
-    /// - Returns: Whether the ciphertext is transparent.
-    /// - seealso: ``HeScheme/isTransparent(ciphertext:)-1nwgm`` for an alternative API.
-    @inlinable
-    public func isTransparent() -> Bool where Format == Eval {
-        Scheme.isTransparent(ciphertext: self)
-    }
-
-    /// Computes whether a ciphertext is transparent.
-    ///
-    /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
-    /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
-    /// - Returns: Whether the ciphertext is transparent.
-    /// - seealso: ``HeScheme/isTransparent(ciphertext:)-6m5nk`` for an alternative API.
-    @inlinable
-    public func isTransparent() -> Bool where Format == Scheme.CanonicalCiphertextFormat {
+    public func isTransparent() -> Bool {
         Scheme.isTransparent(ciphertext: self)
     }
 

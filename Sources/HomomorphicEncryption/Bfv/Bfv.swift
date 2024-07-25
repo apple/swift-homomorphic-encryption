@@ -113,7 +113,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     @inlinable
-    public static func negAssign(_ ciphertext: inout EvalCiphertext) {
+    public static func negAssignCoeff(_ ciphertext: inout CoeffCiphertext) {
         for polyIndex in ciphertext.polys.indices {
             ciphertext.polys[polyIndex] = -ciphertext.polys[polyIndex]
         }
@@ -121,7 +121,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     @inlinable
-    public static func negAssign(_ ciphertext: inout CoeffCiphertext) {
+    public static func negAssignEval(_ ciphertext: inout EvalCiphertext) {
         for polyIndex in ciphertext.polys.indices {
             ciphertext.polys[polyIndex] = -ciphertext.polys[polyIndex]
         }

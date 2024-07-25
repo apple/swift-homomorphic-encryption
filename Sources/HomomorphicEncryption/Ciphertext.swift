@@ -173,72 +173,50 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - Returns: The converted ciphertext.
     /// - Throws: Error upon failure to convert the ciphertext.
     @inlinable
-    public func convertToCoeffFormat() throws -> Ciphertext<Scheme, Coeff>
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        let polys = try polys.map { try $0.convertToCoeff() }
-        return Ciphertext<Scheme, Coeff>(context: context, polys: polys, correctionFactor: correctionFactor)
+    public func convertToCoeffFormat() throws -> Ciphertext<Scheme, Coeff> {
+        if Format.self == Eval.self {
+            if let ciphertext = self as? Ciphertext<Scheme, Eval> {
+                return try ciphertext.inverseNtt()
+            }
+            throw HeError.errorCastingPolyFormat(from: Format.self, to: Eval.self)
+        }
+        if let ciphertext = self as? Ciphertext<Scheme, Coeff> {
+            return ciphertext
+        }
+        throw HeError.errorCastingPolyFormat(from: Format.self, to: Coeff.self)
     }
 
     /// Converts the ciphertext to a ``HeScheme/EvalCiphertext``.
     /// - Returns: The converted ciphertext.
     /// - Throws: Error upon failure to convert the ciphertext.
     @inlinable
-    public func convertToEvalFormat() throws -> Ciphertext<Scheme, Eval>
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
+    public func convertToEvalFormat() throws -> Ciphertext<Scheme, Eval> {
         if Format.self == Coeff.self {
             if let ciphertext = self as? Ciphertext<Scheme, Coeff> {
                 return try ciphertext.forwardNtt()
             }
-            throw HeError.errorInSameFormatCasting(Format.self, Coeff.self)
+            throw HeError.errorCastingPolyFormat(from: Format.self, to: Coeff.self)
         }
         if let ciphertext = self as? Ciphertext<Scheme, Eval> {
             return ciphertext
         }
-        throw HeError.errorInSameFormatCasting(Format.self, Eval.self)
+        throw HeError.errorCastingPolyFormat(from: Format.self, to: Eval.self)
     }
 
     /// Converts the ciphertext to a ``HeScheme/CanonicalCiphertext``.
     /// - Returns: The converted ciphertext.
     /// - Throws: Error upon failure to convert the ciphertext.
     @inlinable
-    public func convertToCanonicalFormat() throws -> Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>
-        where Format == Coeff
-    {
+    public func convertToCanonicalFormat() throws -> Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
         if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
-            if let ciphertext = self as? Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
-                return ciphertext
-            }
-            throw HeError.errorInSameFormatCasting(Format.self, Scheme.CanonicalCiphertextFormat.self)
+            // swiftlint:disable:next force_cast
+            return try convertToCoeffFormat() as! Scheme.CanonicalCiphertext
         }
-
-        let ciphertext = try forwardNtt()
-        if let ciphertext = ciphertext as? Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
-            return ciphertext
-        }
-        throw HeError.errorInSameFormatCasting(Format.self, Scheme.CanonicalCiphertextFormat.self)
-    }
-
-    /// Converts the ciphertext to a ``HeScheme/CanonicalCiphertext``.
-    /// - Returns: The converted ciphertext.
-    /// - Throws: Error upon failure to convert the ciphertext.
-    @inlinable
-    public func convertToCanonicalFormat() throws -> Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>
-        where Format == Eval
-    {
         if Scheme.CanonicalCiphertextFormat.self == Eval.self {
-            if let ciphertext = self as? Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
-                return ciphertext
-            }
-            throw HeError.errorInSameFormatCasting(Format.self, Scheme.CanonicalCiphertextFormat.self)
+            // swiftlint:disable:next force_cast
+            return try convertToEvalFormat() as! Scheme.CanonicalCiphertext
         }
-
-        let ciphertext = try inverseNtt()
-        if let ciphertext = ciphertext as? Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
-            return ciphertext
-        }
-        throw HeError.errorInSameFormatCasting(Format.self, Scheme.CanonicalCiphertextFormat.self)
+        throw HeError.errorCastingPolyFormat(from: Format.self, to: Scheme.CanonicalCiphertextFormat.self)
     }
 
     /// Rotates the columns of a ciphertext.
@@ -308,7 +286,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - Throws: Error upon failure to decrypt.
     /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
     ///  - seealso: The noise budget can be computed using
-    ///  ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``.
+    ///  ``Ciphertext/noiseBudget(using:variableTime:)``.
     ///  - seealso: ``HeScheme/decrypt(_:using:)`` for an alternative API.
     @inlinable
     public func decrypt(using secretKey: SecretKey<Scheme>) throws -> Scheme.CoeffPlaintext {
@@ -326,47 +304,9 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
-    /// - seealso: ``HeScheme/noiseBudget(of:using:variableTime:)-143f3`` for an alternative API.
+    /// - seealso: ``HeScheme/noiseBudget(of:using:variableTime:)`` for an alternative API.
     @inlinable
-    public func noiseBudget(using secretKey: SecretKey<Scheme>, variableTime: Bool) throws -> Double
-        where Format == Coeff
-    {
-        try Scheme.noiseBudget(of: self, using: secretKey, variableTime: variableTime)
-    }
-
-    /// Computes the noise budget of the ciphertext.
-    ///
-    /// The *noise budget* of a ciphertext decreases throughout HE operations. Once a ciphertext's noise budget is below
-    /// ``HeScheme/minNoiseBudget``, decryption may yield inaccurate plaintexts.
-    /// - Parameters:
-    ///   - secretKey: Secret key.
-    ///   - variableTime: Must be `true`, indicating the secret key coefficients are leaked through timing.
-    /// - Returns: The noise budget.
-    /// - Throws: Error upon failure to compute the noise budget.
-    /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
-    /// - seealso: ``HeScheme/noiseBudget(of:using:variableTime:)-7vpza`` for an alternative API.
-    @inlinable
-    public func noiseBudget(using secretKey: SecretKey<Scheme>, variableTime: Bool) throws -> Double
-        where Format == Eval
-    {
-        try Scheme.noiseBudget(of: self, using: secretKey, variableTime: variableTime)
-    }
-
-    /// Computes the noise budget of the ciphertext.
-    ///
-    /// The *noise budget* of a ciphertext decreases throughout HE operations. Once a ciphertext's noise budget is below
-    /// ``HeScheme/minNoiseBudget``, decryption may yield inaccurate plaintexts.
-    /// - Parameters:
-    ///   - secretKey: Secret key.
-    ///   - variableTime: Must be `true`, indicating the secret key coefficients are leaked through timing.
-    /// - Returns: The noise budget.
-    /// - Throws: Error upon failure to compute the noise budget.
-    /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
-    /// - seealso: ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0`` for an alternative API.
-    @inlinable
-    public func noiseBudget(using secretKey: SecretKey<Scheme>, variableTime: Bool) throws -> Double
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
+    public func noiseBudget(using secretKey: SecretKey<Scheme>, variableTime: Bool) throws -> Double {
         try Scheme.noiseBudget(of: self, using: secretKey, variableTime: variableTime)
     }
 }

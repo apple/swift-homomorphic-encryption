@@ -432,12 +432,12 @@ extension PolyRq {
         switch F.self {
         case is Coeff.Type:
             guard let poly = self as? PolyRq<T, Coeff> else {
-                throw HeError.errorInSameFormatCasting(F.self, Coeff.self)
+                throw HeError.errorCastingPolyFormat(from: F.self, to: Coeff.self)
             }
             return poly
         default:
             guard let poly = self as? PolyRq<T, Eval> else {
-                throw HeError.errorInSameFormatCasting(F.self, Eval.self)
+                throw HeError.errorCastingPolyFormat(from: F.self, to: Eval.self)
             }
             return try poly.inverseNtt()
         }
@@ -452,12 +452,12 @@ extension PolyRq {
         switch F.self {
         case is Coeff.Type:
             guard let poly = self as? PolyRq<T, Coeff> else {
-                throw HeError.errorInSameFormatCasting(F.self, Coeff.self)
+                throw HeError.errorCastingPolyFormat(from: F.self, to: Coeff.self)
             }
             return try poly.forwardNtt()
         default:
             guard let poly = self as? PolyRq<T, Eval> else {
-                throw HeError.errorInSameFormatCasting(F.self, Eval.self)
+                throw HeError.errorCastingPolyFormat(from: F.self, to: Eval.self)
             }
             return poly
         }
@@ -472,17 +472,17 @@ extension PolyRq {
         switch Format.self {
         case is Coeff.Type:
             guard let poly = try convertToCoeff() as? PolyRq<T, Format> else {
-                throw HeError.errorInSameFormatCasting(Format.self, F.self)
+                throw HeError.errorCastingPolyFormat(from: F.self, to: Format.self)
             }
             return poly
         case is Eval.Type:
             guard let poly = try convertToEval() as? PolyRq<T, Format> else {
-                throw HeError.errorInSameFormatCasting(Format.self, F.self)
+                throw HeError.errorCastingPolyFormat(from: F.self, to: Format.self)
             }
             return poly
         default:
             guard let poly = self as? PolyRq<T, Format> else {
-                throw HeError.errorInSameFormatCasting(Format.self, F.self)
+                throw HeError.errorCastingPolyFormat(from: F.self, to: Format.self)
             }
             return poly
         }

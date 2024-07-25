@@ -83,15 +83,14 @@ public protocol HeScheme {
 
     /// Ciphertext in ``Eval`` format.
     ///
-    /// ``Ciphertext/convertToEvalFormat()`` can be used to convert a ciphertext to a ``CoeffCiphertext``.
+    /// ``Ciphertext/convertToEvalFormat()`` can be used to convert a ciphertext to an ``EvalCiphertext``.
     typealias EvalCiphertext = Ciphertext<Self, Eval>
 
     /// The canonical representation of a ciphertext.
     ///
     /// The canonical representation is the default ciphertext representation.
-    /// ``Ciphertext/convertToCanonicalFormat()-1ouc4``
-    /// can be used to convert a ciphertext to a ``CoeffCiphertext``. However, some operations may require a specific
-    /// format, such as ``CoeffCiphertext`` or ``EvalCiphertext``.
+    /// ``Ciphertext/convertToCanonicalFormat()`` can be used to convert a ciphertext to a ``CanonicalCiphertext``.
+    /// However, some operations may require a specific format, such as ``CoeffCiphertext`` or ``EvalCiphertext``.
     typealias CanonicalCiphertext = Ciphertext<Self, CanonicalCiphertextFormat>
 
     /// Secret key type.
@@ -109,7 +108,7 @@ public protocol HeScheme {
 
     /// The minimum `noise budget` to guarantee a successful decryption.
     ///
-    /// - seealso: ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``.
+    /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)``.
     static var minNoiseBudget: Double { get }
 
     /// Generates a ``SecretKey``.
@@ -271,8 +270,7 @@ public protocol HeScheme {
     /// - Returns: The plaintext decryption of the ciphertext.
     /// - Throws: Error upon failure to decrypt.
     /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
-    ///  - seealso: The noise budget can be computed using
-    ///  ``HeScheme/noiseBudget(of:using:variableTime:)-143f3``.
+    ///  - seealso: The noise budget can be computed using ``Ciphertext/noiseBudget(using:variableTime:)``.
     ///  - seealso: ``Ciphertext/decrypt(using:)`` for an alternative API.
     static func decryptCoeff(_ ciphertext: CoeffCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
 
@@ -283,8 +281,7 @@ public protocol HeScheme {
     /// - Returns: The plaintext decryption of the ciphertext.
     /// - Throws: Error upon failure to decrypt.
     /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
-    ///  - seealso: The noise budget can be computed using
-    ///  ``HeScheme/noiseBudget(of:using:variableTime:)-7vpza``.
+    ///  - seealso: The noise budget can be computed using ``Ciphertext/noiseBudget(using:variableTime:)``.
     ///  - seealso: ``Ciphertext/decrypt(using:)`` for an alternative API.
     static func decryptEval(_ ciphertext: EvalCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
 
@@ -552,10 +549,9 @@ public protocol HeScheme {
     /// Modulus switching drops the last coefficient modulus in the ciphertext's current ciphertext modulus, without
     /// affecting the value of the plaintext after decryption. Modulus switching reduces the runtime, serialization
     /// size, and memory overhead of the resulting ciphertext. However, it may also reduce the noise budget (see
-    /// ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``) of the ciphertext. The ideal time to mod switch
-    /// therefore
-    /// depends on the encrypted circuit. A simple guideline is to `modSwitchDown` immediately prior to serialization
-    /// and sending the ciphertext to the secret key owner.
+    /// ``Ciphertext/noiseBudget(using:variableTime:)``) of the ciphertext. The ideal time to mod switch
+    /// therefore depends on the encrypted circuit. A simple guideline is to `modSwitchDown` immediately prior to
+    /// serialization and sending the ciphertext to the secret key owner.
     /// - Parameter ciphertext: Ciphertext; must have > 1 ciphertext modulus.
     /// - Throws: Error upon failure to mod-switch.
     /// - seealso: ``Ciphertext/modSwitchDown()`` for an alternative API.
@@ -618,8 +614,8 @@ public protocol HeScheme {
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
-    /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)-7dicj`` for an alternative API.
-    static func noiseBudget(of ciphertext: CanonicalCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
+    /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)`` for an alternative API.
+    static func noiseBudgetCoeff(of ciphertext: CoeffCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
         -> Double
 
     /// Computes the noise budget of a ciphertext.
@@ -633,23 +629,8 @@ public protocol HeScheme {
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
-    /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)-6ha4l`` for an alternative API.
-    static func noiseBudget(of ciphertext: CoeffCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
-        -> Double
-
-    /// Computes the noise budget of a ciphertext.
-    ///
-    /// The *noise budget* of a ciphertext decreases throughout HE operations. Once a ciphertext's noise budget is below
-    /// ``HeScheme/minNoiseBudget``, decryption may yield inaccurate plaintexts.
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext whose noise budget to compute.
-    ///   - secretKey: Secret key.
-    ///   - variableTime: Must be `true`, indicating the secret key coefficients are leaked through timing.
-    /// - Returns: The noise budget.
-    /// - Throws: Error upon failure to compute the noise budget.
-    /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
-    /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)-39n1i`` for an alternative API.
-    static func noiseBudget(of ciphertext: EvalCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
+    /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)`` for an alternative API.
+    static func noiseBudgetEval(of ciphertext: EvalCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
         -> Double
 }
 
@@ -661,8 +642,7 @@ extension HeScheme {
     /// - Returns: The plaintext decryption of the ciphertext.
     /// - Throws: Error upon failure to decrypt.
     /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
-    ///  - seealso: The noise budget can be computed using
-    ///  ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``.
+    ///  - seealso: The noise budget can be computed using ``Ciphertext/noiseBudget(using:variableTime:)``.
     ///  - seealso: ``Ciphertext/decrypt(using:)`` for an alternative API.
     @inlinable
     public static func decrypt<Format: PolyFormat>(_ ciphertext: Ciphertext<Self, Format>,
@@ -820,6 +800,39 @@ extension HeScheme {
         } else {
             fatalError("Unsupported Format \(LhsFormat.description)")
         }
+        // swiftlint:enable force_cast
+    }
+
+    /// Computes the noise budget of a ciphertext.
+    ///
+    /// The *noise budget* of a ciphertext decreases throughout HE operations. Once a ciphertext's noise budget is below
+    /// ``HeScheme/minNoiseBudget``, decryption may yield inaccurate plaintexts.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext whose noise budget to compute.
+    ///   - secretKey: Secret key.
+    ///   - variableTime: Must be `true`, indicating the secret key coefficients are leaked through timing.
+    /// - Returns: The noise budget.
+    /// - Throws: Error upon failure to compute the noise budget.
+    /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
+    /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)`` for an alternative API.
+    @inlinable
+    public static func noiseBudget<Format: PolyFormat>(
+        of ciphertext: Ciphertext<Self, Format>,
+        using secretKey: SecretKey,
+        variableTime: Bool) throws
+        -> Double
+    {
+        // swiftlint:disable force_cast
+        if Format.self == Coeff.self {
+            return try noiseBudgetCoeff(
+                of: ciphertext as! CoeffCiphertext,
+                using: secretKey,
+                variableTime: variableTime)
+        }
+        if Format.self == Eval.self {
+            return try noiseBudgetEval(of: ciphertext as! EvalCiphertext, using: secretKey, variableTime: variableTime)
+        }
+        fatalError("Unsupported Format \(Format.description)")
         // swiftlint:enable force_cast
     }
 }

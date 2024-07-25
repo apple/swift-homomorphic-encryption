@@ -66,7 +66,7 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     ///
     /// and should generally be chosen as the largest of the coefficient moduli to minimize noise growth on those
     /// operations.
-    /// - seealso: ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``
+    /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)``
     public let coefficientModuli: [Scheme.Scalar]
 
     /// RLWE error polynomial standard deviation.

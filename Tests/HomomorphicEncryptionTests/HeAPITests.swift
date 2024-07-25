@@ -996,6 +996,18 @@ class HeAPITests: XCTestCase {
 
         var noiseBudget = try Bfv<T>.noiseBudget(of: ciphertext, using: testEnv.secretKey, variableTime: true)
         XCTAssert(noiseBudget > 0)
+
+        let coeffNoiseBudget = try Bfv<T>.noiseBudget(
+            of: ciphertext.convertToCoeffFormat(),
+            using: testEnv.secretKey,
+            variableTime: true)
+        let canonicalNoiseBudget = try Bfv<T>.noiseBudget(
+            of: ciphertext.convertToCanonicalFormat(),
+            using: testEnv.secretKey,
+            variableTime: true)
+        XCTAssertEqual(coeffNoiseBudget, noiseBudget)
+        XCTAssertEqual(canonicalNoiseBudget, noiseBudget)
+
         while noiseBudget > Bfv<T>.minNoiseBudget + 1 {
             ciphertext = try ciphertext + ciphertext
             try expected += expected

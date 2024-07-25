@@ -64,7 +64,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     @inlinable
-    public static func subAssign(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws {
+    public static func subAssignCoeff(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws {
         try plaintextTranslate(ciphertext: &ciphertext, plaintext: plaintext, op: PlaintextTranslateOp.Subtract)
     }
 
@@ -101,10 +101,12 @@ public enum Bfv<T: ScalarType>: HeScheme {
     // These operations could be supported with extra NTT conversions, but NTTs are expensive, so we prefer to
     // keep NTT conversions explicit
 
+    @inlinable
     public static func addAssignCoeffEval(_: inout CoeffCiphertext, _: EvalPlaintext) throws {
         throw HeError.unsupportedHeOperation()
     }
 
+    @inlinable
     public static func addAssignEvalCoeff(_: inout EvalCiphertext, _: CoeffPlaintext) throws {
         throw HeError.unsupportedHeOperation()
     }
@@ -115,12 +117,17 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     @inlinable
-    public static func subAssign(_: inout EvalCiphertext, _: EvalPlaintext) throws {
+    public static func subAssignCoeffEval(_: inout CoeffCiphertext, _: EvalPlaintext) throws {
         throw HeError.unsupportedHeOperation()
     }
 
     @inlinable
-    public static func subAssign(_: inout CanonicalCiphertext, _: EvalPlaintext) throws {
+    public static func subAssignEvalCoeff(_: inout EvalCiphertext, _: CoeffPlaintext) throws {
+        throw HeError.unsupportedHeOperation()
+    }
+
+    @inlinable
+    public static func subAssignEval(_: inout EvalCiphertext, _: EvalPlaintext) throws {
         throw HeError.unsupportedHeOperation()
     }
 

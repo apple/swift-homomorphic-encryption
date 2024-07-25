@@ -415,7 +415,7 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext to subtract from; will store the difference.
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
-    static func subAssign(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws
+    static func subAssignCoeff(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws
 
     /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
     ///
@@ -423,7 +423,23 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext to subtract from; will store the difference.
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
-    static func subAssign(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws
+    static func subAssignCoeffEval(_ ciphertext: inout CoeffCiphertext, _ plaintext: EvalPlaintext) throws
+
+    /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
+    ///
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to subtract from; will store the difference.
+    ///   - plaintext: Plaintext to subtract.
+    /// - Throws: Error upon failure to subtract.
+    static func subAssignEval(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws
+
+    /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
+    ///
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to subtract from; will store the difference.
+    ///   - plaintext: Plaintext to subtract.
+    /// - Throws: Error upon failure to subtract.
+    static func subAssignEvalCoeff(_ ciphertext: inout EvalCiphertext, _ plaintext: CoeffPlaintext) throws
 
     /// In-place ciphertext-plaintext multiplication: `ciphertext *= plaintext`.
     ///
@@ -691,6 +707,44 @@ extension HeScheme {
                 try addAssignEvalCoeff(&evalCiphertext, plaintext as! CoeffPlaintext)
             } else if PlaintextFormat.self == Eval.self {
                 try addAssignEval(&evalCiphertext, plaintext as! EvalPlaintext)
+            } else {
+                fatalError("Unsupported PlaintextFormat \(PlaintextFormat.description)")
+            }
+            ciphertext = evalCiphertext as! Ciphertext<Self, CiphertextFormat>
+        } else {
+            fatalError("Unsupported CiphertextFormat \(CiphertextFormat.description)")
+        }
+        // swiftlint:enable force_cast
+    }
+
+    /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
+    ///
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to subtract from; will store the difference.
+    ///   - plaintext: Plaintext to subtract.
+    /// - Throws: Error upon failure to subtract.
+    @inlinable
+    public static func subAssign<CiphertextFormat: PolyFormat, PlaintextFormat: PolyFormat>(
+        _ ciphertext: inout Ciphertext<Self, CiphertextFormat>,
+        _ plaintext: Plaintext<Self, PlaintextFormat>) throws
+    {
+        // swiftlint:disable force_cast
+        if CiphertextFormat.self == Coeff.self {
+            var coeffCiphertext = ciphertext as! Ciphertext<Self, Coeff>
+            if PlaintextFormat.self == Coeff.self {
+                try subAssignCoeff(&coeffCiphertext, plaintext as! CoeffPlaintext)
+            } else if PlaintextFormat.self == Eval.self {
+                try subAssignCoeffEval(&coeffCiphertext, plaintext as! EvalPlaintext)
+            } else {
+                fatalError("Unsupported PlaintextFormat \(PlaintextFormat.description)")
+            }
+            ciphertext = coeffCiphertext as! Ciphertext<Self, CiphertextFormat>
+        } else if CiphertextFormat.self == Eval.self {
+            var evalCiphertext = ciphertext as! Ciphertext<Self, Eval>
+            if PlaintextFormat.self == Coeff.self {
+                try subAssignEvalCoeff(&evalCiphertext, plaintext as! CoeffPlaintext)
+            } else if PlaintextFormat.self == Eval.self {
+                try subAssignEval(&evalCiphertext, plaintext as! EvalPlaintext)
             } else {
                 fatalError("Unsupported PlaintextFormat \(PlaintextFormat.description)")
             }

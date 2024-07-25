@@ -82,32 +82,9 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     // MARK: ciphertext -= plaintext
 
     @inlinable
-    public static func -= (ciphertext: inout Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Coeff>) throws
-        where Format == Coeff
-    {
-        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
-        try Scheme.subAssign(&ciphertext, plaintext)
-    }
-
-    @inlinable
-    public static func -= (ciphertext: inout Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws
-        where Format == Eval
-    {
-        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
-        try Scheme.subAssign(&ciphertext, plaintext)
-    }
-
-    @inlinable
-    public static func -= (ciphertext: inout Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Coeff>) throws
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
-        try Scheme.subAssign(&ciphertext, plaintext)
-    }
-
-    @inlinable
-    public static func -= (ciphertext: inout Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws
-        where Format == Scheme.CanonicalCiphertextFormat
+    public static func -= (
+        ciphertext: inout Ciphertext<Scheme, Format>,
+        plaintext: Plaintext<Scheme, some PolyFormat>) throws
     {
         try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
         try Scheme.subAssign(&ciphertext, plaintext)
@@ -487,53 +464,8 @@ extension Ciphertext {
     /// - Returns: A ciphertext encrypting the difference `ciphertext - plaintext`.
     /// - Throws: Error upon failure to subtract.
     @inlinable
-    public static func - (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Coeff>) throws -> Self
-        where Format == Coeff
-    {
-        var result = ciphertext
-        try result -= plaintext
-        return result
-    }
-
-    /// Ciphertext-plaintext subtraction.
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to subtract from.
-    ///   - plaintext: Plaintext to subtract.
-    /// - Returns: A ciphertext encrypting the difference `ciphertext - plaintext`.
-    /// - Throws: Error upon failure to subtract.
-    @inlinable
-    public static func - (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws -> Self
-        where Format == Eval
-    {
-        var result = ciphertext
-        try result -= plaintext
-        return result
-    }
-
-    /// Ciphertext-plaintext subtraction.
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to subtract from.
-    ///   - plaintext: Plaintext to subtract.
-    /// - Returns: A ciphertext encrypting the difference `ciphertext - plaintext`.
-    /// - Throws: Error upon failure to subtract.
-    @inlinable
-    public static func - (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Coeff>) throws -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        var result = ciphertext
-        try result -= plaintext
-        return result
-    }
-
-    /// Ciphertext-plaintext subtraction.
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to subtract from.
-    ///   - plaintext: Plaintext to subtract.
-    /// - Returns: A ciphertext encrypting the difference `ciphertext - plaintext`.
-    /// - Throws: Error upon failure to subtract.
-    @inlinable
-    public static func - (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
+    public static func - (ciphertext: Ciphertext<Scheme, Format>,
+                          plaintext: Plaintext<Scheme, some PolyFormat>) throws -> Self
     {
         var result = ciphertext
         try result -= plaintext

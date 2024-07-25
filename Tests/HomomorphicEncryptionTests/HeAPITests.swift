@@ -630,33 +630,70 @@ class HeAPITests: XCTestCase {
         let coeffPlaintext = testEnv.coeffPlaintext2
         let evalPlaintext = try coeffPlaintext.forwardNtt()
 
-        // canonicalCiphertext - coeffPlaintext
-        try testEnv.checkDecryptsDecodes(
-            ciphertext: canonicalCiphertext - coeffPlaintext,
-            format: .simd,
-            expected: diffData)
-
-        // canonicalCiphertext + evalPlaintext
+        // canonicalCiphertext
         do {
+            // canonicalCiphertext - coeffPlaintext
             try testEnv.checkDecryptsDecodes(
-                ciphertext: canonicalCiphertext - evalPlaintext,
+                ciphertext: canonicalCiphertext - coeffPlaintext,
                 format: .simd,
                 expected: diffData)
-        } catch HeError.unsupportedHeOperation(_) {}
 
-        // evalCiphertext + evalPlaintext
+            // canonicalCiphertext -= coeffPlaintext
+            do {
+                var diff = canonicalCiphertext
+                try diff -= coeffPlaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diffData)
+            }
+
+            // canonicalCiphertext - evalPlaintext
+            do {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: canonicalCiphertext - evalPlaintext,
+                    format: .simd,
+                    expected: diffData)
+            } catch HeError.unsupportedHeOperation(_) {}
+
+            // canonicalCiphertext -= evalPlaintext
+            do {
+                var diff = canonicalCiphertext
+                try diff -= evalPlaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diffData)
+            } catch HeError.unsupportedHeOperation(_) {}
+        }
+
+        // coeffCiphertext
         do {
+            // coeffCiphertext - coeffPlaintext
             try testEnv.checkDecryptsDecodes(
-                ciphertext: evalCiphertext - evalPlaintext,
+                ciphertext: coeffCiphertext - coeffPlaintext,
                 format: .simd,
                 expected: diffData)
-        } catch HeError.unsupportedHeOperation(_) {}
 
-        // coeffCiphertext + coeffPlaintext
-        try testEnv.checkDecryptsDecodes(
-            ciphertext: coeffCiphertext - coeffPlaintext,
-            format: .simd,
-            expected: diffData)
+            // coeffCiphertext -= coeffPlaintext
+            do {
+                var diff = coeffCiphertext
+                try diff -= coeffPlaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diffData)
+            }
+        }
+
+        // evalCiphertext
+        do {
+            // evalCiphertext - evalPlaintext
+            do {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: evalCiphertext - evalPlaintext,
+                    format: .simd,
+                    expected: diffData)
+            } catch HeError.unsupportedHeOperation(_) {}
+
+            // evalCiphertext -= evalPlaintext
+            do {
+                var diff = evalCiphertext
+                try diff -= evalPlaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diffData)
+            } catch HeError.unsupportedHeOperation(_) {}
+        }
     }
 
     private func schemeCiphertextPlaintextMultiplicationTest<Scheme: HeScheme>(context: Context<Scheme>) throws {

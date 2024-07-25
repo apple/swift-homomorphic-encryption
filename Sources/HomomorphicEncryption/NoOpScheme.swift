@@ -189,24 +189,24 @@ public enum NoOpScheme: HeScheme {
 
     // MARK: ciphertext += ciphertext
 
-    public static func addAssign(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws {
+    public static func addAssignCoeff(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws {
         try validateEquality(of: lhs.context, and: rhs.context)
         lhs.polys[0] += rhs.polys[0]
     }
 
-    public static func addAssign(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws {
+    public static func addAssignEval(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws {
         try validateEquality(of: lhs.context, and: rhs.context)
         lhs.polys[0] += rhs.polys[0]
     }
 
     // MARK: ciphertext -= ciphertext
 
-    public static func subAssign(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws {
+    public static func subAssignCoeff(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws {
         try validateEquality(of: lhs.context, and: rhs.context)
         lhs.polys[0] -= rhs.polys[0]
     }
 
-    public static func subAssign(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws {
+    public static func subAssignEval(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws {
         try validateEquality(of: lhs.context, and: rhs.context)
         lhs.polys[0] -= rhs.polys[0]
     }

@@ -46,25 +46,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     // MARK: ciphertext += ciphertext
 
     @inlinable
-    public static func += (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws
-        where Format == Coeff
-    {
-        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
-        try Scheme.addAssign(&lhs, rhs)
-    }
-
-    @inlinable
-    public static func += (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws
-        where Format == Eval
-    {
-        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
-        try Scheme.addAssign(&lhs, rhs)
-    }
-
-    @inlinable
-    public static func += (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
+    public static func += (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, some PolyFormat>) throws {
         try Scheme.validateEquality(of: lhs.context, and: rhs.context)
         try Scheme.addAssign(&lhs, rhs)
     }
@@ -72,9 +54,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     // MARK: ciphertext -= ciphertext
 
     @inlinable
-    public static func -= (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
+    public static func -= (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, some PolyFormat>) throws {
         try Scheme.validateEquality(of: lhs.context, and: rhs.context)
         try Scheme.subAssign(&lhs, rhs)
     }
@@ -88,24 +68,6 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     {
         try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
         try Scheme.subAssign(&ciphertext, plaintext)
-    }
-
-    // MARK: ciphertext -= ciphertext
-
-    @inlinable
-    public static func -= (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws
-        where Format == Coeff
-    {
-        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
-        try Scheme.subAssign(&lhs, rhs)
-    }
-
-    @inlinable
-    public static func -= (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws
-        where Format == Eval
-    {
-        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
-        try Scheme.subAssign(&lhs, rhs)
     }
 
     // MARK: ciphertext *= plaintext
@@ -347,7 +309,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
     ///  - seealso: The noise budget can be computed using
     ///  ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``.
-    ///  - seealso: ``HeScheme/decrypt(_:using:)-32dcy`` for an alternative API.
+    ///  - seealso: ``HeScheme/decrypt(_:using:)`` for an alternative API.
     @inlinable
     public func decrypt(using secretKey: SecretKey<Scheme>) throws -> Scheme.CoeffPlaintext {
         try Scheme.decrypt(self, using: secretKey)
@@ -481,39 +443,7 @@ extension Ciphertext {
     /// - Returns: A ciphertext encrypting the sum `lhs + rhs'.
     /// - Throws: Error upon failure to add.
     @inlinable
-    public static func + (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Coeff
-    {
-        var result = lhs
-        try result += rhs
-        return result
-    }
-
-    /// Ciphertext addition.
-    /// - Parameters:
-    ///   - lhs: Ciphertext to add.
-    ///   - rhs: Plaintext to add.
-    /// - Returns: A ciphertext encrypting the sum `lhs + rhs'.
-    /// - Throws: Error upon failure to add.
-    @inlinable
-    public static func + (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Eval
-    {
-        var result = lhs
-        try result += rhs
-        return result
-    }
-
-    /// Ciphertext addition.
-    /// - Parameters:
-    ///   - lhs: Ciphertext to add.
-    ///   - rhs: Plaintext to add.
-    /// - Returns: A ciphertext encrypting the sum `lhs + rhs'.
-    /// - Throws: Error upon failure to add.
-    @inlinable
-    public static func + (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
+    public static func + (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, some PolyFormat>) throws -> Self {
         var result = lhs
         try result += rhs
         return result
@@ -528,39 +458,7 @@ extension Ciphertext {
     /// - Returns: A ciphertext encrypting the difference `lhs - rhs'.
     /// - Throws: Error upon failure to subtract.
     @inlinable
-    public static func - (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Coeff
-    {
-        var result = lhs
-        try result -= rhs
-        return result
-    }
-
-    /// Ciphertext subtraction.
-    /// - Parameters:
-    ///   - lhs: Ciphertext to subtract from.
-    ///   - rhs: Ciphertext to subtract.
-    /// - Returns: A ciphertext encrypting the difference `lhs - rhs'.
-    /// - Throws: Error upon failure to subtract.
-    @inlinable
-    public static func - (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Eval
-    {
-        var result = lhs
-        try result -= rhs
-        return result
-    }
-
-    /// Ciphertext subtraction.
-    /// - Parameters:
-    ///   - lhs: Ciphertext to subtract from.
-    ///   - rhs: Ciphertext to subtract.
-    /// - Returns: A ciphertext encrypting the difference `lhs - rhs'.
-    /// - Throws: Error upon failure to subtract.
-    @inlinable
-    public static func - (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
+    public static func - (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, some PolyFormat>) throws -> Self {
         var result = lhs
         try result -= rhs
         return result

@@ -273,7 +273,7 @@ public protocol HeScheme {
     /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
     ///  - seealso: The noise budget can be computed using
     ///  ``HeScheme/noiseBudget(of:using:variableTime:)-143f3``.
-    ///  - seealso: ``Ciphertext/decrypt(using:)-4n5b2`` for an alternative API.
+    ///  - seealso: ``Ciphertext/decrypt(using:)`` for an alternative API.
     static func decryptCoeff(_ ciphertext: CoeffCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
 
     /// Decryption of a ciphertext in evaluation format.
@@ -285,7 +285,7 @@ public protocol HeScheme {
     /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
     ///  - seealso: The noise budget can be computed using
     ///  ``HeScheme/noiseBudget(of:using:variableTime:)-7vpza``.
-    ///  - seealso: ``Ciphertext/decrypt(using:)-62y2c`` for an alternative API.
+    ///  - seealso: ``Ciphertext/decrypt(using:)`` for an alternative API.
     static func decryptEval(_ ciphertext: EvalCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
 
     /// Rotates the columns of a ciphertext.
@@ -353,21 +353,21 @@ public protocol HeScheme {
     ///   - lhs: Ciphertext to add; will store the sum.
     ///   - rhs: Ciphertext to add.
     /// - Throws: Error upon failure to add.
-    static func addAssign(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws
+    static func addAssignCoeff(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws
 
     /// In-place ciphertext addition: `lhs += rhs`.
     /// - Parameters:
     ///   - lhs: Ciphertext to add; will store the sum.
     ///   - rhs: Ciphertext to add.
     /// - Throws: Error upon failure to add.
-    static func addAssign(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws
+    static func addAssignEval(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws
 
     /// In-place ciphertext subtraction: `lhs -= rhs`.
     /// - Parameters:
     ///   - lhs: Ciphertext to subtract from; will store the difference.
     ///   - rhs: Ciphertext to subtract.
     /// - Throws: Error upon failure to subtract.
-    static func subAssign(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws
+    static func subAssignCoeff(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws
 
     /// In-place ciphertext subtraction: `lhs -= rhs`.
     ///
@@ -375,7 +375,7 @@ public protocol HeScheme {
     ///   - lhs: Ciphertext to subtract from; will store the difference.
     ///   - rhs: Ciphertext to subtract.
     /// - Throws: Error upon failure to subtract.
-    static func subAssign(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws
+    static func subAssignEval(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws
 
     /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
     ///
@@ -663,7 +663,7 @@ extension HeScheme {
     /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
     ///  - seealso: The noise budget can be computed using
     ///  ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``.
-    ///  - seealso: ``Ciphertext/decrypt(using:)-9qn9g`` for an alternative API.
+    ///  - seealso: ``Ciphertext/decrypt(using:)`` for an alternative API.
     @inlinable
     public static func decrypt<Format: PolyFormat>(_ ciphertext: Ciphertext<Self, Format>,
                                                    using secretKey: SecretKey) throws -> CoeffPlaintext
@@ -692,7 +692,7 @@ extension HeScheme {
     {
         // swiftlint:disable force_cast
         if CiphertextFormat.self == Coeff.self {
-            var coeffCiphertext = ciphertext as! Ciphertext<Self, Coeff>
+            var coeffCiphertext = ciphertext as! CoeffCiphertext
             if PlaintextFormat.self == Coeff.self {
                 try addAssignCoeff(&coeffCiphertext, plaintext as! CoeffPlaintext)
             } else if PlaintextFormat.self == Eval.self {
@@ -702,7 +702,7 @@ extension HeScheme {
             }
             ciphertext = coeffCiphertext as! Ciphertext<Self, CiphertextFormat>
         } else if CiphertextFormat.self == Eval.self {
-            var evalCiphertext = ciphertext as! Ciphertext<Self, Eval>
+            var evalCiphertext = ciphertext as! EvalCiphertext
             if PlaintextFormat.self == Coeff.self {
                 try addAssignEvalCoeff(&evalCiphertext, plaintext as! CoeffPlaintext)
             } else if PlaintextFormat.self == Eval.self {
@@ -713,6 +713,40 @@ extension HeScheme {
             ciphertext = evalCiphertext as! Ciphertext<Self, CiphertextFormat>
         } else {
             fatalError("Unsupported CiphertextFormat \(CiphertextFormat.description)")
+        }
+        // swiftlint:enable force_cast
+    }
+
+    /// In-place ciphertext addition: `lhs += rhs`.
+    ///
+    /// - Parameters:
+    ///   - lhs: Ciphertext to add; will store the sum.
+    ///   - rhs: Ciphertext to add.
+    /// - Throws: Error upon failure to add.
+    @inlinable
+    public static func addAssign<LhsFormat: PolyFormat, RhsFormat: PolyFormat>(
+        _ lhs: inout Ciphertext<Self, LhsFormat>,
+        _ rhs: Ciphertext<Self, RhsFormat>) throws
+    {
+        // swiftlint:disable force_cast
+        if LhsFormat.self == Coeff.self {
+            var lhsCoeffCiphertext = lhs as! CoeffCiphertext
+            if RhsFormat.self == Coeff.self {
+                try addAssignCoeff(&lhsCoeffCiphertext, rhs as! CoeffCiphertext)
+            } else {
+                fatalError("Unsupported Format \(RhsFormat.description)")
+            }
+            lhs = lhsCoeffCiphertext as! Ciphertext<Self, LhsFormat>
+        } else if LhsFormat.self == Eval.self {
+            var lhsEvalCiphertext = lhs as! EvalCiphertext
+            if RhsFormat.self == Eval.self {
+                try addAssignEval(&lhsEvalCiphertext, rhs as! EvalCiphertext)
+            } else {
+                fatalError("Unsupported Format \(RhsFormat.description)")
+            }
+            lhs = lhsEvalCiphertext as! Ciphertext<Self, LhsFormat>
+        } else {
+            fatalError("Unsupported Format \(LhsFormat.description)")
         }
         // swiftlint:enable force_cast
     }
@@ -751,6 +785,40 @@ extension HeScheme {
             ciphertext = evalCiphertext as! Ciphertext<Self, CiphertextFormat>
         } else {
             fatalError("Unsupported CiphertextFormat \(CiphertextFormat.description)")
+        }
+        // swiftlint:enable force_cast
+    }
+
+    /// In-place ciphertext subtraction: `lhs -= rhs`.
+    ///
+    /// - Parameters:
+    ///   - lhs: Ciphertext to subtract from; will store the difference.
+    ///   - rhs: Ciphertext to subtract.
+    /// - Throws: Error upon failure to subtract.
+    @inlinable
+    public static func subAssign<LhsFormat: PolyFormat, RhsFormat: PolyFormat>(
+        _ lhs: inout Ciphertext<Self, LhsFormat>,
+        _ rhs: Ciphertext<Self, RhsFormat>) throws
+    {
+        // swiftlint:disable force_cast
+        if LhsFormat.self == Coeff.self {
+            var lhsCoeffCiphertext = lhs as! CoeffCiphertext
+            if RhsFormat.self == Coeff.self {
+                try subAssignCoeff(&lhsCoeffCiphertext, rhs as! CoeffCiphertext)
+            } else {
+                fatalError("Unsupported Format \(RhsFormat.description)")
+            }
+            lhs = lhsCoeffCiphertext as! Ciphertext<Self, LhsFormat>
+        } else if LhsFormat.self == Eval.self {
+            var lhsEvalCiphertext = lhs as! EvalCiphertext
+            if RhsFormat.self == Eval.self {
+                try subAssignEval(&lhsEvalCiphertext, rhs as! EvalCiphertext)
+            } else {
+                fatalError("Unsupported Format \(RhsFormat.description)")
+            }
+            lhs = lhsEvalCiphertext as! Ciphertext<Self, LhsFormat>
+        } else {
+            fatalError("Unsupported Format \(LhsFormat.description)")
         }
         // swiftlint:enable force_cast
     }

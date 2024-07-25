@@ -35,7 +35,23 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     @inlinable
-    public static func addAssign<F: PolyFormat>(
+    public static func addAssignCoeff<F: PolyFormat>(
+        _ lhs: inout Ciphertext<Bfv<T>, F>,
+        _ rhs: Ciphertext<Bfv<T>, F>) throws
+    {
+        try addAssignSameType(&lhs, rhs)
+    }
+
+    @inlinable
+    public static func addAssignEval<F: PolyFormat>(
+        _ lhs: inout Ciphertext<Bfv<T>, F>,
+        _ rhs: Ciphertext<Bfv<T>, F>) throws
+    {
+        try addAssignSameType(&lhs, rhs)
+    }
+
+    @inlinable
+    public static func addAssignSameType<F: PolyFormat>(
         _ lhs: inout Ciphertext<Bfv<T>, F>,
         _ rhs: Ciphertext<Bfv<T>, F>) throws
     {
@@ -47,7 +63,23 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     @inlinable
-    public static func subAssign<F: PolyFormat>(
+    public static func subAssignCoeff<F: PolyFormat>(
+        _ lhs: inout Ciphertext<Bfv<T>, F>,
+        _ rhs: Ciphertext<Bfv<T>, F>) throws
+    {
+        try subAssignSameType(&lhs, rhs)
+    }
+
+    @inlinable
+    public static func subAssignEval<F: PolyFormat>(
+        _ lhs: inout Ciphertext<Bfv<T>, F>,
+        _ rhs: Ciphertext<Bfv<T>, F>) throws
+    {
+        try subAssignSameType(&lhs, rhs)
+    }
+
+    @inlinable
+    static func subAssignSameType<F: PolyFormat>(
         _ lhs: inout Ciphertext<Bfv<T>, F>,
         _ rhs: Ciphertext<Bfv<T>, F>) throws
     {

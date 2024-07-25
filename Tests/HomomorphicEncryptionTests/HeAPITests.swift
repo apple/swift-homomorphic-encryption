@@ -256,58 +256,186 @@ class HeAPITests: XCTestCase {
         try testEnv.checkDecryptsDecodes(ciphertext: product, format: .coefficient, expected: expected)
     }
 
-    private func schemeSameTypeAdditionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    private func schemeCiphertextAdditionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         let testEnv = try TestEnv(context: context, format: .coefficient)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
         let sumData = zip(data1, data2).map { x, y in x.addMod(y, modulus: context.plaintextModulus) }
 
-        let coeffPlaintext1 = testEnv.coeffPlaintext1
-        let coeffPlaintext2 = testEnv.coeffPlaintext2
-        let plaintextSum = try coeffPlaintext1 + coeffPlaintext2
-        var ciphertext1 = testEnv.ciphertext1
-        var ciphertext2 = testEnv.ciphertext2
-        let ciphertextSum1 = try ciphertext1 + ciphertext2
-        try ciphertext1.modSwitchDownToSingle()
-        try ciphertext2.modSwitchDownToSingle()
-        let ciphertextSum2 = try ciphertext1 + ciphertext2
+        let canonicalCipher1 = testEnv.ciphertext1
+        let canonicalCipher2 = testEnv.ciphertext2
+        let evalCipher1 = try canonicalCipher1.convertToEvalFormat()
+        let evalCipher2 = try canonicalCipher2.convertToEvalFormat()
+        let coeffCipher1 = try canonicalCipher1.convertToCoeffFormat()
+        let coeffCipher2 = try canonicalCipher2.convertToCoeffFormat()
 
-        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextSum1.convertToEvalFormat()
-        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+        // canonicalCiphertext
+        do {
+            // canonicalCiphertext + canonicalCiphertext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: canonicalCipher1 + canonicalCipher2,
+                format: .coefficient,
+                expected: sumData)
 
-        let decodedData: [Scheme.Scalar] = try context.decode(plaintext: plaintextSum, format: .coefficient)
-        XCTAssertEqual(decodedData, sumData)
+            // canonicalCiphertext += canonicalCiphertext
+            do {
+                var sum = canonicalCipher1
+                try sum += canonicalCipher2
+                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
+            }
 
-        let ciphertextSum3 = try [testEnv.ciphertext1, testEnv.ciphertext2].sum()
-        let ciphertextSum4 = try [testEnv.ciphertext1.convertToEvalFormat(), testEnv.ciphertext2.convertToEvalFormat()]
-            .sum()
+            // canonicalCiphertext + coeffCiphertext
+            if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: canonicalCipher1 + coeffCipher2,
+                    format: .coefficient,
+                    expected: sumData)
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: sumData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .coefficient, expected: sumData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextSum2, format: .coefficient, expected: sumData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextSum3, format: .coefficient, expected: sumData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextSum4, format: .coefficient, expected: sumData)
+                // canonicalCiphertext += coeffCipherrtext
+                do {
+                    var sum = canonicalCipher1
+                    try sum += coeffCipher2
+                    try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
+                }
+            }
+            // canonicalCiphertext + evalCiphertext
+            if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: canonicalCipher1 + evalCipher2,
+                    format: .coefficient,
+                    expected: sumData)
+
+                // canonicalCiphertext += evalCiphertext
+                do {
+                    var sum = canonicalCipher1
+                    try sum += evalCipher2
+                    try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
+                }
+            }
+        }
+
+        // coeffCiphertext
+        do {
+            // coeffCiphertext + coeffCiphertext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: coeffCipher1 + coeffCipher2,
+                format: .coefficient,
+                expected: sumData)
+
+            // coeffCiphertext + coeffCiphertext
+            do {
+                var sum = coeffCipher1
+                try sum += coeffCipher2
+                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
+            }
+        }
+
+        // evalCiphertext
+        do {
+            // evalCiphertext + evalCiphertext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: evalCipher1 + evalCipher2,
+                format: .coefficient,
+                expected: sumData)
+
+            // evalCiphertext += evalCiphertext
+            do {
+                var sum = evalCipher1
+                try sum += evalCipher2
+                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
+            }
+        }
     }
 
-    private func schemeSameTypeSubtractionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    private func schemeCiphertextSubtractionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         let testEnv = try TestEnv(context: context, format: .coefficient)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
         let diffData = zip(data1, data2).map { x, y in x.subtractMod(y, modulus: context.plaintextModulus) }
 
-        var ciphertext1 = testEnv.ciphertext1
-        var ciphertext2 = testEnv.ciphertext2
-        let ciphertextDiff1 = try ciphertext1 - ciphertext2
-        try ciphertext1.modSwitchDownToSingle()
-        try ciphertext2.modSwitchDownToSingle()
-        let ciphertextDiff2 = try ciphertext1 - ciphertext2
+        let canonicalCipher1 = testEnv.ciphertext1
+        let canonicalCipher2 = testEnv.ciphertext2
+        let evalCipher1 = try canonicalCipher1.convertToEvalFormat()
+        let evalCipher2 = try canonicalCipher2.convertToEvalFormat()
+        let coeffCipher1 = try canonicalCipher1.convertToCoeffFormat()
+        let coeffCipher2 = try canonicalCipher2.convertToCoeffFormat()
 
-        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextDiff1.convertToEvalFormat()
-        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+        // canonicalCiphertext
+        do {
+            // canonicalCiphertext - canonicalCiphertext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: canonicalCipher1 - canonicalCipher2,
+                format: .coefficient,
+                expected: diffData)
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: diffData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .coefficient, expected: diffData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextDiff2, format: .coefficient, expected: diffData)
+            // canonicalCiphertext -= canonicalCiphertext
+            do {
+                var diff = canonicalCipher1
+                try diff -= canonicalCipher2
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
+            }
+
+            // canonicalCiphertext - coeffCiphertext
+            if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: canonicalCipher1 - coeffCipher2,
+                    format: .coefficient,
+                    expected: diffData)
+
+                // canonicalCiphertext -= coeffCipherrtext
+                do {
+                    var diff = canonicalCipher1
+                    try diff -= coeffCipher2
+                    try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
+                }
+            }
+            // canonicalCiphertext - evalCiphertext
+            if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: canonicalCipher1 - evalCipher2,
+                    format: .coefficient,
+                    expected: diffData)
+
+                // canonicalCiphertext -= evalCiphertext
+                do {
+                    var diff = canonicalCipher1
+                    try diff -= evalCipher2
+                    try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
+                }
+            }
+        }
+
+        // coeffCiphertext
+        do {
+            // coeffCiphertext - coeffCiphertext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: coeffCipher1 - coeffCipher2,
+                format: .coefficient,
+                expected: diffData)
+
+            // coeffCiphertext -= coeffCiphertext
+            do {
+                var diff = coeffCipher1
+                try diff -= coeffCipher2
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
+            }
+        }
+
+        // evalCiphertext
+        do {
+            // evalCiphertext - evalCiphertext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: evalCipher1 - evalCipher2,
+                format: .coefficient,
+                expected: diffData)
+
+            // evalCiphertext -= evalCiphertext
+            do {
+                var diff = evalCipher1
+                try diff -= evalCipher2
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
+            }
+        }
     }
 
     private func schemeCiphertextCiphertextMultiplicationTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
@@ -807,8 +935,8 @@ class HeAPITests: XCTestCase {
         try schemeEncryptZeroDecryptTest(context: context)
         try schemeEncryptZeroAddDecryptTest(context: context)
         try schemeEncryptZeroMultiplyDecryptTest(context: context)
-        try schemeSameTypeAdditionTest(context: context)
-        try schemeSameTypeSubtractionTest(context: context)
+        try schemeCiphertextAdditionTest(context: context)
+        try schemeCiphertextSubtractionTest(context: context)
         try schemeCiphertextCiphertextMultiplicationTest(context: context)
         try schemeCiphertextPlaintextAdditionTest(context: context)
         try schemeCiphertextPlaintextSubtractionTest(context: context)
@@ -914,8 +1042,8 @@ class HeAPITests: XCTestCase {
             try schemeEncryptZeroDecryptTest(context: context)
             try schemeEncryptZeroAddDecryptTest(context: context)
             try schemeEncryptZeroMultiplyDecryptTest(context: context)
-            try schemeSameTypeAdditionTest(context: context)
-            try schemeSameTypeSubtractionTest(context: context)
+            try schemeCiphertextAdditionTest(context: context)
+            try schemeCiphertextSubtractionTest(context: context)
             try schemeCiphertextPlaintextAdditionTest(context: context)
             try schemeCiphertextPlaintextSubtractionTest(context: context)
             try schemeCiphertextPlaintextMultiplicationTest(context: context)

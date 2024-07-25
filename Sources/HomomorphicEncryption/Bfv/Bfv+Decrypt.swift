@@ -39,7 +39,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func noiseBudget(
+    public static func noiseBudgetEval(
         of ciphertext: EvalCiphertext,
         using secretKey: SecretKey<Bfv<T>>,
         variableTime: Bool) throws -> Double
@@ -90,10 +90,10 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func noiseBudget(of ciphertext: CoeffCiphertext,
-                                   using secretKey: SecretKey<Bfv<T>>, variableTime: Bool) throws -> Double
+    public static func noiseBudgetCoeff(of ciphertext: CoeffCiphertext,
+                                        using secretKey: SecretKey<Bfv<T>>, variableTime: Bool) throws -> Double
     {
-        try noiseBudget(of: ciphertext.convertToEvalFormat(), using: secretKey, variableTime: variableTime)
+        try noiseBudgetEval(of: ciphertext.convertToEvalFormat(), using: secretKey, variableTime: variableTime)
     }
 
     @inlinable

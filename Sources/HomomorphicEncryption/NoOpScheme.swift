@@ -276,14 +276,14 @@ public enum NoOpScheme: HeScheme {
 
     public static func relinearize(_: inout CanonicalCiphertext, using _: EvaluationKey<Self>) throws {}
 
-    public static func noiseBudget(of _: CanonicalCiphertext, using _: SecretKey<Self>,
-                                   variableTime _: Bool) throws -> Double
+    public static func noiseBudgetCoeff(of _: CoeffCiphertext, using _: SecretKey<Self>,
+                                        variableTime _: Bool) throws -> Double
     {
         minNoiseBudget
     }
 
-    public static func noiseBudget(of _: EvalCiphertext, using _: SecretKey<Self>,
-                                   variableTime _: Bool) throws -> Double
+    public static func noiseBudgetEval(of _: EvalCiphertext, using _: SecretKey<Self>,
+                                       variableTime _: Bool) throws -> Double
     {
         minNoiseBudget
     }

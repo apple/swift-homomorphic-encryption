@@ -20,7 +20,7 @@ public enum HeError: Error, Equatable {
     case emptyModulus
     case encodingDataCountExceedsLimit(count: Int, limit: Int)
     case encodingDataExceedsLimit(limit: Int)
-    case errorInSameFormatCasting(_ description: String)
+    case errorCastingPolyFormat(_ description: String)
     case incompatibleCiphertextAndPlaintext(_ description: String)
     case incompatibleCiphertextCount(_ description: String)
     case incompatibleCiphertexts(_ description: String)
@@ -52,8 +52,8 @@ public enum HeError: Error, Equatable {
 
 extension HeError {
     @inlinable
-    static func errorInSameFormatCasting(_ t1: (some PolyFormat).Type, _ t2: (some PolyFormat).Type) -> Self {
-        .errorInSameFormatCasting("Cast Format1: \(t1.description)to Format1: \(t2.description)")
+    static func errorCastingPolyFormat(from t1: (some PolyFormat).Type, to t2: (some PolyFormat).Type) -> Self {
+        .errorCastingPolyFormat("Error casting poly format from: \(t1.description) to: \(t2.description)")
     }
 
     @inlinable
@@ -178,8 +178,8 @@ extension HeError: LocalizedError {
             "Actual number of data \(count) exceeds limit \(limit)"
         case let .encodingDataExceedsLimit(limit):
             "Actual data exceeds limit \(limit)"
-        case let .errorInSameFormatCasting(description):
-            "Error in same format casting: \(description) "
+        case let .errorCastingPolyFormat(description):
+            "\(description) "
         case let .incompatibleCiphertextCount(description):
             "\(description)"
         case let .incompatibleCiphertexts(description):

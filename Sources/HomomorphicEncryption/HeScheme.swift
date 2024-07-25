@@ -239,20 +239,11 @@ public protocol HeScheme {
     /// Computes whether a ciphertext is transparent.
     ///
     /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
-    /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
-    /// - Parameter ciphertext: Ciphertext whose transparency to compute.
-    /// - Returns: Whether the ciphertext is transparent.
-    /// - seealso: ``Ciphertext/isTransparent()-zkhb`` for an alternative API.
-    static func isTransparent(ciphertext: CanonicalCiphertext) -> Bool
-
-    /// Computes whether a ciphertext is transparent.
-    ///
-    /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
     /// ``HeScheme/zeroCiphertext(context:moduliCount:)-1xec3`` yields a transparent transparent.
     /// - Parameter ciphertext: Ciphertext whose transparency to compute.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``Ciphertext/isTransparent()-2e258`` for an alternative API.
-    static func isTransparent(ciphertext: CoeffCiphertext) -> Bool
+    static func isTransparentCoeff(ciphertext: CoeffCiphertext) -> Bool
 
     /// Computes whether a ciphertext is transparent.
     ///
@@ -261,7 +252,7 @@ public protocol HeScheme {
     /// - Parameter ciphertext: Ciphertext whose transparency to compute.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``Ciphertext/isTransparent()-8x30o`` for an alternative API.
-    static func isTransparent(ciphertext: EvalCiphertext) -> Bool
+    static func isTransparentEval(ciphertext: EvalCiphertext) -> Bool
 
     /// Decryption of a ciphertext in coefficient format.
     /// - Parameters:
@@ -449,12 +440,12 @@ public protocol HeScheme {
     /// In-place ciphertext negation: `ciphertext = -ciphertext`.
     ///
     /// - Parameter ciphertext: Ciphertext to negate.
-    static func negAssign(_ ciphertext: inout EvalCiphertext)
+    static func negAssignCoeff(_ ciphertext: inout CoeffCiphertext)
 
     /// In-place ciphertext negation: `ciphertext = -ciphertext`.
     ///
     /// - Parameter ciphertext: Ciphertext to negate.
-    static func negAssign(_ ciphertext: inout CoeffCiphertext)
+    static func negAssignEval(_ ciphertext: inout EvalCiphertext)
 
     /// Computes an inner product between two collections of ciphertexts.
     ///
@@ -538,11 +529,6 @@ public protocol HeScheme {
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
     static func subAssign(_ ciphertext: inout CanonicalCiphertext, _ plaintext: EvalPlaintext) throws
-
-    /// In-place ciphertext negation: `ciphertext = -ciphertext`.
-    ///
-    /// - Parameter ciphertext:  Ciphertext to negate.
-    static func negAssign(_ ciphertext: inout CanonicalCiphertext)
 
     /// Performs modulus switching on the ciphertext.
     ///
@@ -803,6 +789,26 @@ extension HeScheme {
         // swiftlint:enable force_cast
     }
 
+    /// In-place ciphertext negation: `ciphertext = -ciphertext`.
+    ///
+    /// - Parameter ciphertext: Ciphertext to negate.
+    @inlinable
+    public static func negAssign<Format: PolyFormat>(_ ciphertext: inout Ciphertext<Self, Format>) {
+        // swiftlint:disable force_cast
+        if Format.self == Coeff.self {
+            var coeffCiphertext = ciphertext as! CoeffCiphertext
+            negAssignCoeff(&coeffCiphertext)
+            ciphertext = coeffCiphertext as! Ciphertext<Self, Format>
+        } else if Format.self == Eval.self {
+            var evalCiphertext = ciphertext as! EvalCiphertext
+            negAssignEval(&evalCiphertext)
+            ciphertext = evalCiphertext as! Ciphertext<Self, Format>
+        } else {
+            fatalError("Unsupported Format \(Format.description)")
+        }
+        // swiftlint:enable force_cast
+    }
+
     /// Computes the noise budget of a ciphertext.
     ///
     /// The *noise budget* of a ciphertext decreases throughout HE operations. Once a ciphertext's noise budget is below
@@ -831,6 +837,26 @@ extension HeScheme {
         }
         if Format.self == Eval.self {
             return try noiseBudgetEval(of: ciphertext as! EvalCiphertext, using: secretKey, variableTime: variableTime)
+        }
+        fatalError("Unsupported Format \(Format.description)")
+        // swiftlint:enable force_cast
+    }
+
+    /// Computes whether a ciphertext is transparent.
+    ///
+    /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
+    /// ``HeScheme/zeroCiphertext(context:moduliCount:)-1xec3`` yields a transparent transparent.
+    /// - Parameter ciphertext: Ciphertext whose transparency to compute.
+    /// - Returns: Whether the ciphertext is transparent.
+    /// - seealso: ``Ciphertext/isTransparent()`` for an alternative API.
+    @inlinable
+    public static func isTransparent<Format: PolyFormat>(ciphertext: Ciphertext<Self, Format>) -> Bool {
+        // swiftlint:disable force_cast
+        if Format.self == Coeff.self {
+            return isTransparentCoeff(ciphertext: ciphertext as! CoeffCiphertext)
+        }
+        if Format.self == Eval.self {
+            return isTransparentEval(ciphertext: ciphertext as! EvalCiphertext)
         }
         fatalError("Unsupported Format \(Format.description)")
         // swiftlint:enable force_cast

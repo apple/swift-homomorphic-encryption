@@ -41,7 +41,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func isTransparent(ciphertext: CoeffCiphertext) -> Bool {
+    public static func isTransparentCoeff(ciphertext: CoeffCiphertext) -> Bool {
         // Decryption multiplies all the polynomials except the first with powers of the secret key.
         // So the ciphertext is transparent if all polynomials except the first are zeros.
         ciphertext.polys[1...].allSatisfy { poly in
@@ -51,7 +51,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func isTransparent(ciphertext: EvalCiphertext) -> Bool {
+    public static func isTransparentEval(ciphertext: EvalCiphertext) -> Bool {
         // Decryption multiplies all the polynomials except the first with powers of the secret key.
         // So the ciphertext is transparent if all polynomials except the first are zeros.
         ciphertext.polys[1...].allSatisfy { poly in poly.isZero(variableTime: true) }

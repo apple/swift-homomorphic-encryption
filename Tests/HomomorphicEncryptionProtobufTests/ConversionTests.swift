@@ -83,7 +83,7 @@ class ConversionTests: XCTestCase {
                     deserialize: serialized.native(),
                     context: context,
                     moduliCount: ciphertext.moduli.count)
-                let decrypted = try Scheme.decrypt(deserialized, using: secretKey)
+                let decrypted = try deserialized.decrypt(using: secretKey)
                 XCTAssertEqual(decrypted, plaintext)
             }
             // serialize for decryption

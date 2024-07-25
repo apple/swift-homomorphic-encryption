@@ -35,32 +35,9 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     // MARK: ciphertext += plaintext
 
     @inlinable
-    public static func += (ciphertext: inout Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Coeff>) throws
-        where Format == Coeff
-    {
-        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
-        try Scheme.addAssign(&ciphertext, plaintext)
-    }
-
-    @inlinable
-    public static func += (ciphertext: inout Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws
-        where Format == Eval
-    {
-        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
-        try Scheme.addAssign(&ciphertext, plaintext)
-    }
-
-    @inlinable
-    public static func += (ciphertext: inout Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Coeff>) throws
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
-        try Scheme.addAssign(&ciphertext, plaintext)
-    }
-
-    @inlinable
-    public static func += (ciphertext: inout Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws
-        where Format == Scheme.CanonicalCiphertextFormat
+    public static func += (
+        ciphertext: inout Ciphertext<Scheme, Format>,
+        plaintext: Plaintext<Scheme, some PolyFormat>) throws
     {
         try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
         try Scheme.addAssign(&ciphertext, plaintext)
@@ -386,33 +363,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
         }
     }
 
-    /// Decryption of a ciphertext in coefficient format.
-    /// - Parameter secretKey: Secret key to decrypt with.
-    /// - Returns: The plaintext decryption of the ciphertext.
-    /// - Throws: Error upon failure to decrypt.
-    /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
-    ///  - seealso: The noise budget can be computed using
-    ///  ``HeScheme/noiseBudget(of:using:variableTime:)-143f3``.
-    ///  - seealso: ``HeScheme/decrypt(_:using:)-59lki`` for an alternative API.
-    @inlinable
-    public func decrypt(using secretKey: SecretKey<Scheme>) throws -> Scheme.CoeffPlaintext where Format == Coeff {
-        try Scheme.decrypt(self, using: secretKey)
-    }
-
-    /// Decryption of a ciphertext in evaluation format.
-    /// - Parameter secretKey: Secret key to decrypt with.
-    /// - Returns: The plaintext decryption of the ciphertext.
-    /// - Throws: Error upon failure to decrypt.
-    /// - Warning: The ciphertext must have at least ``HeScheme/minNoiseBudget`` noise to ensure accurate decryption.
-    ///  - seealso: The noise budget can be computed using
-    ///  ``HeScheme/noiseBudget(of:using:variableTime:)-7vpza``.
-    ///  - seealso: ``HeScheme/decrypt(_:using:)-2rpmn`` for an alternative API.
-    @inlinable
-    public func decrypt(using secretKey: SecretKey<Scheme>) throws -> Scheme.CoeffPlaintext where Format == Eval {
-        try Scheme.decrypt(self, using: secretKey)
-    }
-
-    /// Decryption of a ciphertext in canonical format.
+    /// Decryption of a ciphertext.
     /// - Parameter secretKey: Secret key to decrypt with.
     /// - Returns: The plaintext decryption of the ciphertext.
     /// - Throws: Error upon failure to decrypt.
@@ -421,9 +372,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     ///  ``HeScheme/noiseBudget(of:using:variableTime:)-5p5m0``.
     ///  - seealso: ``HeScheme/decrypt(_:using:)-32dcy`` for an alternative API.
     @inlinable
-    public func decrypt(using secretKey: SecretKey<Scheme>) throws -> Scheme.CoeffPlaintext
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
+    public func decrypt(using secretKey: SecretKey<Scheme>) throws -> Scheme.CoeffPlaintext {
         try Scheme.decrypt(self, using: secretKey)
     }
 
@@ -508,8 +457,8 @@ extension Ciphertext {
     /// - Returns: A ciphertext encrypting the sum.
     /// - Throws: Error upon failure to add.
     @inlinable
-    public static func + (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Coeff>) throws -> Self
-        where Format == Coeff
+    public static func + (ciphertext: Ciphertext<Scheme, Format>,
+                          plaintext: Plaintext<Scheme, some PolyFormat>) throws -> Self
     {
         var result = ciphertext
         try result += plaintext
@@ -523,92 +472,8 @@ extension Ciphertext {
     /// - Returns: A ciphertext encrypting the sum.
     /// - Throws: Error upon failure to add.
     @inlinable
-    public static func + (plaintext: Plaintext<Scheme, Coeff>, ciphertext: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Coeff
-    {
-        try ciphertext + plaintext
-    }
-
-    /// Ciphertext-plaintext addition.
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to add.
-    ///   - plaintext: Plaintext to add.
-    /// - Returns: A ciphertext encrypting the sum.
-    /// - Throws: Error upon failure to add.
-    @inlinable
-    public static func + (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws -> Self
-        where Format == Eval
-    {
-        var result = ciphertext
-        try result += plaintext
-        return result
-    }
-
-    /// Ciphertext-plaintext addition.
-    /// - Parameters:
-    ///   - plaintext: Plaintext to add.
-    ///   - ciphertext: Ciphertext to add.
-    /// - Returns: A ciphertext encrypting the sum.
-    /// - Throws: Error upon failure to add.
-    @inlinable
-    public static func + (plaintext: Plaintext<Scheme, Eval>, ciphertext: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Eval
-    {
-        try ciphertext + plaintext
-    }
-
-    /// Ciphertext-plaintext addition.
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to add.
-    ///   - plaintext: Plaintext to add.
-    /// - Returns: A ciphertext encrypting the sum.
-    /// - Throws: Error upon failure to add.
-    @inlinable
-    public static func + (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Coeff>) throws -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        var result = ciphertext
-        try result += plaintext
-        return result
-    }
-
-    /// Ciphertext-plaintext addition.
-    /// - Parameters:
-    ///   - plaintext: Plaintext to add.
-    ///   - ciphertext: Ciphertext to add.
-    /// - Returns: A ciphertext encrypting the sum.
-    /// - Throws: Error upon failure to add.
-    @inlinable
-    public static func + (plaintext: Plaintext<Scheme, Coeff>, ciphertext: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        try ciphertext + plaintext
-    }
-
-    /// Ciphertext-plaintext addition.
-    /// - Parameters:
-    ///   - ciphertext: Ciphertext to add.
-    ///   - plaintext: Plaintext to add.
-    /// - Returns: A ciphertext encrypting the sum.
-    /// - Throws: Error upon failure to add.
-    @inlinable
-    public static func + (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        var result = ciphertext
-        try result += plaintext
-        return result
-    }
-
-    /// Ciphertext-plaintext addition.
-    /// - Parameters:
-    ///   - plaintext: Plaintext to add.
-    ///   - ciphertext: Ciphertext to add.
-    /// - Returns: A ciphertext encrypting the sum.
-    /// - Throws: Error upon failure to add.
-    @inlinable
-    public static func + (plaintext: Plaintext<Scheme, Eval>, ciphertext: Ciphertext<Scheme, Format>) throws -> Self
-        where Format == Scheme.CanonicalCiphertextFormat
+    public static func + (plaintext: Plaintext<Scheme, some PolyFormat>,
+                          ciphertext: Ciphertext<Scheme, Format>) throws -> Self
     {
         try ciphertext + plaintext
     }

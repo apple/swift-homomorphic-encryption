@@ -102,16 +102,18 @@ public enum NoOpScheme: HeScheme {
             polys: [plaintext.poly], correctionFactor: 1)
     }
 
-    public static func decrypt(_ ciphertext: CoeffCiphertext, using _: SecretKey<NoOpScheme>) throws -> CoeffPlaintext {
+    public static func decryptCoeff(_ ciphertext: CoeffCiphertext,
+                                    using _: SecretKey<NoOpScheme>) throws -> CoeffPlaintext
+    {
         NoOpScheme.CoeffPlaintext(
             context: ciphertext.context,
             poly: ciphertext.polys[0])
     }
 
-    public static func decrypt(_ ciphertext: EvalCiphertext,
-                               using secretKey: SecretKey<NoOpScheme>) throws -> CoeffPlaintext
+    public static func decryptEval(_ ciphertext: EvalCiphertext,
+                                   using secretKey: SecretKey<NoOpScheme>) throws -> CoeffPlaintext
     {
-        try decrypt(ciphertext.inverseNtt(), using: secretKey)
+        try decryptCoeff(ciphertext.inverseNtt(), using: secretKey)
     }
 
     public static func rotateColumns(
@@ -145,22 +147,22 @@ public enum NoOpScheme: HeScheme {
 
     // MARK: ciphertext += plaintext
 
-    public static func addAssign(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws {
+    public static func addAssignCoeff(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws {
         try validateEquality(of: ciphertext.context, and: plaintext.context)
         ciphertext.polys[0] += plaintext.poly
     }
 
-    public static func addAssign(_ ciphertext: inout CoeffCiphertext, _ plaintext: EvalPlaintext) throws {
+    public static func addAssignCoeffEval(_ ciphertext: inout CoeffCiphertext, _ plaintext: EvalPlaintext) throws {
         try addAssign(&ciphertext, plaintext.inverseNtt())
     }
 
-    static func addAssign(_ ciphertext: inout EvalCiphertext, _ plaintext: CoeffPlaintext) throws {
+    public static func addAssignEvalCoeff(_ ciphertext: inout EvalCiphertext, _ plaintext: CoeffPlaintext) throws {
         try validateEquality(of: ciphertext.context, and: plaintext.context)
         let evalPlaintext = try plaintext.forwardNtt()
         try addAssign(&ciphertext, evalPlaintext)
     }
 
-    public static func addAssign(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws {
+    public static func addAssignEval(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws {
         try validateEquality(of: ciphertext.context, and: plaintext.context)
         ciphertext.polys[0] += plaintext.poly
     }

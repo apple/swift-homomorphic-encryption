@@ -17,8 +17,16 @@ import Foundation
 extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decrypt(_ ciphertext: EvalCiphertext,
-                               using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
+    public static func decryptCoeff(_ ciphertext: CoeffCiphertext,
+                                    using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
+    {
+        try decryptEval(ciphertext.forwardNtt(), using: secretKey)
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func decryptEval(_ ciphertext: EvalCiphertext,
+                                   using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
     {
         let t = ciphertext.context.plaintextModulus
         let dotProduct = try Self.dotProduct(ciphertext: ciphertext, with: secretKey)
@@ -27,14 +35,6 @@ extension Bfv {
         let plaintext = try rnsTool.scaleAndRound(poly: dotProduct, scalingFactor: scalingFactor)
 
         return CoeffPlaintext(context: ciphertext.context, poly: plaintext)
-    }
-
-    @inlinable
-    // swiftlint:disable:next missing_docs attributes
-    public static func decrypt(_ ciphertext: CoeffCiphertext,
-                               using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
-    {
-        try decrypt(ciphertext.forwardNtt(), using: secretKey)
     }
 
     @inlinable

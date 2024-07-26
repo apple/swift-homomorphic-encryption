@@ -211,7 +211,7 @@ public protocol HeScheme {
     ///  transparentCiphertext * plaintext = transparentCiphertext
     ///  transparentCiphertext + plaintext = transparentCiphertext
     /// ```
-    /// - seealso: ``HeScheme/isTransparent(ciphertext:)-31w9f``
+    /// - seealso: ``HeScheme/isTransparent(ciphertext:)``
     static func zeroCiphertext(context: Context<Self>, moduliCount: Int) throws -> CoeffCiphertext
 
     /// Generates a ciphertext of zeros in ``Eval`` format.
@@ -233,7 +233,7 @@ public protocol HeScheme {
     ///  transparentCiphertext * plaintext = transparentCiphertext
     ///  transparentCiphertext + plaintext = transparentCiphertext
     /// ```
-    /// - seealso: ``HeScheme/isTransparent(ciphertext:)-31w9f``
+    /// - seealso: ``HeScheme/isTransparent(ciphertext:)``
     static func zeroCiphertext(context: Context<Self>, moduliCount: Int) throws -> EvalCiphertext
 
     /// Computes whether a ciphertext is transparent.
@@ -242,7 +242,7 @@ public protocol HeScheme {
     /// ``HeScheme/zeroCiphertext(context:moduliCount:)-1xec3`` yields a transparent transparent.
     /// - Parameter ciphertext: Ciphertext whose transparency to compute.
     /// - Returns: Whether the ciphertext is transparent.
-    /// - seealso: ``Ciphertext/isTransparent()-2e258`` for an alternative API.
+    /// - seealso: ``Ciphertext/isTransparent()`` for an alternative API.
     static func isTransparentCoeff(ciphertext: CoeffCiphertext) -> Bool
 
     /// Computes whether a ciphertext is transparent.
@@ -251,7 +251,7 @@ public protocol HeScheme {
     /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
     /// - Parameter ciphertext: Ciphertext whose transparency to compute.
     /// - Returns: Whether the ciphertext is transparent.
-    /// - seealso: ``Ciphertext/isTransparent()-8x30o`` for an alternative API.
+    /// - seealso: ``Ciphertext/isTransparent()`` for an alternative API.
     static func isTransparentEval(ciphertext: EvalCiphertext) -> Bool
 
     /// Decryption of a ciphertext in coefficient format.

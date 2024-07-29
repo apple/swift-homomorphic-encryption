@@ -1018,7 +1018,7 @@ class HeAPITests: XCTestCase {
             let decrypted = try Bfv<T>.decrypt(ciphertext, using: testEnv.secretKey)
             XCTAssertEqual(decrypted, expected)
         }
-        // Two more decryptions yields incorrect results
+        // Two more additions yields incorrect results
         ciphertext = try ciphertext + ciphertext
         ciphertext = try ciphertext + ciphertext
         try expected += expected

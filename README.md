@@ -99,6 +99,12 @@ You can then add
  ```
 to your Swift code to access the functionality in the `HomomorphicEncryption` library.
 
+See the example [Snippets](https://github.com/apple/swift-homomorphic-encryption/tree/main/Snippets) for examples of using `HomomorphicEncryption`.
+To run the `EncryptionParametersSnippet` example, run
+```
+swift run -c release EncryptionParametersSnippet
+```
+
 ## Developing Swift Homomorphic Encryption
 ### Dependencies
 Building Swift Homomorphic Encryption requires:

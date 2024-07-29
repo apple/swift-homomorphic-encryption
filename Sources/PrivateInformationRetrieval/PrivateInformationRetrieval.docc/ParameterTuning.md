@@ -35,7 +35,7 @@ PIRs automatically. For thin databases, smaller RLWE plaintexts in
 fits many buckets. Large plaintexts are more efficient for
 wide databases.
 
-Otherwise, the observed [noise budget](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/hescheme/noisebudget(of:using:variabletime:)-143f3) is an important parameter to track. If it is low,
+Otherwise, the observed [noise budget](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/ciphertext/noisebudget(using:variabletime:)) is an important parameter to track. If it is low,
 then it is best to increase the ciphertext-to-plaintext modulus ratio.
 This can be done by either decreasing the plaintext modulus with the same ring dimension
 or increasing the ring dimension and ciphertext modulus while keeping the

@@ -76,14 +76,11 @@ class HeAPITests: XCTestCase {
             _ line: UInt = #line) throws
         {
             if let coeffCiphertext = ciphertext as? Scheme.CoeffCiphertext {
-                let decryptedData: [Scheme.Scalar] = try context.decode(
-                    plaintext: coeffCiphertext.decrypt(using: secretKey),
-                    format: format)
+                let decryptedData: [Scheme.Scalar] = try coeffCiphertext.decrypt(using: secretKey)
+                    .decode(format: format)
                 XCTAssertEqual(decryptedData, expected, message(), file: file, line: line)
             } else if let evalCiphertext = ciphertext as? Scheme.EvalCiphertext {
-                let decryptedData: [Scheme.Scalar] = try context.decode(
-                    plaintext: evalCiphertext.decrypt(using: secretKey),
-                    format: format)
+                let decryptedData: [Scheme.Scalar] = try evalCiphertext.decrypt(using: secretKey).decode(format: format)
                 XCTAssertEqual(decryptedData, expected, message(), file: file, line: line)
             } else {
                 XCTFail("\(message()) Invalid ciphertext \(ciphertext.description)", file: file, line: line)
@@ -153,11 +150,11 @@ class HeAPITests: XCTestCase {
         switch polyFormat {
         case is Coeff.Type:
             let plaintextCoeff: Plaintext<Scheme, Coeff> = try context.encode(values: data, format: encodeFormat)
-            let decoded = try context.decode(plaintext: plaintextCoeff, format: encodeFormat) as [Scheme.Scalar]
+            let decoded = try plaintextCoeff.decode(format: encodeFormat) as [Scheme.Scalar]
             XCTAssertEqual(data, decoded)
         case is Eval.Type:
             let plaintextEval: Plaintext<Scheme, Eval> = try context.encode(values: data, format: encodeFormat)
-            let decoded = try context.decode(plaintext: plaintextEval, format: encodeFormat) as [Scheme.Scalar]
+            let decoded = try plaintextEval.decode(format: encodeFormat) as [Scheme.Scalar]
             XCTAssertEqual(data, decoded)
         default:
             XCTFail("Invalid PolyFormat \(polyFormat)")

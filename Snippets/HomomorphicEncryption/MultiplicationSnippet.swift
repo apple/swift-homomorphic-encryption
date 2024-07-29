@@ -56,9 +56,7 @@ let evalPlaintext = try plaintext.convertToEvalFormat()
 // mod the plaintext modulus, 17 in this case.
 let product = try evalCiphertext * evalPlaintext
 var plaintextProduct = try product.decrypt(using: secretKey)
-var decoded: [UInt32] = try context.decode(
-    plaintext: plaintextProduct,
-    format: .simd)
+var decoded: [UInt32] = try plaintextProduct.decode(format: .simd)
 precondition(Array(decoded[0..<valueCount]) == values.map { ($0 * $0) % 17 })
 
 // We can also multiply two ciphertexts, which requires changing back to the
@@ -66,6 +64,6 @@ precondition(Array(decoded[0..<valueCount]) == values.map { ($0 * $0) % 17 })
 var canonicalProduct = try product.convertToCanonicalFormat()
 try canonicalProduct *= ciphertext
 plaintextProduct = try canonicalProduct.decrypt(using: secretKey)
-decoded = try context.decode(plaintext: plaintextProduct, format: .simd)
+decoded = try plaintextProduct.decode(format: .simd)
 precondition(Array(decoded[0..<valueCount]) == values
     .map { ($0 * $0 * $0) % 17 })

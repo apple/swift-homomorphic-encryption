@@ -19,6 +19,15 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     @usableFromInline var correctionFactor: Scheme.Scalar
     @usableFromInline var seed: [UInt8] = []
 
+    /// The number of polynomials in the ciphertext.
+    ///
+    /// After a fresh encryption, the ciphertext has ``HeScheme/freshCiphertextPolyCount`` polynomials.
+    /// The count may change during the course of HE operations, e.g. increase during ciphertext multiplication,
+    /// or decrease during relinearization ``Ciphertext/relinearize(using:)``.
+    public var polyCount: Int {
+        polys.count
+    }
+
     @inlinable
     init(
         context: Context<Scheme>,

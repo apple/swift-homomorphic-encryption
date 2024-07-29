@@ -46,6 +46,11 @@ public enum SecurityLevel: Hashable, Codable, Sendable {
 ///
 /// These parameters are considered public.
 public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendable {
+    /// The maximum modulus value for a single coefficient or plaintext modulus.
+    public static var maxSingleModulus: Scheme.Scalar {
+        Modulus<Scheme.Scalar>.max
+    }
+
     /// Polynomial degree `N` of the RLWE polynomial ring.
     ///
     /// Must be a power of two.
@@ -117,7 +122,7 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
             throw HeError.invalidEncryptionParameters(self)
         }
         let log2CoefficientModulus = coefficientModuli.map { log2(Float($0)) }.reduce(0, +)
-        guard try log2CoefficientModulus <= Float(maxLog2CoefficientModulus(
+        guard try log2CoefficientModulus <= Float(Self.maxLog2CoefficientModulus(
             degree: polyDegree,
             securityLevel: securityLevel)),
             errorStdDev == ErrorStdDev.stdDev32
@@ -137,7 +142,7 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
         }
         for modulus in coefficientModuli + [plaintextModulus] {
             guard modulus.isPrime(variableTime: true),
-                  (1...Modulus<Scheme.Scalar>.max).contains(modulus),
+                  (1...Self.maxSingleModulus).contains(modulus),
                   modulus != Scheme.Scalar.rnsCorrectionFactor,
                   modulus != Scheme.Scalar.mTilde
             else {
@@ -385,7 +390,7 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     /// - Returns: The maximum coefficient modulus.
     /// - Throws: Error upon invalid `degree`.
     /// - Warning: ``SecurityLevel/unchecked`` does not enforce any security.
-    func maxLog2CoefficientModulus(degree: Int, securityLevel: SecurityLevel) throws -> Int {
+    public static func maxLog2CoefficientModulus(degree: Int, securityLevel: SecurityLevel) throws -> Int {
         switch securityLevel {
         case .unchecked: Int.max
         case .quantum128:

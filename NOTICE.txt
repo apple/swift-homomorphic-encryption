@@ -1,0 +1,22 @@
+Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+-------------------------------------------------------------------------------
+
+This product contains modifications of "DoubleWidth.swift.gyb" from https://github.com/swiftlang/swift/blob/fc23eef2d2b2e42116ac94a6cc0d0d2cc96688f5/test/Prototypes/DoubleWidth.swift.gyb in:
+- Sources/HomomorphicEncryption/DoubleWidthUInt.swift
+- Tests/HomomorphicEncryptionTests/DoubleWidthUIntTests.swift
+
+* LICENSE (Apache 2.0 with Runtime Library Exception)
+  * https://www.swift.org/legal/license.html

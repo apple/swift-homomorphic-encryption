@@ -152,16 +152,6 @@ public enum NoOpScheme: HeScheme {
         ciphertext.polys[0] += plaintext.poly
     }
 
-    public static func addAssignCoeffEval(_ ciphertext: inout CoeffCiphertext, _ plaintext: EvalPlaintext) throws {
-        try addAssign(&ciphertext, plaintext.inverseNtt())
-    }
-
-    public static func addAssignEvalCoeff(_ ciphertext: inout EvalCiphertext, _ plaintext: CoeffPlaintext) throws {
-        try validateEquality(of: ciphertext.context, and: plaintext.context)
-        let evalPlaintext = try plaintext.forwardNtt()
-        try addAssign(&ciphertext, evalPlaintext)
-    }
-
     public static func addAssignEval(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws {
         try validateEquality(of: ciphertext.context, and: plaintext.context)
         ciphertext.polys[0] += plaintext.poly
@@ -172,14 +162,6 @@ public enum NoOpScheme: HeScheme {
     public static func subAssignCoeff(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws {
         try validateEquality(of: ciphertext.context, and: plaintext.context)
         ciphertext.polys[0] -= plaintext.poly
-    }
-
-    public static func subAssignCoeffEval(_ ciphertext: inout CoeffCiphertext, _ plaintext: EvalPlaintext) throws {
-        try subAssignCoeff(&ciphertext, plaintext.inverseNtt())
-    }
-
-    public static func subAssignEvalCoeff(_ ciphertext: inout EvalCiphertext, _ plaintext: CoeffPlaintext) throws {
-        try subAssignEval(&ciphertext, plaintext.forwardNtt())
     }
 
     public static func subAssignEval(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws {

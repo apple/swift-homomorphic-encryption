@@ -134,27 +134,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
     // keep NTT conversions explicit
 
     @inlinable
-    public static func addAssignCoeffEval(_: inout CoeffCiphertext, _: EvalPlaintext) throws {
-        throw HeError.unsupportedHeOperation()
-    }
-
-    @inlinable
-    public static func addAssignEvalCoeff(_: inout EvalCiphertext, _: CoeffPlaintext) throws {
-        throw HeError.unsupportedHeOperation()
-    }
-
-    @inlinable
     public static func addAssignEval(_: inout EvalCiphertext, _: EvalPlaintext) throws {
-        throw HeError.unsupportedHeOperation()
-    }
-
-    @inlinable
-    public static func subAssignCoeffEval(_: inout CoeffCiphertext, _: EvalPlaintext) throws {
-        throw HeError.unsupportedHeOperation()
-    }
-
-    @inlinable
-    public static func subAssignEvalCoeff(_: inout EvalCiphertext, _: CoeffPlaintext) throws {
         throw HeError.unsupportedHeOperation()
     }
 

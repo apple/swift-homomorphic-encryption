@@ -38,13 +38,11 @@ var ciphertext = try plaintext.encrypt(using: secretKey)
 
 // Decrypting the plaintext yields the original values.
 var decrypted = try ciphertext.decrypt(using: secretKey)
-var decoded: [UInt64] = try context.decode(
-    plaintext: decrypted,
-    format: .coefficient)
+var decoded: [UInt64] = try decrypted.decode(format: .coefficient)
 precondition(decoded == values)
 
 // Mixing formats between encoding and decoding yields incorrect results.
-decoded = try context.decode(plaintext: decrypted, format: .simd)
+decoded = try decrypted.decode(format: .simd)
 precondition(decoded != values)
 
 // snippet.addition
@@ -54,17 +52,13 @@ var sum = try ciphertext + plaintext
 // and plaintext's values, mod 17, the plaintext modulus.
 precondition(encryptParams.plaintextModulus == 17)
 var plaintextSum = try sum.decrypt(using: secretKey)
-decoded = try context.decode(
-    plaintext: plaintextSum,
-    format: .coefficient)
+decoded = try plaintextSum.decode(format: .coefficient)
 precondition(decoded == [16, 10, 7, 7, 13, 0, 16, 10])
 
 // We can also add ciphertexts.
 try sum += ciphertext
 plaintextSum = try sum.decrypt(using: secretKey)
-decoded = try context.decode(
-    plaintext: plaintextSum,
-    format: .coefficient)
+decoded = try plaintextSum.decode(format: .coefficient)
 precondition(decoded == [7, 15, 2, 2, 11, 0, 7, 15])
 // snippet.end
 
@@ -72,17 +66,13 @@ precondition(decoded == [7, 15, 2, 2, 11, 0, 7, 15])
 // We can subtract a plaintext from a ciphertext.
 try sum -= plaintext
 plaintextSum = try sum.decrypt(using: secretKey)
-decoded = try context.decode(
-    plaintext: plaintextSum,
-    format: .coefficient)
+decoded = try plaintextSum.decode(format: .coefficient)
 precondition(decoded == [16, 10, 7, 7, 13, 0, 16, 10])
 
 // We can also subtract a ciphertext from a ciphertext.
 try sum -= ciphertext
 plaintextSum = try sum.decrypt(using: secretKey)
-decoded = try context.decode(
-    plaintext: plaintextSum,
-    format: .coefficient)
+decoded = try plaintextSum.decode(format: .coefficient)
 precondition(decoded == [8, 5, 12, 12, 15, 0, 8, 5])
 
 // One special case is when subtracting a ciphertext from itself.

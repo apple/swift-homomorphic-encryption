@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Crypto
 import Foundation
 import HomomorphicEncryption
 
@@ -52,11 +53,11 @@ extension KeywordValuePair.Keyword {
     /// - Returns: The shard index.
     @inlinable
     func shardIndex(shardCount: Int) -> Int {
-        HashKeyword
-            .indexFromHash(
-                keywordHash: HashKeyword.hash(keyword: self),
-                bucketCount: shardCount,
-                counter: 0)
+        let digest = SHA256.hash(data: self)
+        let truncatedHash = digest.withUnsafeBytes { buffer in
+            buffer.load(as: UInt64.self)
+        }
+        return Int(truncatedHash % UInt64(shardCount))
     }
 }
 

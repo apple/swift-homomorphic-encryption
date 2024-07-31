@@ -39,4 +39,15 @@ class KeywordDatabaseTests: XCTestCase {
             XCTAssert(database.shards.contains { shard in shard.value[row.keyword] == row.value })
         }
     }
+
+    func testShardingKnownAnswerTest() throws {
+        func checkKeywordShard(_ keyword: KeywordValuePair.Keyword, shardCount: Int, expectedShard: Int) {
+            XCTAssertEqual(keyword.shardIndex(shardCount: shardCount), expectedShard)
+        }
+
+        checkKeywordShard([0, 0, 0, 0], shardCount: 41, expectedShard: 2)
+        checkKeywordShard([0, 0, 0, 0], shardCount: 1001, expectedShard: 635)
+        checkKeywordShard([1, 2, 3], shardCount: 1001, expectedShard: 903)
+        checkKeywordShard([3, 2, 1], shardCount: 1001, expectedShard: 842)
+    }
 }

@@ -45,6 +45,30 @@ extension Query {
     }
 }
 
+extension ProcessedDatabaseWithParameters {
+    /// Converts the native processed database with parameters into protobuf object that contains only the parameters.
+    /// - Parameter context: The context that was used to create processed database.
+    /// - Returns: The PIR parameters protobuf object.
+    /// - Throws: Error when the parameters cannot be represented as a protobuf object.
+    public func proto(context: Context<Scheme>) throws -> Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
+        let encryptionParameters = context.encryptionParameters
+        return try Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters.with { params in
+            params.encryptionParameters = try encryptionParameters.proto()
+            params.numEntries = UInt64(pirParameter.entryCount)
+            params.entrySize = UInt64(pirParameter.entrySizeInBytes)
+            params.dimensions = pirParameter.dimensions.map(UInt64.init)
+            if let keywordPirParameter {
+                params.keywordPirParams = keywordPirParameter.proto()
+            }
+            params.algorithm = algorithm.proto()
+            params.batchSize = UInt64(pirParameter.batchSize)
+            params.evaluationKeyConfig = try evaluationKeyConfiguration
+                .proto(encryptionParameters: encryptionParameters)
+            params.keyCompressionStrategy = .unspecified
+        }
+    }
+}
+
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.

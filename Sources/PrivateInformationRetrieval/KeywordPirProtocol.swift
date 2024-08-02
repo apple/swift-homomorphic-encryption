@@ -199,6 +199,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
 
         return ProcessedDatabaseWithParameters(
             database: processedDb,
+            algorithm: PirServer.IndexPir.algorithm,
             evaluationKeyConfiguration: evaluationKeyConfig,
             pirParameter: indexPirParameter,
             keywordPirParameter: config.parameter)

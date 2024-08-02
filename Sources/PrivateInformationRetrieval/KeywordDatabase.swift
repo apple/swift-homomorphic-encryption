@@ -44,7 +44,7 @@ extension KeywordValuePair.Keyword {
     ///  - shardCount: The shard count.
     /// - Returns: The shard identifier.
     @inlinable
-    func shardID(shardCount: Int) -> String {
+    public func shardID(shardCount: Int) -> String {
         String(shardIndex(shardCount: shardCount))
     }
 
@@ -52,7 +52,7 @@ extension KeywordValuePair.Keyword {
     /// - Parameter shardCount: The shard count.
     /// - Returns: The shard index.
     @inlinable
-    func shardIndex(shardCount: Int) -> Int {
+    public func shardIndex(shardCount: Int) -> Int {
         let digest = SHA256.hash(data: self)
         let truncatedHash = digest.withUnsafeBytes { buffer in
             buffer.load(as: UInt64.self)
@@ -163,7 +163,7 @@ public struct KeywordDatabaseShard: Hashable, Codable {
     ///   - shardID: Identifier for the database shard.
     ///   - rows: Rows in the database.
     @inlinable
-    init(
+    public init(
         shardID: String,
         rows: some Collection<(KeywordValuePair.Keyword, KeywordValuePair.Value)>)
     {

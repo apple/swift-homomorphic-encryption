@@ -27,6 +27,8 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
     public typealias Response = PrivateInformationRetrieval.Response<Scheme>
     @usableFromInline typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
 
+    public static var algorithm: PirAlgorithm { .mulPir }
+
     public static func generateParameter(config: IndexPirConfig, with context: Context<Scheme>) -> IndexPirParameter {
         let entrySizeInBytes = config.entrySizeInBytes
         let perChunkPlaintextCount = if entrySizeInBytes <= context.bytesPerPlaintext {

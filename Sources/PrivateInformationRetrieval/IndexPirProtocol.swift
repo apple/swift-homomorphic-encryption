@@ -148,7 +148,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - buffer: Serialized plaintexts.
     ///   - context: Context for HE computation.
     /// - Throws: Error upon failure to deserialize.
-    init(from buffer: [UInt8], context: Context<Scheme>) throws {
+    public init(from buffer: [UInt8], context: Context<Scheme>) throws {
         var offset = buffer.startIndex
         let versionNumber = buffer[offset]
         offset += MemoryLayout<SerializationVersionType>.size
@@ -181,9 +181,9 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
         self.init(plaintexts: plaintexts)
     }
 
-    /// Returns the serilization size in bytes of the database.
+    /// Returns the serialization size in bytes of the database.
     @inlinable
-    func serializationByteCount() throws -> Int {
+    public func serializationByteCount() throws -> Int {
         let nonNilPlaintexts = plaintexts.compactMap { $0 }
         guard let polyContext = nonNilPlaintexts.first?.polyContext() else {
             throw PirError.emptyDatabase
@@ -208,7 +208,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     /// - Returns: The serialized database.
     /// - Throws: Error upon failure to serialize the database.
     @inlinable
-    func serialize() throws -> [UInt8] {
+    public func serialize() throws -> [UInt8] {
         var buffer: [UInt8] = []
         try buffer.reserveCapacity(serializationByteCount())
         buffer.append(Self.serializationVersion)
@@ -230,6 +230,8 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
 public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Sendable {
     /// Processed database.
     public let database: ProcessedDatabase<Scheme>
+    /// The algorithm that this database was processed for.
+    public let algorithm: PirAlgorithm
     /// Evaluation key configuration.
     public let evaluationKeyConfiguration: EvaluationKeyConfiguration
     /// Parameters for Index PIR queries.
@@ -240,16 +242,19 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Sendable {
     /// Initializes a ``ProcessedDatabaseWithParameters``.
     /// - Parameters:
     ///   - database: Processed database.
+    ///   - algorithm: The PIR algorithm used.
     ///   - evaluationKeyConfiguration: Evaluation key configuration.
     ///   - pirParameter: Index PIR parameters.
     ///   - keywordPirParameter: Optional keyword PIR parameters.
     public init(
         database: ProcessedDatabase<Scheme>,
+        algorithm: PirAlgorithm,
         evaluationKeyConfiguration: EvaluationKeyConfiguration,
         pirParameter: IndexPirParameter,
         keywordPirParameter: KeywordPirParameter? = nil)
     {
         self.database = database
+        self.algorithm = algorithm
         self.evaluationKeyConfiguration = evaluationKeyConfiguration
         self.pirParameter = pirParameter
         self.keywordPirParameter = keywordPirParameter
@@ -295,6 +300,9 @@ public protocol IndexPirProtocol {
     typealias Query = PrivateInformationRetrieval.Query<Scheme>
     /// Encrypted server response type.
     typealias Response = PrivateInformationRetrieval.Response<Scheme>
+
+    /// The PIR algorithm.
+    static var algorithm: PirAlgorithm { get }
 
     /// Generates the PIR parameters for a database.
     /// - Parameters:

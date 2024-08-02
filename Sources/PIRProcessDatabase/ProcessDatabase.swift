@@ -301,7 +301,6 @@ struct ProcessDatabase: ParsableCommand {
         let keywordConfig = try KeywordPirConfig(dimensionCount: 2,
                                                  cuckooTableConfig: config.cuckooTableConfig,
                                                  unevenDimensions: true)
-        let keywordPirParams = keywordConfig.parameter.proto()
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
@@ -335,7 +334,6 @@ struct ProcessDatabase: ParsableCommand {
                 ProcessDatabase.logger.info("ValidationResults \(description)")
             }
 
-            let shardConfig = processed.pirParameter.proto(shardID: shardID)
             let outputDatabaseFilename = config.outputDatabase.replacingOccurrences(
                 of: "SHARD_ID",
                 with: String(shardID))
@@ -345,16 +343,7 @@ struct ProcessDatabase: ParsableCommand {
             let shardEvaluationKeyConfig = processed.evaluationKeyConfiguration
             evaluationKeyConfig = [evaluationKeyConfig, shardEvaluationKeyConfig].union()
 
-            let shardPirParameters = try Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters.with { params in
-                params.encryptionParameters = try encryptionParameters.proto()
-                params.numEntries = shardConfig.numEntries
-                params.entrySize = shardConfig.entrySize
-                params.dimensions = shardConfig.dimensions
-                params.batchSize = UInt64(processed.pirParameter.batchSize)
-                params.keywordPirParams = keywordPirParams
-                params.evaluationKeyConfig = try shardEvaluationKeyConfig
-                    .proto(encryptionParameters: encryptionParameters)
-            }
+            let shardPirParameters = try processed.proto(context: context)
             let outputParametersFilename = config.outputPirParameters.replacingOccurrences(
                 of: "SHARD_ID",
                 with: String(shardID))

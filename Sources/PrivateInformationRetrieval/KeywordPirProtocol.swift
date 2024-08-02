@@ -58,7 +58,7 @@ public struct KeywordPirConfig: Hashable, Codable {
 /// Parameters for a keyword PIR lookup.
 ///
 /// Must be the same between client and server for a correct database lookup.
-public struct KeywordPirParameter: Sendable {
+public struct KeywordPirParameter: Hashable, Codable, Sendable {
     /// Number of hash functions in the ``CuckooTableConfig``.
     public let hashFunctionCount: Int
 

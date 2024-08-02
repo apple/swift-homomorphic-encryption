@@ -97,6 +97,21 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
             dimensions: dimensions.map(Int.init),
             batchSize: Int(batchSize))
     }
+
+    /// Converts the protobuf object into a native type.
+    /// - Parameter database: The database  to use.
+    /// - Returns: A database with parameters.
+    /// - Throws: Error when the protobuf object cannot be represented.
+    public func native<Scheme: HeScheme>(database: ProcessedDatabase<Scheme>) throws
+        -> ProcessedDatabaseWithParameters<Scheme>
+    {
+        try ProcessedDatabaseWithParameters(
+            database: database,
+            algorithm: algorithm.native(),
+            evaluationKeyConfiguration: evaluationKeyConfig.native(),
+            pirParameter: native(),
+            keywordPirParameter: hasKeywordPirParams ? keywordPirParams.native() : nil)
+    }
 }
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirAlgorithm {

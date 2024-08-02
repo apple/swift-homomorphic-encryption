@@ -227,7 +227,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
 }
 
 /// A processed database along with PIR parameters describing the database.
-public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Sendable {
+public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Sendable {
     /// Processed database.
     public let database: ProcessedDatabase<Scheme>
     /// The algorithm that this database was processed for.

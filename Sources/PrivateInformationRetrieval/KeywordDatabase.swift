@@ -279,12 +279,19 @@ public enum ProcessKeywordDatabase {
         ///   - encryptionParameters: Encryption parameters.
         ///   - algorithm: PIR algorithm to process with.
         ///   - trialsPerShard: number of test queries per shard.
+        ///  - Throws: Error upon invalid arguments
         public init(
             databaseConfig: KeywordDatabaseConfig,
             encryptionParameters: EncryptionParameters<Scheme>,
             algorithm: PirAlgorithm,
-            trialsPerShard: Int)
+            trialsPerShard: Int) throws
         {
+            guard trialsPerShard >= 0 else {
+                throw PirError.validationError("trialsPerShard \(trialsPerShard) must be > 0")
+            }
+            guard algorithm == .mulPir else {
+                throw PirError.invalidPirAlgorithm(algorithm)
+            }
             self.databaseConfig = databaseConfig
             self.encryptionParameters = encryptionParameters
             self.algorithm = algorithm
@@ -360,6 +367,9 @@ public enum ProcessKeywordDatabase {
     {
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
         let context = try Context(encryptionParameters: arguments.encryptionParameters)
+        guard arguments.algorithm == .mulPir else {
+            throw PirError.invalidPirAlgorithm(arguments.algorithm)
+        }
         return try KeywordPirServer<MulPirServer<Scheme>>.process(database: shard,
                                                                   config: keywordConfig,
                                                                   with: context)
@@ -457,6 +467,9 @@ public enum ProcessKeywordDatabase {
 
         var processedShards = [String: ProcessedDatabaseWithParameters<Scheme>]()
         for (shardID, shardedDatabase) in keywordDatabase.shards where !shardedDatabase.isEmpty {
+            guard arguments.algorithm == .mulPir else {
+                throw PirError.invalidPirAlgorithm(arguments.algorithm)
+            }
             let processed = try KeywordPirServer<MulPirServer<Scheme>>.process(database: shardedDatabase,
                                                                                config: keywordConfig,
                                                                                with: context)

@@ -306,10 +306,10 @@ struct ProcessDatabase: ParsableCommand {
             keywordPirConfig: keywordConfig)
 
         let encryptionParameters = try EncryptionParameters<Scheme>(from: config.rlweParameters)
-        let processArgs = ProcessKeywordDatabase.Arguments<Scheme>(databaseConfig: databaseConfig,
-                                                                   encryptionParameters: encryptionParameters,
-                                                                   algorithm: config.algorithm,
-                                                                   trialsPerShard: config.trialsPerShard)
+        let processArgs = try ProcessKeywordDatabase.Arguments<Scheme>(databaseConfig: databaseConfig,
+                                                                       encryptionParameters: encryptionParameters,
+                                                                       algorithm: config.algorithm,
+                                                                       trialsPerShard: config.trialsPerShard)
 
         var evaluationKeyConfig = EvaluationKeyConfiguration()
         let context = try Context(encryptionParameters: processArgs.encryptionParameters)

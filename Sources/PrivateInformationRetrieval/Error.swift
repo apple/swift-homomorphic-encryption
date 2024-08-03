@@ -33,6 +33,7 @@ public enum PirError: Error, Hashable, Codable {
     case invalidHashBucketEntryValueSize(maxSize: Int)
     case invalidHashBucketSlotCount(maxCount: Int)
     case invalidIndex(index: Int, numberOfEntries: Int)
+    case invalidPirAlgorithm(_ pirAlgorithm: PirAlgorithm)
     case invalidReply(ciphertextCount: Int, expected: Int)
     case invalidResponse(replyCount: Int, expected: Int)
     case invalidSharding(_ description: String)
@@ -94,6 +95,8 @@ extension PirError: LocalizedError {
             "Invalid hash bucket slot count; maximum is \(maxCount)"
         case let .invalidIndex(index, numberOfEntries):
             "Index \(index) should between 0 and \(numberOfEntries)"
+        case let .invalidPirAlgorithm(pirAlgorithm):
+            "Invalid PIR algorithm: \(pirAlgorithm)"
         case let .invalidReply(ciphertextCount, expected):
             "Reply has \(ciphertextCount) ciphertexts, expected \(expected)"
         case let .invalidResponse(replyCount, expected):

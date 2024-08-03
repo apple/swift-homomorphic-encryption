@@ -359,6 +359,29 @@ class KeywordPirTests: XCTestCase {
             MulPirServer<Bfv<UInt64>>.self, client: MulPirClient<Bfv<UInt64>>.self)
     }
 
+    func testInvalidArguments() throws {
+        let cuckooConfig = try CuckooTableConfig(
+            hashFunctionCount: 2,
+            maxEvictionCount: 100,
+            maxSerializedBucketSize: 10 * 5,
+            bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.5))
+        let keywordConfig = try KeywordPirConfig(
+            dimensionCount: 2,
+            cuckooTableConfig: cuckooConfig,
+            unevenDimensions: true)
+        let databaseConfig = KeywordDatabaseConfig(
+            sharding: Sharding.shardCount(1),
+            keywordPirConfig: keywordConfig)
+        let encryptionParameters = try EncryptionParameters<Bfv<UInt32>>(
+            from: .n_4096_logq_27_28_28_logt_5)
+        XCTAssertThrowsError(try ProcessKeywordDatabase.Arguments(
+            databaseConfig: databaseConfig,
+            encryptionParameters: encryptionParameters,
+            algorithm: PirAlgorithm.aclsPir,
+            trialsPerShard: 1),
+        error: PirError.invalidPirAlgorithm(PirAlgorithm.aclsPir))
+    }
+
     func testSharding() throws {
         func runTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
             rlweParameters: PredefinedRlweParameters,
@@ -386,7 +409,7 @@ class KeywordPirTests: XCTestCase {
                 keywordPirConfig: keywordConfig)
             let testDatabase = PirTestUtils.getTestTable(rowCount: rowCount, valueSize: valueSize)
 
-            let args = ProcessKeywordDatabase.Arguments(
+            let args = try ProcessKeywordDatabase.Arguments(
                 databaseConfig: databaseConfig,
                 encryptionParameters: encryptionParameters,
                 algorithm: PirAlgorithm.mulPir,

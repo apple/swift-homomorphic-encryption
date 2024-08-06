@@ -63,12 +63,52 @@ extension Ciphertext {
         }
     }
 
-    /// Serializes a ciphertext.
-    /// - Parameter forDecryption: If true, serialization may use a more compressed format, yielding a ciphertext which,
+    /// Serializes a ciphertext, retaining decryption correctness only at the given indices.
+    ///
+    /// When only a few indices are known to contain meaningful information, this can yield a serialized ciphertext
+    /// which is more compressible than a typical serialized ciphertext.
+    /// - Parameters:
+    ///   - coeffIndices: The coefficient indices for which to preserve correctness of decryption. If specified, must
+    /// the ciphertext must be in ``Coeff`` format.
+    ///   - forDecryption: If true, serialization may use a more concise format, yielding a ciphertext which,
     /// once deserialized, is only compatible with decryption, and not any other HE operations.
-    /// - Returns: The deserialized ciphertext.
+    /// - Returns: The serialized ciphertext.
+    /// - Throws: Error upon failure to serialize.
     @inlinable
-    public func serialize(forDecryption: Bool = false) -> SerializedCiphertext<Scalar> {
+    public func serialize(indices coeffIndices: [Int]? = nil,
+                          forDecryption: Bool = false) throws -> SerializedCiphertext<Scalar>
+    {
+        var toSerialize = self
+        if let coeffIndices {
+            guard Format.self == Coeff.self else {
+                throw HeError.invalidFormat(Format.self)
+            }
+            var poly0 = PolyRq<Scheme.Scalar, Format>.zero(context: polyContext())
+            for coeffIndex in coeffIndices {
+                guard poly0.coeffIndices.contains(coeffIndex) else {
+                    throw HeError.invalidCoefficientIndex(
+                        index: coeffIndex,
+                        degree: poly0.degree)
+                }
+            }
+            for rnsIndex in poly0.rnsIndices {
+                for coeffIndex in coeffIndices {
+                    let index = poly0.index(rnsIndex: rnsIndex, coeffIndex: coeffIndex)
+                    poly0[index] = polys[0][index]
+                }
+            }
+            toSerialize.polys[0] = poly0
+        }
+        return toSerialize.serialize(forDecryption: forDecryption)
+    }
+
+    /// Serializes a ciphertext.
+    /// - Parameter forDecryption: If true, serialization may use a more concise format, yielding a ciphertext which,
+    /// once deserialized, is only compatible with decryption, and not any other HE operations.
+    /// - Returns: The serialized ciphertext.
+    /// - seealso: ``Ciphertext/serialize(indices:forDecryption:)``.
+    @inlinable
+    func serialize(forDecryption: Bool = false) -> SerializedCiphertext<Scalar> {
         if !seed.isEmpty, polys.count == 2 {
             return serialize(seed: seed)
         }

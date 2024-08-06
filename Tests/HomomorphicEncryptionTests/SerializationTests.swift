@@ -75,6 +75,27 @@ class SerializationTests: XCTestCase {
                 let decrypted = try deserialized.decrypt(using: secretKey)
                 XCTAssertEqual(decrypted, plaintext)
             }
+            // serialize indices for decryption
+            do {
+                var ciphertext = ciphertext
+                try ciphertext.modSwitchDownToSingle()
+                let indices = [1, 2, 5]
+                let serialized = try ciphertext.serialize(indices: indices, forDecryption: true)
+                if case let .full(_, skipLSBs, _) = serialized {
+                    XCTAssertTrue(skipLSBs.contains { $0 > 0 })
+                } else {
+                    XCTFail("Must be full serialization")
+                }
+                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
+                    deserialize: serialized,
+                    context: context,
+                    moduliCount: ciphertext.moduli.count)
+                let decrypted = try deserialized.decrypt(using: secretKey)
+                let decoded = try decrypted.decode(format: .coefficient)
+                for index in indices {
+                    XCTAssertEqual(decoded[index], values[index])
+                }
+            }
         }
 
         // TODO: NoOpScheme is broken: ciphertext.polyContext != context.ciphertextContext

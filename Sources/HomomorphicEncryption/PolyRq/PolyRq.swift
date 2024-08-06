@@ -34,6 +34,11 @@ public struct PolyRq<T: ScalarType, F: PolyFormat>: Equatable, Sendable {
         assert(isValidData())
     }
 
+    @inlinable
+    func index(rnsIndex: Int, coeffIndex: Int) -> Int {
+        data.index(row: rnsIndex, column: coeffIndex)
+    }
+
     @inlinable subscript(_ index: Int) -> T {
         get {
             data[index]

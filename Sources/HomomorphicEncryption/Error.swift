@@ -26,6 +26,7 @@ public enum HeError: Error, Equatable {
     case incompatibleCiphertexts(_ description: String)
     case insecureEncryptionParameters(_ description: String)
     case invalidCiphertext(_ description: String)
+    case invalidCoefficientIndex(index: Int, degree: Int)
     case invalidContext(_ description: String)
     case invalidCorrectionFactor(_ description: String)
     case invalidDegree(_ degree: Int)
@@ -188,6 +189,8 @@ extension HeError: LocalizedError {
             "\(description)"
         case let .insecureEncryptionParameters(description):
             "Insecure encryption parameters \(description)"
+        case let .invalidCoefficientIndex(index, degree):
+            "Invalid coefficient index \(index) for degree \(degree)"
         case let .invalidCiphertext(description):
             "\(description)"
         case let .invalidContext(description):

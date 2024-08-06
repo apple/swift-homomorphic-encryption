@@ -17,6 +17,14 @@ import HomomorphicEncryptionProtobuf
 import TestUtilities
 import XCTest
 
+extension SerializedCiphertext {
+    /// Returns the number of non-zero bytes in the serialized data.
+    func nonZeroBytes() throws -> Int {
+        let data = try proto().serializedData()
+        return data.count { byte in byte != 0 }
+    }
+}
+
 class ConversionTests: XCTestCase {
     func testHeScheme() throws {
         let bfvUInt32 = try Bfv<UInt32>.proto()
@@ -102,6 +110,33 @@ class ConversionTests: XCTestCase {
                     moduliCount: ciphertext.moduli.count)
                 let decrypted = try deserialized.decrypt(using: secretKey)
                 XCTAssertEqual(decrypted, plaintext)
+            }
+            // serialize indices for decryption
+            do {
+                var ciphertext = ciphertext
+                try ciphertext.modSwitchDownToSingle()
+                let indices = [1, 3, 5]
+                let serializedAllIndices = ciphertext.serialize(forDecryption: true)
+                let serialized = try ciphertext.serialize(indices: indices, forDecryption: true)
+                if case let .full(_, skipLSBs, _) = serialized {
+                    XCTAssertTrue(skipLSBs.contains { $0 > 0 })
+                } else {
+                    XCTFail("Must be full serialization")
+                }
+                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
+                    deserialize: serialized,
+                    context: context,
+                    moduliCount: 1)
+                let decrypted = try deserialized.decrypt(using: secretKey)
+                let decoded = try decrypted.decode(format: .coefficient)
+                for index in indices {
+                    XCTAssertEqual(decoded[index], values[index])
+                }
+
+                // Check non-zero byte count.
+                let allIndicesSize = try serializedAllIndices.nonZeroBytes()
+                let indicesSize = try serialized.nonZeroBytes()
+                XCTAssertLessThan(indicesSize, allIndicesSize)
             }
         }
 

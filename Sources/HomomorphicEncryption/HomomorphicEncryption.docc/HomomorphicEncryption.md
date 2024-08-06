@@ -34,3 +34,8 @@ This scheme can be configured to support post-quantum 128-bit security.
 > In particular, as little information as possible about each decrypted ciphertext should be sent back to the server. To protect against a malicious server, the client should also validate the decrypted content is in the expected format.
 >
 > Consult a cryptography expert when developing and deploying homomorphic encryption applications.
+
+## Articles
+
+- <doc:UsingSwiftHomomorphicEncryption>
+- <doc:DataFormats>

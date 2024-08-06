@@ -109,6 +109,7 @@ func processBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             polyDegree: 4096,
             plaintextModulusBits: 5,
             coefficientModulusBits: [27, 28, 28])
+        let keyCompression = PirKeyCompressionStrategy.noCompression
 
         let benchmarkName = [
             "Process",
@@ -116,6 +117,7 @@ func processBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             encryptionConfig.description,
             "entryCount=\(entryCount)",
             "entrySize=\(entrySizeInBytes)",
+            "keyCompression=\(keyCompression)",
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
         Benchmark(benchmarkName, configuration: benchmarkConfiguration) { (
@@ -136,7 +138,8 @@ func processBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
                     entrySizeInBytes: entrySizeInBytes,
                     dimensionCount: 2,
                     batchSize: 1,
-                    unevenDimensions: true),
+                    unevenDimensions: true,
+                    keyCompression: keyCompression),
                 parameterConfig: encryptionConfig)
         }
         // swiftlint:enable closure_parameter_position
@@ -200,6 +203,7 @@ func indexPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             polyDegree: 4096,
             plaintextModulusBits: 5,
             coefficientModulusBits: [27, 28, 28])
+        let keyCompression = PirKeyCompressionStrategy.noCompression
 
         let benchmarkName = [
             "IndexPir",
@@ -207,6 +211,7 @@ func indexPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             encryptionConfig.description,
             "entryCount=\(entryCount)",
             "entrySize=\(entrySizeInBytes)",
+            "keyCompression=\(keyCompression)",
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
         Benchmark(benchmarkName, configuration: benchmarkConfiguration) { (
@@ -230,7 +235,8 @@ func indexPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
                     entrySizeInBytes: entrySizeInBytes,
                     dimensionCount: 2,
                     batchSize: 1,
-                    unevenDimensions: true),
+                    unevenDimensions: true,
+                    keyCompression: keyCompression),
                 parameterConfig: encryptionConfig)
         }
         // swiftlint:enable closure_parameter_position
@@ -256,7 +262,8 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
         dimensionCount: Int,
         databaseCount: Int,
         payloadSize: Int,
-        parameterConfig: EncryptionParametersConfig) throws
+        parameterConfig: EncryptionParametersConfig,
+        keyCompression: PirKeyCompressionStrategy) throws
     {
         let encryptParameter: EncryptionParameters<Server.Scheme> = try EncryptionParameters(from: parameterConfig)
         let context = try Context(encryptionParameters: encryptParameter)
@@ -270,7 +277,8 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
             dimensionCount: dimensionCount,
             cuckooTableConfig: CuckooTableConfig
                 .defaultKeywordPir(maxSerializedBucketSize: encryptParameter.bytesPerPlaintext),
-            unevenDimensions: true)
+            unevenDimensions: true,
+            keyCompression: keyCompression)
 
         let processed = try Server.process(database: rows,
                                            config: config,
@@ -315,6 +323,7 @@ func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             polyDegree: 4096,
             plaintextModulusBits: 5,
             coefficientModulusBits: [27, 28, 28])
+        let keyCompression = PirKeyCompressionStrategy.noCompression
 
         let benchmarkName = [
             "KeywordPir",
@@ -322,6 +331,7 @@ func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             encryptionConfig.description,
             "entryCount=\(entryCount)",
             "entrySize=\(entrySizeInBytes)",
+            "keyCompression=\(keyCompression)",
         ].joined(separator: "/")
         Benchmark(benchmarkName, configuration: benchmarkConfiguration) { benchmark, benchmarkContext in
             for _ in benchmark.scaledIterations {
@@ -337,7 +347,8 @@ func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
                 dimensionCount: 2,
                 databaseCount: entryCount,
                 payloadSize: entrySizeInBytes,
-                parameterConfig: encryptionConfig)
+                parameterConfig: encryptionConfig,
+                keyCompression: keyCompression)
         }
     }
 }

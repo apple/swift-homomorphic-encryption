@@ -63,21 +63,38 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
             }
         }
 
+        let evalKeyConfig = Self.evaluationKeyConfiguration(
+            expandedQueryCount: dimensions.sum() * config.batchSize,
+            degree: context.encryptionParameters.polyDegree,
+            keyCompression: config.keyCompression)
         return IndexPirParameter(
             entryCount: config.entryCount,
             entrySizeInBytes: entrySizeInBytes,
-            dimensions: dimensions, batchSize: config.batchSize)
+            dimensions: dimensions, batchSize: config.batchSize,
+            evaluationKeyConfig: evalKeyConfig)
     }
 
-    public static func evaluationKeyConfiguration(
-        parameter: IndexPirParameter,
-        encryptionParameters: EncryptionParameters<Scheme>) -> HomomorphicEncryption.EvaluationKeyConfiguration
+    static func evaluationKeyConfiguration(
+        expandedQueryCount: Int,
+        degree: Int,
+        keyCompression: PirKeyCompressionStrategy) -> HomomorphicEncryption.EvaluationKeyConfiguration
     {
-        let degree = encryptionParameters.polyDegree
-        let expandedQueryCount = parameter.expandedQueryCount * parameter.batchSize
         let maxExpansionDepth = min(expandedQueryCount, degree).ceilLog2
-        let galoisElements = (degree.log2 - maxExpansionDepth + 1...degree.log2).map { level in
+        let smallestPower = degree.log2 - maxExpansionDepth + 1
+        let largestPower = switch keyCompression {
+        case .noCompression: degree.log2
+        case .hybridCompression, .maxCompression:
+            max(smallestPower, (degree.log2 + 1).dividingCeil(2, variableTime: true))
+        }
+        var galoisElements = (smallestPower...largestPower).map { level in
             (1 << level) + 1
+        }
+        if keyCompression == .hybridCompression {
+            let extraPower = max(largestPower, (degree.log2 + largestPower + 1) / 2)
+            let extraGaloisElement = (1 << extraPower) + 1
+            if !galoisElements.contains(extraGaloisElement) {
+                galoisElements.append(extraGaloisElement)
+            }
         }
         return .init(galoisElements: galoisElements, hasRelinearizationKey: true)
     }
@@ -103,7 +120,7 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
     public let context: HomomorphicEncryption.Context<Scheme>
 
     public var evaluationKeyConfiguration: HomomorphicEncryption.EvaluationKeyConfiguration {
-        MulPir.evaluationKeyConfiguration(parameter: parameter, encryptionParameters: context.encryptionParameters)
+        parameter.evaluationKeyConfig
     }
 
     @usableFromInline var entrySizeInBytes: Int { parameter.entrySizeInBytes }
@@ -259,8 +276,9 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     /// Must be the same between client and server.
     public let context: HomomorphicEncryption.Context<Scheme>
 
-    public var evaluationKeyConfiguration: HomomorphicEncryption.EvaluationKeyConfiguration {
-        MulPir.evaluationKeyConfiguration(parameter: parameter, encryptionParameters: context.encryptionParameters)
+    /// Evaluation key configuration.
+    public var evaluationKeyConfiguration: EvaluationKeyConfiguration {
+        parameter.evaluationKeyConfig
     }
 
     /// Processed databases.
@@ -284,7 +302,7 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
 
     /// Initializes a ``MulPirServer`` with databases.
     /// - Parameters:
-    ///   - parameter: PIR parameters associated with the database.
+    ///   - parameter: PIR parameters associated with the databases.
     ///   - context: Context for HE computation.
     ///   - databases: Databases, each compatible with the given `parameter`.
     /// - Throws: Error upon failure to initialize the server.

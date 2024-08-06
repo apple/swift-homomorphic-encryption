@@ -140,7 +140,7 @@ public struct EvaluationKey<Scheme: HeScheme>: Equatable, Sendable {
 }
 
 /// A configuration for generating an evaluation key.
-public struct EvaluationKeyConfiguration: Equatable, Sendable {
+public struct EvaluationKeyConfiguration: Codable, Equatable, Hashable, Sendable {
     /// Galois elements.
     /// - seealso: ``GaloisElement``and ``HeScheme/applyGalois(ciphertext:element:using:)`` for more information.
     public let galoisElements: [Int]

@@ -41,12 +41,26 @@ enum PirUtil<Scheme: HeScheme> {
         logStep: Int,
         using evaluationKey: EvaluationKey<Scheme>) throws -> (CanonicalCiphertext, CanonicalCiphertext)
     {
-        let logDegree = ciphertext.degree.log2
-        precondition(logStep <= ciphertext.degree.log2)
-        let swappingGaloisElement = 1 << (logDegree - logStep + 1) + 1
+        let degree = ciphertext.degree
+        precondition(logStep <= degree.log2)
         let shiftingPower = 1 << (logStep - 1)
+
+        let targetElement = 1 << (degree.log2 - logStep + 1) + 1
         var c1 = ciphertext
-        try c1.applyGalois(element: swappingGaloisElement, using: evaluationKey)
+
+        guard let galoisElement = evaluationKey.configuration.galoisElements.filter({ element in
+            element <= targetElement }).max()
+        else {
+            throw HeError.missingGaloisKey
+        }
+        let applyGaloisCount = 1 << ((targetElement - 1).log2 - (galoisElement - 1).log2)
+        var currElement = 1
+        for _ in 0..<applyGaloisCount {
+            try c1.applyGalois(element: galoisElement, using: evaluationKey)
+            currElement *= galoisElement
+            currElement %= (2 * degree)
+        }
+        precondition(currElement == targetElement)
 
         var difference = try (ciphertext - c1).convertToCoeffFormat()
         try difference.multiplyInversePowerOfX(power: shiftingPower)

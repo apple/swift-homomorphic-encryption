@@ -95,7 +95,8 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
             entryCount: Int(numEntries),
             entrySizeInBytes: Int(entrySize),
             dimensions: dimensions.map(Int.init),
-            batchSize: Int(batchSize))
+            batchSize: Int(batchSize),
+            evaluationKeyConfig: evaluationKeyConfig.native())
     }
 
     /// Converts the protobuf object into a native type.
@@ -134,6 +135,32 @@ extension PirAlgorithm {
         switch self {
         case .aclsPir: Apple_SwiftHomomorphicEncryption_Pir_V1_PirAlgorithm.aclsPir
         case .mulPir: Apple_SwiftHomomorphicEncryption_Pir_V1_PirAlgorithm.mulPir
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    public func native() throws -> PirKeyCompressionStrategy {
+        switch self {
+        case .unspecified: PirKeyCompressionStrategy.noCompression
+        case .hybridCompression: PirKeyCompressionStrategy.hybridCompression
+        case .maximumCompression: PirKeyCompressionStrategy.maxCompression
+        case let .UNRECOGNIZED(value):
+            throw ConversionError.unrecognizedEnumValue(enum: Self.self, value: value)
+        }
+    }
+}
+
+extension PirKeyCompressionStrategy {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy {
+        switch self {
+        case .noCompression: Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy.unspecified
+        case .hybridCompression: Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy.hybridCompression
+        case .maxCompression: Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy.maximumCompression
         }
     }
 }

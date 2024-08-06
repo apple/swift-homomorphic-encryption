@@ -382,7 +382,7 @@ extension ProcessKeywordDatabase.ShardValidationResult {
         descriptionDict["query size"] = try sizeString(byteCount: query.size(), count: query.ciphertexts.count,
                                                        label: "ciphertexts")
         descriptionDict["evaluation key size"] = try sizeString(
-            byteCount: query.size(),
+            byteCount: evaluationKey.size(),
             count: evaluationKey.configuration.keyCount,
             label: "keys"
         )

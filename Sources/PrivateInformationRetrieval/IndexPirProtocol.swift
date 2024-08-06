@@ -21,10 +21,23 @@ public enum PirAlgorithm: String, CaseIterable, Codable, CodingKeyRepresentable,
     ///
     /// - seealso: <https://eprint.iacr.org/2017/1142.pdf>.
     case aclsPir
+
     /// PIR using ciphertext-ciphertext multiplication.
     ///
     /// - seealso: ``MulPir``, <https://eprint.iacr.org/2019/1483.pdf>.
     case mulPir
+}
+
+/// Which strategy to use for ``EvaluationKey`` compression.
+public enum PirKeyCompressionStrategy: String, CaseIterable, Codable, CodingKeyRepresentable, Hashable, Sendable {
+    /// A middle ground between no compression and ``.maxCompression``.
+    case hybridCompression
+
+    /// Use as small an evaluation key as possible.
+    case maxCompression
+
+    /// No compression.
+    case noCompression
 }
 
 /// Configuration for an Index PIR database.
@@ -39,6 +52,8 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     public let batchSize: Int
     /// Whether or not to enable `uneven dimensions` optimization.
     public let unevenDimensions: Bool
+    /// ``EvaluationKey`` compression.
+    public let keyCompression: PirKeyCompressionStrategy
 
     /// Initializes an ``IndexPirConfig``.
     /// - Parameters:
@@ -47,13 +62,15 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     ///   - dimensionCount: Number of dimensions in database.
     ///   - batchSize: Number of indices in a query to the database.
     ///   - unevenDimensions: Whether or not to enable `uneven dimensions` optimization.
+    ///   - keyCompression: ``EvaluationKey`` compression.
     /// - Throws: Error upon invalid configuration parameters.
     public init(
         entryCount: Int,
         entrySizeInBytes: Int,
         dimensionCount: Int,
         batchSize: Int,
-        unevenDimensions: Bool) throws
+        unevenDimensions: Bool,
+        keyCompression: PirKeyCompressionStrategy) throws
     {
         let validDimensionsCount = [1, 2]
         guard validDimensionsCount.contains(dimensionCount) else {
@@ -64,6 +81,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         self.dimensionCount = dimensionCount
         self.batchSize = batchSize
         self.unevenDimensions = unevenDimensions
+        self.keyCompression = keyCompression
     }
 }
 
@@ -79,6 +97,8 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     public let dimensions: [Int]
     /// Number of indices in a query to the database.
     public let batchSize: Int
+    /// ``EvaluationKey`` configuration.
+    public let evaluationKeyConfig: EvaluationKeyConfiguration
 
     /// The number of dimensions in the database.
     @usableFromInline var dimensionCount: Int { dimensions.count }
@@ -91,11 +111,19 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     ///   - entrySizeInBytes:  Byte size of each entry in the database.
     ///   - dimensions: Number of plaintexts in each dimension of the database.
     ///   - batchSize: Number of indices in a query to the database.
-    public init(entryCount: Int, entrySizeInBytes: Int, dimensions: [Int], batchSize: Int) {
+    ///   - evaluationKeyConfig: Evaluation key configuration.
+    public init(
+        entryCount: Int,
+        entrySizeInBytes: Int,
+        dimensions: [Int],
+        batchSize: Int,
+        evaluationKeyConfig: EvaluationKeyConfiguration)
+    {
         self.entryCount = entryCount
         self.entrySizeInBytes = entrySizeInBytes
         self.dimensions = dimensions
         self.batchSize = batchSize
+        self.evaluationKeyConfig = evaluationKeyConfig
     }
 }
 
@@ -310,18 +338,6 @@ public protocol IndexPirProtocol {
     ///   - context: Context for HE computation.
     /// - Returns: The PIR parameters for the database.
     static func generateParameter(config: IndexPirConfig, with context: Context<Scheme>) -> IndexPirParameter
-
-    /// Computes the evaluation key configuration.
-    ///
-    /// The client and server must agree on the evaluation key configuration.
-    /// - Parameters:
-    ///   - parameter: Index PIR parameters.
-    ///   - encryptionParameters: Encryption parameters.
-    /// - Returns: The evaluation key configuration.
-    static func evaluationKeyConfiguration(
-        parameter: IndexPirParameter,
-        encryptionParameters: EncryptionParameters<Scheme>)
-        -> EvaluationKeyConfiguration
 }
 
 /// Protocol for a server hosting index PIR databases for lookup.

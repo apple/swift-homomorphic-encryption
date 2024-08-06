@@ -42,7 +42,8 @@ class ConversionTests: XCTestCase {
         let config = try KeywordPirConfig(
             dimensionCount: 2,
             cuckooTableConfig: .defaultKeywordPir(maxSerializedBucketSize: context.bytesPerPlaintext),
-            unevenDimensions: true)
+            unevenDimensions: true,
+            keyCompression: .noCompression)
         let processedDatabaseWithParameters = try KeywordPirServer<MulPirServer<Bfv<UInt32>>>.process(
             database: rows,
             config: config,
@@ -53,5 +54,17 @@ class ConversionTests: XCTestCase {
         let pirParameters = try processedDatabaseWithParameters.proto(context: context)
         let loadedProcessedDatabaseWithParameters = try pirParameters.native(database: processedDatabase)
         XCTAssertEqual(loadedProcessedDatabaseWithParameters, processedDatabaseWithParameters)
+    }
+
+    func testPirAlgorithm() throws {
+        for algorithm in PirAlgorithm.allCases {
+            XCTAssertEqual(try algorithm.proto().native(), algorithm)
+        }
+    }
+
+    func testPirKeyCompressionStrategy() throws {
+        for strategy in PirKeyCompressionStrategy.allCases {
+            XCTAssertEqual(try strategy.proto().native(), strategy)
+        }
     }
 }

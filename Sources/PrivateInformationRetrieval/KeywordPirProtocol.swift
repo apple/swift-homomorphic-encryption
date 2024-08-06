@@ -26,6 +26,9 @@ public struct KeywordPirConfig: Hashable, Codable {
     /// Whether to enable the `uneven dimensions` optimization.
     @usableFromInline let unevenDimensions: Bool
 
+    /// Strategy for ``EvaluationKey`` compression.
+    @usableFromInline let keyCompression: PirKeyCompressionStrategy
+
     /// Keyword PIR parameters.
     public var parameter: KeywordPirParameter {
         KeywordPirParameter(hashFunctionCount: cuckooTableConfig.hashFunctionCount)
@@ -35,12 +38,14 @@ public struct KeywordPirConfig: Hashable, Codable {
     /// - Parameters:
     ///   - dimensionCount: Number of dimensions in the database.
     ///   - cuckooTableConfig: Cuckoo table configuration.
-    ///   - unevenDimensions: Whether to enable the `uneven dimensions` optimization`.
+    ///   - unevenDimensions: Whether to enable the `uneven dimensions` optimization.
+    ///   - keyCompression: Strategy for ``EvaluationKey`` compression.
     /// - Throws: Error upon invalid arguments.
     public init(
         dimensionCount: Int,
         cuckooTableConfig: CuckooTableConfig,
-        unevenDimensions: Bool) throws
+        unevenDimensions: Bool,
+        keyCompression: PirKeyCompressionStrategy) throws
     {
         let validDimensionsCount = [1, 2]
         guard validDimensionsCount.contains(dimensionCount) else {
@@ -52,6 +57,7 @@ public struct KeywordPirConfig: Hashable, Codable {
         self.dimensionCount = dimensionCount
         self.cuckooTableConfig = cuckooTableConfig
         self.unevenDimensions = unevenDimensions
+        self.keyCompression = keyCompression
     }
 }
 
@@ -172,7 +178,8 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
             let newConfig = try KeywordPirConfig(
                 dimensionCount: config.dimensionCount,
                 cuckooTableConfig: newCuckooTableConfig,
-                unevenDimensions: config.unevenDimensions)
+                unevenDimensions: config.unevenDimensions,
+                keyCompression: config.keyCompression)
             return try Self.process(database: database, config: newConfig, with: context)
         }
 
@@ -181,7 +188,8 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
             entrySizeInBytes: maxEntrySize,
             dimensionCount: config.dimensionCount,
             batchSize: cuckooTableConfig.hashFunctionCount,
-            unevenDimensions: config.unevenDimensions)
+            unevenDimensions: config.unevenDimensions,
+            keyCompression: config.keyCompression)
         let indexPirParameter = PirServer.generateParameter(config: indexPirConfig, with: context)
 
         let processedDb = try PirServer.Database(plaintexts: stride(
@@ -193,9 +201,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
                 with: context,
                 using: indexPirParameter).plaintexts
         })
-        let evaluationKeyConfig = PirServer.IndexPir.evaluationKeyConfiguration(
-            parameter: indexPirParameter,
-            encryptionParameters: context.encryptionParameters)
+        let evaluationKeyConfig = indexPirParameter.evaluationKeyConfig
 
         return ProcessedDatabaseWithParameters(
             database: processedDb,

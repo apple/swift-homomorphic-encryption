@@ -26,7 +26,8 @@ class IndexPirTests: XCTestCase {
                                             entrySizeInBytes: context.bytesPerPlaintext,
                                             dimensionCount: 2,
                                             batchSize: 1,
-                                            unevenDimensions: false)
+                                            unevenDimensions: false,
+                                            keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
             XCTAssertEqual(parameter.dimensions, [4, 4])
         }
@@ -35,7 +36,8 @@ class IndexPirTests: XCTestCase {
                                             entrySizeInBytes: context.bytesPerPlaintext,
                                             dimensionCount: 2,
                                             batchSize: 2,
-                                            unevenDimensions: false)
+                                            unevenDimensions: false,
+                                            keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
             XCTAssertEqual(parameter.dimensions, [4, 3])
         }
@@ -45,7 +47,8 @@ class IndexPirTests: XCTestCase {
                                             entrySizeInBytes: context.bytesPerPlaintext,
                                             dimensionCount: 2,
                                             batchSize: 1,
-                                            unevenDimensions: true)
+                                            unevenDimensions: true,
+                                            keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
             XCTAssertEqual(parameter.dimensions, [5, 3])
         }
@@ -54,7 +57,8 @@ class IndexPirTests: XCTestCase {
                                             entrySizeInBytes: context.bytesPerPlaintext,
                                             dimensionCount: 2,
                                             batchSize: 2,
-                                            unevenDimensions: true)
+                                            unevenDimensions: true,
+                                            keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
             XCTAssertEqual(parameter.dimensions, [5, 3])
         }
@@ -63,9 +67,52 @@ class IndexPirTests: XCTestCase {
                                             entrySizeInBytes: context.bytesPerPlaintext,
                                             dimensionCount: 2,
                                             batchSize: 2,
-                                            unevenDimensions: true)
+                                            unevenDimensions: true,
+                                            keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
             XCTAssertEqual(parameter.dimensions, [9, 2])
+        }
+        // no key compression
+        do {
+            let config = try IndexPirConfig(entryCount: 100,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .noCompression)
+            let parameter = MulPir.generateParameter(config: config, with: context)
+            let evalKeyConfig = EvaluationKeyConfiguration(
+                galoisElements: [3, 5, 9, 17],
+                hasRelinearizationKey: true)
+            XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)
+        }
+        // hybrid key compression
+        do {
+            let config = try IndexPirConfig(entryCount: 100,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .hybridCompression)
+            let parameter = MulPir.generateParameter(config: config, with: context)
+            let evalKeyConfig = EvaluationKeyConfiguration(
+                galoisElements: [3, 5, 9, 17],
+                hasRelinearizationKey: true)
+            XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)
+        }
+        // max key compression
+        do {
+            let config = try IndexPirConfig(entryCount: 100,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .maxCompression)
+            let parameter = MulPir.generateParameter(config: config, with: context)
+            let evalKeyConfig = EvaluationKeyConfiguration(
+                galoisElements: [3, 5, 9],
+                hasRelinearizationKey: true)
+            XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)
         }
     }
 
@@ -116,39 +163,50 @@ class IndexPirTests: XCTestCase {
                                                                               client: Client.Type) throws
         where Server.IndexPir == Client.IndexPir
     {
-        let config1 = try IndexPirConfig(entryCount: 100,
-                                         entrySizeInBytes: 1,
-                                         dimensionCount: 2,
-                                         batchSize: 2,
-                                         unevenDimensions: false)
-        let config2 = try IndexPirConfig(entryCount: 100,
-                                         entrySizeInBytes: 8,
-                                         dimensionCount: 2,
-                                         batchSize: 2,
-                                         unevenDimensions: false)
-        let config3 = try IndexPirConfig(entryCount: 100,
-                                         entrySizeInBytes: 24,
-                                         dimensionCount: 2,
-                                         batchSize: 2,
-                                         unevenDimensions: true)
-        let config4 = try IndexPirConfig(entryCount: 100,
-                                         entrySizeInBytes: 24,
-                                         dimensionCount: 1,
-                                         batchSize: 2,
-                                         unevenDimensions: true)
+        let configs = try [
+            IndexPirConfig(entryCount: 100,
+                           entrySizeInBytes: 1,
+                           dimensionCount: 2,
+                           batchSize: 2,
+                           unevenDimensions: false,
+                           keyCompression: .noCompression),
+            IndexPirConfig(entryCount: 100,
+                           entrySizeInBytes: 8,
+                           dimensionCount: 2,
+                           batchSize: 2,
+                           unevenDimensions: false,
+                           keyCompression: .noCompression),
+            IndexPirConfig(entryCount: 100,
+                           entrySizeInBytes: 24,
+                           dimensionCount: 2,
+                           batchSize: 2,
+                           unevenDimensions: true,
+                           keyCompression: .noCompression),
+            IndexPirConfig(entryCount: 100,
+                           entrySizeInBytes: 24,
+                           dimensionCount: 1,
+                           batchSize: 2,
+                           unevenDimensions: true,
+                           keyCompression: .noCompression),
+            IndexPirConfig(entryCount: 100,
+                           entrySizeInBytes: 24,
+                           dimensionCount: 1,
+                           batchSize: 2,
+                           unevenDimensions: true,
+                           keyCompression: .hybridCompression),
+            IndexPirConfig(entryCount: 100,
+                           entrySizeInBytes: 24,
+                           dimensionCount: 1,
+                           batchSize: 2,
+                           unevenDimensions: true,
+                           keyCompression: .maxCompression),
+        ]
 
         let context: Context<Server.Scheme> = try TestUtils.getTestContext()
-        let parameter1 = Server.generateParameter(config: config1, with: context)
-        try indexPirTestForParameter(server: server, client: client, for: parameter1, with: context)
-
-        let parameter2 = Server.generateParameter(config: config2, with: context)
-        try indexPirTestForParameter(server: server, client: client, for: parameter2, with: context)
-
-        let parameter3 = Server.generateParameter(config: config3, with: context)
-        try indexPirTestForParameter(server: server, client: client, for: parameter3, with: context)
-
-        let parameter4 = Server.generateParameter(config: config4, with: context)
-        try indexPirTestForParameter(server: server, client: client, for: parameter4, with: context)
+        for config in configs {
+            let parameter = Server.generateParameter(config: config, with: context)
+            try indexPirTestForParameter(server: server, client: client, for: parameter, with: context)
+        }
     }
 
     private func mulIndexPirTest<Scheme: HeScheme>(scheme _: Scheme.Type) throws {

@@ -124,6 +124,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
     var sharding: Sharding?
     var cuckooTableArguments: CuckooTableArguments?
     var algorithm: PirAlgorithm?
+    var keyCompression: PirKeyCompressionStrategy?
     var trialsPerShard: Int?
 
     static func defaultJsonString() -> String {
@@ -155,6 +156,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
             sharding: resolved.sharding,
             cuckooTableArguments: cuckooTableArguments,
             algorithm: resolved.algorithm,
+            keyCompression: PirKeyCompressionStrategy.noCompression,
             trialsPerShard: resolved.trialsPerShard)
 
         let encoder = JSONEncoder()
@@ -199,6 +201,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
             cuckooTableConfig: cuckooTableConfig,
             rlweParameters: rlweParameters,
             algorithm: algorithm ?? .mulPir,
+            keyCompression: keyCompression ?? .noCompression,
             trialsPerShard: trialsPerShard ?? 1)
     }
 }
@@ -213,6 +216,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     let cuckooTableConfig: CuckooTableConfig
     let rlweParameters: PredefinedRlweParameters
     let algorithm: PirAlgorithm
+    let keyCompression: PirKeyCompressionStrategy
     let trialsPerShard: Int
 
     var description: String {
@@ -232,6 +236,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     ///  - cuckooTableConfig: Cuckoo Table configuration.
     ///  - rlweParameters: RLWE parameters.
     ///  - algorithm: PIR algorithm.
+    ///  - keyCompression: ``EvaluationKey`` compression.
     ///  - trialsPerShard: Number of test queries per shard.
     init(
         inputDatabase: String,
@@ -242,6 +247,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         cuckooTableConfig: CuckooTableConfig,
         rlweParameters: PredefinedRlweParameters,
         algorithm: PirAlgorithm,
+        keyCompression: PirKeyCompressionStrategy,
         trialsPerShard: Int) throws
     {
         self.inputDatabase = inputDatabase
@@ -252,6 +258,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         self.cuckooTableConfig = cuckooTableConfig
         self.rlweParameters = rlweParameters
         self.algorithm = algorithm
+        self.keyCompression = keyCompression
         self.trialsPerShard = trialsPerShard
 
         try validate()
@@ -300,7 +307,8 @@ struct ProcessDatabase: ParsableCommand {
         ProcessDatabase.logger.info("Processing database with configuration: \(config)")
         let keywordConfig = try KeywordPirConfig(dimensionCount: 2,
                                                  cuckooTableConfig: config.cuckooTableConfig,
-                                                 unevenDimensions: true)
+                                                 unevenDimensions: true,
+                                                 keyCompression: config.keyCompression)
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
@@ -309,6 +317,7 @@ struct ProcessDatabase: ParsableCommand {
         let processArgs = try ProcessKeywordDatabase.Arguments<Scheme>(databaseConfig: databaseConfig,
                                                                        encryptionParameters: encryptionParameters,
                                                                        algorithm: config.algorithm,
+                                                                       keyCompression: config.keyCompression,
                                                                        trialsPerShard: config.trialsPerShard)
 
         var evaluationKeyConfig = EvaluationKeyConfiguration()

@@ -33,6 +33,7 @@ package enum PirTestUtils {
         with context: Context<PIR.Scheme>,
         entryCount: Int,
         entrySizeInBytes: Int,
+        keyCompression: PirKeyCompressionStrategy,
         batchSize: Int = 10) throws -> IndexPirParameter
     {
         let config = try IndexPirConfig(
@@ -40,7 +41,8 @@ package enum PirTestUtils {
             entrySizeInBytes: entrySizeInBytes,
             dimensionCount: 2,
             batchSize: batchSize,
-            unevenDimensions: true)
+            unevenDimensions: true,
+            keyCompression: keyCompression)
         return PIR.generateParameter(config: config, with: context)
     }
 

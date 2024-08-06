@@ -116,6 +116,8 @@ The suggested value is 1.
 The `outputEvaluationKeyConfig` argument will store a configuration that is
 suitable for any of the processed shards.
 
+* `keyCompression`. The evaluation key can be made smaller at the cost of extra server runtime. For fastest runtime, leave unspecified. For smallest key size, choose `maxCompression`. For a middle ground, choose `hybridCompression`.
+
 #### Cuckoo Table Parameters
 Keyword PIR uses bucketed cuckoo hashing to map a keyword to an index in the
 database/shard which stores a bucket of keywords’ metadata. All cuckoo table

@@ -18,8 +18,59 @@ import TestUtilities
 import XCTest
 
 class MulPirTests: XCTestCase {
-    private func queryGenerationTest<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-        let entryCount = 100
+    func testEvaluationKeyConfiguration() throws {
+        func runTest(queryCount: Int, degree: Int, _ keyCompression: PirKeyCompressionStrategy, expected: [Int]) {
+            let evalKeyConfig = MulPir<Bfv<UInt32>>.evaluationKeyConfiguration(
+                expandedQueryCount: queryCount,
+                degree: degree,
+                keyCompression: keyCompression)
+            XCTAssertEqual(evalKeyConfig.galoisElements, expected)
+        }
+        // noCompression
+        do {
+            let compression = PirKeyCompressionStrategy.noCompression
+            runTest(queryCount: 2, degree: 4096, compression, expected: [4097])
+            runTest(queryCount: 2, degree: 8192, compression, expected: [8193])
+            runTest(queryCount: 32, degree: 4096, compression, expected: [257, 513, 1025, 2049, 4097])
+            runTest(queryCount: 32, degree: 8192, compression, expected: [513, 1025, 2049, 4097, 8193])
+            runTest(
+                queryCount: 1024,
+                degree: 4096,
+                compression,
+                expected: [9, 17, 33, 65, 129, 257, 513, 1025, 2049, 4097])
+            runTest(
+                queryCount: 1024,
+                degree: 8192,
+                compression,
+                expected: [17, 33, 65, 129, 257, 513, 1025, 2049, 4097, 8193])
+        }
+        // hybridCompression
+        do {
+            let compression = PirKeyCompressionStrategy.hybridCompression
+            runTest(queryCount: 2, degree: 4096, compression, expected: [4097])
+            runTest(queryCount: 2, degree: 8192, compression, expected: [8193])
+            runTest(queryCount: 32, degree: 4096, compression, expected: [257, 1025])
+            runTest(queryCount: 32, degree: 8192, compression, expected: [513, 2049])
+            runTest(queryCount: 1024, degree: 4096, compression, expected: [9, 17, 33, 65, 129, 1025])
+            runTest(queryCount: 1024, degree: 8192, compression, expected: [17, 33, 65, 129, 1025])
+        }
+        // maxCompression
+        do {
+            let compression = PirKeyCompressionStrategy.maxCompression
+            runTest(queryCount: 2, degree: 4096, compression, expected: [4097])
+            runTest(queryCount: 2, degree: 8192, compression, expected: [8193])
+            runTest(queryCount: 32, degree: 4096, compression, expected: [257])
+            runTest(queryCount: 32, degree: 8192, compression, expected: [513])
+            runTest(queryCount: 1024, degree: 4096, compression, expected: [9, 17, 33, 65, 129])
+            runTest(queryCount: 1024, degree: 8192, compression, expected: [17, 33, 65, 129])
+        }
+    }
+
+    private func queryGenerationTest<Scheme: HeScheme>(
+        scheme _: Scheme.Type,
+        _ keyCompression: PirKeyCompressionStrategy) throws
+    {
+        let entryCount = 200
         let entrySizeInBytes = 16
         let context: Context<Scheme> = try TestUtils.getTestContext()
         let secretKey = try context.generateSecretKey()
@@ -27,7 +78,7 @@ class MulPirTests: XCTestCase {
             pir: MulPir<Scheme>.self,
             with: context,
             entryCount: entryCount,
-            entrySizeInBytes: entrySizeInBytes)
+            entrySizeInBytes: entrySizeInBytes, keyCompression: keyCompression)
         let client = MulPirClient(parameter: parameter, context: context)
 
         let evaluationKey = try client.generateEvaluationKey(using: secretKey)
@@ -69,10 +120,22 @@ class MulPirTests: XCTestCase {
         }
     }
 
-    func testQueryGeneration() throws {
-        try queryGenerationTest(scheme: NoOpScheme.self)
-        try queryGenerationTest(scheme: Bfv<UInt32>.self)
-        try queryGenerationTest(scheme: Bfv<UInt64>.self)
+    func testQueryGenerationNoCompression() throws {
+        try queryGenerationTest(scheme: NoOpScheme.self, .noCompression)
+        try queryGenerationTest(scheme: Bfv<UInt32>.self, .noCompression)
+        try queryGenerationTest(scheme: Bfv<UInt64>.self, .noCompression)
+    }
+
+    func testQueryGenerationHybridCompression() throws {
+        try queryGenerationTest(scheme: NoOpScheme.self, .hybridCompression)
+        try queryGenerationTest(scheme: Bfv<UInt32>.self, .hybridCompression)
+        try queryGenerationTest(scheme: Bfv<UInt64>.self, .hybridCompression)
+    }
+
+    func testQueryGenerationMaxCompression() throws {
+        try queryGenerationTest(scheme: NoOpScheme.self, .maxCompression)
+        try queryGenerationTest(scheme: Bfv<UInt32>.self, .maxCompression)
+        try queryGenerationTest(scheme: Bfv<UInt64>.self, .maxCompression)
     }
 
     private func getDatabaseForTesting(
@@ -84,9 +147,12 @@ class MulPirTests: XCTestCase {
         }
     }
 
-    private func queryAndResponseTest<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
+    private func queryAndResponseTest<Scheme: HeScheme>(
+        scheme _: Scheme.Type,
+        _ keyCompression: PirKeyCompressionStrategy) throws
+    {
         let context: Context<Scheme> = try TestUtils.getTestContext()
-        let entryCount = 1000
+        let entryCount = 10000
         let entrySize = 16
         let database: [[UInt8]] = getDatabaseForTesting(
             entryCount: entryCount,
@@ -95,7 +161,7 @@ class MulPirTests: XCTestCase {
             pir: MulPir<Scheme>.self,
             with: context,
             entryCount: entryCount,
-            entrySizeInBytes: entrySize)
+            entrySizeInBytes: entrySize, keyCompression: keyCompression)
         let client = MulPirClient(parameter: parameter, context: context)
 
         let secretKey = try context.generateSecretKey()
@@ -121,17 +187,39 @@ class MulPirTests: XCTestCase {
         }
     }
 
-    func testQueryAndResponse() throws {
-        try queryAndResponseTest(scheme: NoOpScheme.self)
-        try queryAndResponseTest(scheme: Bfv<UInt32>.self)
-        try queryAndResponseTest(scheme: Bfv<UInt64>.self)
+    func testQueryAndResponseNoKeyCompression() throws {
+        try queryAndResponseTest(scheme: NoOpScheme.self, .noCompression)
+        try queryAndResponseTest(scheme: Bfv<UInt32>.self, .noCompression)
+        try queryAndResponseTest(scheme: Bfv<UInt64>.self, .noCompression)
+    }
+
+    func testQueryAndResponseHybridCompression() throws {
+        try queryAndResponseTest(
+            scheme: NoOpScheme.self,
+            .hybridCompression)
+        try queryAndResponseTest(scheme: Bfv<UInt32>.self, .hybridCompression)
+        try queryAndResponseTest(scheme: Bfv<UInt64>.self, .hybridCompression)
+    }
+
+    func testQueryAndResponseMaxCompression() throws {
+        try queryAndResponseTest(
+            scheme: NoOpScheme.self,
+            .maxCompression)
+        try queryAndResponseTest(scheme: Bfv<UInt32>.self, .maxCompression)
+        try queryAndResponseTest(scheme: Bfv<UInt64>.self, .maxCompression)
     }
 
     func testComputeCoordinates() throws {
         let context: Context<NoOpScheme> = try TestUtils.getTestContext()
+        let evalKeyConfig = EvaluationKeyConfiguration()
         // two dimensional case
         do {
-            let parameter = IndexPirParameter(entryCount: 100, entrySizeInBytes: 16, dimensions: [10, 10], batchSize: 1)
+            let parameter = IndexPirParameter(
+                entryCount: 100,
+                entrySizeInBytes: 16,
+                dimensions: [10, 10],
+                batchSize: 1,
+                evaluationKeyConfig: evalKeyConfig)
             let client = MulPirClient(parameter: parameter, context: context)
 
             let vectors = [
@@ -152,7 +240,12 @@ class MulPirTests: XCTestCase {
 
         // three dimensional case
         do {
-            let parameter = IndexPirParameter(entryCount: 30, entrySizeInBytes: 16, dimensions: [5, 3, 2], batchSize: 1)
+            let parameter = IndexPirParameter(
+                entryCount: 30,
+                entrySizeInBytes: 16,
+                dimensions: [5, 3, 2],
+                batchSize: 1,
+                evaluationKeyConfig: evalKeyConfig)
             let client = MulPirClient(parameter: parameter, context: context)
 
             let vectors = [

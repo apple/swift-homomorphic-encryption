@@ -34,7 +34,7 @@ extension Bfv {
             throw HeError.unsupportedHeOperation()
         }
         var galoisKeys: [Int: KeySwitchKey<Self>] = [:]
-        for element in configuration.galoisElements {
+        for element in configuration.galoisElements where !galoisKeys.keys.contains(element) {
             let switchedKey = try secretKey.poly.applyGalois(element: element)
             galoisKeys[element] = try generateKeySwitchKey(
                 context: context,

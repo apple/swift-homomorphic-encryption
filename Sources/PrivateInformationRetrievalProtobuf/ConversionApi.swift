@@ -46,14 +46,17 @@ extension Response {
 
 extension Apple_SwiftHomomorphicEncryption_Api_V1_PIRShardConfig {
     /// Converts the protobuf object to a native type.
-    /// - Parameter batchSize: Number of queries in a batch.
-    /// - Returns: The converted protobuf object.
-    public func native(batchSize: Int) -> IndexPirParameter {
+    /// - Parameters:
+    ///   - batchSize: Number of queries in a batch.
+    ///   - evaluationKeyConfig: Evaluation key configuration
+    /// - Returns: The converted native type.
+    public func native(batchSize: Int, evaluationKeyConfig: EvaluationKeyConfiguration) -> IndexPirParameter {
         IndexPirParameter(
             entryCount: Int(numEntries),
             entrySizeInBytes: Int(entrySize),
             dimensions: dimensions.map(Int.init),
-            batchSize: batchSize)
+            batchSize: batchSize,
+            evaluationKeyConfig: evaluationKeyConfig)
     }
 }
 

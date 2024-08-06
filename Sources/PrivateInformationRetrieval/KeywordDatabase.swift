@@ -271,6 +271,8 @@ public enum ProcessKeywordDatabase {
         public let encryptionParameters: EncryptionParameters<Scheme>
         /// PIR algorithm to process with.
         public let algorithm: PirAlgorithm
+        /// Strategy for ``EvaluationKey`` compression.
+        public let keyCompression: PirKeyCompressionStrategy
         /// Number of test queries per shard.
         public let trialsPerShard: Int
 
@@ -279,12 +281,14 @@ public enum ProcessKeywordDatabase {
         ///   - databaseConfig: Database configuration.
         ///   - encryptionParameters: Encryption parameters.
         ///   - algorithm: PIR algorithm to process with.
-        ///   - trialsPerShard: number of test queries per shard.
+        ///   - keyCompression: Strategy for ``EvaluationKey`` compression.
+        ///   - trialsPerShard: Number of test queries per shard.
         ///  - Throws: Error upon invalid arguments
         public init(
             databaseConfig: KeywordDatabaseConfig,
             encryptionParameters: EncryptionParameters<Scheme>,
             algorithm: PirAlgorithm,
+            keyCompression: PirKeyCompressionStrategy,
             trialsPerShard: Int) throws
         {
             guard trialsPerShard >= 0 else {
@@ -296,6 +300,7 @@ public enum ProcessKeywordDatabase {
             self.databaseConfig = databaseConfig
             self.encryptionParameters = encryptionParameters
             self.algorithm = algorithm
+            self.keyCompression = keyCompression
             self.trialsPerShard = trialsPerShard
         }
     }
@@ -474,12 +479,8 @@ public enum ProcessKeywordDatabase {
             let processed = try KeywordPirServer<MulPirServer<Scheme>>.process(database: shardedDatabase,
                                                                                config: keywordConfig,
                                                                                with: context)
-            evaluationKeyConfiguration = [
-                evaluationKeyConfiguration,
-                MulPir.evaluationKeyConfiguration(
-                    parameter: processed.pirParameter,
-                    encryptionParameters: arguments.encryptionParameters),
-            ].union()
+            evaluationKeyConfiguration = [evaluationKeyConfiguration, processed.pirParameter.evaluationKeyConfig]
+                .union()
 
             processedShards[shardID] = processed
         }

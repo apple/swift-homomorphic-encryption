@@ -18,23 +18,45 @@ import TestUtilities
 import XCTest
 
 class PirUtilTests: XCTestCase {
-    private func expandCiphertextForOneStepTest<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-        let context: Context<Scheme> = try TestUtils.getTestContext()
-        let degree = TestUtils.testPolyDegree
+    private func expandCiphertextForOneStepTest<Scheme: HeScheme>(
+        scheme _: Scheme.Type,
+        _ keyCompression: PirKeyCompressionStrategy) throws
+    {
+        let degree = 32
+        let encryptionParams = try EncryptionParameters<Scheme>(
+            polyDegree: degree,
+            plaintextModulus: Scheme.Scalar(17),
+            coefficientModuli: Scheme.Scalar
+                .generatePrimes(
+                    significantBitCounts: Array(
+                        repeating: Scheme.Scalar.bitWidth - 4,
+                        count: 4),
+                    preferringSmall: false,
+                    nttDegree: degree),
+            errorStdDev: ErrorStdDev.stdDev32,
+            securityLevel: SecurityLevel.unchecked)
+
+        let context: Context<Scheme> = try Context(encryptionParameters: encryptionParams)
+        let plaintextModulus = context.plaintextModulus
         let logDegree = degree.log2
         for logStep in 1...logDegree {
             let step = 1 << logStep
             let halfStep = step >> 1
             let data: [Scheme.Scalar] = TestUtils.getRandomPlaintextData(
                 count: degree,
-                in: 0..<Scheme.Scalar(TestUtils.testPlaintextModulus))
+                in: 0..<plaintextModulus)
             let plaintext: Plaintext<Scheme, Coeff> = try Scheme.encode(context: context,
                                                                         values: data,
                                                                         format: .coefficient)
             let secretKey = try context.generateSecretKey()
+
+            let expandedQueryCount = degree
+            let evaluationKeyConfiguration = MulPir<Scheme>.evaluationKeyConfiguration(
+                expandedQueryCount: expandedQueryCount,
+                degree: degree,
+                keyCompression: keyCompression)
             let evaluationKey = try context.generateEvaluationKey(
-                configuration: EvaluationKeyConfiguration(
-                    galoisElements: [1 << (logDegree - logStep + 1) + 1]), using: secretKey)
+                configuration: evaluationKeyConfiguration, using: secretKey)
             let ciphertext = try plaintext.encrypt(using: secretKey)
             let expandedCiphertexts = try PirUtil.expandCiphertextForOneStep(
                 ciphertext,
@@ -42,17 +64,19 @@ class PirUtilTests: XCTestCase {
                 using: evaluationKey)
             let p0: [Scheme.Scalar] = try expandedCiphertexts.0.decrypt(using: secretKey).decode(format: .coefficient)
             let p1: [Scheme.Scalar] = try expandedCiphertexts.1.decrypt(using: secretKey).decode(format: .coefficient)
-            let modulus = Scheme.Scalar(TestUtils.testPlaintextModulus)
+
             for index in stride(from: 0, to: degree, by: step) {
-                XCTAssertEqual(data[index].multiplyMod(2, modulus: modulus, variableTime: true), p0[index])
-                XCTAssertEqual(data[index + halfStep].multiplyMod(2, modulus: modulus, variableTime: true), p1[index])
+                XCTAssertEqual(data[index].multiplyMod(2, modulus: plaintextModulus, variableTime: true), p0[index])
+                XCTAssertEqual(
+                    data[index + halfStep].multiplyMod(2, modulus: plaintextModulus, variableTime: true),
+                    p1[index])
             }
         }
     }
 
     private func expandCiphertextTest<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
         let context: Context<Scheme> = try TestUtils.getTestContext()
-        let degree = TestUtils.testPolyDegree
+        let degree = context.degree
         let logDegree = degree.log2
         for inputCount in 1...degree {
             let data: [Scheme.Scalar] = (0..<inputCount).map { _ in Scheme.Scalar(Int.random(in: 0...1)) }
@@ -116,10 +140,22 @@ class PirUtilTests: XCTestCase {
         }
     }
 
-    func testExpandCiphertextForOneStep() throws {
-        try expandCiphertextForOneStepTest(scheme: NoOpScheme.self)
-        try expandCiphertextForOneStepTest(scheme: Bfv<UInt32>.self)
-        try expandCiphertextForOneStepTest(scheme: Bfv<UInt64>.self)
+    func testExpandCiphertextForOneStepNoCompression() throws {
+        try expandCiphertextForOneStepTest(scheme: NoOpScheme.self, .noCompression)
+        try expandCiphertextForOneStepTest(scheme: Bfv<UInt32>.self, .noCompression)
+        try expandCiphertextForOneStepTest(scheme: Bfv<UInt64>.self, .noCompression)
+    }
+
+    func testExpandCiphertextForOneStepHybridCompression() throws {
+        try expandCiphertextForOneStepTest(scheme: NoOpScheme.self, .hybridCompression)
+        try expandCiphertextForOneStepTest(scheme: Bfv<UInt32>.self, .hybridCompression)
+        try expandCiphertextForOneStepTest(scheme: Bfv<UInt64>.self, .hybridCompression)
+    }
+
+    func testExpandCiphertextForOneStepMaxCompression() throws {
+        try expandCiphertextForOneStepTest(scheme: NoOpScheme.self, .maxCompression)
+        try expandCiphertextForOneStepTest(scheme: Bfv<UInt32>.self, .maxCompression)
+        try expandCiphertextForOneStepTest(scheme: Bfv<UInt64>.self, .maxCompression)
     }
 
     func testExpandCiphertext() throws {

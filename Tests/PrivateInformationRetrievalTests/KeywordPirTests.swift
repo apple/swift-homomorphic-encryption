@@ -39,7 +39,8 @@ class KeywordPirTests: XCTestCase {
             let keywordConfig = try KeywordPirConfig(
                 dimensionCount: 2,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(maxSerializedBucketSize: 5 * valueSize),
-                unevenDimensions: true)
+                unevenDimensions: true,
+                keyCompression: .noCompression)
             let processed = try KeywordPirServer<PirServer>.process(database: testDatabase,
                                                                     config: keywordConfig,
                                                                     with: testContext)
@@ -109,7 +110,8 @@ class KeywordPirTests: XCTestCase {
         let keywordConfig = try KeywordPirConfig(
             dimensionCount: 2,
             cuckooTableConfig: cuckooTableConfig,
-            unevenDimensions: true)
+            unevenDimensions: true,
+            keyCompression: .noCompression)
         try KeywordPirTest(
             encryptionParameters: TestUtils.getTestEncryptionParameters(),
             keywordConfig: keywordConfig,
@@ -136,7 +138,7 @@ class KeywordPirTests: XCTestCase {
         let keywordConfig = try KeywordPirConfig(
             dimensionCount: 2,
             cuckooTableConfig: cuckooTableConfig,
-            unevenDimensions: true)
+            unevenDimensions: true, keyCompression: .noCompression)
         try KeywordPirTest(
             encryptionParameters: TestUtils.getTestEncryptionParameters(),
             keywordConfig: keywordConfig,
@@ -159,7 +161,7 @@ class KeywordPirTests: XCTestCase {
             dimensionCount: 1,
             cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                 maxSerializedBucketSize: 100),
-            unevenDimensions: true)
+            unevenDimensions: true, keyCompression: .noCompression)
         try KeywordPirTest(
             encryptionParameters: TestUtils.getTestEncryptionParameters(),
             keywordConfig: keywordConfig,
@@ -182,7 +184,53 @@ class KeywordPirTests: XCTestCase {
             dimensionCount: 2,
             cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                 maxSerializedBucketSize: 100),
-            unevenDimensions: true)
+            unevenDimensions: true, keyCompression: .noCompression)
+        try KeywordPirTest(
+            encryptionParameters: TestUtils.getTestEncryptionParameters(),
+            keywordConfig: keywordConfig,
+            server: MulPirServer<NoOpScheme>.self,
+            client: MulPirClient<NoOpScheme>.self)
+        try KeywordPirTest(
+            encryptionParameters: TestUtils.getTestEncryptionParameters(),
+            keywordConfig: keywordConfig,
+            server: MulPirServer<Bfv<UInt32>>.self,
+            client: MulPirClient<Bfv<UInt32>>.self)
+        try KeywordPirTest(
+            encryptionParameters: TestUtils.getTestEncryptionParameters(),
+            keywordConfig: keywordConfig,
+            server: MulPirServer<Bfv<UInt64>>.self,
+            client: MulPirClient<Bfv<UInt64>>.self)
+    }
+
+    func testKeywordPirMulPirHybridKeyCompression() throws {
+        let keywordConfig = try KeywordPirConfig(
+            dimensionCount: 2,
+            cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
+                maxSerializedBucketSize: 100),
+            unevenDimensions: true, keyCompression: .hybridCompression)
+        try KeywordPirTest(
+            encryptionParameters: TestUtils.getTestEncryptionParameters(),
+            keywordConfig: keywordConfig,
+            server: MulPirServer<NoOpScheme>.self,
+            client: MulPirClient<NoOpScheme>.self)
+        try KeywordPirTest(
+            encryptionParameters: TestUtils.getTestEncryptionParameters(),
+            keywordConfig: keywordConfig,
+            server: MulPirServer<Bfv<UInt32>>.self,
+            client: MulPirClient<Bfv<UInt32>>.self)
+        try KeywordPirTest(
+            encryptionParameters: TestUtils.getTestEncryptionParameters(),
+            keywordConfig: keywordConfig,
+            server: MulPirServer<Bfv<UInt64>>.self,
+            client: MulPirClient<Bfv<UInt64>>.self)
+    }
+
+    func testKeywordPirMulPirMaxKeyCompression() throws {
+        let keywordConfig = try KeywordPirConfig(
+            dimensionCount: 2,
+            cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
+                maxSerializedBucketSize: 100),
+            unevenDimensions: true, keyCompression: .maxCompression)
         try KeywordPirTest(
             encryptionParameters: TestUtils.getTestEncryptionParameters(),
             keywordConfig: keywordConfig,
@@ -208,7 +256,7 @@ class KeywordPirTests: XCTestCase {
                 dimensionCount: 2,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                     maxSerializedBucketSize: 3 * noOpParameters.bytesPerPlaintext),
-                unevenDimensions: true)
+                unevenDimensions: true, keyCompression: .noCompression)
             try KeywordPirTest(
                 encryptionParameters: noOpParameters,
                 keywordConfig: keywordConfig,
@@ -222,7 +270,7 @@ class KeywordPirTests: XCTestCase {
                 dimensionCount: 2,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                     maxSerializedBucketSize: 3 * bfv32Parameters.bytesPerPlaintext),
-                unevenDimensions: true)
+                unevenDimensions: true, keyCompression: .noCompression)
             try KeywordPirTest(
                 encryptionParameters: bfv32Parameters,
                 keywordConfig: keywordConfig,
@@ -236,7 +284,7 @@ class KeywordPirTests: XCTestCase {
                 dimensionCount: 2,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                     maxSerializedBucketSize: 3 * bfv64Parameters.bytesPerPlaintext),
-                unevenDimensions: true)
+                unevenDimensions: true, keyCompression: .noCompression)
             try KeywordPirTest(
                 encryptionParameters: bfv64Parameters,
                 keywordConfig: keywordConfig,
@@ -265,7 +313,7 @@ class KeywordPirTests: XCTestCase {
                 let keywordConfig = try KeywordPirConfig(
                     dimensionCount: 2,
                     cuckooTableConfig: cuckooConfig,
-                    unevenDimensions: true)
+                    unevenDimensions: true, keyCompression: .noCompression)
                 let testDatabase = PirTestUtils.getTestTable(rowCount: rowCount, valueSize: valueSize, using: &rng)
                 let processed = try KeywordPirServer<PirServer>.process(database: testDatabase,
                                                                         config: keywordConfig,
@@ -276,7 +324,7 @@ class KeywordPirTests: XCTestCase {
                         .freezingTableSize(
                             maxSerializedBucketSize: processed.pirParameter.entrySizeInBytes,
                             bucketCount: processed.pirParameter.entryCount * processed.pirParameter.batchSize),
-                    unevenDimensions: true)
+                    unevenDimensions: true, keyCompression: .noCompression)
                 return (processed.pirParameter, newConfig)
             }()
 
@@ -333,7 +381,7 @@ class KeywordPirTests: XCTestCase {
             let config = try KeywordPirConfig(
                 dimensionCount: 2,
                 cuckooTableConfig: .defaultKeywordPir(maxSerializedBucketSize: 1024),
-                unevenDimensions: true)
+                unevenDimensions: true, keyCompression: .noCompression)
             let processed = try KeywordPirServer<PirServer>.process(
                 database: testDatabase,
                 config: config,
@@ -368,7 +416,7 @@ class KeywordPirTests: XCTestCase {
         let keywordConfig = try KeywordPirConfig(
             dimensionCount: 2,
             cuckooTableConfig: cuckooConfig,
-            unevenDimensions: true)
+            unevenDimensions: true, keyCompression: .noCompression)
         let databaseConfig = KeywordDatabaseConfig(
             sharding: Sharding.shardCount(1),
             keywordPirConfig: keywordConfig)
@@ -377,7 +425,7 @@ class KeywordPirTests: XCTestCase {
         XCTAssertThrowsError(try ProcessKeywordDatabase.Arguments(
             databaseConfig: databaseConfig,
             encryptionParameters: encryptionParameters,
-            algorithm: PirAlgorithm.aclsPir,
+            algorithm: PirAlgorithm.aclsPir, keyCompression: .noCompression,
             trialsPerShard: 1),
         error: PirError.invalidPirAlgorithm(PirAlgorithm.aclsPir))
     }
@@ -403,7 +451,7 @@ class KeywordPirTests: XCTestCase {
             let keywordConfig = try KeywordPirConfig(
                 dimensionCount: 2,
                 cuckooTableConfig: cuckooConfig,
-                unevenDimensions: true)
+                unevenDimensions: true, keyCompression: .noCompression)
             let databaseConfig = KeywordDatabaseConfig(
                 sharding: Sharding.shardCount(shardCount),
                 keywordPirConfig: keywordConfig)
@@ -412,7 +460,7 @@ class KeywordPirTests: XCTestCase {
             let args = try ProcessKeywordDatabase.Arguments(
                 databaseConfig: databaseConfig,
                 encryptionParameters: encryptionParameters,
-                algorithm: PirAlgorithm.mulPir,
+                algorithm: PirAlgorithm.mulPir, keyCompression: .noCompression,
                 trialsPerShard: 1)
             let processed: ProcessKeywordDatabase.Processed<PirServer.Scheme> = try ProcessKeywordDatabase.process(
                 rows: testDatabase,

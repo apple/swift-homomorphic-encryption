@@ -21,10 +21,14 @@ import HomomorphicEncryption
 // We use protocol buffers as a serialization format.
 import HomomorphicEncryptionProtobuf
 
-// Returns the serialized size in bytes of the ciphertext.
 extension SerializedCiphertext {
+    /// Returns the approximate size in bytes of the serialized ciphertext.
+    ///
+    /// As an approximation for compression of zero bytes, ignores zero bytes
+    /// from the size.
     func size() throws -> Int {
-        try proto().serializedData().count
+        let data = try proto().serializedData()
+        return data.filter { byte in byte != 0 }.count
     }
 }
 
@@ -49,11 +53,11 @@ var ciphertext: Bfv<UInt32>.CanonicalCiphertext = try plaintext
 // randomly from a seeded random number generator (RNG). We compress such
 // ciphertexts by serializing the RNG seed instead of serializing all the
 // coefficients for this polynomial.
-let serialized = ciphertext.serialize()
+let serialized = try ciphertext.serialize()
 let sizeAfterEncryption = try serialized.size()
 // snippet.hide
-print("Serialized size")
-print("    after encryption:                 \(sizeAfterEncryption) bytes")
+print("Serialized size after")
+print("\tencryption:                        \(sizeAfterEncryption) bytes")
 // snippet.show
 
 // We can deserialize the ciphertext, making sure its format is the same as the
@@ -65,12 +69,13 @@ precondition(deserialized == ciphertext)
 
 // After computing on the ciphertext, we lose the benefit of compressing the
 // seed, yielding nearly 2x larger serialization size.
-try ciphertext *= ciphertext
+try ciphertext += ciphertext
+let expectedValues = values.map { value in (value + value) % 17 }
 let sizeAfterAdd = try ciphertext.serialize().size()
 // snippet.hide
-print("    after addition:                   \(sizeAfterAdd) bytes")
+print("\taddition:                          \(sizeAfterAdd) bytes")
 // snippet.show
-precondition(sizeAfterAdd > 2 * sizeAfterEncryption - 100)
+precondition(sizeAfterAdd > 2 * sizeAfterEncryption - 200)
 
 // After completing an HE computation, we can reduce final ciphertext size by
 // mod-switching to a single modulus. This reduces the number of moduli in the
@@ -82,7 +87,7 @@ precondition(sizeAfterAdd > 2 * sizeAfterEncryption - 100)
 try ciphertext.modSwitchDownToSingle()
 let sizeAfterModSwitch = try ciphertext.serialize().size()
 // snippet.hide
-print("    after mod switching:              \(sizeAfterModSwitch) bytes")
+print("\tmod switching:                     \(sizeAfterModSwitch) bytes")
 // snippet.show
 precondition(sizeAfterModSwitch < sizeAfterAdd)
 
@@ -90,10 +95,10 @@ precondition(sizeAfterModSwitch < sizeAfterAdd)
 // deserialization and decryption, we can reduce the serialized size further.
 // This setting occurs when a server performs HE computation, and sends the
 // result to a client, which decrypts to learn the result.
-let serializedForDecryption = ciphertext.serialize(forDecryption: true)
+let serializedForDecryption = try ciphertext.serialize(forDecryption: true)
 let sizeForDecryption = try serializedForDecryption.size()
 // snippet.hide
-print("    after serializing for decryption: \(sizeForDecryption) bytes")
+print("\tserializing for decryption:        \(sizeForDecryption) bytes")
 // snippet.show
 precondition(sizeAfterModSwitch < sizeAfterAdd)
 
@@ -104,3 +109,25 @@ deserialized = try Ciphertext(
     moduliCount: 1)
 let clientDecryption = try deserialized.decrypt(using: secretKey)
 precondition(decrypted == clientDecryption)
+
+// If we additionally only care about certain encrypted indices and use
+// coefficient encoding, we can make a more compressible ciphertext.
+let indices = [1, 3, 5]
+let serializedIndicesForDecryption = try ciphertext.serialize(
+    indices: indices,
+    forDecryption: true)
+let sizeIndicesForDecryption = try serializedIndicesForDecryption.size()
+// snippet.hide
+print("\tserializing indices for decryption: \(sizeIndicesForDecryption) bytes")
+// snippet.show
+precondition(sizeIndicesForDecryption < sizeForDecryption)
+
+deserialized = try Ciphertext(
+    deserialize: serializedIndicesForDecryption,
+    context: context,
+    moduliCount: 1)
+let decryptedIndices = try deserialized.decrypt(using: secretKey)
+let clientDecoded = try decryptedIndices.decode(format: .coefficient)
+for index in indices {
+    precondition(clientDecoded[index] == expectedValues[index])
+}

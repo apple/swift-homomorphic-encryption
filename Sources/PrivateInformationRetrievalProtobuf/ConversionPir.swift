@@ -35,10 +35,10 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices {
 extension Query {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
-    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices {
-        Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices.with { encryptedIndices in
-            encryptedIndices.ciphertexts = ciphertexts.map { ciphertext in
-                ciphertext.serialize().proto()
+    public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices {
+        try Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices.with { encryptedIndices in
+            encryptedIndices.ciphertexts = try ciphertexts.map { ciphertext in
+                try ciphertext.serialize().proto()
             }
             encryptedIndices.numPirCalls = UInt64(indicesCount)
         }

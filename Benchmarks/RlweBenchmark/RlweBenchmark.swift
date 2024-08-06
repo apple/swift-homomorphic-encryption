@@ -422,7 +422,7 @@ func ciphertextSerializeFullBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () ->
             ciphertext.clearSeed()
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                blackHole(ciphertext.serialize())
+                try blackHole(ciphertext.serialize())
             }
         }
     }
@@ -434,7 +434,7 @@ func ciphertextSerializeSeedBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () ->
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                blackHole(benchmarkContext.ciphertext.serialize())
+                try blackHole(benchmarkContext.ciphertext.serialize())
             }
         }
     }
@@ -446,7 +446,7 @@ func ciphertextDeserializeFullBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () 
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
             var ciphertext = benchmarkContext.ciphertext
             ciphertext.clearSeed()
-            let serializedCiphertext = ciphertext.serialize()
+            let serializedCiphertext = try ciphertext.serialize()
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
                 try blackHole(
@@ -462,7 +462,7 @@ func ciphertextDeserializeSeedBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () 
     {
         benchmark("CiphertextDeserializeSeed", Scheme.self) { benchmark in
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
-            let serializedSeededCiphertext = benchmarkContext.ciphertext.serialize()
+            let serializedSeededCiphertext = try benchmarkContext.ciphertext.serialize()
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
                 try blackHole(

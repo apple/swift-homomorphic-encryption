@@ -111,11 +111,11 @@ Building Swift Homomorphic Encryption requires:
 * [Swift](https://www.swift.org/) version 5.10 or later
 
 Additionally, developing Swift Homomorphic Encryption requires:
-* [Nick Lockwood swiftformat](https://github.com/nicklockwood/SwiftFormat), v0.54.0
+* [Nick Lockwood SwiftFormat](https://github.com/nicklockwood/SwiftFormat), v0.54.0
 * [pre-commit](https://pre-commit.com)
 * [swift-format](https://github.com/apple/swift-format), v510.1.0
 * [swift-protobuf](https://github.com/apple/swift-protobuf), v1.27.0
-* [swiftlint](https://github.com/realm/SwiftLint), v0.55.1
+* [SwiftLint](https://github.com/realm/SwiftLint), v0.55.1
 
 ### Building
 You can build Swift Homomorphic Encryption either via Xcode or via command line in a terminal.

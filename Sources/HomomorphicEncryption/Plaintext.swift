@@ -176,8 +176,8 @@ extension Plaintext {
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``HeScheme/decode(plaintext:format:)-h6vl`` for an alternative API.
     @inlinable
-    public func decode(format: EncodeFormat) throws -> [Scheme.Scalar] where Format == Coeff {
-        try context.decode(plaintext: self, format: format)
+    public func decode<T: ScalarType>(format: EncodeFormat) throws -> [T] where Format == Coeff {
+        try Scheme.decode(plaintext: self, format: format)
     }
 
     /// Decodes a plaintext in ``Eval`` format.
@@ -186,8 +186,8 @@ extension Plaintext {
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``HeScheme/decode(plaintext:format:)-663x4`` for an alternative API.
     @inlinable
-    public func decode(format: EncodeFormat) throws -> [Scheme.Scalar] where Format == Eval {
-        try context.decode(plaintext: self, format: format)
+    public func decode<T: ScalarType>(format: EncodeFormat) throws -> [T] where Format == Eval {
+        try Scheme.decode(plaintext: self, format: format)
     }
 
     /// Symmetric secret key encryption of the plaintext.

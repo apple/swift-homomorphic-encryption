@@ -21,9 +21,9 @@ class SerializationTests: XCTestCase {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
-            let plaintext: Scheme.CoeffPlaintext = try Scheme.encode(context: context,
-                                                                     values: values,
-                                                                     format: .coefficient)
+            let plaintext: Scheme.CoeffPlaintext = try context.encode(
+                values: values,
+                format: .coefficient)
             let secretKey = try context.generateSecretKey()
             let ciphertext = try plaintext.encrypt(using: secretKey)
 
@@ -91,7 +91,7 @@ class SerializationTests: XCTestCase {
                     context: context,
                     moduliCount: ciphertext.moduli.count)
                 let decrypted = try deserialized.decrypt(using: secretKey)
-                let decoded = try decrypted.decode(format: .coefficient)
+                let decoded: [Scheme.Scalar] = try decrypted.decode(format: .coefficient)
                 for index in indices {
                     XCTAssertEqual(decoded[index], values[index])
                 }
@@ -111,17 +111,15 @@ class SerializationTests: XCTestCase {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             do { // CoeffPlaintext
-                let plaintext: Scheme.CoeffPlaintext = try Scheme.encode(context: context,
-                                                                         values: values,
-                                                                         format: format)
+                let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values,
+                                                                          format: format)
                 let serialized = plaintext.serialize()
                 let deserialized: Scheme.CoeffPlaintext = try Plaintext(deserialize: serialized, context: context)
                 XCTAssertEqual(deserialized, plaintext)
             }
             do { // EvalPlaintext
-                let plaintext: Scheme.EvalPlaintext = try Scheme.encode(context: context,
-                                                                        values: values,
-                                                                        format: format)
+                let plaintext: Scheme.EvalPlaintext = try context.encode(values: values,
+                                                                         format: format)
                 let serialized = plaintext.serialize()
                 let deserialized: Scheme.EvalPlaintext = try Plaintext(deserialize: serialized, context: context)
                 XCTAssertEqual(deserialized, plaintext)
@@ -141,10 +139,9 @@ class SerializationTests: XCTestCase {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             for moduliCount in 1...context.ciphertextContext.moduli.count {
-                let plaintext: Scheme.EvalPlaintext = try Scheme.encode(context: context,
-                                                                        values: values,
-                                                                        format: format,
-                                                                        moduliCount: moduliCount)
+                let plaintext: Scheme.EvalPlaintext = try context.encode(values: values,
+                                                                         format: format,
+                                                                         moduliCount: moduliCount)
                 let serialized = plaintext.serialize()
                 let deserialized: Scheme.EvalPlaintext = try Plaintext(
                     deserialize: serialized,

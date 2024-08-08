@@ -199,9 +199,7 @@ extension TestUtils {
     package static func getRandomPlaintextData<T: ScalarType>(count: Int,
                                                               in range: Range<T>) -> [T]
     {
-        (0..<count).map { _ in
-            T.random(in: range)
-        }
+        (0..<count).map { _ in T.random(in: range) }
     }
 
     package static func uniformnessTest<T>(poly: PolyRq<T, some Any>) {

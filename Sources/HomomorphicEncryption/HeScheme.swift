@@ -63,6 +63,9 @@ public enum EncodeFormat: CaseIterable {
 }
 
 /// Protocol for HE schemes.
+///
+/// The protocol should be implemented when adding a new HE scheme.
+/// However, several functions have an alternative API which is more ergonomic and should be preferred.
 public protocol HeScheme {
     /// Coefficient type for each polynomial.
     associatedtype Scalar: ScalarType
@@ -140,6 +143,7 @@ public protocol HeScheme {
     ///   - format: Encoding format.
     /// - Returns: A plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
+    /// - seealso: ``Context/encode(values:format:)`` for an alternative API.
     static func encode(context: Context<Self>, values: [some ScalarType], format: EncodeFormat) throws -> CoeffPlaintext
 
     /// Encodes values into a plaintext with evaluation format.
@@ -149,22 +153,13 @@ public protocol HeScheme {
     ///   - context: Context for HE computation.
     ///   - values: Values to encode.
     ///   - format: Encoding format.
-    ///   - moduliCount: Number of coefficient moduli in the encoded plaintext.
+    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext with all the
+    /// moduli.
     /// - Returns: A plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
+    /// - seealso: ``Context/encode(values:format:moduliCount:)`` for an alternative API.
     static func encode(context: Context<Self>, values: [some ScalarType], format: EncodeFormat,
-                       moduliCount: Int) throws -> EvalPlaintext
-
-    /// Encodes `values` into a plaintext with evaluation format and with top-level ciphertext context with all moduli.
-    /// - seealso: ``HeScheme/encode(context:values:format:moduliCount:)``
-    /// for an alternative which allows specifying the `moduliCount`.
-    /// - Parameters:
-    ///   - context: Context for HE computation.
-    ///   - values: Values to encode.
-    ///   - format: Encoding format.
-    /// - Returns: A plaintext encoding `values`.
-    /// - Throws: Error upon failure to encode.
-    static func encode(context: Context<Self>, values: [some ScalarType], format: EncodeFormat) throws -> EvalPlaintext
+                       moduliCount: Int?) throws -> EvalPlaintext
 
     /// Decodes a plaintext in ``Coeff`` format.
     /// - Parameters:

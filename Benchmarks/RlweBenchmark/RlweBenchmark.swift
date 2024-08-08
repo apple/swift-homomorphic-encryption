@@ -85,7 +85,7 @@ struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
         self.serializedEvaluationKey = evaluationKey.serialize()
 
         self.data = getRandomPlaintextData(count: polyDegree, in: 0..<Scheme.Scalar(plaintextModulus))
-        self.coeffPlaintext = try Scheme.encode(context: context, values: data, format: .simd)
+        self.coeffPlaintext = try context.encode(values: data, format: .simd)
         self.evalPlaintext = try coeffPlaintext.convertToEvalFormat()
         self.ciphertext = try coeffPlaintext.encrypt(using: secretKey)
         self.evalCiphertext = try ciphertext.convertToEvalFormat()
@@ -123,9 +123,8 @@ func encodeCoefficientBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void 
             benchmark.startMeasurement()
             var plaintext: Scheme.CoeffPlaintext?
             for _ in benchmark.scaledIterations {
-                try blackHole(plaintext = Scheme.encode(context: benchmarkContext.context,
-                                                        values: benchmarkContext.data,
-                                                        format: .coefficient))
+                try blackHole(plaintext = benchmarkContext.context.encode(values: benchmarkContext.data,
+                                                                          format: .coefficient))
             }
             // Avoid warning about variable written to, but never read
             withExtendedLifetime(plaintext) {}
@@ -140,9 +139,8 @@ func encodeSimdBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             benchmark.startMeasurement()
             var plaintext: Scheme.CoeffPlaintext?
             for _ in benchmark.scaledIterations {
-                try blackHole(plaintext = Scheme.encode(context: benchmarkContext.context,
-                                                        values: benchmarkContext.data,
-                                                        format: .simd))
+                try blackHole(plaintext = benchmarkContext.context.encode(values: benchmarkContext.data,
+                                                                          format: .simd))
             }
             // Avoid warning about variable written to, but never read
             withExtendedLifetime(plaintext) {}

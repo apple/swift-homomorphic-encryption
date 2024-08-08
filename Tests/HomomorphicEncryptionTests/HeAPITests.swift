@@ -40,16 +40,12 @@ class HeAPITests: XCTestCase {
             self.context = context
             let polyDegree = context.degree
             let plaintextModulus = context.plaintextModulus
-            self.data1 = TestUtils.getRandomPlaintextData(
-                count: polyDegree,
-                in: 0..<Scheme.Scalar(plaintextModulus))
-            self.data2 = TestUtils.getRandomPlaintextData(
-                count: polyDegree,
-                in: 0..<Scheme.Scalar(plaintextModulus))
-            self.coeffPlaintext1 = try Scheme.encode(context: context, values: data1, format: format)
-            self.coeffPlaintext2 = try Scheme.encode(context: context, values: data2, format: format)
-            self.evalPlaintext1 = try Scheme.encode(context: context, values: data1, format: format)
-            self.evalPlaintext2 = try Scheme.encode(context: context, values: data2, format: format)
+            self.data1 = TestUtils.getRandomPlaintextData(count: polyDegree, in: 0..<plaintextModulus)
+            self.data2 = TestUtils.getRandomPlaintextData(count: polyDegree, in: 0..<plaintextModulus)
+            self.coeffPlaintext1 = try context.encode(values: data1, format: format)
+            self.coeffPlaintext2 = try context.encode(values: data2, format: format)
+            self.evalPlaintext1 = try context.encode(values: data1, format: format)
+            self.evalPlaintext2 = try context.encode(values: data2, format: format)
             self.secretKey = try Scheme.generateSecretKey(context: context)
             self.ciphertext1 = try Scheme.encrypt(coeffPlaintext1, using: secretKey)
             self.ciphertext2 = try Scheme.encrypt(coeffPlaintext2, using: secretKey)
@@ -202,10 +198,8 @@ class HeAPITests: XCTestCase {
         XCTAssert(evalCiphertext.isTransparent())
         XCTAssert(canonicalCiphertext.isTransparent())
 
-        let zeroPlaintext: Scheme.CoeffPlaintext = try Scheme.encode(
-            context: context,
-            values: zeros,
-            format: .coefficient)
+        let zeroPlaintext: Scheme.CoeffPlaintext = try context.encode(values: zeros,
+                                                                      format: .coefficient)
         let nonTransparentZero = try Scheme.encrypt(zeroPlaintext, using: testEnv.secretKey)
         if Scheme.self != NoOpScheme.self {
             XCTAssertFalse(nonTransparentZero.isTransparent())
@@ -246,7 +240,7 @@ class HeAPITests: XCTestCase {
 
         let zeroCiphertext: Ciphertext<Scheme, Eval> = try Scheme.zeroCiphertext(
             context: context,
-            moduliCount: context.ciphertextContext.moduli.count)
+            moduliCount: testEnv.evalPlaintext1.moduli.count)
         let product = try zeroCiphertext * testEnv.evalPlaintext1
         XCTAssert(product.isTransparent())
 
@@ -846,10 +840,10 @@ class HeAPITests: XCTestCase {
             var ciphertext = testEnv.ciphertext1
             try ciphertext.modSwitchDown()
             let evalCiphertext = try ciphertext.convertToEvalFormat()
-            let evalPlaintext = try Scheme.encode(context: testEnv.context,
-                                                  values: testEnv.data2,
-                                                  format: .simd,
-                                                  moduliCount: evalCiphertext.moduli.count)
+            let evalPlaintext = try testEnv.context.encode(
+                values: testEnv.data2,
+                format: .simd,
+                moduliCount: evalCiphertext.moduli.count)
             try testEnv.checkDecryptsDecodes(
                 ciphertext: evalCiphertext * evalPlaintext,
                 format: .simd,

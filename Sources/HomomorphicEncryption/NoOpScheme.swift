@@ -53,15 +53,10 @@ public enum NoOpScheme: HeScheme {
     }
 
     public static func encode(context: Context<NoOpScheme>, values: [some ScalarType],
-                              format: EncodeFormat, moduliCount _: Int) throws -> EvalPlaintext
+                              format: EncodeFormat, moduliCount _: Int?) throws -> EvalPlaintext
     {
-        try encode(context: context, values: values, format: format).forwardNtt()
-    }
-
-    public static func encode(context: Context<NoOpScheme>, values: [some ScalarType],
-                              format: EncodeFormat) throws -> EvalPlaintext
-    {
-        try encode(context: context, values: values, format: format, moduliCount: 1)
+        let coeffPlaintext = try Self.encode(context: context, values: values, format: format)
+        return try EvalPlaintext(context: context, poly: coeffPlaintext.poly.forwardNtt())
     }
 
     public static func decode<T>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T] where T: ScalarType {

@@ -155,7 +155,7 @@ enum PirUtil<Scheme: HeScheme> {
         for index in nonZeroInputs {
             rawData[index] = inverseInputCountCeilLog
         }
-        return try Scheme.encode(context: context, values: rawData, format: .coefficient)
+        return try context.encode(values: rawData, format: .coefficient)
     }
 
     /// Generate the ciphertext based on the given non-zero positions.

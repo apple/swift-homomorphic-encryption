@@ -24,28 +24,22 @@ extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
     public static func encode(context: Context<Bfv<T>>, values: [some ScalarType], format: EncodeFormat,
-                              moduliCount: Int) throws -> EvalPlaintext
+                              moduliCount: Int?) throws -> EvalPlaintext
     {
-        try context.encode(values: values, format: format, moduliCount: moduliCount)
+        let coeffPlaintext = try Self.encode(context: context, values: values, format: format)
+        return try coeffPlaintext.convertToEvalFormat(moduliCount: moduliCount)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func encode(context: Context<Bfv<T>>, values: [some ScalarType],
-                              format: EncodeFormat) throws -> EvalPlaintext
-    {
-        try context.encode(values: values, format: format, moduliCount: nil)
-    }
-
-    @inlinable
-    // swiftlint:disable:next missing_docs attributes
-    public static func decode<V>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] where V: ScalarType {
+    public static func decode<V: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decode<V>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] where V: ScalarType {
-        try plaintext.context.decode(plaintext: plaintext, format: format)
+    public static func decode<V: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
+        let coeffPlaintext = try plaintext.convertToCoeffFormat()
+        return try coeffPlaintext.decode(format: format)
     }
 }

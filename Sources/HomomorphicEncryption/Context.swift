@@ -39,7 +39,7 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     /// `keySwitchingContexts[0].next.moduli = [q_0, q_1]`
     @usableFromInline let keySwitchingContexts: [PolyContext<Scheme.Scalar>]
 
-    /// the rns tools for each level of ciphertexts, with number of modulis in descending order.
+    /// The rns tools for each level of ciphertexts, with number of moduli in descending order.
     @usableFromInline let rnsTools: [RnsTool<Scheme.Scalar>]
 
     /// The plaintext modulus,`t`.

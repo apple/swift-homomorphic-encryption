@@ -418,7 +418,7 @@ public enum ProcessKeywordDatabase {
         let clock = ContinuousClock()
         var minNoiseBudget = Double.infinity
         let computeTimes = try (0..<trials).map { trial in
-            let secretKey = try Scheme.generateSecretKey(context: context)
+            let secretKey = try context.generateSecretKey()
             let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
             let trialQuery = try client.generateQuery(at: row.keyword, using: secretKey)
             let computeTime = try clock.measure {

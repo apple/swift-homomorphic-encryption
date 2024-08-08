@@ -41,6 +41,40 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
         self.seed = seed
     }
 
+    /// Generates a ciphertext of zeros.
+    ///
+    /// A zero ciphertext may arise from HE computations, e.g., by subtracting a ciphertext from itself, or multiplying
+    /// a ciphertext with a zero plaintext.
+    ///
+    /// - Parameters:
+    ///   - context: Context for HE computation.
+    ///   - moduliCount: Number of moduli in the zero ciphertext. If `nil`, the ciphertext will have the ciphertext
+    /// context with all the coefficient moduli in `context`.
+    /// - Returns: A zero ciphertext.
+    /// - Throws: Error upon failure to encode.
+    /// - Warning: a zero ciphertext is *transparent*, i.e., everyone can see the the underlying plaintext, zero in
+    /// this case. Transparency can propagate to ciphertexts operating with transparent ciphertexts, e.g.
+    /// ```
+    ///  transparentCiphertext * ciphertext = transparentCiphertext
+    ///  transparentCiphertext * plaintext = transparentCiphertext
+    ///  transparentCiphertext + plaintext = transparentCiphertext
+    /// ```
+    /// - seelaso: ``Ciphertext/isTransparent()``
+    @inlinable
+    public static func zero(context: Context<Scheme>, moduliCount: Int? = nil) throws -> Ciphertext<Scheme, Format> {
+        if Format.self == Coeff.self {
+            let coeffCiphertext = try Scheme.zeroCiphertextCoeff(context: context, moduliCount: moduliCount)
+            // swiftlint:disable:next force_cast
+            return coeffCiphertext as! Ciphertext<Scheme, Format>
+        }
+        if Format.self == Eval.self {
+            let evalCiphertext = try Scheme.zeroCiphertextEval(context: context, moduliCount: moduliCount)
+            // swiftlint:disable:next force_cast
+            return evalCiphertext as! Ciphertext<Scheme, Format>
+        }
+        throw HeError.unsupportedHeOperation()
+    }
+
     // MARK: ciphertext += plaintext
 
     @inlinable

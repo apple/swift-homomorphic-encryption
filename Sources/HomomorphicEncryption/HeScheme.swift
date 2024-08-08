@@ -195,19 +195,20 @@ public protocol HeScheme {
     ///
     /// - Parameters:
     ///   - context: Context for HE computation.
-    ///   - moduliCount: Number of moduli in the zero ciphertext.
+    ///   - moduliCount: Number of moduli in the zero ciphertext. If `nil`, the ciphertext will have the ciphertext
+    /// context with all the coefficient moduli in `context`.
     /// - Returns: A zero ciphertext.
-    /// - Throws: Error upon failure to generate a zero ciphertext..
-    /// - Warning: a zero ciphertext is *transparent*, i.e., everyone can see the the underlying plaintext, zero in this
-    /// case.
-    /// Transparency can propagate to ciphertexts operating with transparent ciphertexts, e.g.
+    /// - Throws: Error upon failure to generate a zero ciphertext.
+    /// - Warning: a zero ciphertext is *transparent*, i.e., everyone can see the the underlying plaintext, zero in
+    /// this case. Transparency can propagate to ciphertexts operating with transparent ciphertexts, e.g.
     /// ```
     ///  transparentCiphertext * ciphertext = transparentCiphertext
     ///  transparentCiphertext * plaintext = transparentCiphertext
     ///  transparentCiphertext + plaintext = transparentCiphertext
     /// ```
     /// - seealso: ``HeScheme/isTransparent(ciphertext:)``
-    static func zeroCiphertext(context: Context<Self>, moduliCount: Int) throws -> CoeffCiphertext
+    /// - seealso: ``Ciphertext/zero(context:moduliCount:)`` for an alternative API.
+    static func zeroCiphertextCoeff(context: Context<Self>, moduliCount: Int?) throws -> CoeffCiphertext
 
     /// Generates a ciphertext of zeros in ``Eval`` format.
     ///
@@ -216,20 +217,20 @@ public protocol HeScheme {
     ///
     /// - Parameters:
     ///   - context: Context for HE computation.
-    ///   - moduliCount: Number of moduli in the zero ciphertext.
+    ///   - moduliCount: Number of moduli in the zero ciphertext. If `nil`, the ciphertext will have the ciphertext
+    /// context with all the coefficient moduli in `context`.
     /// - Returns: A zero ciphertext.
-    /// - Throws: Error upon failure to encode.
-    ///  - Warning: a zero ciphertext is *transparent*, i.e., everyone can see the the underlying plaintext, zero in
-    /// this
-    /// case.
-    /// Transparency can propagate to ciphertexts operating with transparent ciphertexts, e.g.
+    /// - Throws: Error upon failure to generate a zero ciphertext.
+    /// - Warning: a zero ciphertext is *transparent*, i.e., everyone can see the the underlying plaintext, zero in
+    /// this case. Transparency can propagate to ciphertexts operating with transparent ciphertexts, e.g.
     /// ```
     ///  transparentCiphertext * ciphertext = transparentCiphertext
     ///  transparentCiphertext * plaintext = transparentCiphertext
     ///  transparentCiphertext + plaintext = transparentCiphertext
     /// ```
     /// - seealso: ``HeScheme/isTransparent(ciphertext:)``
-    static func zeroCiphertext(context: Context<Self>, moduliCount: Int) throws -> EvalCiphertext
+    /// - seealso: ``Ciphertext/zero(context:moduliCount:)`` for an alternative API.
+    static func zeroCiphertextEval(context: Context<Self>, moduliCount: Int?) throws -> EvalCiphertext
 
     /// Computes whether a ciphertext is transparent.
     ///
@@ -862,7 +863,7 @@ extension HeScheme {
         }
         return try (zip(ciphertexts, plaintexts).map { ciphertext, plaintext in
             guard let plaintext else {
-                return try Self.zeroCiphertext(
+                return try EvalCiphertext.zero(
                     context: firstCiphertext.context,
                     moduliCount: firstCiphertext.moduli.count)
             }

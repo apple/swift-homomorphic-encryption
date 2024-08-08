@@ -67,7 +67,7 @@ public enum NoOpScheme: HeScheme {
         try decode(plaintext: plaintext.inverseNtt(), format: format)
     }
 
-    public static func zeroCiphertext(context: Context<Self>, moduliCount _: Int) throws -> CoeffCiphertext {
+    public static func zeroCiphertextCoeff(context: Context<Self>, moduliCount _: Int?) throws -> CoeffCiphertext {
         NoOpScheme
             .CoeffCiphertext(
                 context: context,
@@ -75,7 +75,7 @@ public enum NoOpScheme: HeScheme {
                 correctionFactor: 1)
     }
 
-    public static func zeroCiphertext(context: Context<Self>, moduliCount _: Int) throws -> EvalCiphertext {
+    public static func zeroCiphertextEval(context: Context<Self>, moduliCount _: Int?) throws -> EvalCiphertext {
         NoOpScheme
             .EvalCiphertext(
                 context: context,

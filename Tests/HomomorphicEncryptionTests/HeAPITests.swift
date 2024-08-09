@@ -46,16 +46,15 @@ class HeAPITests: XCTestCase {
             self.coeffPlaintext2 = try context.encode(values: data2, format: format)
             self.evalPlaintext1 = try context.encode(values: data1, format: format)
             self.evalPlaintext2 = try context.encode(values: data2, format: format)
-            self.secretKey = try Scheme.generateSecretKey(context: context)
-            self.ciphertext1 = try Scheme.encrypt(coeffPlaintext1, using: secretKey)
-            self.ciphertext2 = try Scheme.encrypt(coeffPlaintext2, using: secretKey)
+            self.secretKey = try context.generateSecretKey()
+            self.ciphertext1 = try coeffPlaintext1.encrypt(using: secretKey)
+            self.ciphertext2 = try coeffPlaintext2.encrypt(using: secretKey)
             self.evalCiphertext1 = try ciphertext1.convertToEvalFormat()
             let evaluationkeyConfig = EvaluationKeyConfiguration(
                 galoisElements: galoisElements,
                 hasRelinearizationKey: true)
             self.evaluationKey = if context.supportsEvaluationKey, !galoisElements.isEmpty || relinearizationKey {
-                try Scheme.generateEvaluationKey(
-                    context: context,
+                try context.generateEvaluationKey(
                     configuration: evaluationkeyConfig,
                     using: secretKey)
             } else {
@@ -185,12 +184,8 @@ class HeAPITests: XCTestCase {
         let testEnv = try TestEnv(context: context, format: .coefficient)
         let zeros = [Scheme.Scalar](repeating: 0, count: context.degree)
 
-        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try Scheme.zeroCiphertext(
-            context: context,
-            moduliCount: context.ciphertextContext.moduli.count)
-        let evalCiphertext: Ciphertext<Scheme, Eval> = try Scheme.zeroCiphertext(
-            context: context,
-            moduliCount: context.ciphertextContext.moduli.count)
+        let coeffCiphertext = try Ciphertext<Scheme, Coeff>.zero(context: context)
+        let evalCiphertext = try Ciphertext<Scheme, Eval>.zero(context: context)
         var canonicalCiphertext = try coeffCiphertext.convertToCanonicalFormat()
         try canonicalCiphertext.modSwitchDownToSingle()
 
@@ -200,7 +195,7 @@ class HeAPITests: XCTestCase {
 
         let zeroPlaintext: Scheme.CoeffPlaintext = try context.encode(values: zeros,
                                                                       format: .coefficient)
-        let nonTransparentZero = try Scheme.encrypt(zeroPlaintext, using: testEnv.secretKey)
+        let nonTransparentZero = try zeroPlaintext.encrypt(using: testEnv.secretKey)
         if Scheme.self != NoOpScheme.self {
             XCTAssertFalse(nonTransparentZero.isTransparent())
         }
@@ -214,9 +209,7 @@ class HeAPITests: XCTestCase {
         let testEnv = try TestEnv(context: context, format: .coefficient)
         let expected = [Scheme.Scalar](repeating: 0, count: context.degree)
 
-        let zeroCoeffCiphertext: Ciphertext<Scheme, Coeff> = try Scheme.zeroCiphertext(
-            context: context,
-            moduliCount: context.ciphertextContext.moduli.count)
+        let zeroCoeffCiphertext = try Ciphertext<Scheme, Coeff>.zero(context: context)
         let zeroCiphertext = try zeroCoeffCiphertext.convertToCanonicalFormat()
 
         let sum1 = try zeroCiphertext + zeroCiphertext
@@ -238,9 +231,7 @@ class HeAPITests: XCTestCase {
         let testEnv = try TestEnv(context: context, format: .coefficient)
         let expected = [Scheme.Scalar](repeating: 0, count: context.degree)
 
-        let zeroCiphertext: Ciphertext<Scheme, Eval> = try Scheme.zeroCiphertext(
-            context: context,
-            moduliCount: testEnv.evalPlaintext1.moduli.count)
+        let zeroCiphertext = try Ciphertext<Scheme, Eval>.zero(context: context)
         let product = try zeroCiphertext * testEnv.evalPlaintext1
         XCTAssert(product.isTransparent())
 
@@ -947,7 +938,7 @@ class HeAPITests: XCTestCase {
         }
 
         let testEnv = try TestEnv(context: context, format: .coefficient)
-        let newSecretKey = try Bfv<T>.generateSecretKey(context: context)
+        let newSecretKey = try context.generateSecretKey()
 
         let keySwitchKey = try Bfv<T>.generateKeySwitchKey(context: context,
                                                            currentKey: testEnv.secretKey.poly,
@@ -958,8 +949,8 @@ class HeAPITests: XCTestCase {
             keySwitchingKey: keySwitchKey)
         switchedPolys[0] += testEnv.ciphertext1.polys[0]
         let switchedCiphertext = Ciphertext(context: context, polys: switchedPolys, correctionFactor: 1)
-        let plaintext = try Bfv<T>.decrypt(switchedCiphertext, using: newSecretKey)
-        let decrypted: [T] = try Bfv<T>.decode(plaintext: plaintext, format: .coefficient)
+        let plaintext = try switchedCiphertext.decrypt(using: newSecretKey)
+        let decrypted: [T] = try plaintext.decode(format: .coefficient)
 
         XCTAssertEqual(testEnv.data1, decrypted)
     }
@@ -967,17 +958,13 @@ class HeAPITests: XCTestCase {
     private func bfvNoiseBudgetTest<T>(context: Context<Bfv<T>>) throws {
         let testEnv = try TestEnv(context: context, format: .coefficient)
 
-        let zeroCoeffCiphertext: Bfv<T>.CoeffCiphertext = try Bfv<T>.zeroCiphertext(
-            context: context,
-            moduliCount: 1)
+        let zeroCoeffCiphertext = try Bfv<T>.CoeffCiphertext.zero(context: context, moduliCount: 1)
         XCTAssertEqual(
-            try Bfv<T>.noiseBudget(of: zeroCoeffCiphertext, using: testEnv.secretKey, variableTime: true),
+            try zeroCoeffCiphertext.noiseBudget(using: testEnv.secretKey, variableTime: true),
             Double.infinity)
-        let zeroEvalCiphertext: Bfv<T>.CoeffCiphertext = try Bfv<T>.zeroCiphertext(
-            context: context,
-            moduliCount: 1)
+        let zeroEvalCiphertext = try Bfv<T>.EvalCiphertext.zero(context: context, moduliCount: 1)
         XCTAssertEqual(
-            try Bfv<T>.noiseBudget(of: zeroEvalCiphertext, using: testEnv.secretKey, variableTime: true),
+            try zeroEvalCiphertext.noiseBudget(using: testEnv.secretKey, variableTime: true),
             Double.infinity)
 
         var coeffCiphertext = testEnv.ciphertext1
@@ -985,15 +972,13 @@ class HeAPITests: XCTestCase {
         try coeffCiphertext.modSwitchDownToSingle()
         var ciphertext = try coeffCiphertext.convertToEvalFormat()
 
-        var noiseBudget = try Bfv<T>.noiseBudget(of: ciphertext, using: testEnv.secretKey, variableTime: true)
+        var noiseBudget = try ciphertext.noiseBudget(using: testEnv.secretKey, variableTime: true)
         XCTAssert(noiseBudget > 0)
 
-        let coeffNoiseBudget = try Bfv<T>.noiseBudget(
-            of: ciphertext.convertToCoeffFormat(),
+        let coeffNoiseBudget = try ciphertext.convertToCoeffFormat().noiseBudget(
             using: testEnv.secretKey,
             variableTime: true)
-        let canonicalNoiseBudget = try Bfv<T>.noiseBudget(
-            of: ciphertext.convertToCanonicalFormat(),
+        let canonicalNoiseBudget = try ciphertext.convertToCanonicalFormat().noiseBudget(
             using: testEnv.secretKey,
             variableTime: true)
         XCTAssertEqual(coeffNoiseBudget, noiseBudget)
@@ -1002,11 +987,11 @@ class HeAPITests: XCTestCase {
         while noiseBudget > Bfv<T>.minNoiseBudget + 1 {
             ciphertext = try ciphertext + ciphertext
             try expected += expected
-            let newNoiseBudget = try Bfv<T>.noiseBudget(of: ciphertext, using: testEnv.secretKey, variableTime: true)
+            let newNoiseBudget = try ciphertext.noiseBudget(using: testEnv.secretKey, variableTime: true)
             XCTAssertIsClose(newNoiseBudget, noiseBudget - 1)
             noiseBudget = newNoiseBudget
 
-            let decrypted = try Bfv<T>.decrypt(ciphertext, using: testEnv.secretKey)
+            let decrypted = try ciphertext.decrypt(using: testEnv.secretKey)
             XCTAssertEqual(decrypted, expected)
         }
         // Two more additions yields incorrect results
@@ -1014,7 +999,7 @@ class HeAPITests: XCTestCase {
         ciphertext = try ciphertext + ciphertext
         try expected += expected
         try expected += expected
-        let decrypted = try Bfv<T>.decrypt(ciphertext, using: testEnv.secretKey)
+        let decrypted = try ciphertext.decrypt(using: testEnv.secretKey)
         XCTAssertNotEqual(decrypted, expected)
     }
 

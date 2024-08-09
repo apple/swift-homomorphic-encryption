@@ -360,7 +360,7 @@ extension TestUtils {
         try EncryptionParameters<Scheme>(
             polyDegree: testPolyDegree,
             plaintextModulus: Scheme.Scalar(testPlaintextModulus),
-            coefficientModuli: testCoefficientModuli(Scheme.Scalar.self).map { Scheme.Scalar($0) },
+            coefficientModuli: testCoefficientModuli(Scheme.Scalar.self),
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
     }

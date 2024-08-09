@@ -453,7 +453,7 @@ extension MulPirServer {
                 if coefficients.allSatisfy({ $0 == 0 }) {
                     return nil
                 }
-                return try Scheme.encode(context: context, values: coefficients, format: .coefficient)
+                return try context.encode(values: coefficients, format: .coefficient)
             }
         }
 
@@ -502,7 +502,7 @@ extension MulPirServer {
                 if plaintextCoefficients.allSatisfy({ $0 == 0 }) {
                     return nil
                 }
-                return try Scheme.encode(context: context, values: plaintextCoefficients, format: .coefficient)
+                return try context.encode(values: plaintextCoefficients, format: .coefficient)
             }
         let perChunkPlaintextCount = IndexPir.computePerChunkPlaintextCount(for: parameter)
         while plaintexts.count < perChunkPlaintextCount {

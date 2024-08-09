@@ -127,7 +127,7 @@ deserialized = try Ciphertext(
     context: context,
     moduliCount: 1)
 let decryptedIndices = try deserialized.decrypt(using: secretKey)
-let clientDecoded = try decryptedIndices.decode(format: .coefficient)
+let clientDecoded: [UInt32] = try decryptedIndices.decode(format: .coefficient)
 for index in indices {
     precondition(clientDecoded[index] == expectedValues[index])
 }

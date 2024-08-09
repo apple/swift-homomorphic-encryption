@@ -17,72 +17,6 @@
 
 extension Context {
     /// Encodes `values` in the given format.
-    /// - Parameters:
-    ///   - values: Values to encode.
-    ///   - format: Encoding format.
-    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext with all the
-    /// moduli.
-    /// - Returns: The plaintext encoding `values`.
-    /// - Throws: Error upon failure to encode.
-    @inlinable
-    public func encode<T: ScalarType>(
-        values: [some ScalarType],
-        format: EncodeFormat,
-        moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
-        where Scheme == Bfv<T>
-    {
-        let coeffPlaintext: Plaintext<Scheme, Coeff> = try encode(values: values, format: format)
-        return try coeffPlaintext.convertToEvalFormat(moduliCount: moduliCount)
-    }
-
-    /// Encodes `values` in the given format.
-    ///
-    /// Encoding will use the top-level ciphertext context with all moduli.
-    /// - Parameters:
-    ///   - values: Values to encode.
-    ///   - format: Encoding format.
-    /// - Returns: The plaintext encoding `values`.
-    /// - Throws: Error upon failure to encode.
-    @inlinable
-    public func encode<T: ScalarType>(values: [some ScalarType], format: EncodeFormat) throws -> Plaintext<Scheme, Eval>
-        where Scheme == Bfv<T>
-    {
-        let coeffPlaintext: Plaintext<Scheme, Coeff> = try encode(values: values, format: format)
-        return try coeffPlaintext.convertToEvalFormat(moduliCount: nil)
-    }
-}
-
-extension Context {
-    /// Encodes `values` in the given format.
-    /// - Parameters:
-    ///   - values: Values to encode.
-    ///   - format: Encoding format.
-    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext with all the
-    /// moduli.
-    /// - Returns: The plaintext encoding `values`.
-    /// - Throws: Error upon failure to encode.
-    @inlinable
-    public func encode(values: [some ScalarType], format: EncodeFormat,
-                       moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
-    {
-        let coeffPlaintext: Plaintext<Scheme, Coeff> = try encode(values: values, format: format)
-        return try coeffPlaintext.convertToEvalFormat(moduliCount: moduliCount)
-    }
-
-    /// Encodes `values` in the given format.
-    ///
-    /// Encoding will use the top-level ciphertext context with all moduli.
-    /// - Parameters:
-    ///   - values: Values to encode.
-    ///   - format: Encoding format.
-    /// - Returns: The plaintext encoding `values`.
-    /// - Throws: Error upon failure to encode.
-    @inlinable
-    public func encode(values: [some ScalarType], format: EncodeFormat) throws -> Plaintext<Scheme, Eval> {
-        try encode(values: values, format: format, moduliCount: nil)
-    }
-
-    /// Encodes `values` in the given format.
     ///
     /// Encoding will use the top-level ciphertext context with all moduli.
     /// - Parameters:
@@ -99,6 +33,23 @@ extension Context {
         case .simd:
             return try encodeSimd(values: values)
         }
+    }
+
+    /// Encodes `values` in the given format.
+    /// - Parameters:
+    ///   - values: Values to encode.
+    ///   - format: Encoding format.
+    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext with all the
+    /// moduli.
+    /// - Returns: The plaintext encoding `values`.
+    /// - Throws: Error upon failure to encode.
+    @inlinable
+    public func encode(
+        values: [some ScalarType],
+        format: EncodeFormat,
+        moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
+    {
+        try Scheme.encode(context: self, values: values, format: format, moduliCount: moduliCount)
     }
 
     /// Decodes a plaintext with the given format.
@@ -131,7 +82,7 @@ extension Context {
     public func decode<T: ScalarType>(plaintext: Plaintext<Scheme, Eval>,
                                       format: EncodeFormat) throws -> [T]
     {
-        try decode(plaintext: plaintext.convertToCoeffFormat(), format: format)
+        try Scheme.decode(plaintext: plaintext, format: format)
     }
 
     @inlinable

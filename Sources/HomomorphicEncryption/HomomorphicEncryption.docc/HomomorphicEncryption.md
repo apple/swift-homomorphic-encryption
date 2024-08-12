@@ -35,7 +35,9 @@ This scheme can be configured to support post-quantum 128-bit security.
 >
 > Consult a cryptography expert when developing and deploying homomorphic encryption applications.
 
-## Articles
+## Topics
 
-- <doc:UsingSwiftHomomorphicEncryption>
+### Articles
+<!-- Snippets are defined in a different "virtual module", requiring manually linking articles here. -->
 - <doc:DataFormats>
+- <doc:UsingSwiftHomomorphicEncryption>

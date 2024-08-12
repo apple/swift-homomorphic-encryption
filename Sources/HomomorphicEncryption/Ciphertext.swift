@@ -145,7 +145,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// Computes whether a ciphertext is transparent.
     ///
     /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
-    /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
+    /// ``Ciphertext/zero(context:moduliCount:)`` yields a transparent transparent.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``HeScheme/isTransparent(ciphertext:)`` for an alternative API.
     @inlinable

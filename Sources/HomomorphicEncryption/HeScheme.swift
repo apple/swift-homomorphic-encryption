@@ -167,7 +167,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-9l5kz`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-5me1t`` for an alternative API.
     static func decode<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Decodes a plaintext in ``Eval`` format.
@@ -176,7 +176,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-i9hh`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-3dnfa`` for an alternative API.
     static func decode<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Symmetric secret key encryption of a plaintext.
@@ -235,7 +235,7 @@ public protocol HeScheme {
     /// Computes whether a ciphertext is transparent.
     ///
     /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
-    /// ``HeScheme/zeroCiphertext(context:moduliCount:)-1xec3`` yields a transparent transparent.
+    /// ``HeScheme/zeroCiphertextCoeff(context:moduliCount:)`` yields a transparent transparent.
     /// - Parameter ciphertext: Ciphertext whose transparency to compute.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``Ciphertext/isTransparent()`` for an alternative API.
@@ -244,7 +244,7 @@ public protocol HeScheme {
     /// Computes whether a ciphertext is transparent.
     ///
     /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
-    /// ``HeScheme/zeroCiphertext(context:moduliCount:)-52gz2`` yields a transparent transparent.
+    /// ``HeScheme/zeroCiphertextEval(context:moduliCount:)`` yields a transparent transparent.
     /// - Parameter ciphertext: Ciphertext whose transparency to compute.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``Ciphertext/isTransparent()`` for an alternative API.
@@ -793,7 +793,7 @@ extension HeScheme {
     /// Computes whether a ciphertext is transparent.
     ///
     /// A *transparent* ciphertext reveals the underlying plaintext to any observer. For instance,
-    /// ``HeScheme/zeroCiphertext(context:moduliCount:)-1xec3`` yields a transparent transparent.
+    /// ``Ciphertext/zero(context:moduliCount:)`` yields a transparent transparent.
     /// - Parameter ciphertext: Ciphertext whose transparency to compute.
     /// - Returns: Whether the ciphertext is transparent.
     /// - seealso: ``Ciphertext/isTransparent()`` for an alternative API.

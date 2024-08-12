@@ -39,7 +39,7 @@ public struct KeywordPirConfig: Hashable, Codable {
     ///   - dimensionCount: Number of dimensions in the database.
     ///   - cuckooTableConfig: Cuckoo table configuration.
     ///   - unevenDimensions: Whether to enable the `uneven dimensions` optimization.
-    ///   - keyCompression: Strategy for ``EvaluationKey`` compression.
+    ///   - keyCompression: Strategy for evaluation key compression.
     /// - Throws: Error upon invalid arguments.
     public init(
         dimensionCount: Int,
@@ -123,8 +123,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
             let subTableSize = processed.database.count / keywordPirParameter.hashFunctionCount
             let tables = stride(from: 0, to: processed.database.count, by: subTableSize).map { startIndex in
                 PirServer
-                    .Database(plaintexts: Array(processed.database
-                            .plaintexts[startIndex..<startIndex + subTableSize]))
+                    .Database(plaintexts: Array(processed.database.plaintexts[startIndex..<startIndex + subTableSize]))
             }
             self.indexPirServer = try PirServer(parameter: processed.pirParameter, context: context, databases: tables)
             return

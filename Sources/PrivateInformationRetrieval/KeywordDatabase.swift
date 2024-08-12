@@ -271,7 +271,7 @@ public enum ProcessKeywordDatabase {
         public let encryptionParameters: EncryptionParameters<Scheme>
         /// PIR algorithm to process with.
         public let algorithm: PirAlgorithm
-        /// Strategy for ``EvaluationKey`` compression.
+        /// Strategy for evaluation key compression.
         public let keyCompression: PirKeyCompressionStrategy
         /// Number of test queries per shard.
         public let trialsPerShard: Int
@@ -281,7 +281,7 @@ public enum ProcessKeywordDatabase {
         ///   - databaseConfig: Database configuration.
         ///   - encryptionParameters: Encryption parameters.
         ///   - algorithm: PIR algorithm to process with.
-        ///   - keyCompression: Strategy for ``EvaluationKey`` compression.
+        ///   - keyCompression: Strategy for evaluation key compression.
         ///   - trialsPerShard: Number of test queries per shard.
         ///  - Throws: Error upon invalid arguments
         public init(

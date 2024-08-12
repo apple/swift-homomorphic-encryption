@@ -28,9 +28,9 @@ public enum PirAlgorithm: String, CaseIterable, Codable, CodingKeyRepresentable,
     case mulPir
 }
 
-/// Which strategy to use for ``EvaluationKey`` compression.
+/// Which strategy to use for evaluation key compression.
 public enum PirKeyCompressionStrategy: String, CaseIterable, Codable, CodingKeyRepresentable, Hashable, Sendable {
-    /// A middle ground between no compression and ``.maxCompression``.
+    /// A middle ground between no compression and ``PirKeyCompressionStrategy/maxCompression``.
     case hybridCompression
 
     /// Use as small an evaluation key as possible.
@@ -52,7 +52,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     public let batchSize: Int
     /// Whether or not to enable `uneven dimensions` optimization.
     public let unevenDimensions: Bool
-    /// ``EvaluationKey`` compression.
+    /// Evaluation key compression.
     public let keyCompression: PirKeyCompressionStrategy
 
     /// Initializes an ``IndexPirConfig``.
@@ -62,7 +62,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     ///   - dimensionCount: Number of dimensions in database.
     ///   - batchSize: Number of indices in a query to the database.
     ///   - unevenDimensions: Whether or not to enable `uneven dimensions` optimization.
-    ///   - keyCompression: ``EvaluationKey`` compression.
+    ///   - keyCompression: Evaluation key compression.
     /// - Throws: Error upon invalid configuration parameters.
     public init(
         entryCount: Int,
@@ -97,7 +97,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     public let dimensions: [Int]
     /// Number of indices in a query to the database.
     public let batchSize: Int
-    /// ``EvaluationKey`` configuration.
+    /// Evaluation key configuration.
     public let evaluationKeyConfig: EvaluationKeyConfiguration
 
     /// The number of dimensions in the database.

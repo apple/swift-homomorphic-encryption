@@ -236,7 +236,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     ///  - cuckooTableConfig: Cuckoo Table configuration.
     ///  - rlweParameters: RLWE parameters.
     ///  - algorithm: PIR algorithm.
-    ///  - keyCompression: ``EvaluationKey`` compression.
+    ///  - keyCompression: Evaluation key compression.
     ///  - trialsPerShard: Number of test queries per shard.
     init(
         inputDatabase: String,

@@ -59,9 +59,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: pre-commit
+    - name: Install pre-commit
       run: pip install pre-commit
-    - name: pre-commit checks
+    - name: Pre-commit checks
       # CI will commit to `main`
       # swiftformat & swiftlint tested separately
       run: >
@@ -72,39 +72,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: cache swiftlint
+    - name: Cache SwiftLint
       id: cache-swiftlint
       uses: actions/cache@v4
       with:
         path: /tmp/swiftlint/SwiftLint/.build/release/swiftlint
         key: ${{ runner.os }}-swiftlint-${{ env.SWIFTLINT_VERSION }}
-    - name: install swiftlint
+    - name: Install SwiftLint
       if: steps.cache-swiftlint.outputs.cache-hit != 'true'
       run: |
         ci/install-swiftlint.sh
-    - name: run swiftlint
+    - name: Run SwiftLint
       run: /tmp/swiftlint/SwiftLint/.build/release/swiftlint lint --strict .
   lockwood-swiftformat:
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: cache swiftformat
+    - name: Cache SwiftFormat
       id: cache-swiftformat
       uses: actions/cache@v4
       with:
         path: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat
         key: ${{ runner.os }}-swiftformat-${{ env.SWIFTFORMAT_VERSION }}
-    - name: install Lockwood swiftformat
+    - name: Install Lockwood SwiftFormat
       if: steps.cache-swiftformat.outputs.cache-hit != 'true'
       run: |
         ci/install-lockwood-swiftformat.sh
-    - name: run swiftformat
+    - name: Run SwiftFormat
       run: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat --strict .
   check-doc-comments:
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: check documentation comments
+    - name: Check documentation comments
       run: ci/run-apple-swift-format.sh

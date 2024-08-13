@@ -30,7 +30,7 @@ class CuckooTableTests: XCTestCase {
         for entry in testDatabase {
             let indices = HashKeyword.hashIndices(
                 keyword: entry.keyword,
-                bucketCount: cuckooTable.bucketPerTable,
+                bucketCount: cuckooTable.bucketsPerTable,
                 hashFunctionCount: config.hashFunctionCount).enumerated()
             var foundEntry = false
             for (tableIndex, hashIndex) in indices {

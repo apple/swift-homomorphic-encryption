@@ -183,7 +183,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
         }
 
         let indexPirConfig = try IndexPirConfig(
-            entryCount: cuckooTable.bucketPerTable,
+            entryCount: cuckooTable.bucketsPerTable,
             entrySizeInBytes: maxEntrySize,
             dimensionCount: config.dimensionCount,
             batchSize: cuckooTableConfig.hashFunctionCount,
@@ -194,9 +194,9 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
         let processedDb = try PirServer.Database(plaintexts: stride(
             from: 0,
             to: entryTable.count,
-            by: cuckooTable.bucketPerTable).flatMap { startIndex in
+            by: cuckooTable.bucketsPerTable).flatMap { startIndex in
             try PirServer.process(
-                database: entryTable[startIndex..<startIndex + cuckooTable.bucketPerTable],
+                database: entryTable[startIndex..<startIndex + cuckooTable.bucketsPerTable],
                 with: context,
                 using: indexPirParameter).plaintexts
         })

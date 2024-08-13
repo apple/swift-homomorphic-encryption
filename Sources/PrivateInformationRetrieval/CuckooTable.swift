@@ -243,7 +243,7 @@ struct CuckooTable {
         buckets.map(\.count).sum()
     }
 
-    @usableFromInline var bucketPerTable: Int { buckets.count / tableCount }
+    @usableFromInline var bucketsPerTable: Int { buckets.count / tableCount }
     @usableFromInline var tableCount: Int { config.multipleTables ? config.hashFunctionCount : 1 }
 
     init(
@@ -343,7 +343,7 @@ struct CuckooTable {
         }
         let keywordHashIndices = HashKeyword.hashIndices(
             keyword: keywordValuePair.keyword,
-            bucketCount: bucketPerTable,
+            bucketCount: bucketsPerTable,
             hashFunctionCount: config.hashFunctionCount).enumerated()
 
         // return if the keyword already exists
@@ -386,7 +386,7 @@ struct CuckooTable {
 
     @inlinable
     func index(tableIndex: Int, index: Int) -> Int {
-        tableCount == 1 ? index : tableIndex * bucketPerTable + index
+        tableCount == 1 ? index : tableIndex * bucketsPerTable + index
     }
 
     @inlinable
@@ -417,7 +417,7 @@ struct CuckooTable {
     subscript(_ keyword: KeywordValuePair.Keyword) -> KeywordValuePair.Value? {
         let keywordHashIndices = HashKeyword.hashIndices(
             keyword: keyword,
-            bucketCount: bucketPerTable,
+            bucketCount: bucketsPerTable,
             hashFunctionCount: config.hashFunctionCount).enumerated()
         for (tableIndex, hashIndex) in keywordHashIndices {
             let bucket = buckets[index(tableIndex: tableIndex, index: hashIndex)]

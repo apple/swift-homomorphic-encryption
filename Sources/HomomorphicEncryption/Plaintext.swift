@@ -14,7 +14,9 @@
 
 /// Plaintext type.
 public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
-    @usableFromInline let context: Context<Scheme>
+    /// Context for HE computation.
+    public let context: Context<Scheme>
+
     @usableFromInline package var poly: PolyRq<Scheme.Scalar, Format>
 
     @inlinable

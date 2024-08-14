@@ -135,6 +135,10 @@ public protocol HeScheme {
         using secretKey: SecretKey) throws
         -> EvaluationKey
 
+    /// Returns the (row, column) dimension counts for ``EncodeFormat/simd`` encoding, or `nil` if the HE scheme does
+    /// not support SIMD encoding.
+    static func encodeSimdDimensions(for parameters: EncryptionParameters<Self>) -> (rowCount: Int, columnCount: Int)?
+
     /// Encodes values into a plaintext with coefficient format.
     ///
     /// - Parameters:

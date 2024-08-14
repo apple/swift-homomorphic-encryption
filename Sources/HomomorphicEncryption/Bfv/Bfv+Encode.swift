@@ -16,12 +16,12 @@ extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
     public static func encodeSimdDimensions(for parameters: EncryptionParameters<Bfv<T>>)
-        -> (rowCount: Int, columnCount: Int)?
+        -> SimdEncodingDimensions?
     {
         guard parameters.supportsSimdEncoding else {
             return nil
         }
-        return (rowCount: 2, columnCount: parameters.polyDegree / 2)
+        return SimdEncodingDimensions(rowCount: 2, columnCount: parameters.polyDegree / 2)
     }
 
     @inlinable

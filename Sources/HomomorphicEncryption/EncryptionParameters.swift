@@ -88,7 +88,7 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
     ///
     /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
-    public var simdDimensions: (rowCount: Int, columnCount: Int)? {
+    public var simdDimensions: SimdEncodingDimensions? {
         Scheme.encodeSimdDimensions(for: self)
     }
 

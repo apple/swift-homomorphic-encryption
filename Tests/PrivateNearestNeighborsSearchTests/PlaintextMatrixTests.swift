@@ -43,13 +43,13 @@ final class PlaintextMatrixTests: XCTestCase {
             let plaintext: Plaintext<Scheme, Coeff> = try context.encode(
                 values: values,
                 format: EncodeFormat.coefficient)
-            XCTAssertNoThrow(try PlaintextMatrix<Scheme>(
+            XCTAssertNoThrow(try PlaintextMatrix<Scheme, Coeff>(
                 dimensions: dims,
                 packing: packing,
                 plaintexts: [plaintext, plaintext]))
 
             // Not enough plaintexts
-            XCTAssertThrowsError(try PlaintextMatrix<Scheme>(dimensions: dims, packing: packing, plaintexts: []))
+            XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(dimensions: dims, packing: packing, plaintexts: []))
             // Plaintexts from different contexts
             do {
                 let diffRlweParams = rlweParams == PredefinedRlweParameters
@@ -63,7 +63,7 @@ final class PlaintextMatrixTests: XCTestCase {
                 let diffPlaintext: Scheme.CoeffPlaintext = try diffContext.encode(
                     values: diffValues,
                     format: EncodeFormat.coefficient)
-                XCTAssertThrowsError(try PlaintextMatrix<Scheme>(
+                XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(
                     dimensions: dims,
                     packing: packing,
                     plaintexts: [plaintext, diffPlaintext]))
@@ -93,7 +93,7 @@ final class PlaintextMatrixTests: XCTestCase {
             // Wrong number of values
             do {
                 let wrongDims = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount + 1)
-                XCTAssertThrowsError(try PlaintextMatrix<Scheme>(
+                XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(
                     context: context,
                     dimensions: wrongDims,
                     packing: packing,
@@ -102,7 +102,7 @@ final class PlaintextMatrixTests: XCTestCase {
             // Too many columns
             do {
                 let dims = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount + 1)
-                XCTAssertThrowsError(try PlaintextMatrix<Scheme>(
+                XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(
                     context: context,
                     dimensions: dims,
                     packing: packing,
@@ -133,7 +133,7 @@ final class PlaintextMatrixTests: XCTestCase {
             }
             let packing = PlaintextMatrixPacking.denseRow
 
-            let plaintextMatrix = try PlaintextMatrix<Scheme>(
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                 context: context,
                 dimensions: dimensions,
                 packing: packing,
@@ -225,6 +225,34 @@ final class PlaintextMatrixTests: XCTestCase {
                 let dimensions = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount)
                 try runTest(context: context, dimensions: dimensions, expected: expected)
             }
+        }
+        try runTest(for: NoOpScheme.self)
+        try runTest(for: Bfv<UInt32>.self)
+        try runTest(for: Bfv<UInt64>.self)
+    }
+
+    func testPlaintextMatrixConversion() throws {
+        func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
+            let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
+            let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
+            XCTAssert(encryptionParams.supportsSimdEncoding)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
+            let encodeValues: [[Scheme.Scalar]] = (0..<dimensions.rowCount).map { rowIndex in
+                (0..<dimensions.columnCount).map { columnIndex in
+                    let value = 1 + Scheme.Scalar(rowIndex * dimensions.columnCount + columnIndex)
+                    return value % context.plaintextModulus
+                }
+            }
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
+                context: context,
+                dimensions: dimensions,
+                packing: .denseRow,
+                values: encodeValues.flatMap { $0 })
+
+            let evalMatrix = try plaintextMatrix.convertToEvalFormat()
+            let coeffMatrixRoundtrip = try evalMatrix.convertToCoeffFormat()
+            XCTAssertEqual(coeffMatrixRoundtrip, plaintextMatrix)
         }
         try runTest(for: NoOpScheme.self)
         try runTest(for: Bfv<UInt32>.self)

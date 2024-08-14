@@ -91,17 +91,61 @@ noise growth. Further, the ciphertext modulus bits determines the noise budget
 for each ciphertext.
 
 ### Optional Parameters
+#### Sharding
 Our keyword PIR shards the server’s database to improve performance: the keyword
 PIR protocol is run on a database the size the query’s destination shard. The
 only sharding parameter is the number of shards. This can be set manually with:
 * `shardCount`, e.g., `"shardCount" : 10` will divide the database into 10 roughly equal-sized shards.
-* `entryCountPerShard`, e.g. `entryCountPerShard: 1000`, which will divide the database into as many shards as needed to average 100 entries per shard.
+* `entryCountPerShard`, e.g. `entryCountPerShard: 1000`, which will divide the database into as many shards as needed to
+  average 100 entries per shard.
 
 More shards, or equivalently, fewer entries per shard, lowers the query load per shard. However,
 there is a privacy loss in having too many shards since the query’s shard is
 leaked to the server. Leakage is determined by the universe size divided by the
 number of shards. For example, a universe size of 1 million keywords with two
 shards means 500k keywords map to each shard.
+
+#### Symmetric PIR
+Some PIR algorithms, such as MulPir, include an optimization which returns multiple keyword-value pairs in the PIR
+response, beyond the keyword-value pair requested by the client. However, this may be undesirable, e.g., if the database
+contains sensitive IP. `Symmetric PIR` is a variant of PIR which protects the unrequested server values from the client,
+in addition to the standard PIR guarantee protecting the client's keyword from the server. A best-effort approach
+towards enabling symmetric PIR is to pad the entries, such that only a limited number of entries are in the server
+response. However, this approach will increase server runtime.
+
+> Warning: This is only a best-effort approach, because HE does not guarantee *circuit privacy*.
+
+That is, the output of HE computation, though encrypted, can leak to the client information about the computation that
+was performed to yield the ciphertext. For instance, the noise budget can leak the encrypted operations were performed
+on the query, as well as any plaintext arguments, e.g. database entries.
+
+Three arguments enable this best-effort approach towards symmetric PIR:
+* `slotCount`. The maximum number of keyword-value pairs that can be stored in a hash bucket.
+* `maxSerializedBucketSize`. We can set size equal to the number of bytes in a plaintexts. This roughly says that each
+  bucket can hold as many bytes as a single plaintext.
+* `useMaxSerializedBucketSize`. When enabled, the IndexPIR layer will assume that each entry is as large as
+  `maxSerializedBucketSize`. This avoids packing multiple hash buckets into a single plaintexts.
+
+Together these options can be used to control the number of entries in a response.
+
+For example, if we want to limit the number of entries in a response to 8, we can set the parameters like this:
+
+In code
+```swift
+let numberOfEntriesPerResponse = 8
+let hashFunctionCount = 2
+let config = try KeywordPirConfig(
+        dimensionCount: 2,
+        cuckooTableConfig: CuckooTableConfig(
+            hashFunctionCount: hashFunctionCount,
+            maxEvictionCount: 100,
+            maxSerializedBucketSize: context.bytesPerPlaintext,
+            bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.5),
+            slotCount: numberOfEntriesPerResponse / hashFunctionCount),
+        unevenDimensions: true,
+        keyCompression: .noCompression,
+        useMaxSerializedBucketSize: true)
+```
 
 #### Cryptographic Parameters
 Other cryptographic parameters are the following:

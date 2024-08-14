@@ -245,6 +245,19 @@ extension MulPirClient {
             return Array(bytes[computeResponseRangeInBytes(at: entryIndex)])
         }
     }
+
+    // swiftlint:disable:next missing_docs
+    public func decryptFull(response: Response, using secretKey: SecretKey<Scheme>) throws -> [[UInt8]] {
+        try response.ciphertexts.map { reply in
+            try reply.flatMap { ciphertext in
+                let plaintext = try ciphertext.decrypt(using: secretKey)
+                let coefficients: [Scheme.Scalar] = try plaintext.decode(format: .coefficient)
+                return try CoefficientPacking.coefficientsToBytes(
+                    coeffs: coefficients,
+                    bitsPerCoeff: context.plaintextModulus.log2)
+            }
+        }
+    }
 }
 
 /// Server which can compute responses using the ``PirAlgorithm/mulPir`` algorithm.

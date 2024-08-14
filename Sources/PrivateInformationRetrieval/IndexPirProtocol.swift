@@ -463,7 +463,7 @@ public protocol IndexPirClient: Sendable {
 
     /// Decrypts an encrypted response.
     /// - Parameters:
-    ///   - response: Encrypted response from a PIR query.
+    ///   - response: Encrypted response for a PIR query.
     ///   - queryIndices: Indices which were queried.
     ///   - secretKey: Secret key used for decryption.
     /// - Returns: For each query index, the database entry at that index.
@@ -471,6 +471,17 @@ public protocol IndexPirClient: Sendable {
     func decrypt(response: Response,
                  at queryIndices: [Int],
                  using secretKey: SecretKey<Scheme>) throws -> [[UInt8]]
+
+    /// Decrypts the encoded response, but does not pick out the right slice from it.
+    ///
+    /// Note: This is only useful, when one wants to inspect the full response.
+    /// - Parameters:
+    ///   - response: Encrypted response for a PIR query.
+    ///   - secretKey: Secret key used for decryption.
+    /// - Returns: The full decrypted response that may contain multiple entries in addition to the entries that were
+    /// queried.
+    /// - Throws: Error upon failure to decrypt.
+    func decryptFull(response: Response, using secretKey: SecretKey<Scheme>) throws -> [[UInt8]]
 
     /// Generates an `EvaluationKey` that the server uses to evaluate PIR queries.
     /// - Parameter secretKey: Secret key used to generate the evaluation key.

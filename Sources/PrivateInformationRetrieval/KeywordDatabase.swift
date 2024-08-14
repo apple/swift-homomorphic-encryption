@@ -317,6 +317,8 @@ public enum ProcessKeywordDatabase {
         public let noiseBudget: Double
         /// Server runtimes.
         public let computeTimes: [Duration]
+        /// Number of entries per response.
+        public let entryCountPerResponse: [Int]
 
         /// Initializes a ``ShardValidationResult``.
         /// - Parameters:
@@ -325,18 +327,21 @@ public enum ProcessKeywordDatabase {
         ///   - response: Response.
         ///   - noiseBudget: Noise budget of the response.
         ///   - computeTimes: Server runtimes.
+        ///   - entryCountPerResponse: Number of entries in a single PIR response.
         public init(
             evaluationKey: EvaluationKey<Scheme>,
             query: Query<Scheme>,
             response: Response<Scheme>,
             noiseBudget: Double,
-            computeTimes: [Duration])
+            computeTimes: [Duration],
+            entryCountPerResponse: [Int])
         {
             self.evaluationKey = evaluationKey
             self.response = response
             self.computeTimes = computeTimes
             self.query = query
             self.noiseBudget = noiseBudget
+            self.entryCountPerResponse = entryCountPerResponse
         }
     }
 
@@ -417,7 +422,7 @@ public enum ProcessKeywordDatabase {
         var response = Response<Scheme>(ciphertexts: [[]])
         let clock = ContinuousClock()
         var minNoiseBudget = Double.infinity
-        let computeTimes = try (0..<trials).map { trial in
+        let results = try (0..<trials).map { trial in
             let secretKey = try context.generateSecretKey()
             let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
             let trialQuery = try client.generateQuery(at: row.keyword, using: secretKey)
@@ -438,21 +443,28 @@ public enum ProcessKeywordDatabase {
                 throw PirError.validationError("Incorrect PIR response")
             }
 
+            let entryCount = try client.countEntriesInResponse(response: response, using: secretKey)
+
             if trial == 0 {
                 evaluationKey = trialEvaluationKey
                 query = trialQuery
             }
-            return computeTime
+            return (computeTime, entryCount)
         }
         guard let evaluationKey, let query else {
             throw PirError.validationError("Empty evaluation key or query")
         }
+
+        let computeTimes = results.map(\.0)
+        let entryCounts = results.map(\.1)
+
         return ShardValidationResult(
             evaluationKey: evaluationKey,
             query: query,
             response: response,
             noiseBudget: minNoiseBudget,
-            computeTimes: computeTimes)
+            computeTimes: computeTimes,
+            entryCountPerResponse: entryCounts)
     }
 
     /// Processes the database to prepare for PIR queries.

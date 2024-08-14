@@ -29,6 +29,8 @@ public struct KeywordPirConfig: Hashable, Codable {
     /// Strategy for ``EvaluationKey`` compression.
     @usableFromInline let keyCompression: PirKeyCompressionStrategy
 
+    @usableFromInline let useMaxSerializedBucketSize: Bool
+
     /// Keyword PIR parameters.
     public var parameter: KeywordPirParameter {
         KeywordPirParameter(hashFunctionCount: cuckooTableConfig.hashFunctionCount)
@@ -40,12 +42,16 @@ public struct KeywordPirConfig: Hashable, Codable {
     ///   - cuckooTableConfig: Cuckoo table configuration.
     ///   - unevenDimensions: Whether to enable the `uneven dimensions` optimization.
     ///   - keyCompression: Strategy for evaluation key compression.
+    ///   - useMaxSerializedBucketSize: Enable this to set the entry size in index PIR layer to
+    /// ``CuckooTableConfig/maxSerializedBucketSize``. When not enabled, the largest serialized bucket size is used
+    /// instead.
     /// - Throws: Error upon invalid arguments.
     public init(
         dimensionCount: Int,
         cuckooTableConfig: CuckooTableConfig,
         unevenDimensions: Bool,
-        keyCompression: PirKeyCompressionStrategy) throws
+        keyCompression: PirKeyCompressionStrategy,
+        useMaxSerializedBucketSize: Bool = false) throws
     {
         let validDimensionsCount = [1, 2]
         guard validDimensionsCount.contains(dimensionCount) else {
@@ -58,6 +64,7 @@ public struct KeywordPirConfig: Hashable, Codable {
         self.cuckooTableConfig = cuckooTableConfig
         self.unevenDimensions = unevenDimensions
         self.keyCompression = keyCompression
+        self.useMaxSerializedBucketSize = useMaxSerializedBucketSize
     }
 }
 
@@ -153,14 +160,18 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
         let cuckooTable = try CuckooTable(config: cuckooTableConfig, database: database)
         let entryTable = try cuckooTable.serializeBuckets()
         let maxEntrySize: Int
-        switch cuckooTable.config.bucketCount {
-        case .allowExpansion:
-            guard let foundMaxEntrySize = entryTable.map(\.count).max() else {
-                throw PirError.emptyDatabase
-            }
-            maxEntrySize = foundMaxEntrySize
-        case .fixedSize:
+        if config.useMaxSerializedBucketSize {
             maxEntrySize = cuckooTableConfig.maxSerializedBucketSize
+        } else {
+            switch cuckooTable.config.bucketCount {
+            case .allowExpansion:
+                guard let foundMaxEntrySize = entryTable.map(\.count).max() else {
+                    throw PirError.emptyDatabase
+                }
+                maxEntrySize = foundMaxEntrySize
+            case .fixedSize:
+                maxEntrySize = cuckooTableConfig.maxSerializedBucketSize
+            }
         }
 
         let indexPirConfig = try IndexPirConfig(
@@ -291,5 +302,28 @@ public final class KeywordPirClient<PirClient: IndexPirClient>: KeywordPirProtoc
     /// - Warning: The evaluation key is only valid for use with the given `secretKey`.
     public func generateEvaluationKey(using secretKey: SecretKey<Scheme>) throws -> EvaluationKey<Scheme> {
         try indexPirClient.generateEvaluationKey(using: secretKey)
+    }
+
+    /// Count the number of entries contained in a PIR response.
+    /// - Parameters:
+    ///   - response: PIR response.
+    ///   - secretKey: The secret key to use for decrypting the response.
+    /// - Returns: The number of entries that were contained in the response.
+    /// - Throws: Error upon failure to decrypt.
+    public func countEntriesInResponse(response: Response, using secretKey: SecretKey<Scheme>) throws -> Int {
+        var entriesFound = 0
+        let responses = try indexPirClient.decryptFull(response: response, using: secretKey)
+        for bytes in responses {
+            // scan for hashbuckets in the reply bytes
+            //
+            // note: that zero byte is a valid hashbucket with 0 entries and length one
+            // so we will scan over the zero padding
+            var offset = 0
+            while let bucket = try? HashBucket(deserialize: Array(bytes[offset...])) {
+                entriesFound += bucket.slots.count
+                offset += bucket.serializedSize()
+            }
+        }
+        return entriesFound
     }
 }

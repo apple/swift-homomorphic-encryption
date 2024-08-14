@@ -13,3 +13,9 @@ Then the server server sends the entire database to the client.
 While this *trivial PIR* protocol satisfies the privacy and correctness requirements of PIR, it is only feasible for small databases.
 
 The PIR implementation in Swift Homomorphic Encryption uses homomorphic encryption to improve upon the trivial PIR protocol.
+
+## Topics
+<!-- Snippets are defined in a different "virtual module", requiring manually linking articles here. -->
+### Articles
+- <doc:EncodingPipeline>
+- <doc:ParameterTuning>

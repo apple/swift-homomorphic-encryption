@@ -17,9 +17,11 @@ import HomomorphicEncryption
 
 /// Error type for ``PrivateNearestNeighborsSearch``.
 enum PNNSError: Error, Equatable {
+    case emptyCiphertextArray
     case emptyPlaintextArray
     case invalidMatrixDimensions(_ dimensions: MatrixDimensions)
     case simdEncodingNotSupported(_ description: String)
+    case wrongCiphertextCount(got: Int, expected: Int)
     case wrongContext(gotDescription: String, expectedDescription: String)
     case wrongEncodingValuesCount(got: Int, expected: Int)
     case wrongPlaintextCount(got: Int, expected: Int)
@@ -43,12 +45,16 @@ extension PNNSError {
 extension PNNSError: LocalizedError {
     public var errorDescription: String? {
         switch self {
+        case .emptyCiphertextArray:
+            "Empty ciphertext array"
         case .emptyPlaintextArray:
             "Empty plaintext array"
         case let .invalidMatrixDimensions(dimensions):
             "Invalid matrix dimensions: rowCount \(dimensions.rowCount), columnCount \(dimensions.columnCount)"
         case let .simdEncodingNotSupported(encryptionParameters):
             "SIMD encoding is not supported for encryption parameters \(encryptionParameters)"
+        case let .wrongCiphertextCount(got, expected):
+            "Wrong ciphertext count \(got), expected \(expected)"
         case let .wrongContext(gotDescription, expectedDescription):
             "Wrong context: got \(gotDescription), expected \(expectedDescription)"
         case let .wrongEncodingValuesCount(got, expected):

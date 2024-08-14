@@ -369,7 +369,7 @@ extension PolyRq where F == Coeff {
     /// then drops the last modulus.
     ///
     /// This polynomial must have a next context.
-    /// - throws: Error upon failure to perform division and rounding.
+    /// - Throws: Error upon failure to perform division and rounding.
     /// - seealso: Algorithm 8 of <https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9395438>,
     /// Algorithm 2 of <https://eprint.iacr.org/2018/931.pdf> for more details.
     @inlinable

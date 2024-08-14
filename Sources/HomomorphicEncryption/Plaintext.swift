@@ -97,7 +97,7 @@ extension Plaintext {
     ///   - lhs: Plaintext to add.
     ///   - rhs: Plaintext add.
     /// - Returns: The sum `lhs + rhs`.
-    /// - throws: Error upon failure to add the plaintexts.
+    /// - Throws: Error upon failure to add the plaintexts.
     /// - seealso: ``HeScheme/addAssign(_:_:)-3bv7g`` for an alternative API.
     @inlinable
     public static func + (lhs: Self, rhs: Self) throws -> Self where Format == Coeff {
@@ -111,7 +111,7 @@ extension Plaintext {
     ///   - lhs: Plaintext to add.
     ///   - rhs: Plaintext add.
     /// - Returns: The sum `lhs + rhs`.
-    /// - throws: Error upon failure to add the plaintexts.
+    /// - Throws: Error upon failure to add the plaintexts.
     /// - seealso: ``HeScheme/addAssign(_:_:)-1osb9`` for an alternative API.
     @inlinable
     public static func + (lhs: Self, rhs: Self) throws -> Self where Format == Eval {
@@ -125,7 +125,7 @@ extension Plaintext {
     /// This makes the plaintext suitable for operations with ciphertexts in ``Eval`` format, with `moduliCount` moduli.
     /// - Parameter moduliCount: Number of coefficient moduli in the context.
     /// - Returns: The converted plaintext.
-    /// - throws: Error upon failure to convert the plaintext.
+    /// - Throws: Error upon failure to convert the plaintext.
     @inlinable
     public func convertToEvalFormat(moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval> {
         if let plaintext = self as? Plaintext<Scheme, Eval> {
@@ -152,7 +152,7 @@ extension Plaintext {
 
     /// Converts the plaintext to ``Coeff`` format.
     /// - Returns: The converted plaintext.
-    /// - throws: Error upon failure to convert the plaintext.
+    /// - Throws: Error upon failure to convert the plaintext.
     @inlinable
     public func convertToCoeffFormat() throws -> Plaintext<Scheme, Coeff> {
         if let plaintext = self as? Plaintext<Scheme, Coeff> {

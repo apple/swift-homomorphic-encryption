@@ -64,7 +64,7 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
     /// Dimensions of the scalars.
     @usableFromInline let dimensions: Dimensions
 
-    /// The row and column count of a SIMD-encoded plaintext.
+    /// Dimensions of the scalar matrix in a SIMD-encoded plaintext.
     let simdDimensions: SimdEncodingDimensions
 
     /// Plaintext packing with which the data is stored.
@@ -79,19 +79,19 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
         return plaintexts[0].context
     }
 
-    /// The number of rows in SIMD-encoded plaintext.
+    /// Number of rows in SIMD-encoded plaintext.
     @usableFromInline var simdRowCount: Int { simdDimensions.rowCount }
 
-    /// The number of columns SIMD-encoded plaintext.
+    /// Number of columns SIMD-encoded plaintext.
     @usableFromInline var simdColumnCount: Int { simdDimensions.columnCount }
 
-    /// The number of data values stored in the plaintext matrix.
+    /// Number of data values stored in the plaintext matrix.
     @usableFromInline var count: Int { dimensions.count }
 
-    /// The number of rows in the stored data.
+    /// Number of rows in the stored data.
     @usableFromInline var rowCount: Int { dimensions.rowCount }
 
-    /// The number of columns in the stored data.
+    /// Number of columns in the stored data.
     @usableFromInline var columnCount: Int { dimensions.columnCount }
 
     /// Creates a new plaintext matrix.
@@ -413,6 +413,18 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
         }
         return values
     }
+
+    /// Symmetric secret key encryption of the plaintext matrix.
+    /// - Parameter secretKey: Secret key to encrypt with.
+    /// - Returns: A ciphertext encrypting the plaintext matrix.
+    /// - Throws: Error upon failure to encrypt the plaintext matrix.
+    @inlinable
+    func encrypt(using secretKey: SecretKey<Scheme>) throws
+        -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat> where Format == Coeff
+    {
+        let ciphertexts = try plaintexts.map { plaintext in try plaintext.encrypt(using: secretKey) }
+        return try CiphertextMatrix(dimensions: dimensions, packing: packing, ciphertexts: ciphertexts)
+    }
 }
 
 // MARK: format conversion
@@ -423,8 +435,8 @@ extension PlaintextMatrix {
     /// This makes the plaintext matrix suitable for operations with ciphertexts in ``Eval`` format, with `moduliCount`
     /// moduli.
     /// - Parameter moduliCount: Number of coefficient moduli in the context.
-    /// - Returns: The convertext plaintext matrix.
-    /// - throws: Error upon failure to convert the plaintext matrix.
+    /// - Returns: The converted plaintext matrix.
+    /// - Throws: Error upon failure to convert the plaintext matrix.
     @inlinable
     public func convertToEvalFormat(moduliCount: Int? = nil) throws -> PlaintextMatrix<Scheme, Eval> {
         if Format.self == Eval.self {
@@ -437,7 +449,7 @@ extension PlaintextMatrix {
 
     /// Converts the plaintext matrix to ``Coeff`` format.
     /// - Returns: The converted plaintext matrix.
-    /// - throws: Error upon failure to convert the plaintext matrix.
+    /// - Throws: Error upon failure to convert the plaintext matrix.
     @inlinable
     public func convertToCoeffFormat() throws -> PlaintextMatrix<Scheme, Coeff> {
         if Format.self == Coeff.self {

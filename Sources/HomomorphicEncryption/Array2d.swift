@@ -14,7 +14,7 @@
 
 /// Stores values in a 2 dimensional array.
 public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, Sendable {
-    @usableFromInline var data: [T]
+    @usableFromInline package var data: [T]
     @usableFromInline var rowCount: Int
     @usableFromInline var columnCount: Int
 
@@ -22,7 +22,7 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
     @usableFromInline var count: Int { rowCount * columnCount }
 
     @inlinable
-    init(data: [T], rowCount: Int, columnCount: Int) {
+    package init(data: [T], rowCount: Int, columnCount: Int) {
         precondition(data.count == rowCount * columnCount)
         self.data = data
         self.rowCount = rowCount
@@ -66,7 +66,7 @@ extension Array2d {
         indices.map { data[$0] }
     }
 
-    func transposed() -> Self {
+    package func transposed() -> Self {
         var transposed = Self(
             data: Array(repeating: T.zero, count: count),
             rowCount: columnCount,

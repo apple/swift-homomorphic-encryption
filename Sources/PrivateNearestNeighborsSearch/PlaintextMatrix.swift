@@ -16,6 +16,10 @@ import HomomorphicEncryption
 
 /// Different algorithms for packing a matrix of scalar values into plaintexts.
 enum PlaintextMatrixPacking: Equatable, Sendable {
+    /// As many columns of data are packed sequentially into each plaintext SIMD row as possible, such that no SIMD row
+    /// contains data from multiple columns.
+    case denseColumn
+
     /// As many rows of data are packed sequentially into each SIMD plaintext
     /// row as possible, such that no data row is split across multiple SIMD rows, and
     /// each data row is zero-padded to the next power of two length.
@@ -140,6 +144,12 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
             throw PNNSError.wrongEncodingValuesCount(got: values.count, expected: values.count)
         }
         switch packing {
+        case .denseColumn:
+            let plaintexts = try PlaintextMatrix.denseColumnPlaintexts(
+                context: context,
+                dimensions: dimensions,
+                values: values)
+            try self.init(dimensions: dimensions, packing: packing, plaintexts: plaintexts)
         case .denseRow:
             let plaintexts = try PlaintextMatrix.denseRowPlaintexts(
                 context: context,
@@ -166,6 +176,13 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
             throw PNNSError.simdEncodingNotSupported(for: encryptionParameters)
         }
         switch packing {
+        case .denseColumn:
+            let columnsPerPlaintextCount = simdDimensions.rowCount * (simdDimensions.columnCount / dimensions.rowCount)
+            if columnsPerPlaintextCount > 1 {
+                return dimensions.columnCount.dividingCeil(columnsPerPlaintextCount, variableTime: true)
+            }
+            return dimensions.columnCount * dimensions.rowCount
+                .dividingCeil(encryptionParameters.polyDegree, variableTime: true)
         case .denseRow:
             guard dimensions.columnCount <= simdDimensions.columnCount else {
                 throw PNNSError.invalidMatrixDimensions(dimensions)
@@ -176,12 +193,68 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
         }
     }
 
-    /// Computes the plaintexts for denseRow packing.
+    /// Computes the plaintexts for `denseColumn`` packing.
     /// - Parameters:
     ///   - context: Context for HE computation.
     ///   - dimensions: Plaintext matrix dimensions.
     ///   - values: The data values to store in the plaintext matrix; stored in row-major format.
-    /// - Returns: The plaintexts for denseRow packing.
+    /// - Returns: The plaintexts for `denseColumn` packing.
+    /// - Throws: Error upon plaintext to compute the plaintexts.
+    @inlinable
+    static func denseColumnPlaintexts<V: ScalarType>(context: Context<Scheme>, dimensions: Dimensions,
+                                                     values: [V]) throws -> [Scheme.CoeffPlaintext]
+    {
+        let degree = context.degree
+        guard let simdColumnCount = context.simdDimensions?.columnCount else {
+            throw PNNSError.simdEncodingNotSupported(for: context.encryptionParameters)
+        }
+
+        let encryptionParams = context.encryptionParameters
+        let expectedPlaintextCount = try PlaintextMatrix.plaintextCount(
+            encryptionParameters: encryptionParams,
+            dimensions: dimensions,
+            packing: .denseColumn)
+        var plaintexts: [Scheme.CoeffPlaintext] = []
+        plaintexts.reserveCapacity(expectedPlaintextCount)
+
+        var packedValues: [V] = []
+        packedValues.reserveCapacity(degree)
+        for colIndex in 0..<dimensions.columnCount {
+            for rowIndex in 0..<dimensions.rowCount {
+                let valueIndex = rowIndex * dimensions.columnCount + colIndex
+                let value = values[valueIndex]
+                packedValues.append(value)
+                if packedValues.count == degree {
+                    try plaintexts.append(context.encode(values: packedValues, format: .simd))
+                    packedValues.removeAll(keepingCapacity: true)
+                }
+            }
+            let nextColumnCount = packedValues.count + dimensions.rowCount
+            // Ensure data column is contained within single SIMD row, if possible
+            if packedValues.count < simdColumnCount, (simdColumnCount + 1...degree).contains(nextColumnCount) {
+                // Next data column fits in next SIMD row; pad 0s to this SIMD row
+                let padCount = (context.degree - packedValues.count) % simdColumnCount
+                packedValues += [V](repeating: 0, count: padCount)
+            } else if nextColumnCount > degree {
+                // Next data column requires new plaintext
+                try plaintexts.append(context.encode(values: packedValues, format: .simd))
+                packedValues.removeAll(keepingCapacity: true)
+            }
+        }
+        if !packedValues.isEmpty {
+            try plaintexts.append(context.encode(values: packedValues, format: .simd))
+        }
+        precondition(plaintexts.count == expectedPlaintextCount)
+
+        return plaintexts
+    }
+
+    /// Computes the plaintexts for `denseRow` packing.
+    /// - Parameters:
+    ///   - context: Context for HE computation.
+    ///   - dimensions: Plaintext matrix dimensions.
+    ///   - values: The data values to store in the plaintext matrix; stored in row-major format.
+    /// - Returns: The plaintexts for `denseRow` packing.
     /// - Throws: Error upon failure to compute the plaintexts.
     @inlinable
     static func denseRowPlaintexts<V: ScalarType>(
@@ -193,7 +266,7 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
         guard let simdDimensions = context.simdDimensions else {
             throw PNNSError.simdEncodingNotSupported(for: encryptionParameters)
         }
-        precondition(simdDimensions.rowCount == 2)
+        precondition(simdDimensions.rowCount == 2, "simdRowCount must be 2")
         let simdColumnCount = simdDimensions.columnCount
         guard dimensions.columnCount <= simdColumnCount else {
             throw PNNSError.invalidMatrixDimensions(dimensions)
@@ -255,9 +328,55 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
     @inlinable
     func unpack<V: ScalarType>() throws -> [V] where Format == Coeff {
         switch packing {
+        case .denseColumn:
+            return try unpackDenseColumn()
         case .denseRow:
             return try unpackDenseRow()
         }
+    }
+
+    /// Unpacks a plaintext matrix with `denseColumn` packing.
+    /// - Returns: The stored data values in row-major format.
+    /// - Throws: Error upon failure to unpack the matrix.
+    @inlinable
+    func unpackDenseColumn<V: ScalarType>() throws -> [V] where Format == Coeff {
+        guard case packing = .denseColumn else {
+            throw PNNSError.wrongPlaintextMatrixPacking(got: packing, expected: .denseColumn)
+        }
+        let simdColumnCount = simdDimensions.columnCount
+        let simdRowCount = simdDimensions.rowCount
+        precondition(simdRowCount == 2, "simdRowCount must be 2")
+        let columnsPerPlaintextCount = simdRowCount * (simdColumnCount / rowCount)
+
+        var valuesColumnMajor: [V] = []
+        valuesColumnMajor.reserveCapacity(count)
+        for plaintext in plaintexts {
+            let decoded: [V] = try plaintext.decode(format: .simd)
+            if columnsPerPlaintextCount > 1 {
+                let valsPerSimdRowCount = rowCount * (simdColumnCount / rowCount)
+                // Ignore padding at the end of each SIMD row
+                var remainingDecodeCount = count - valuesColumnMajor.count
+                let simdRow1DecodedCount = min(valsPerSimdRowCount, remainingDecodeCount)
+                valuesColumnMajor += decoded[0..<simdRow1DecodedCount]
+
+                remainingDecodeCount = count - valuesColumnMajor.count
+                let simdRow2DecodedCount = min(valsPerSimdRowCount, remainingDecodeCount)
+                valuesColumnMajor += decoded[simdColumnCount..<simdColumnCount + simdRow2DecodedCount]
+            } else {
+                let valuesInRowCount = valuesColumnMajor.count % rowCount
+                let decodedEndIndex = min(decoded.count, rowCount - valuesInRowCount)
+                valuesColumnMajor += decoded[0..<decodedEndIndex]
+            }
+        }
+        guard valuesColumnMajor.count == count else {
+            throw PNNSError.wrongEncodingValuesCount(got: valuesColumnMajor.count, expected: count)
+        }
+        // transpose from column-major to row-major
+        let arrayColumnMajor = Array2d(
+            data: valuesColumnMajor,
+            rowCount: columnCount,
+            columnCount: rowCount)
+        return arrayColumnMajor.transposed().data
     }
 
     /// Unpacks a plaintext matrix with `denseRow` packing.

@@ -15,7 +15,7 @@
 import HomomorphicEncryption
 
 /// Different algorithms for packing a matrix of scalar values into plaintexts.
-enum PlaintextMatrixPacking: Equatable {
+enum PlaintextMatrixPacking: Equatable, Sendable {
     /// As many rows of data are packed sequentially into each SIMD plaintext
     /// row as possible, such that no data row is split across multiple SIMD rows, and
     /// each data row is zero-padded to the next power of two length.
@@ -26,7 +26,7 @@ enum PlaintextMatrixPacking: Equatable {
 }
 
 /// The dimensions of a matrix, a 2d array.
-struct MatrixDimensions: Equatable {
+struct MatrixDimensions: Equatable, Sendable {
     /// Number of rows in the data.
     @usableFromInline let rowCount: Int
     /// Number of columns in the data.
@@ -53,7 +53,7 @@ struct MatrixDimensions: Equatable {
 }
 
 /// Stores a matrix of scalars as plaintexts.
-struct PlaintextMatrix<Scheme: HeScheme> {
+struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
     typealias Packing = PlaintextMatrixPacking
     typealias Dimensions = MatrixDimensions
 
@@ -61,13 +61,13 @@ struct PlaintextMatrix<Scheme: HeScheme> {
     @usableFromInline let dimensions: Dimensions
 
     /// The row and column count of a SIMD-encoded plaintext.
-    let simdDimensions: (rowCount: Int, columnCount: Int)
+    let simdDimensions: SimdEncodingDimensions
 
     /// Plaintext packing with which the data is stored.
     @usableFromInline let packing: Packing
 
     /// Plaintexts encoding the scalars.
-    let plaintexts: [Scheme.CoeffPlaintext]
+    let plaintexts: [Plaintext<Scheme, Format>]
 
     /// The parameter context.
     @usableFromInline var context: Context<Scheme> {
@@ -97,7 +97,7 @@ struct PlaintextMatrix<Scheme: HeScheme> {
     ///   - plaintexts: Plaintexts encoding the data; must not be empty.
     /// - Throws: Error upon failure to initialize the plaintext matrix.
     @inlinable
-    init(dimensions: Dimensions, packing: Packing, plaintexts: [Scheme.CoeffPlaintext]) throws {
+    init(dimensions: Dimensions, packing: Packing, plaintexts: [Plaintext<Scheme, Format>]) throws {
         guard !plaintexts.isEmpty else {
             throw PNNSError.emptyPlaintextArray
         }
@@ -133,7 +133,9 @@ struct PlaintextMatrix<Scheme: HeScheme> {
     ///   - values: The data values to store in the plaintext matrix; stored in row-major format.
     /// - Throws: Error upon failure to create the plaitnext matrix.
     @inlinable
-    init(context: Context<Scheme>, dimensions: Dimensions, packing: Packing, values: [some ScalarType]) throws {
+    init(context: Context<Scheme>, dimensions: Dimensions, packing: Packing, values: [some ScalarType]) throws
+        where Format == Coeff
+    {
         guard values.count == dimensions.count, !values.isEmpty else {
             throw PNNSError.wrongEncodingValuesCount(got: values.count, expected: values.count)
         }
@@ -160,15 +162,16 @@ struct PlaintextMatrix<Scheme: HeScheme> {
         dimensions: PlaintextMatrix.Dimensions,
         packing: PlaintextMatrix.Packing) throws -> Int
     {
-        guard let (simdRowCount, simdColumnCount) = encryptionParameters.simdDimensions else {
+        guard let simdDimensions = encryptionParameters.simdDimensions else {
             throw PNNSError.simdEncodingNotSupported(for: encryptionParameters)
         }
         switch packing {
         case .denseRow:
-            guard dimensions.columnCount <= simdColumnCount else {
+            guard dimensions.columnCount <= simdDimensions.columnCount else {
                 throw PNNSError.invalidMatrixDimensions(dimensions)
             }
-            let rowsPerPlaintextCount = simdRowCount * (simdColumnCount / dimensions.columnCount.nextPowerOfTwo)
+            let rowsPerPlaintextCount = simdDimensions.rowCount * (
+                simdDimensions.columnCount / dimensions.columnCount.nextPowerOfTwo)
             return dimensions.rowCount.dividingCeil(rowsPerPlaintextCount, variableTime: true)
         }
     }
@@ -184,18 +187,19 @@ struct PlaintextMatrix<Scheme: HeScheme> {
     static func denseRowPlaintexts<V: ScalarType>(
         context: Context<Scheme>,
         dimensions: Dimensions,
-        values: [V]) throws -> [Scheme.CoeffPlaintext]
+        values: [V]) throws -> [Plaintext<Scheme, Coeff>]
     {
         let encryptionParameters = context.encryptionParameters
-        guard let (simdRowCount, simdColumnCount) = context.simdDimensions else {
+        guard let simdDimensions = context.simdDimensions else {
             throw PNNSError.simdEncodingNotSupported(for: encryptionParameters)
         }
-        precondition(simdRowCount == 2)
+        precondition(simdDimensions.rowCount == 2)
+        let simdColumnCount = simdDimensions.columnCount
         guard dimensions.columnCount <= simdColumnCount else {
             throw PNNSError.invalidMatrixDimensions(dimensions)
         }
 
-        var plaintexts: [Scheme.CoeffPlaintext] = []
+        var plaintexts: [Plaintext<Scheme, Coeff>] = []
         let expectedPlaintextCount = try PlaintextMatrix.plaintextCount(
             encryptionParameters: encryptionParameters,
             dimensions: dimensions,
@@ -220,7 +224,7 @@ struct PlaintextMatrix<Scheme: HeScheme> {
                 packedValues += repeatElement(0, count: simdColumnCount - packedValues.count)
             }
             if packedValues.count + dimensions.columnCount > context.degree {
-                let plaintext = try context.encode(values: packedValues, format: .simd)
+                let plaintext: Plaintext<Scheme, Coeff> = try context.encode(values: packedValues, format: .simd)
                 packedValues.removeAll(keepingCapacity: true)
                 plaintexts.append(plaintext)
             }
@@ -240,6 +244,8 @@ struct PlaintextMatrix<Scheme: HeScheme> {
             }
             try plaintexts.append(context.encode(values: packedValues, format: .simd))
         }
+        precondition(plaintexts.count == expectedPlaintextCount)
+
         return plaintexts
     }
 
@@ -247,7 +253,7 @@ struct PlaintextMatrix<Scheme: HeScheme> {
     /// - Returns: The stored data values in row-major format.
     /// - Throws: Error upon failure to unpack the matrix.
     @inlinable
-    func unpack<V: ScalarType>() throws -> [V] {
+    func unpack<V: ScalarType>() throws -> [V] where Format == Coeff {
         switch packing {
         case .denseRow:
             return try unpackDenseRow()
@@ -258,7 +264,7 @@ struct PlaintextMatrix<Scheme: HeScheme> {
     /// - Returns: The stored data values in row-major format.
     /// - Throws: Error upon failure to unpack the matrix.
     @inlinable
-    func unpackDenseRow<V: ScalarType>() throws -> [V] {
+    func unpackDenseRow<V: ScalarType>() throws -> [V] where Format == Coeff {
         guard case packing = .denseRow else {
             throw PNNSError.wrongPlaintextMatrixPacking(got: packing, expected: Packing.denseRow)
         }
@@ -287,5 +293,39 @@ struct PlaintextMatrix<Scheme: HeScheme> {
             throw PNNSError.wrongEncodingValuesCount(got: values.count, expected: count)
         }
         return values
+    }
+}
+
+// MARK: format conversion
+
+extension PlaintextMatrix {
+    /// Converts the plaintext matrix to ``Eval`` format.
+    ///
+    /// This makes the plaintext matrix suitable for operations with ciphertexts in ``Eval`` format, with `moduliCount`
+    /// moduli.
+    /// - Parameter moduliCount: Number of coefficient moduli in the context.
+    /// - Returns: The convertext plaintext matrix.
+    /// - throws: Error upon failure to convert the plaintext matrix.
+    @inlinable
+    public func convertToEvalFormat(moduliCount: Int? = nil) throws -> PlaintextMatrix<Scheme, Eval> {
+        if Format.self == Eval.self {
+            // swiftlint:disable:next force_cast
+            return self as! PlaintextMatrix<Scheme, Eval>
+        }
+        let plaintexts = try plaintexts.map { plaintext in try plaintext.convertToEvalFormat(moduliCount: moduliCount) }
+        return try PlaintextMatrix<Scheme, Eval>(dimensions: dimensions, packing: packing, plaintexts: plaintexts)
+    }
+
+    /// Converts the plaintext matrix to ``Coeff`` format.
+    /// - Returns: The converted plaintext matrix.
+    /// - throws: Error upon failure to convert the plaintext matrix.
+    @inlinable
+    public func convertToCoeffFormat() throws -> PlaintextMatrix<Scheme, Coeff> {
+        if Format.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            return self as! PlaintextMatrix<Scheme, Coeff>
+        }
+        let plaintexts = try plaintexts.map { plaintext in try plaintext.convertToCoeffFormat() }
+        return try PlaintextMatrix<Scheme, Coeff>(dimensions: dimensions, packing: packing, plaintexts: plaintexts)
     }
 }

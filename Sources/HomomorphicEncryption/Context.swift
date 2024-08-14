@@ -53,7 +53,7 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
     ///
     /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
-    public var simdDimensions: (rowCount: Int, columnCount: Int)? { encryptionParameters.simdDimensions }
+    public var simdDimensions: SimdEncodingDimensions? { encryptionParameters.simdDimensions }
     /// Whether or not the context supports use of an ``EvaluationKey``.
     public var supportsEvaluationKey: Bool { encryptionParameters.supportsEvaluationKey }
     /// The number of bits that can be encoded in a single ``Plaintext``.

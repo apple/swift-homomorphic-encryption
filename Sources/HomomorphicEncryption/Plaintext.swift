@@ -124,12 +124,13 @@ extension Plaintext {
     ///
     /// This makes the plaintext suitable for operations with ciphertexts in ``Eval`` format, with `moduliCount` moduli.
     /// - Parameter moduliCount: Number of coefficient moduli in the context.
-    /// - Returns: The convertext plaintext.
+    /// - Returns: The converted plaintext.
     /// - throws: Error upon failure to convert the plaintext.
     @inlinable
-    public func convertToEvalFormat(moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
-        where Format == Coeff
-    {
+    public func convertToEvalFormat(moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval> {
+        if let plaintext = self as? Plaintext<Scheme, Eval> {
+            return plaintext
+        }
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count
         let rnsTool = context.getRnsTool(moduliCount: moduliCount)
         let polyContext = try context.ciphertextContext.getContext(moduliCount: moduliCount)
@@ -153,11 +154,12 @@ extension Plaintext {
     /// - Returns: The converted plaintext.
     /// - throws: Error upon failure to convert the plaintext.
     @inlinable
-    public func convertToCoeffFormat() throws -> Plaintext<Scheme, Coeff>
-        where Format == Eval
-    {
+    public func convertToCoeffFormat() throws -> Plaintext<Scheme, Coeff> {
+        if let plaintext = self as? Plaintext<Scheme, Coeff> {
+            return plaintext
+        }
         let rnsTool = context.getRnsTool(moduliCount: moduli.count)
-        var plaintextData = try poly.inverseNtt().data
+        var plaintextData = try poly.convertToCoeff().data
         for index in plaintextData.rowIndices(row: 0) {
             let condition = plaintextData[index].constantTimeGreaterThanOrEqual(rnsTool.tThreshold)
             plaintextData[index] = Scheme.Scalar.constantTimeSelect(

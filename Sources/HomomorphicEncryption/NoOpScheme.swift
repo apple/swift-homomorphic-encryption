@@ -48,12 +48,12 @@ public enum NoOpScheme: HeScheme {
 
     @inlinable
     public static func encodeSimdDimensions(for parameters: EncryptionParameters<NoOpScheme>)
-        -> (rowCount: Int, columnCount: Int)?
+        -> SimdEncodingDimensions?
     {
         guard parameters.supportsSimdEncoding else {
             return nil
         }
-        return (rowCount: 2, columnCount: parameters.polyDegree / 2)
+        return SimdEncodingDimensions(rowCount: 2, columnCount: parameters.polyDegree / 2)
     }
 
     public static func encode(context: Context<NoOpScheme>, values: [some ScalarType],

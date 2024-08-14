@@ -62,6 +62,27 @@ public enum EncodeFormat: CaseIterable {
     case simd
 }
 
+/// The (row, column) dimensions for ``EncodeFormat/simd`` encoding.
+///
+/// With ``EncodeFormat/simd`` encoding, the encoded values can be viewed as a matrix of scalars. Some HE operations
+/// such as ``HeScheme/rotateColumns(of:by:using:)-5mcg`` and ``HeScheme/swapRows(of:using:)-7lya8`` operate on the rows
+/// and columns of the matrix.
+public struct SimdEncodingDimensions: Codable, Equatable, Hashable, Sendable {
+    /// Number of rows of scalars encoded in each plaintext.
+    public let rowCount: Int
+    /// Number of columns of scalars encoded in each plaintext.
+    public let columnCount: Int
+
+    /// Initializes a new ``SimdEncodingDimensions``.
+    /// - Parameters:
+    ///   - rowCount: Number of rows of scalars in each plaintext.
+    ///   - columnCount: Number of columns of scalars in each plaintext.
+    public init(rowCount: Int, columnCount: Int) {
+        self.rowCount = rowCount
+        self.columnCount = columnCount
+    }
+}
+
 /// Protocol for HE schemes.
 ///
 /// The protocol should be implemented when adding a new HE scheme.
@@ -135,9 +156,9 @@ public protocol HeScheme {
         using secretKey: SecretKey) throws
         -> EvaluationKey
 
-    /// Returns the (row, column) dimension counts for ``EncodeFormat/simd`` encoding, or `nil` if the HE scheme does
-    /// not support SIMD encoding.
-    static func encodeSimdDimensions(for parameters: EncryptionParameters<Self>) -> (rowCount: Int, columnCount: Int)?
+    /// Returns the dimension counts for ``EncodeFormat/simd`` encoding, or `nil` if the HE scheme does
+    /// not support SIMD encoding for the given parameters.
+    static func encodeSimdDimensions(for parameters: EncryptionParameters<Self>) -> SimdEncodingDimensions?
 
     /// Encodes values into a plaintext with coefficient format.
     ///
@@ -171,7 +192,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-5me1t`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-9l5kz`` for an alternative API.
     static func decode<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Decodes a plaintext in ``Eval`` format.
@@ -180,7 +201,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-3dnfa`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-i9hh`` for an alternative API.
     static func decode<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Symmetric secret key encryption of a plaintext.

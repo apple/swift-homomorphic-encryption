@@ -14,7 +14,8 @@
 
 /// Ciphertext type.
 public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
-    @usableFromInline let context: Context<Scheme>
+    /// Context for HE computation.
+    public let context: Context<Scheme>
     @usableFromInline var polys: [PolyRq<Scheme.Scalar, Format>]
     @usableFromInline var correctionFactor: Scheme.Scalar
     @usableFromInline var seed: [UInt8] = []

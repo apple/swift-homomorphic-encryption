@@ -15,6 +15,17 @@
 extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
+    public static func encodeSimdDimensions(for parameters: EncryptionParameters<Bfv<T>>)
+        -> (rowCount: Int, columnCount: Int)?
+    {
+        guard parameters.supportsSimdEncoding else {
+            return nil
+        }
+        return (rowCount: 2, columnCount: parameters.polyDegree / 2)
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func encode(context: Context<Bfv<T>>, values: [some ScalarType],
                               format: EncodeFormat) throws -> CoeffPlaintext
     {

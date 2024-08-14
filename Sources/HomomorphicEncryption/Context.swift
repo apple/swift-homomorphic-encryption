@@ -50,6 +50,10 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     public var degree: Int { encryptionParameters.polyDegree }
     /// Whether or not the context supports ``EncodeFormat/simd`` encoding.
     public var supportsSimdEncoding: Bool { encryptionParameters.supportsSimdEncoding }
+    /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
+    ///
+    /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
+    public var simdDimensions: (rowCount: Int, columnCount: Int)? { encryptionParameters.simdDimensions }
     /// Whether or not the context supports use of an ``EvaluationKey``.
     public var supportsEvaluationKey: Bool { encryptionParameters.supportsEvaluationKey }
     /// The number of bits that can be encoded in a single ``Plaintext``.

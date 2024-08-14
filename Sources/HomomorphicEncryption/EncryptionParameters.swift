@@ -85,6 +85,13 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     /// Whether or not encryption parameters support ``EncodeFormat/simd`` encoding.
     public var supportsSimdEncoding: Bool { plaintextModulus.isNttModulus(for: polyDegree) }
 
+    /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
+    ///
+    /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
+    public var simdDimensions: (rowCount: Int, columnCount: Int)? {
+        Scheme.encodeSimdDimensions(for: self)
+    }
+
     /// Whether or not encryption parameters use of an ``EvaluationKey``.
     public var supportsEvaluationKey: Bool { coefficientModuli.count > 1 }
 

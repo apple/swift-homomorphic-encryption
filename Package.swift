@@ -38,6 +38,9 @@ let package = Package(
             name: "PrivateInformationRetrieval",
             targets: ["PrivateInformationRetrieval"]),
         .library(
+            name: "PrivateNearestNeighborsSearch",
+            targets: ["PrivateNearestNeighborsSearch"]),
+        .library(
             name: "HomomorphicEncryptionProtobuf",
             targets: ["HomomorphicEncryptionProtobuf"]),
         .library(
@@ -90,6 +93,10 @@ let package = Package(
                            "HomomorphicEncryptionProtobuf",
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
             exclude: ["generated/README.md", "protobuf_module_mappings.txtpb"],
+            swiftSettings: librarySettings),
+        .target(
+            name: "PrivateNearestNeighborsSearch",
+            dependencies: ["HomomorphicEncryption"],
             swiftSettings: librarySettings),
         .target(
             name: "TestUtilities",
@@ -149,6 +156,11 @@ let package = Package(
             dependencies: [
                 "PrivateInformationRetrieval", "TestUtilities",
                 .product(name: "Numerics", package: "swift-numerics"),
+            ], swiftSettings: executableSettings),
+        .testTarget(
+            name: "PrivateNearestNeighborsSearchTests",
+            dependencies: [
+                "PrivateNearestNeighborsSearch", "HomomorphicEncryption", "TestUtilities",
             ], swiftSettings: executableSettings),
         .testTarget(
             name: "PIRGenerateDatabaseTests",

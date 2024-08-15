@@ -53,6 +53,10 @@ While this *trivial PIR* protocol satisfies the privacy and correctness requirem
 
 The PIR implementation in Swift Homomorphic Encryption uses HE to improve upon the trivial PIR protocol.
 
+> [!WARNING]
+> PIR is asymmetric, meaning the client may learn keyword-value pairs not requested, as happens in trivial PIR for instance.
+> A variant of PIR, known as *symmetric PIR*, would be required to ensure the client does not learn anything about values it did not request.
+
 ## Using Swift Homomorphic Encryption
 Swift Homomorphic Encryption requires:
 * 64-bit processor with little-endian memory representation

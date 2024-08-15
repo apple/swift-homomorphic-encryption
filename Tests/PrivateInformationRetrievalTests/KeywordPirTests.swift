@@ -475,4 +475,54 @@ class KeywordPirTests: XCTestCase {
         try runTest(rlweParameters: rlweParameters, server:
             MulPirServer<Bfv<UInt64>>.self, client: MulPirClient<Bfv<UInt64>>.self)
     }
+
+    func testLimitEntriesPerResponse() throws {
+        func runTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
+            rlweParams: PredefinedRlweParameters,
+            server _: PirServer.Type,
+            client _: PirClient.Type) throws where PirServer.IndexPir == PirClient.IndexPir
+        {
+            let context: Context<PirServer.Scheme> = try Context(encryptionParameters: .init(from: rlweParams))
+            let numberOfEntriesPerResponse = 8
+            let hashFunctionCount = 2
+            var testRng = TestRng()
+            let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: 1, using: &testRng)
+            let config = try KeywordPirConfig(
+                dimensionCount: 2,
+                cuckooTableConfig: CuckooTableConfig(
+                    hashFunctionCount: hashFunctionCount,
+                    maxEvictionCount: 100,
+                    maxSerializedBucketSize: context.bytesPerPlaintext,
+                    bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.5),
+                    slotCount: numberOfEntriesPerResponse / hashFunctionCount),
+                unevenDimensions: true,
+                keyCompression: .noCompression,
+                useMaxSerializedBucketSize: true)
+            let processed = try KeywordPirServer<PirServer>.process(
+                database: testDatabase,
+                config: config,
+                with: context)
+            let server = try KeywordPirServer<PirServer>(
+                context: context,
+                processed: processed)
+            let client = KeywordPirClient<PirClient>(
+                keywordParameter: config.parameter,
+                pirParameter: processed.pirParameter,
+                context: context)
+            let secretKey = try context.generateSecretKey()
+            let evaluationKey = try client.generateEvaluationKey(using: secretKey)
+            let randomKeyValuePair = try XCTUnwrap(testDatabase.randomElement())
+            let query = try client.generateQuery(at: randomKeyValuePair.keyword, using: secretKey)
+            let response = try server.computeResponse(to: query, using: evaluationKey)
+            let result = try client.decrypt(response: response, at: randomKeyValuePair.keyword, using: secretKey)
+            XCTAssertEqual(result, randomKeyValuePair.value)
+            let entriesFound = try client.countEntriesInResponse(response: response, using: secretKey)
+            XCTAssertLessThanOrEqual(entriesFound, numberOfEntriesPerResponse)
+        }
+        let rlweParams = PredefinedRlweParameters.n_4096_logq_27_28_28_logt_5
+        try runTest(rlweParams: rlweParams, server:
+            MulPirServer<Bfv<UInt32>>.self, client: MulPirClient<Bfv<UInt32>>.self)
+        try runTest(rlweParams: rlweParams, server:
+            MulPirServer<Bfv<UInt64>>.self, client: MulPirClient<Bfv<UInt64>>.self)
+    }
 }

@@ -50,21 +50,25 @@ struct CuckooTableArguments: Codable, Equatable, Hashable {
     let maxEvictionCount: Int?
     let maxSerializedBucketSize: Int?
     let bucketCount: TableSizeOption?
+    let slotCount: Int?
 
     /// - Parameters:
     ///  - hashFunctionCount: The number of hashes to use in the cuckoo table.
     ///  - maxEvictionCount: The maximum number of evictions before re-making the cuckoo table.
     ///  - maxSerializedBucketSize: The maximum number of bytes per serialized bucket.
-    ///  - bucketCount: The number of buckets per entry.
+    ///  - bucketCount: The number of buckets.
+    ///  - slotCount: Then number of slots in a bucket.
     init(hashFunctionCount: Int? = nil,
          maxEvictionCount: Int? = nil,
          maxSerializedBucketSize: Int? = nil,
-         bucketCount: TableSizeOption? = nil)
+         bucketCount: TableSizeOption? = nil,
+         slotCount: Int? = nil)
     {
         self.hashFunctionCount = hashFunctionCount
         self.maxEvictionCount = maxEvictionCount
         self.maxSerializedBucketSize = maxSerializedBucketSize
         self.bucketCount = bucketCount
+        self.slotCount = slotCount
     }
 
     /// Returns a `CuckooTableConfig` with the given parameters.
@@ -87,6 +91,14 @@ struct CuckooTableArguments: Codable, Equatable, Hashable {
 
         let hashFunctionCount = hashFunctionCount ?? 2
         let maxEvictionCount = maxEvictionCount ?? 100
+        if let slotCount {
+            return try CuckooTableConfig(
+                hashFunctionCount: hashFunctionCount,
+                maxEvictionCount: maxEvictionCount,
+                maxSerializedBucketSize: maxSerializedBucketSize,
+                bucketCount: bucketCount,
+                slotCount: slotCount)
+        }
         return try CuckooTableConfig(
             hashFunctionCount: hashFunctionCount,
             maxEvictionCount: maxEvictionCount,
@@ -125,6 +137,8 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
     var cuckooTableArguments: CuckooTableArguments?
     var algorithm: PirAlgorithm?
     var keyCompression: PirKeyCompressionStrategy?
+    // swiftlint:disable:next discouraged_optional_boolean
+    var useMaxSerializedBucketSize: Bool?
     var trialsPerShard: Int?
 
     static func defaultJsonString() -> String {
@@ -202,6 +216,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
             rlweParameters: rlweParameters,
             algorithm: algorithm ?? .mulPir,
             keyCompression: keyCompression ?? .noCompression,
+            useMaxSerializedBucketSize: useMaxSerializedBucketSize ?? false,
             trialsPerShard: trialsPerShard ?? 1)
     }
 }
@@ -217,6 +232,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     let rlweParameters: PredefinedRlweParameters
     let algorithm: PirAlgorithm
     let keyCompression: PirKeyCompressionStrategy
+    let useMaxSerializedBucketSize: Bool
     let trialsPerShard: Int
 
     var description: String {
@@ -248,6 +264,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         rlweParameters: PredefinedRlweParameters,
         algorithm: PirAlgorithm,
         keyCompression: PirKeyCompressionStrategy,
+        useMaxSerializedBucketSize: Bool,
         trialsPerShard: Int) throws
     {
         self.inputDatabase = inputDatabase
@@ -259,6 +276,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         self.rlweParameters = rlweParameters
         self.algorithm = algorithm
         self.keyCompression = keyCompression
+        self.useMaxSerializedBucketSize = useMaxSerializedBucketSize
         self.trialsPerShard = trialsPerShard
 
         try validate()
@@ -308,7 +326,8 @@ struct ProcessDatabase: ParsableCommand {
         let keywordConfig = try KeywordPirConfig(dimensionCount: 2,
                                                  cuckooTableConfig: config.cuckooTableConfig,
                                                  unevenDimensions: true,
-                                                 keyCompression: config.keyCompression)
+                                                 keyCompression: config.keyCompression,
+                                                 useMaxSerializedBucketSize: config.useMaxSerializedBucketSize)
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
@@ -403,6 +422,7 @@ extension ProcessKeywordDatabase.ShardValidationResult {
             String(format: "%.01f", runtime.milliseconds)
         }.joined(separator: ", ")
         descriptionDict["runtime (ms)"] = "[\(runtimeString)]"
+        descriptionDict["entry count per response"] = "\(entryCountPerResponse)"
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]

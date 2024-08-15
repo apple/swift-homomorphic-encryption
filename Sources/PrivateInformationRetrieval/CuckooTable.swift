@@ -54,6 +54,9 @@ public struct CuckooTableConfig: Hashable, Codable, Sendable {
     /// This can help improve PIR runtime.
     public let multipleTables: Bool
 
+    /// Maximum number of slots in a bucket.
+    public let slotCount: Int
+
     /// Initializes a ``CuckooTableConfig``.
     /// - Parameters:
     ///   - hashFunctionCount: Number of hash functions.
@@ -61,19 +64,22 @@ public struct CuckooTableConfig: Hashable, Codable, Sendable {
     ///   - maxSerializedBucketSize: Maximum number of bytes in a serialized bucket.
     ///   - bucketCount: Number of buckets.
     ///   - multipleTables: Whether to enable multiple tables setting.
+    ///   - slotCount: How many entries can fit in a bucket.
     /// - Throws: Error upon invalid configuration arguments.
     public init(
         hashFunctionCount: Int,
         maxEvictionCount: Int,
         maxSerializedBucketSize: Int,
         bucketCount: BucketCountConfig,
-        multipleTables: Bool = true) throws
+        multipleTables: Bool = true,
+        slotCount: Int = HashBucket.maxSlotCount) throws
     {
         self.hashFunctionCount = hashFunctionCount
         self.maxEvictionCount = maxEvictionCount
         self.maxSerializedBucketSize = maxSerializedBucketSize
         self.bucketCount = bucketCount
         self.multipleTables = multipleTables
+        self.slotCount = slotCount
         try validate()
     }
 
@@ -110,7 +116,11 @@ public struct CuckooTableConfig: Hashable, Codable, Sendable {
     /// Validates the configuration is valid.
     /// - Throws: Error upon invalid configuration.
     func validate() throws {
-        guard hashFunctionCount > 0, maxSerializedBucketSize >= HashBucket.serializedSize(singleValueSize: 0) else {
+        guard hashFunctionCount > 0,
+              maxSerializedBucketSize >= HashBucket.serializedSize(singleValueSize: 0),
+              slotCount > 0,
+              slotCount <= HashBucket.maxSlotCount
+        else {
             throw PirError.invalidCuckooConfig(config: self)
         }
         switch bucketCount {
@@ -165,7 +175,7 @@ struct CuckooBucket {
 
     @inlinable
     func canInsert(value: KeywordValuePair.Value, with config: CuckooTableConfig) -> Bool {
-        let hasSlots = slots.count < HashBucket.maxSlotCount
+        let hasSlots = slots.count < config.slotCount
         return hasSlots && HashBucket.serializedSize(values: values + [value]) <= config.maxSerializedBucketSize
     }
 

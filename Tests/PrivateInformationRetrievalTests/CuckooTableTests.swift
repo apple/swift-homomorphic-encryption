@@ -128,4 +128,22 @@ class CuckooTableTests: XCTestCase {
             XCTFail("Cuckoo config was not fixed size")
         }
     }
+
+    func testCuckooTableSmallSlotCount() throws {
+        let valueSize = 10
+        let slotCount = 7
+        let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: valueSize)
+        let config = try CuckooTableConfig(
+            hashFunctionCount: 2,
+            maxEvictionCount: 100,
+            maxSerializedBucketSize: 5000, // large value to limit based on number of slots
+            bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.9),
+            slotCount: slotCount)
+        let rng = TestUtilities.TestRng(counter: 0)
+
+        let cuckooTable = try CuckooTable(config: config, database: testDatabase, using: rng)
+        for bucket in cuckooTable.buckets {
+            XCTAssertLessThanOrEqual(bucket.slots.count, slotCount)
+        }
+    }
 }

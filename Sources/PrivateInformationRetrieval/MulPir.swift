@@ -242,12 +242,6 @@ extension MulPirClient {
                     bitsPerCoeff: context.plaintextModulus.log2)
             }
 
-            // this is a copy of the client side bug
-            let accessRange = computeResponseRangeInBytes(at: entryIndex)
-            guard accessRange.upperBound < bytes.count else {
-                throw PirError.validationError("Client side bug hit!")
-            }
-
             return Array(bytes[computeResponseRangeInBytes(at: entryIndex)])
         }
     }

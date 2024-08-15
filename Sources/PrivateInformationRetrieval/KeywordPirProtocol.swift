@@ -163,25 +163,6 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
             maxEntrySize = cuckooTableConfig.maxSerializedBucketSize
         }
 
-        // if we would hit the client side bug, reprocess with modified `maxSerializedBucketSize`
-        if maxEntrySize.isMultiple(of: context.bytesPerPlaintext)
-            || context.bytesPerPlaintext.isMultiple(of: maxEntrySize)
-        {
-            let newCuckooTableConfig = try CuckooTableConfig(
-                hashFunctionCount: cuckooTableConfig.hashFunctionCount,
-                maxEvictionCount: cuckooTableConfig.maxEvictionCount,
-                maxSerializedBucketSize: maxEntrySize - 1,
-                bucketCount: cuckooTableConfig.bucketCount,
-                multipleTables: cuckooTableConfig.multipleTables)
-
-            let newConfig = try KeywordPirConfig(
-                dimensionCount: config.dimensionCount,
-                cuckooTableConfig: newCuckooTableConfig,
-                unevenDimensions: config.unevenDimensions,
-                keyCompression: config.keyCompression)
-            return try Self.process(database: database, config: newConfig, with: context)
-        }
-
         let indexPirConfig = try IndexPirConfig(
             entryCount: cuckooTable.bucketsPerTable,
             entrySizeInBytes: maxEntrySize,

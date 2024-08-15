@@ -368,45 +368,6 @@ class KeywordPirTests: XCTestCase {
             MulPirServer<Bfv<UInt64>>.self, client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testClientBugWorkaround() throws {
-        func runTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
-            rlweParams: PredefinedRlweParameters,
-            server _: PirServer.Type,
-            client _: PirClient.Type) throws where PirServer.IndexPir == PirClient.IndexPir
-        {
-            let context: Context<PirServer.Scheme> = try Context(encryptionParameters: .init(from: rlweParams))
-
-            var testRng = TestRng()
-            let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: 1, using: &testRng)
-            let config = try KeywordPirConfig(
-                dimensionCount: 2,
-                cuckooTableConfig: .defaultKeywordPir(maxSerializedBucketSize: 1024),
-                unevenDimensions: true, keyCompression: .noCompression)
-            let processed = try KeywordPirServer<PirServer>.process(
-                database: testDatabase,
-                config: config,
-                with: context)
-            let server = try KeywordPirServer<PirServer>(
-                context: context,
-                processed: processed)
-            let client = KeywordPirClient<PirClient>(
-                keywordParameter: config.parameter,
-                pirParameter: processed.pirParameter,
-                context: context)
-            let secretKey = try context.generateSecretKey()
-            let evaluationKey = try client.generateEvaluationKey(using: secretKey)
-            let query = try client.generateQuery(at: [], using: secretKey)
-            let response = try server.computeResponse(to: query, using: evaluationKey)
-            let result = try client.decrypt(response: response, at: [], using: secretKey)
-            XCTAssertNil(result)
-        }
-        let rlweParams = PredefinedRlweParameters.n_4096_logq_27_28_28_logt_5
-        try runTest(rlweParams: rlweParams, server:
-            MulPirServer<Bfv<UInt32>>.self, client: MulPirClient<Bfv<UInt32>>.self)
-        try runTest(rlweParams: rlweParams, server:
-            MulPirServer<Bfv<UInt64>>.self, client: MulPirClient<Bfv<UInt64>>.self)
-    }
-
     func testInvalidArguments() throws {
         let cuckooConfig = try CuckooTableConfig(
             hashFunctionCount: 2,

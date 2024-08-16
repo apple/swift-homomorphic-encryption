@@ -16,7 +16,7 @@
 import XCTest
 
 class Array2dTests: XCTestCase {
-    func testZeroize() {
+    func testZeroAndZeroize() {
         func runTest<T: FixedWidthInteger & Sendable>(_: T.Type) {
             let data = [T](1...16)
             var array = Array2d(data: data, rowCount: 2, columnCount: 8)
@@ -27,6 +27,7 @@ class Array2dTests: XCTestCase {
                 rowCount: 2,
                 columnCount: 8)
             XCTAssertEqual(array, zero)
+            XCTAssertEqual(array, Array2d.zero(rowCount: 2, columnCount: 8))
         }
         runTest(Int.self)
         runTest(Int32.self)

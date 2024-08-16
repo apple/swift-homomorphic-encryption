@@ -371,22 +371,40 @@ extension FixedWidthInteger {
         return self / divisor
     }
 
-    /// Computes the next value larger than or equal to this value that is a multiple of `factor`.
+    /// Computes the smallest value greater than or equal to this value that is a multiple of `rhs`.
     ///
     /// This value must be non-negative.
     /// - Parameters:
-    ///   - factor: Value of which the output is a product of.
+    ///   - rhs: Value of which the output is a multiple of.
     ///   - variableTime: Must be `true`, indicating this value and `other` are leaked through timing.
     /// - Returns: the next multiple of this value.
     /// - Warning: Leaks this value and `other` through timing.
     @inlinable
-    public func nextMultiple(of factor: Self, variableTime: Bool) -> Self {
+    public func nextMultiple(of rhs: Self, variableTime: Bool) -> Self {
         precondition(variableTime)
         precondition(self >= 0)
-        if factor == 0 {
+        if rhs == 0 {
             return 0
         }
-        return dividingCeil(factor, variableTime: true) * factor
+        return dividingCeil(rhs, variableTime: true) * rhs
+    }
+
+    /// Computes the largest value less than or equal to this value that is a multiple of `rhs`.
+    ///
+    /// This value must be non-negative.
+    /// - Parameters:
+    ///   - rhs: Value of which the output is a multiple of.
+    ///   - variableTime: Must be `true`, indicating this value and `other` are leaked through timing.
+    /// - Returns: the previous multiple of this value.
+    /// - Warning: Leaks this value and `other` through timing.
+    @inlinable
+    public func previousMultiple(of rhs: Self, variableTime: Bool) -> Self {
+        precondition(variableTime)
+        precondition(self >= 0)
+        if rhs == 0 {
+            return 0
+        }
+        return (self / rhs) * rhs
     }
 }
 

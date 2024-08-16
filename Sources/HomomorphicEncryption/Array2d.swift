@@ -15,11 +15,11 @@
 /// Stores values in a 2 dimensional array.
 public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, Sendable {
     @usableFromInline package var data: [T]
-    @usableFromInline var rowCount: Int
-    @usableFromInline var columnCount: Int
+    @usableFromInline package var rowCount: Int
+    @usableFromInline package var columnCount: Int
 
-    @usableFromInline var shape: (Int, Int) { (rowCount, columnCount) }
-    @usableFromInline var count: Int { rowCount * columnCount }
+    @usableFromInline package var shape: (Int, Int) { (rowCount, columnCount) }
+    @usableFromInline package var count: Int { rowCount * columnCount }
 
     @inlinable
     package init(data: [T], rowCount: Int, columnCount: Int) {
@@ -35,26 +35,34 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
         self.rowCount = array.rowCount
         self.data = array.data.map { T($0) }
     }
+
+    @inlinable
+    package static func zero(rowCount: Int, columnCount: Int) -> Self {
+        self.init(
+            data: [T](Array(repeating: T.zero, count: rowCount * columnCount)),
+            rowCount: rowCount,
+            columnCount: columnCount)
+    }
 }
 
 extension Array2d {
     @inlinable
-    func index(row: Int, column: Int) -> Int {
+    package func index(row: Int, column: Int) -> Int {
         row &* columnCount &+ column
     }
 
     @inlinable
-    func rowIndices(row: Int) -> Range<Int> {
+    package func rowIndices(row: Int) -> Range<Int> {
         index(row: row, column: 0)..<index(row: row, column: columnCount)
     }
 
     @inlinable
-    func columnIndices(column: Int) -> StrideTo<Int> {
+    package func columnIndices(column: Int) -> StrideTo<Int> {
         stride(from: index(row: 0, column: column), to: index(row: rowCount, column: column), by: columnCount)
     }
 
     @inlinable
-    func row(row: Int) -> [T] {
+    package func row(row: Int) -> [T] {
         Array(data[rowIndices(row: row)])
     }
 
@@ -80,7 +88,7 @@ extension Array2d {
     }
 
     @inlinable
-    subscript(_ index: Int) -> T {
+    package subscript(_ index: Int) -> T {
         get {
             data[index]
         }
@@ -90,7 +98,7 @@ extension Array2d {
     }
 
     @inlinable
-    subscript(_ row: Int, _ column: Int) -> T {
+    package subscript(_ row: Int, _ column: Int) -> T {
         get {
             data[index(row: row, column: column)]
         }

@@ -116,11 +116,19 @@ class ScalarTests: XCTestCase {
     }
 
     func testNextMultiple() {
-        XCTAssertEqual(0.nextMultiple(of: 7, variableTime: true), 0)
+        XCTAssertEqual(0.nextMultiple(of: 0, variableTime: true), 0)
         XCTAssertEqual(0.nextMultiple(of: 7, variableTime: true), 0)
         XCTAssertEqual(3.nextMultiple(of: 7, variableTime: true), 7)
         XCTAssertEqual(7.nextMultiple(of: 7, variableTime: true), 7)
         XCTAssertEqual(8.nextMultiple(of: 7, variableTime: true), 14)
+    }
+
+    func testPreviousMultiple() {
+        XCTAssertEqual(0.previousMultiple(of: 0, variableTime: true), 0)
+        XCTAssertEqual(0.previousMultiple(of: 7, variableTime: true), 0)
+        XCTAssertEqual(3.previousMultiple(of: 7, variableTime: true), 0)
+        XCTAssertEqual(7.previousMultiple(of: 7, variableTime: true), 7)
+        XCTAssertEqual(8.previousMultiple(of: 7, variableTime: true), 7)
     }
 
     func testIsPrime() {

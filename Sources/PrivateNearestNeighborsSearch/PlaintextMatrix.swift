@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Algorithms
 import HomomorphicEncryption
 
 /// Different algorithms for packing a matrix of scalar values into plaintexts.
-enum PlaintextMatrixPacking: Equatable, Sendable {
+enum PlaintextMatrixPacking: Codable, Equatable, Hashable, Sendable {
     /// As many columns of data are packed sequentially into each plaintext SIMD row as possible, such that no SIMD row
     /// contains data from multiple columns.
     case denseColumn
@@ -27,6 +28,11 @@ enum PlaintextMatrixPacking: Equatable, Sendable {
     /// with the constraint that either all or none of the entries stored within the last plaintext
     /// row are repeated.
     case denseRow
+    /// Packs the values using a generalized diagonal packing.
+    ///
+    /// Includes modifications for the baby-step, giant-step algorithm from Section 6.3 of
+    /// <https://eprint.iacr.org/2018/244.pdf>.
+    case diagonal(babyStepGiantStep: BabyStepGiantStep)
 }
 
 /// The dimensions of a matrix, a 2d array.
@@ -156,6 +162,13 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
                 dimensions: dimensions,
                 values: values)
             try self.init(dimensions: dimensions, packing: packing, plaintexts: plaintexts)
+        case .diagonal:
+            let plaintexts = try PlaintextMatrix.diagonalPlaintexts(
+                context: context,
+                dimensions: dimensions,
+                packing: packing,
+                values: values)
+            try self.init(dimensions: dimensions, packing: packing, plaintexts: plaintexts)
         }
     }
 
@@ -190,6 +203,11 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
             let rowsPerPlaintextCount = simdDimensions.rowCount * (
                 simdDimensions.columnCount / dimensions.columnCount.nextPowerOfTwo)
             return dimensions.rowCount.dividingCeil(rowsPerPlaintextCount, variableTime: true)
+        case .diagonal:
+            let plaintextsPerColumnCount = dimensions.rowCount.dividingCeil(
+                encryptionParameters.polyDegree,
+                variableTime: true)
+            return dimensions.columnCount.nextPowerOfTwo * plaintextsPerColumnCount
         }
     }
 
@@ -322,6 +340,83 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
         return plaintexts
     }
 
+    /// Computes the plaintexts for diagonal packing.
+    /// - Parameters:
+    ///   - context: Context for HE computation.
+    ///   - dimensions: Plaintext matrix dimensions.
+    ///   - packing: Plaintext packing; must be `.diagonal`.
+    ///   - values: The data values to store in the plaintext matrix; stored in row-major format.
+    /// - Returns: The plaintexts for diagonal packing.
+    /// - Throws: Error upon failure to compute the plaintexts.
+    @inlinable
+    static func diagonalPlaintexts<V: ScalarType>(
+        context: Context<Scheme>,
+        dimensions: Dimensions,
+        packing: PlaintextMatrixPacking,
+        values: [V]) throws -> [Scheme.CoeffPlaintext]
+    {
+        let encryptionParameters = context.encryptionParameters
+        guard let simdDimensions = context.simdDimensions else {
+            throw PNNSError.simdEncodingNotSupported(for: encryptionParameters)
+        }
+        let simdColumnCount = simdDimensions.columnCount
+        let simdRowCount = simdDimensions.rowCount
+        precondition(simdRowCount == 2, "simdRowCount must be 2")
+        guard dimensions.columnCount <= simdColumnCount else {
+            throw PNNSError.invalidMatrixDimensions(dimensions)
+        }
+        guard case let .diagonal(bsgs) = packing else {
+            let expectedBsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
+            throw PNNSError
+                .wrongPlaintextMatrixPacking(got: packing, expected: .diagonal(babyStepGiantStep: expectedBsgs))
+        }
+
+        let data = Array2d(data: values, rowCount: dimensions.rowCount, columnCount: dimensions.columnCount)
+        // Transposed from original shape, with extra zero columns.
+        // Encode diagonals
+        var packedValues = Array2d<V>.zero(
+            rowCount: dimensions.columnCount.nextPowerOfTwo,
+            columnCount: dimensions.rowCount)
+        for rowIndex in 0..<packedValues.rowCount {
+            for columnIndex in 0..<packedValues.columnCount {
+                let paddedColumnIndex = (columnIndex &+ rowIndex) % packedValues.rowCount
+                if paddedColumnIndex < dimensions.columnCount {
+                    packedValues[rowIndex, columnIndex] =
+                        data[columnIndex, paddedColumnIndex]
+                }
+            }
+        }
+
+        var plaintexts: [Scheme.CoeffPlaintext] = []
+        let expectedPlaintextCount = try PlaintextMatrix.plaintextCount(
+            encryptionParameters: encryptionParameters,
+            dimensions: dimensions,
+            packing: packing)
+        plaintexts.reserveCapacity(expectedPlaintextCount)
+        let plaintextsPerColumn = expectedPlaintextCount / packedValues.rowCount
+
+        // Perform baby-step giant-step rotations.
+        // See Section 6.3 of <https://eprint.iacr.org/2018/244.pdf>.
+        let n = context.degree
+        for rowIndex in 0..<packedValues.rowCount {
+            let row = packedValues.row(row: rowIndex)
+            for (chunkIndex, var chunk) in row.chunks(ofCount: n).enumerated() {
+                chunk += repeatElement(0, count: n - chunk.count)
+                let i = (plaintexts.count - chunkIndex) / plaintextsPerColumn
+                let rotationStep = i.previousMultiple(of: bsgs.babyStep, variableTime: true)
+                let middle = min(chunk.endIndex, chunk.startIndex + n / 2)
+                chunk[chunk.startIndex..<middle].rotate(toStartAt: chunk.startIndex + rotationStep)
+                chunk[middle...].rotate(toStartAt: middle + rotationStep)
+
+                let plaintext = try context.encode(values: Array(chunk), format: .simd)
+                plaintexts.append(plaintext)
+            }
+        }
+        precondition(plaintexts.count == expectedPlaintextCount)
+
+        return plaintexts
+    }
+
     /// Unpacks the plaintext matrix.
     /// - Returns: The stored data values in row-major format.
     /// - Throws: Error upon failure to unpack the matrix.
@@ -332,6 +427,9 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
             return try unpackDenseColumn()
         case .denseRow:
             return try unpackDenseRow()
+        case .diagonal:
+            // TODO: Implement
+            preconditionFailure("Unpacking diagonal plaintext matrix not supported")
         }
     }
 

@@ -1,5 +1,5 @@
 {
-  "originHash" : "7ee1d955f789a2932c73eb859ad423a54265140cebf530f47f84bc523d26c86f",
+  "originHash" : "287ba43d965ab226c778e6332f9fbb9244920f2452fbe9bccef6f422c30d7e49",
   "pins" : [
     {
       "identity" : "hdrhistogram-swift",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "e8a5db026963f5bfeac842d9d3f2cc8cde323b49",
         "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "swift-algorithms",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-algorithms",
+      "state" : {
+        "revision" : "f6919dfc309e7f1b56224378b11e28bab5bccc42",
+        "version" : "1.2.0"
       }
     },
     {

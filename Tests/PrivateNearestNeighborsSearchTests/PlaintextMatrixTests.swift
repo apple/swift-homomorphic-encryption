@@ -29,7 +29,8 @@ final class PlaintextMatrixTests: XCTestCase {
     func testPlaintextMatrixError() throws {
         func runTest<Scheme: HeScheme>(rlweParams: PredefinedRlweParameters, _: Scheme.Type) throws {
             let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
-            guard encryptionParams.supportsSimdEncoding else {
+            // Parameters with large polyDegree are slow in debug mode
+            guard encryptionParams.supportsSimdEncoding, encryptionParams.polyDegree <= 16 else {
                 return
             }
             let rowCount = encryptionParams.polyDegree
@@ -141,7 +142,12 @@ final class PlaintextMatrixTests: XCTestCase {
         XCTAssertEqual(plaintextMatrix.packing, packing)
         XCTAssertEqual(plaintextMatrix.context, context)
         // Test round-trip
-        XCTAssertEqual(try plaintextMatrix.unpack(), encodeValues.flatMap { $0 })
+        switch packing {
+        case .diagonal: // TODO: test .diagonal once implemented
+            break
+        default:
+            XCTAssertEqual(try plaintextMatrix.unpack(), encodeValues.flatMap { $0 })
+        }
 
         // Test representation
         XCTAssertEqual(plaintextMatrix.plaintexts.count, expected.count)
@@ -332,6 +338,109 @@ final class PlaintextMatrixTests: XCTestCase {
                     context: context,
                     dimensions: dimensions,
                     packing: .denseRow,
+                    expected: expected)
+            }
+        }
+        try runTest(for: NoOpScheme.self)
+        try runTest(for: Bfv<UInt32>.self)
+        try runTest(for: Bfv<UInt64>.self)
+    }
+
+    func testPlaintextMatrixDiagonal() throws {
+        let kats: [((rowCount: Int, columnCount: Int), expected: [[Int]])] = [
+            ((1, 3), [
+                [1, 0, 0, 0, 0, 0, 0, 0],
+                [2, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 3, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+            ]),
+            ((2, 3), [
+                [1, 5, 0, 0, 0, 0, 0, 0],
+                [2, 6, 0, 0, 0, 0, 0, 0],
+                [0, 0, 3, 0, 0, 0, 0, 0],
+                [0, 0, 0, 4, 0, 0, 0, 0],
+            ]),
+            ((3, 3), [
+                [1, 5, 9, 0, 0, 0, 0, 0],
+                [2, 6, 0, 0, 0, 0, 0, 0],
+                [7, 0, 3, 0, 0, 0, 0, 0],
+                [8, 0, 0, 4, 0, 0, 0, 0],
+            ]),
+            ((4, 3), [
+                [1, 5, 9, 0, 0, 0, 0, 0],
+                [2, 6, 0, 10, 0, 0, 0, 0],
+                [7, 11, 3, 0, 0, 0, 0, 0],
+                [8, 12, 0, 4, 0, 0, 0, 0],
+            ]),
+            ((7, 3), [
+                [1, 5, 9, 0, 13, 17, 21, 0],
+                [2, 6, 0, 10, 14, 18, 0, 0],
+                [7, 11, 3, 0, 19, 0, 15, 0],
+                [8, 12, 0, 4, 20, 0, 0, 16],
+            ]),
+            ((10, 3), [
+                [1, 5, 9, 0, 13, 17, 21, 0],
+                [25, 29, 0, 0, 0, 0, 0, 0],
+                [2, 6, 0, 10, 14, 18, 0, 22],
+                [26, 30, 0, 0, 0, 0, 0, 0],
+                [7, 11, 3, 0, 19, 23, 15, 0],
+                [0, 0, 27, 0, 0, 0, 0, 0],
+                [8, 12, 0, 4, 20, 24, 0, 16],
+                [0, 0, 0, 28, 0, 0, 0, 0],
+            ]),
+            ((1, 4), [[1, 0, 0, 0, 0, 0, 0, 0],
+                      [2, 0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 3, 0, 0, 0, 0, 0],
+                      [0, 0, 4, 0, 0, 0, 0, 0]]),
+            ((2, 4), [[1, 6, 0, 0, 0, 0, 0, 0],
+                      [2, 7, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 3, 8, 0, 0, 0, 0],
+                      [0, 0, 4, 5, 0, 0, 0, 0]]),
+            ((3, 4), [[1, 6, 11, 0, 0, 0, 0, 0],
+                      [2, 7, 12, 0, 0, 0, 0, 0],
+                      [9, 0, 3, 8, 0, 0, 0, 0],
+                      [10, 0, 4, 5, 0, 0, 0, 0]]),
+            ((4, 4), [[1, 6, 11, 16, 0, 0, 0, 0],
+                      [2, 7, 12, 13, 0, 0, 0, 0],
+                      [9, 14, 3, 8, 0, 0, 0, 0],
+                      [10, 15, 4, 5, 0, 0, 0, 0]]),
+            ((7, 4), [[1, 6, 11, 16, 17, 22, 27, 0],
+                      [2, 7, 12, 13, 18, 23, 28, 0],
+                      [9, 14, 3, 8, 25, 0, 19, 24],
+                      [10, 15, 4, 5, 26, 0, 20, 21]]),
+            ((8, 4), [[1, 6, 11, 16, 17, 22, 27, 32],
+                      [2, 7, 12, 13, 18, 23, 28, 29],
+                      [9, 14, 3, 8, 25, 30, 19, 24],
+                      [10, 15, 4, 5, 26, 31, 20, 21]]),
+            ((9, 4), [[1, 6, 11, 16, 17, 22, 27, 32],
+                      [33, 0, 0, 0, 0, 0, 0, 0],
+                      [2, 7, 12, 13, 18, 23, 28, 29],
+                      [34, 0, 0, 0, 0, 0, 0, 0],
+                      [9, 14, 3, 8, 25, 30, 19, 24],
+                      [0, 0, 35, 0, 0, 0, 0, 0],
+                      [10, 15, 4, 5, 26, 31, 20, 21],
+                      [0, 0, 36, 0, 0, 0, 0, 0]]),
+        ]
+
+        func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
+            let encryptionParams = try EncryptionParameters<Scheme>(
+                polyDegree: 8,
+                plaintextModulus: 1153,
+                coefficientModuli: Scheme.Scalar
+                    .generatePrimes(
+                        significantBitCounts: [25, 25],
+                        preferringSmall: false,
+                        nttDegree: 8),
+                errorStdDev: ErrorStdDev.stdDev32,
+                securityLevel: SecurityLevel.unchecked)
+            let context = try Context(encryptionParameters: encryptionParams)
+            for ((rowCount, columnCount), expected) in kats {
+                let dimensions = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount)
+                let bsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount.nextPowerOfTwo)
+                try runPlaintextMatrixInitTest(
+                    context: context,
+                    dimensions: dimensions,
+                    packing: .diagonal(babyStepGiantStep: bsgs),
                     expected: expected)
             }
         }

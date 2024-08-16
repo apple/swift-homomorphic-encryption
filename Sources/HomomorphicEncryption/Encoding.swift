@@ -169,16 +169,11 @@ extension Context {
     func encodeSimd(values: [some ScalarType]) throws -> Plaintext<Scheme, Coeff> {
         guard !simdEncodingMatrix.isEmpty else { throw HeError.simdEncodingNotSupported(for: encryptionParameters) }
         let polyDegree = encryptionParameters.polyDegree
-        var array = Array2d<Scheme.Scalar>(
-            data: [Scheme.Scalar](repeating: 0,
-                                  count: polyDegree),
-            rowCount: 1,
-            columnCount: polyDegree)
+        var array = Array2d<Scheme.Scalar>.zero(rowCount: 1, columnCount: polyDegree)
         for index in 0..<values.count {
             array[0, simdEncodingMatrix[index]] = Scheme.Scalar(values[index])
         }
-        let poly = PolyRq<_, Eval>(context: plaintextContext,
-                                   data: array)
+        let poly = PolyRq<_, Eval>(context: plaintextContext, data: array)
         let coeffPoly = try poly.inverseNtt()
         return Plaintext<Scheme, Coeff>(context: self, poly: coeffPoly)
     }
@@ -189,10 +184,8 @@ extension Context {
             throw HeError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let poly = try plaintext.poly.forwardNtt()
-        var values = [T](repeating: 0, count: encryptionParameters.polyDegree)
-        for index in 0..<encryptionParameters.polyDegree {
-            values[index] = T(poly.data[0, simdEncodingMatrix[index]])
+        return (0..<encryptionParameters.polyDegree).map { index in
+            T(poly.data[0, simdEncodingMatrix[index]])
         }
-        return values
     }
 }

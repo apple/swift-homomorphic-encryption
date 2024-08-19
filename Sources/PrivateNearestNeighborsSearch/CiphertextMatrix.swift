@@ -61,22 +61,22 @@ struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
     @inlinable
     init(dimensions: Dimensions, packing: Packing, ciphertexts: [Ciphertext<Scheme, Format>]) throws {
         guard let context = ciphertexts.first?.context else {
-            throw PNNSError.emptyCiphertextArray
+            throw PnnsError.emptyCiphertextArray
         }
         let encryptionParams = context.encryptionParameters
         guard let simdDimensions = encryptionParams.simdDimensions else {
-            throw PNNSError.simdEncodingNotSupported(for: encryptionParams)
+            throw PnnsError.simdEncodingNotSupported(for: encryptionParams)
         }
         let expectedCiphertextCount = try PlaintextMatrix<Scheme, Format>.plaintextCount(
             encryptionParameters: encryptionParams,
             dimensions: dimensions,
             packing: packing)
         guard ciphertexts.count == expectedCiphertextCount else {
-            throw PNNSError.wrongCiphertextCount(got: ciphertexts.count, expected: expectedCiphertextCount)
+            throw PnnsError.wrongCiphertextCount(got: ciphertexts.count, expected: expectedCiphertextCount)
         }
         for ciphertext in ciphertexts {
             guard ciphertext.context == context else {
-                throw PNNSError.wrongContext(got: ciphertext.context, expected: context)
+                throw PnnsError.wrongContext(got: ciphertext.context, expected: context)
             }
         }
 

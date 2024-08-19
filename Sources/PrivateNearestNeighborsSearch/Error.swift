@@ -16,7 +16,7 @@ import Foundation
 import HomomorphicEncryption
 
 /// Error type for ``PrivateNearestNeighborsSearch``.
-enum PNNSError: Error, Equatable {
+enum PnnsError: Error, Equatable {
     case emptyCiphertextArray
     case emptyPlaintextArray
     case invalidMatrixDimensions(_ dimensions: MatrixDimensions)
@@ -30,7 +30,7 @@ enum PNNSError: Error, Equatable {
         expected: PlaintextMatrixPacking)
 }
 
-extension PNNSError {
+extension PnnsError {
     @inlinable
     static func simdEncodingNotSupported(for encryptionParameters: EncryptionParameters<some HeScheme>) -> Self {
         .simdEncodingNotSupported(encryptionParameters.description)
@@ -38,11 +38,11 @@ extension PNNSError {
 
     @inlinable
     static func wrongContext(got: Context<some HeScheme>, expected: Context<some HeScheme>) -> Self {
-        PNNSError.wrongContext(gotDescription: got.description, expectedDescription: expected.description)
+        PnnsError.wrongContext(gotDescription: got.description, expectedDescription: expected.description)
     }
 }
 
-extension PNNSError: LocalizedError {
+extension PnnsError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .emptyCiphertextArray:

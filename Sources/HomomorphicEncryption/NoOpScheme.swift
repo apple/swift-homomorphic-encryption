@@ -85,24 +85,20 @@ public enum NoOpScheme: HeScheme {
         return try EvalPlaintext(context: context, poly: coeffPlaintext.poly.forwardNtt())
     }
 
-    public static func decode<T>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T] where T: ScalarType {
+    public static func decodeCoeff<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
-    public static func decode<T>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
-        where T: SignedScalarType
-    {
+    public static func decodeEval<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T] {
+        try plaintext.inverseNtt().decode(format: format)
+    }
+
+    public static func decodeCoeff<T: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
-    public static func decode<T>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T] where T: ScalarType {
-        try decode(plaintext: plaintext.inverseNtt(), format: format)
-    }
-
-    public static func decode<T>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
-        where T: SignedScalarType
-    {
-        try decode(plaintext: plaintext.inverseNtt(), format: format)
+    public static func decodeEval<T: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T] {
+        try plaintext.inverseNtt().decode(format: format)
     }
 
     public static func zeroCiphertextCoeff(context: Context<Self>, moduliCount _: Int?) throws -> CoeffCiphertext {

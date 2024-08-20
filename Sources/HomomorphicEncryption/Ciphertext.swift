@@ -63,17 +63,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - seelaso: ``Ciphertext/isTransparent()``
     @inlinable
     public static func zero(context: Context<Scheme>, moduliCount: Int? = nil) throws -> Ciphertext<Scheme, Format> {
-        if Format.self == Coeff.self {
-            let coeffCiphertext = try Scheme.zeroCiphertextCoeff(context: context, moduliCount: moduliCount)
-            // swiftlint:disable:next force_cast
-            return coeffCiphertext as! Ciphertext<Scheme, Format>
-        }
-        if Format.self == Eval.self {
-            let evalCiphertext = try Scheme.zeroCiphertextEval(context: context, moduliCount: moduliCount)
-            // swiftlint:disable:next force_cast
-            return evalCiphertext as! Ciphertext<Scheme, Format>
-        }
-        throw HeError.unsupportedHeOperation()
+        try Scheme.zero(context: context, moduliCount: moduliCount)
     }
 
     // MARK: ciphertext += plaintext

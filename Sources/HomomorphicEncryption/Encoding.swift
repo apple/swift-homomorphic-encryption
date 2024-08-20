@@ -96,8 +96,8 @@ extension Context {
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode.
     @inlinable
-    public func decode<T: ScalarType>(plaintext: Plaintext<Scheme, Coeff>,
-                                      format: EncodeFormat) throws -> [T]
+    func decode<T: ScalarType>(plaintext: Plaintext<Scheme, Coeff>,
+                               format: EncodeFormat) throws -> [T]
     {
         switch format {
         case .coefficient:
@@ -115,25 +115,11 @@ extension Context {
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode.
     @inlinable
-    public func decode<T: SignedScalarType>(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [T] {
+    func decode<T: SignedScalarType>(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [T] {
         let unsignedValues: [Scheme.Scalar] = try decode(plaintext: plaintext, format: format)
         return unsignedValues.map { value in
             T(value.remainderToCentered(modulus: plaintextModulus))
         }
-    }
-
-    /// Decodes a plaintext with the given format.
-    ///
-    /// - Parameters:
-    ///   - plaintext: Plaintext to decode.
-    ///   - format: Format to decode with.
-    /// - Returns: The decoded values.
-    /// - Throws: Error upon failure to decode.
-    @inlinable
-    public func decode<T: ScalarType>(plaintext: Plaintext<Scheme, Eval>,
-                                      format: EncodeFormat) throws -> [T]
-    {
-        try Scheme.decode(plaintext: plaintext, format: format)
     }
 
     /// Decodes a plaintext with the given format, into signed values.
@@ -144,8 +130,8 @@ extension Context {
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode.
     @inlinable
-    public func decode<T: SignedScalarType>(plaintext: Plaintext<Scheme, Eval>, format: EncodeFormat) throws -> [T] {
-        try Scheme.decode(plaintext: plaintext, format: format)
+    func decode<T: SignedScalarType>(plaintext: Plaintext<Scheme, Eval>, format: EncodeFormat) throws -> [T] {
+        try Scheme.decodeEval(plaintext: plaintext, format: format)
     }
 
     @inlinable

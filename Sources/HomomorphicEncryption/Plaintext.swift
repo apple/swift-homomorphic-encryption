@@ -174,41 +174,21 @@ extension Plaintext {
         return Plaintext<Scheme, Coeff>(context: context, poly: coeffPoly)
     }
 
-    /// Decodes a plaintext in ``Coeff`` format.
+    /// Decodes a plaintext.
     /// - Parameter format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``HeScheme/decode(plaintext:format:)-h6vl`` for an alternative API.
     @inlinable
-    public func decode<T: ScalarType>(format: EncodeFormat) throws -> [T] where Format == Coeff {
+    public func decode<T: ScalarType>(format: EncodeFormat) throws -> [T] {
         try Scheme.decode(plaintext: self, format: format)
     }
 
-    /// Decodes a plaintext in ``Coeff`` format to signed values.
+    /// Decodes a plaintext to signed values.
     /// - Parameter format: Encoding format of the plaintext.
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
     @inlinable
-    public func decode<T: SignedScalarType>(format: EncodeFormat) throws -> [T] where Format == Coeff {
-        try Scheme.decode(plaintext: self, format: format)
-    }
-
-    /// Decodes a plaintext in ``Eval`` format.
-    /// - Parameter format: Encoding format of the plaintext.
-    /// - Returns: The decoded values.
-    /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``HeScheme/decode(plaintext:format:)-663x4`` for an alternative API.
-    @inlinable
-    public func decode<T: ScalarType>(format: EncodeFormat) throws -> [T] where Format == Eval {
-        try Scheme.decode(plaintext: self, format: format)
-    }
-
-    /// Decodes a plaintext in ``Eval`` format to signed values.
-    /// - Parameter format: Encoding format of the plaintext.
-    /// - Returns: Error upon failure to decode the plaintext.
-    /// - Throws: Error upon failure to decode the plaintext.
-    @inlinable
-    public func decode<T: SignedScalarType>(format: EncodeFormat) throws -> [T] where Format == Eval {
+    public func decode<T: SignedScalarType>(format: EncodeFormat) throws -> [T] {
         try Scheme.decode(plaintext: self, format: format)
     }
 

@@ -157,8 +157,7 @@ class HeAPITests: XCTestCase {
             let plaintextCoeffSigned: Plaintext<Scheme, Coeff> = try context.encode(
                 signedValues: signedData,
                 format: encodeFormat)
-            let roundTrip: [Scheme.Scalar.SignedScalar] = try context.decode(
-                plaintext: plaintextCoeffSigned,
+            let roundTrip: [Scheme.Scalar.SignedScalar] = try plaintextCoeffSigned.decode(
                 format: encodeFormat)
             XCTAssertEqual(roundTrip, signedData)
         case is Eval.Type:
@@ -1082,5 +1081,13 @@ class HeAPITests: XCTestCase {
 
     func testBfvUInt64() throws {
         try runBfvTests(UInt64.self)
+    }
+}
+
+/// This will compile if Plaintext.decode is generic across PolyFormat.
+extension Plaintext {
+    private func checkDecodeIsGeneric() throws {
+        let _: [Scheme.Scalar] = try decode(format: .coefficient)
+        let _: [Scheme.SignedScalar] = try decode(format: .coefficient)
     }
 }

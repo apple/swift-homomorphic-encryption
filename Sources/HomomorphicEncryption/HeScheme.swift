@@ -90,6 +90,8 @@ public struct SimdEncodingDimensions: Codable, Equatable, Hashable, Sendable {
 public protocol HeScheme {
     /// Coefficient type for each polynomial.
     associatedtype Scalar: ScalarType
+    /// Coefficient type for signed encoding/decoding.
+    typealias SignedScalar = Scalar.SignedScalar
 
     /// Polynomial format for the <doc:/documentation/HomomorphicEncryption/HeScheme/CanonicalCiphertext>.
     associatedtype CanonicalCiphertextFormat: PolyFormat
@@ -223,8 +225,8 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-9l5kz`` for an alternative API.
-    static func decode<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
+    /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
+    static func decodeCoeff<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Decodes a plaintext in ``Coeff`` format into signed values.
     /// - Parameters:
@@ -232,8 +234,8 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-9l5kz`` for an alternative API.
-    static func decode<T: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
+    /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
+    static func decodeCoeff<T: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Decodes a plaintext in ``Eval`` format.
     /// - Parameters:
@@ -241,8 +243,8 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-i9hh`` for an alternative API.
-    static func decode<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
+    /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
+    static func decodeEval<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Decodes a plaintext in ``Eval`` format to signed values.
     /// - Parameters:
@@ -250,8 +252,8 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-i9hh`` for an alternative API.
-    static func decode<T: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
+    /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
+    static func decodeEval<T: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Symmetric secret key encryption of a plaintext.
     /// - Parameters:
@@ -882,6 +884,92 @@ extension HeScheme {
         }
         fatalError("Unsupported Format \(Format.description)")
         // swiftlint:enable force_cast
+    }
+
+    /// Generates a ciphertext of zeros.
+    ///
+    /// A zero ciphertext may arise from HE computations, e.g., by subtracting a ciphertext from itself, or multiplying
+    /// a ciphertext with a zero plaintext.
+    ///
+    /// - Parameters:
+    ///   - context: Context for HE computation.
+    ///   - moduliCount: Number of moduli in the zero ciphertext. If `nil`, the ciphertext will have the ciphertext
+    /// context with all the coefficient moduli in `context`.
+    /// - Returns: A zero ciphertext.
+    /// - Throws: Error upon failure to encode.
+    /// - Warning: a zero ciphertext is *transparent*, i.e., everyone can see the the underlying plaintext, zero in
+    /// this case. Transparency can propagate to ciphertexts operating with transparent ciphertexts, e.g.
+    /// ```
+    ///  transparentCiphertext * ciphertext = transparentCiphertext
+    ///  transparentCiphertext * plaintext = transparentCiphertext
+    ///  transparentCiphertext + plaintext = transparentCiphertext
+    /// ```
+    /// - seelaso: ``Ciphertext/isTransparent()``
+    @inlinable
+    public static func zero<Format: PolyFormat>(context: Context<Self>,
+                                                moduliCount: Int? = nil) throws -> Ciphertext<Self, Format>
+    {
+        if Format.self == Coeff.self {
+            let coeffCiphertext = try zeroCiphertextCoeff(context: context, moduliCount: moduliCount)
+            // swiftlint:disable:next force_cast
+            return coeffCiphertext as! Ciphertext<Self, Format>
+        }
+        if Format.self == Eval.self {
+            let evalCiphertext = try zeroCiphertextEval(context: context, moduliCount: moduliCount)
+            // swiftlint:disable:next force_cast
+            return evalCiphertext as! Ciphertext<Self, Format>
+        }
+        fatalError("Unsupported Format \(Format.description)")
+    }
+
+    /// Decodes a plaintext.
+    /// - Parameters:
+    ///   - plaintext: Plaintext to decode.
+    ///   - format: Encoding format of the plaintext.
+    /// - Returns: The decoded values.
+    /// - Throws: Error upon failure to decode the plaintext.
+    /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
+    @inlinable
+    public static func decode<T: ScalarType, Format: PolyFormat>(
+        plaintext: Plaintext<Self, Format>,
+        format: EncodeFormat) throws -> [T]
+    {
+        if Format.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            let coeffPlaintext = plaintext as! CoeffPlaintext
+            return try decodeCoeff(plaintext: coeffPlaintext, format: format)
+        }
+        if Format.self == Eval.self {
+            // swiftlint:disable:next force_cast
+            let evalPlaintext = plaintext as! EvalPlaintext
+            return try decodeEval(plaintext: evalPlaintext, format: format)
+        }
+        fatalError("Unsupported Format \(Format.description)")
+    }
+
+    /// Decodes a plaintext to signed values.
+    /// - Parameters:
+    ///   - plaintext: Plaintext to decode.
+    ///   - format: Encoding format of the plaintext.
+    /// - Returns: The decoded signed values.
+    /// - Throws: Error upon failure to decode the plaintext.
+    /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
+    @inlinable
+    public static func decode<T: SignedScalarType, Format: PolyFormat>(
+        plaintext: Plaintext<Self, Format>,
+        format: EncodeFormat) throws -> [T]
+    {
+        if Format.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            let coeffPlaintext = plaintext as! CoeffPlaintext
+            return try decodeCoeff(plaintext: coeffPlaintext, format: format)
+        }
+        if Format.self == Eval.self {
+            // swiftlint:disable:next force_cast
+            let evalPlaintext = plaintext as! EvalPlaintext
+            return try decodeEval(plaintext: evalPlaintext, format: format)
+        }
+        fatalError("Unsupported Format \(Format.description)")
     }
 }
 

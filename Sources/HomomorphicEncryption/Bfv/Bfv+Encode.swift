@@ -63,27 +63,25 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decode<V: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] {
+    public static func decodeCoeff<V: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decode<V: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] {
+    public static func decodeCoeff<V: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decode<V: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
-        let coeffPlaintext = try plaintext.convertToCoeffFormat()
-        return try coeffPlaintext.decode(format: format)
+    public static func decodeEval<V: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
+        try plaintext.convertToCoeffFormat().decode(format: format)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decode<V: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
-        let coeffPlaintext = try plaintext.convertToCoeffFormat()
-        return try coeffPlaintext.decode(format: format)
+    public static func decodeEval<V: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
+        try plaintext.convertToCoeffFormat().decode(format: format)
     }
 }

@@ -35,6 +35,27 @@ extension Context {
         }
     }
 
+    /// Encodes `signedValues` in the given format.
+    ///
+    /// Encoding will use the top-level ciphertext context with all moduli.
+    /// - Parameters:
+    ///   - signedValues: Signed values to encode.
+    ///   - format: Encoding format.
+    /// - Returns: The plaintext encoding `signedValues`.
+    /// - Throws: Error upon failure to encode.
+    @inlinable
+    public func encode(signedValues: [some SignedScalarType], format: EncodeFormat) throws -> Plaintext<Scheme, Coeff> {
+        let signedModulus = Scheme.Scalar.SignedScalar(plaintextModulus)
+        let bounds = -(signedModulus >> 1)...((signedModulus - 1) >> 1)
+        let centeredValues = try signedValues.map { value in
+            guard bounds.contains(Scheme.Scalar.SignedScalar(value)) else {
+                throw HeError.encodingDataOutOfBounds(for: bounds)
+            }
+            return try Scheme.Scalar(value.centeredToRemainder(modulus: plaintextModulus))
+        }
+        return try encode(values: centeredValues, format: format)
+    }
+
     /// Encodes `values` in the given format.
     /// - Parameters:
     ///   - values: Values to encode.
@@ -50,6 +71,21 @@ extension Context {
         moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
     {
         try Scheme.encode(context: self, values: values, format: format, moduliCount: moduliCount)
+    }
+
+    /// Encodes `signedValues` in the given format.
+    /// - Parameters:
+    ///   - signedValues: Signed values to encode.
+    ///   - format: Encoding format.
+    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext with all the
+    /// moduli.
+    /// - Returns: The plaintext encoding `signedValues`.
+    /// - Throws: Error upon failure to encode.
+    @inlinable
+    public func encode(signedValues: [some SignedScalarType], format: EncodeFormat,
+                       moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
+    {
+        try Scheme.encode(context: self, signedValues: signedValues, format: format, moduliCount: moduliCount)
     }
 
     /// Decodes a plaintext with the given format.
@@ -71,6 +107,21 @@ extension Context {
         }
     }
 
+    /// Decodes a plaintext with the given format, into signed values.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to decode.
+    ///   - format: Format to decode with.
+    /// - Returns: The decoded signed values.
+    /// - Throws: Error upon failure to decode.
+    @inlinable
+    public func decode<T: SignedScalarType>(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [T] {
+        let unsignedValues: [Scheme.Scalar] = try decode(plaintext: plaintext, format: format)
+        return unsignedValues.map { value in
+            T(value.remainderToCentered(modulus: plaintextModulus))
+        }
+    }
+
     /// Decodes a plaintext with the given format.
     ///
     /// - Parameters:
@@ -85,6 +136,18 @@ extension Context {
         try Scheme.decode(plaintext: plaintext, format: format)
     }
 
+    /// Decodes a plaintext with the given format, into signed values.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to decode.
+    ///   - format: Format to decode with.
+    /// - Returns: The decoded signed values.
+    /// - Throws: Error upon failure to decode.
+    @inlinable
+    public func decode<T: SignedScalarType>(plaintext: Plaintext<Scheme, Eval>, format: EncodeFormat) throws -> [T] {
+        try Scheme.decode(plaintext: plaintext, format: format)
+    }
+
     @inlinable
     func validDataForEncoding(values: [some ScalarType]) throws {
         guard values.count <= encryptionParameters.polyDegree else {
@@ -92,8 +155,7 @@ extension Context {
         }
         for value in values {
             guard value < encryptionParameters.plaintextModulus else {
-                throw HeError.encodingDataExceedsLimit(
-                    limit: Int(encryptionParameters.plaintextModulus))
+                throw HeError.encodingDataOutOfBounds(for: 0..<encryptionParameters.plaintextModulus)
             }
         }
     }

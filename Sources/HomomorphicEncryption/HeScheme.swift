@@ -169,7 +169,21 @@ public protocol HeScheme {
     /// - Returns: A plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(values:format:)`` for an alternative API.
+    /// - seealso: ``HeScheme/encode(context:signedValues:format:)`` to encode signed values.
     static func encode(context: Context<Self>, values: [some ScalarType], format: EncodeFormat) throws -> CoeffPlaintext
+
+    /// Encodes signed values into a plaintext with coefficient format.
+    ///
+    /// - Parameters:
+    ///   - context: Context for HE computation.
+    ///   - signedValues: Signed values to encode.
+    ///   - format: Encoding format.
+    /// - Returns: A plaintext encoding `signedValues`.
+    /// - Throws: Error upon failure to encode.
+    /// - seealso: ``Context/encode(signedValues:format:)`` for an alternative API.
+    /// - seealso: ``HeScheme/encode(context:values:format)`` to encode unsigned values.
+    static func encode(context: Context<Self>, signedValues: [some SignedScalarType], format: EncodeFormat) throws
+        -> CoeffPlaintext
 
     /// Encodes values into a plaintext with evaluation format.
     ///
@@ -183,7 +197,24 @@ public protocol HeScheme {
     /// - Returns: A plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(values:format:moduliCount:)`` for an alternative API.
+    /// - seealso: ``HeScheme/encode(context:signedValues:format:moduliCount:)`` to encode signed values.
     static func encode(context: Context<Self>, values: [some ScalarType], format: EncodeFormat,
+                       moduliCount: Int?) throws -> EvalPlaintext
+
+    /// Encodes signed values into a plaintext with evaluation format.
+    ///
+    /// The encoded plaintext will have a ``Plaintext/polyContext()`` with the `moduliCount` first ciphertext moduli.
+    /// - Parameters:
+    ///   - context: Context for HE computation.
+    ///   - signedValues: Signed values to encode.
+    ///   - format: Encoding format.
+    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext with all the
+    /// moduli.
+    /// - Returns: A plaintext encoding `signedValues`.
+    /// - Throws: Error upon failure to encode.
+    /// - seealso: ``Context/encode(signedValues:format:moduliCount:)`` for an alternative API.
+    /// - seealso: ``HeScheme/encode(context:values:format:moduliCount:)`` to encode unsigned values.
+    static func encode(context: Context<Self>, signedValues: [some SignedScalarType], format: EncodeFormat,
                        moduliCount: Int?) throws -> EvalPlaintext
 
     /// Decodes a plaintext in ``Coeff`` format.
@@ -195,6 +226,15 @@ public protocol HeScheme {
     /// - seealso: ``Plaintext/decode(format:)-9l5kz`` for an alternative API.
     static func decode<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
 
+    /// Decodes a plaintext in ``Coeff`` format into signed values.
+    /// - Parameters:
+    ///   - plaintext: Plaintext to decode.
+    ///   - format: Encoding format of the plaintext.
+    /// - Returns: The decoded signed values.
+    /// - Throws: Error upon failure to decode the plaintext.
+    /// - seealso: ``Plaintext/decode(format:)-9l5kz`` for an alternative API.
+    static func decode<T: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
+
     /// Decodes a plaintext in ``Eval`` format.
     /// - Parameters:
     ///   - plaintext: Plaintext to decode.
@@ -203,6 +243,15 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``Plaintext/decode(format:)-i9hh`` for an alternative API.
     static func decode<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
+
+    /// Decodes a plaintext in ``Eval`` format to signed values.
+    /// - Parameters:
+    ///   - plaintext: Plaintext to decode.
+    ///   - format: Encoding format of the plaintext.
+    /// - Returns: The decoded signed values.
+    /// - Throws: Error upon failure to decode the plaintext.
+    /// - seealso: ``Plaintext/decode(format:)-i9hh`` for an alternative API.
+    static func decode<T: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
 
     /// Symmetric secret key encryption of a plaintext.
     /// - Parameters:

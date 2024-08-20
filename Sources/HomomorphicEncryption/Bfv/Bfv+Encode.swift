@@ -34,10 +34,30 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
+    public static func encode(context: Context<Bfv<T>>, signedValues: [some SignedScalarType],
+                              format: EncodeFormat) throws -> CoeffPlaintext
+    {
+        try context.encode(signedValues: signedValues, format: format)
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func encode(context: Context<Bfv<T>>, values: [some ScalarType], format: EncodeFormat,
                               moduliCount: Int?) throws -> EvalPlaintext
     {
         let coeffPlaintext = try Self.encode(context: context, values: values, format: format)
+        return try coeffPlaintext.convertToEvalFormat(moduliCount: moduliCount)
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func encode(
+        context: Context<Bfv<T>>,
+        signedValues: [some SignedScalarType],
+        format: EncodeFormat,
+        moduliCount: Int?) throws -> EvalPlaintext
+    {
+        let coeffPlaintext = try Self.encode(context: context, signedValues: signedValues, format: format)
         return try coeffPlaintext.convertToEvalFormat(moduliCount: moduliCount)
     }
 
@@ -49,7 +69,20 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
+    public static func decode<V: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] {
+        try plaintext.context.decode(plaintext: plaintext, format: format)
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
     public static func decode<V: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
+        let coeffPlaintext = try plaintext.convertToCoeffFormat()
+        return try coeffPlaintext.decode(format: format)
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func decode<V: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
         let coeffPlaintext = try plaintext.convertToCoeffFormat()
         return try coeffPlaintext.decode(format: format)
     }

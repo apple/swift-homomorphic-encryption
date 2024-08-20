@@ -17,6 +17,9 @@ public protocol ScalarType: FixedWidthInteger, UnsignedInteger, Codable, Sendabl
     /// Scalar which can hold a product of two `ScalarType` multiplicands.
     associatedtype DoubleWidth: DoubleWidthType, Sendable where DoubleWidth.Scalar == Self
 
+    /// Holds signed values of the same bit-width.
+    associatedtype SignedScalar: SignedScalarType where SignedScalar.UnsignedScalar == Self
+
     /// Correction factor for RNS base conversions.
     ///
     /// Should be co-prime to plaintext modulus `t` and coefficient modulus `q` and chosen as large as possible to
@@ -28,10 +31,61 @@ public protocol ScalarType: FixedWidthInteger, UnsignedInteger, Codable, Sendabl
     ///
     /// -seealso: Section 5.2 of <https://eprint.iacr.org/2016/510.pdf>.
     static var mTilde: Self { get }
+
+    /// Used for signed-unsigned conversion.
+    init(bitPattern: SignedScalar)
+}
+
+public protocol SignedScalarType: FixedWidthInteger, SignedInteger, Codable, Sendable where Self.Magnitude: Sendable {
+    /// Holds unsigned value of the same bit-width.
+    associatedtype UnsignedScalar: ScalarType where UnsignedScalar.SignedScalar == Self
+
+    /// Used for unsigned-signed conversion.
+    init(bitPattern: UnsignedScalar)
+}
+
+extension SignedScalarType {
+    /// Constant-time selection.
+    /// - Parameters:
+    ///   - condition: Selection bit. Must be 0 or `0xFFF...F`.
+    ///   - value: Output if `condition` is `0xFFF...F`.
+    ///   - other: Output if `condition` is zero.
+    /// - Returns: `if condition & 1 { value } else { other }`.
+    @inlinable
+    public static func constantTimeSelect(if condition: Self.UnsignedScalar, then value: Self,
+                                          else other: Self) -> Self
+    {
+        let result = Self.UnsignedScalar.constantTimeSelect(if: condition,
+                                                            then: Self.UnsignedScalar(bitPattern: value),
+                                                            else: Self.UnsignedScalar(bitPattern: other))
+        return Self(bitPattern: result)
+    }
+
+    /// Constant-time centered-to-remainder conversion.
+    /// - Parameter modulus: Modulus.
+    /// - Returns: Given `self` in `[-floor(modulus/2), floor(modulus-1)/2]`,  returns `self % modulus` in `[0,
+    /// modulus)`.
+    /// - Throws: Error upon failure to encode.
+    @inlinable
+    public func centeredToRemainder(modulus: some ScalarType) throws -> Self.UnsignedScalar {
+        let condition = Self.UnsignedScalar(bitPattern: self >> (bitWidth - 1))
+        let thenValue = Self.UnsignedScalar(bitPattern: self &+ Self(bitPattern: Self.UnsignedScalar(modulus)))
+        let elseValue = Self.UnsignedScalar(bitPattern: self)
+        return Self.UnsignedScalar.constantTimeSelect(if: condition, then: thenValue, else: elseValue)
+    }
+}
+
+extension Int32: SignedScalarType {
+    public typealias UnsignedScalar = UInt32
+}
+
+extension Int64: SignedScalarType {
+    public typealias UnsignedScalar = UInt64
 }
 
 extension UInt32: ScalarType {
     public typealias DoubleWidth = UInt64
+    public typealias SignedScalar = Int32
 
     public static var rnsCorrectionFactor: UInt32 {
         // ~1000'th largest prime less than 2**30,
@@ -46,6 +100,7 @@ extension UInt32: ScalarType {
 
 extension UInt64: ScalarType {
     public typealias DoubleWidth = DoubleWidthUInt<UInt64>
+    public typealias SignedScalar = Int64
 
     public static var rnsCorrectionFactor: UInt64 {
         // ~1000'th largest prime less than 2**62,
@@ -568,5 +623,16 @@ extension ScalarType {
     @inlinable
     func constantTimeGreaterThanOrEqual(_ other: Self) -> Self {
         ~constantTimeLessThan(other)
+    }
+
+    /// Constant-time remainder-to-centered conversion.
+    /// - Parameter modulus: Modulus.
+    /// - Returns: Given `self` in `[0,modulus)`, returns `self % modulus` in `[-floor(modulus/2), floor(modulus-1)/2]`.
+    @inlinable
+    func remainderToCentered(modulus: Self) -> Self.SignedScalar {
+        let condition = constantTimeGreaterThan((modulus - 1) >> 1)
+        let thenValue = Self.SignedScalar(self) - Self.SignedScalar(bitPattern: modulus)
+        let elseValue = Self.SignedScalar(bitPattern: self)
+        return Self.SignedScalar.constantTimeSelect(if: condition, then: thenValue, else: elseValue)
     }
 }

@@ -62,6 +62,12 @@ public enum NoOpScheme: HeScheme {
         try context.encode(values: values, format: format)
     }
 
+    public static func encode(context: Context<NoOpScheme>, signedValues: [some SignedScalarType],
+                              format: EncodeFormat) throws -> CoeffPlaintext
+    {
+        try context.encode(signedValues: signedValues, format: format)
+    }
+
     public static func encode(context: Context<NoOpScheme>, values: [some ScalarType],
                               format: EncodeFormat, moduliCount _: Int?) throws -> EvalPlaintext
     {
@@ -69,11 +75,33 @@ public enum NoOpScheme: HeScheme {
         return try EvalPlaintext(context: context, poly: coeffPlaintext.poly.forwardNtt())
     }
 
+    public static func encode(
+        context: Context<NoOpScheme>,
+        signedValues: [some SignedScalarType],
+        format: EncodeFormat,
+        moduliCount _: Int?) throws -> EvalPlaintext
+    {
+        let coeffPlaintext = try Self.encode(context: context, signedValues: signedValues, format: format)
+        return try EvalPlaintext(context: context, poly: coeffPlaintext.poly.forwardNtt())
+    }
+
     public static func decode<T>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T] where T: ScalarType {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
+    public static func decode<T>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
+        where T: SignedScalarType
+    {
+        try plaintext.context.decode(plaintext: plaintext, format: format)
+    }
+
     public static func decode<T>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T] where T: ScalarType {
+        try decode(plaintext: plaintext.inverseNtt(), format: format)
+    }
+
+    public static func decode<T>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
+        where T: SignedScalarType
+    {
         try decode(plaintext: plaintext.inverseNtt(), format: format)
     }
 

@@ -19,7 +19,8 @@ public enum HeError: Error, Equatable {
     case coprimeModuli(moduli: [Int64])
     case emptyModulus
     case encodingDataCountExceedsLimit(count: Int, limit: Int)
-    case encodingDataExceedsLimit(limit: Int)
+    /// The actual encoding data might be sensitive, so we omit it.
+    case encodingDataOutOfBounds(_ closedRange: ClosedRange<Int64>)
     case errorCastingPolyFormat(_ description: String)
     case incompatibleCiphertextAndPlaintext(_ description: String)
     case incompatibleCiphertextCount(_ description: String)
@@ -52,6 +53,16 @@ public enum HeError: Error, Equatable {
 }
 
 extension HeError {
+    @inlinable
+    static func encodingDataOutOfBounds(for bounds: ClosedRange<some SignedScalarType>) -> Self {
+        .encodingDataOutOfBounds(Int64(bounds.lowerBound)...Int64(bounds.upperBound))
+    }
+
+    @inlinable
+    static func encodingDataOutOfBounds(for bounds: Range<some ScalarType>) -> Self {
+        .encodingDataOutOfBounds(Int64(bounds.lowerBound)...(Int64(bounds.upperBound) - 1))
+    }
+
     @inlinable
     static func errorCastingPolyFormat(from t1: (some PolyFormat).Type, to t2: (some PolyFormat).Type) -> Self {
         .errorCastingPolyFormat("Error casting poly format from: \(t1.description) to: \(t2.description)")
@@ -177,8 +188,8 @@ extension HeError: LocalizedError {
             "Empty modulus"
         case let .encodingDataCountExceedsLimit(count, limit):
             "Actual number of data \(count) exceeds limit \(limit)"
-        case let .encodingDataExceedsLimit(limit):
-            "Actual data exceeds limit \(limit)"
+        case let .encodingDataOutOfBounds(closedRange):
+            "Values not in encoding bounds \(closedRange)"
         case let .errorCastingPolyFormat(description):
             "\(description) "
         case let .incompatibleCiphertextCount(description):

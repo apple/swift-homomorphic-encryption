@@ -142,18 +142,45 @@ class HeAPITests: XCTestCase {
         let data = TestUtils.getRandomPlaintextData(
             count: context.degree,
             in: 0..<Scheme.Scalar(context.plaintextModulus))
+        var signedData = data.map { v in
+            v.remainderToCentered(modulus: context.plaintextModulus)
+        }
         switch polyFormat {
         case is Coeff.Type:
             let plaintextCoeff: Plaintext<Scheme, Coeff> = try context.encode(values: data, format: encodeFormat)
             let decoded = try plaintextCoeff.decode(format: encodeFormat) as [Scheme.Scalar]
-            XCTAssertEqual(data, decoded)
+            XCTAssertEqual(decoded, data)
+
+            let decodedSigned: [Scheme.Scalar.SignedScalar] = try plaintextCoeff.decode(format: encodeFormat)
+            XCTAssertEqual(decodedSigned, signedData)
+
+            let plaintextCoeffSigned: Plaintext<Scheme, Coeff> = try context.encode(
+                signedValues: signedData,
+                format: encodeFormat)
+            let roundTrip: [Scheme.Scalar.SignedScalar] = try context.decode(
+                plaintext: plaintextCoeffSigned,
+                format: encodeFormat)
+            XCTAssertEqual(roundTrip, signedData)
         case is Eval.Type:
             let plaintextEval: Plaintext<Scheme, Eval> = try context.encode(values: data, format: encodeFormat)
             let decoded = try plaintextEval.decode(format: encodeFormat) as [Scheme.Scalar]
-            XCTAssertEqual(data, decoded)
+            XCTAssertEqual(decoded, data)
+
+            let decodedSigned: [Scheme.Scalar.SignedScalar] = try plaintextEval.decode(format: encodeFormat)
+            XCTAssertEqual(decodedSigned, signedData)
+
+            let plaintextEvalSigned: Plaintext<Scheme, Eval> = try context.encode(
+                signedValues: signedData,
+                format: encodeFormat)
+            let roundTrip: [Scheme.Scalar.SignedScalar] = try plaintextEvalSigned.decode(format: encodeFormat)
+            XCTAssertEqual(signedData, roundTrip)
         default:
             XCTFail("Invalid PolyFormat \(polyFormat)")
         }
+        signedData[0] = (Scheme.Scalar.SignedScalar(context.plaintextModulus) - 1) / 2 + 1
+        XCTAssertThrowsError(try context.encode(signedValues: signedData, format: encodeFormat))
+        signedData[0] = -Scheme.Scalar.SignedScalar(context.plaintextModulus) / 2 - 1
+        XCTAssertThrowsError(try context.encode(signedValues: signedData, format: encodeFormat))
     }
 
     private func schemeEncodeDecodeTest(context: Context<some HeScheme>) throws {
@@ -952,7 +979,7 @@ class HeAPITests: XCTestCase {
         let plaintext = try switchedCiphertext.decrypt(using: newSecretKey)
         let decrypted: [T] = try plaintext.decode(format: .coefficient)
 
-        XCTAssertEqual(testEnv.data1, decrypted)
+        XCTAssertEqual(decrypted, testEnv.data1)
     }
 
     private func bfvNoiseBudgetTest<T>(context: Context<Bfv<T>>) throws {

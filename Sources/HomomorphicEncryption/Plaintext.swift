@@ -184,6 +184,15 @@ extension Plaintext {
         try Scheme.decode(plaintext: self, format: format)
     }
 
+    /// Decodes a plaintext in ``Coeff`` format to signed values.
+    /// - Parameter format: Encoding format of the plaintext.
+    /// - Returns: The decoded signed values.
+    /// - Throws: Error upon failure to decode the plaintext.
+    @inlinable
+    public func decode<T: SignedScalarType>(format: EncodeFormat) throws -> [T] where Format == Coeff {
+        try Scheme.decode(plaintext: self, format: format)
+    }
+
     /// Decodes a plaintext in ``Eval`` format.
     /// - Parameter format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
@@ -191,6 +200,15 @@ extension Plaintext {
     /// - seealso: ``HeScheme/decode(plaintext:format:)-663x4`` for an alternative API.
     @inlinable
     public func decode<T: ScalarType>(format: EncodeFormat) throws -> [T] where Format == Eval {
+        try Scheme.decode(plaintext: self, format: format)
+    }
+
+    /// Decodes a plaintext in ``Eval`` format to signed values.
+    /// - Parameter format: Encoding format of the plaintext.
+    /// - Returns: Error upon failure to decode the plaintext.
+    /// - Throws: Error upon failure to decode the plaintext.
+    @inlinable
+    public func decode<T: SignedScalarType>(format: EncodeFormat) throws -> [T] where Format == Eval {
         try Scheme.decode(plaintext: self, format: format)
     }
 

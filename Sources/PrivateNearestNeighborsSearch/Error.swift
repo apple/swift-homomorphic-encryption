@@ -24,10 +24,8 @@ enum PnnsError: Error, Equatable {
     case wrongCiphertextCount(got: Int, expected: Int)
     case wrongContext(gotDescription: String, expectedDescription: String)
     case wrongEncodingValuesCount(got: Int, expected: Int)
+    case wrongMatrixPacking(got: MatrixPacking, expected: MatrixPacking)
     case wrongPlaintextCount(got: Int, expected: Int)
-    case wrongPlaintextMatrixPacking(
-        got: PlaintextMatrixPacking,
-        expected: PlaintextMatrixPacking)
 }
 
 extension PnnsError {
@@ -59,10 +57,10 @@ extension PnnsError: LocalizedError {
             "Wrong context: got \(gotDescription), expected \(expectedDescription)"
         case let .wrongEncodingValuesCount(got, expected):
             "Wrong encoding values count \(got), expected \(expected)"
+        case let .wrongMatrixPacking(got: got, expected: expected):
+            "Wrong matrix packing \(got), expected \(expected)"
         case let .wrongPlaintextCount(got, expected):
             "Wrong plaintext count \(got), expected \(expected)"
-        case let .wrongPlaintextMatrixPacking(got: got, expected: expected):
-            "Wrong plaintext matrix packing \(got), expected \(expected)"
         }
     }
 }

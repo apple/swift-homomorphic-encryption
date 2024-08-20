@@ -36,7 +36,7 @@ final class PlaintextMatrixTests: XCTestCase {
             let rowCount = encryptionParams.polyDegree
             let columnCount = 2
             let dims = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount)
-            let packing = PlaintextMatrixPacking.denseRow
+            let packing = MatrixPacking.denseRow
             let context = try Context(encryptionParameters: encryptionParams)
             let values = TestUtils.getRandomPlaintextData(
                 count: encryptionParams.polyDegree,
@@ -89,7 +89,7 @@ final class PlaintextMatrixTests: XCTestCase {
             let values = TestUtils.getRandomPlaintextData(
                 count: encryptionParams.polyDegree,
                 in: 0..<Scheme.Scalar(rowCount * columnCount))
-            let packing = PlaintextMatrixPacking.denseRow
+            let packing = MatrixPacking.denseRow
 
             // Wrong number of values
             do {
@@ -118,7 +118,7 @@ final class PlaintextMatrixTests: XCTestCase {
     private func runPlaintextMatrixInitTest<Scheme: HeScheme>(
         context: Context<Scheme>,
         dimensions: MatrixDimensions,
-        packing: PlaintextMatrixPacking,
+        packing: MatrixPacking,
         expected: [[Int]]) throws
     {
         guard context.supportsSimdEncoding else {
@@ -456,12 +456,9 @@ final class PlaintextMatrixTests: XCTestCase {
             XCTAssert(encryptionParams.supportsSimdEncoding)
             let context = try Context<Scheme>(encryptionParameters: encryptionParams)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
-            let encodeValues: [[Scheme.Scalar]] = (0..<dimensions.rowCount).map { rowIndex in
-                (0..<dimensions.columnCount).map { columnIndex in
-                    let value = 1 + Scheme.Scalar(rowIndex * dimensions.columnCount + columnIndex)
-                    return value % context.plaintextModulus
-                }
-            }
+            let encodeValues: [[Scheme.Scalar]] = increasingData(
+                dimensions: dimensions,
+                modulus: context.plaintextModulus)
             let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                 context: context,
                 dimensions: dimensions,

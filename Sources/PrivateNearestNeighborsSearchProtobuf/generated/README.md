@@ -8,8 +8,8 @@ See the [dependencies](../../../README.md#dependencies) for the swift-protobuf v
 
 ## Generate Swift files
 To generate the Swift files:
+
 1. Change directory to `<REPOSITORY_ROOT>`
 2. Run
 ```sh
-./Utilities/generate-protobuf-files.sh
-```
+./Utilities/generate-protobuf-files.sh```

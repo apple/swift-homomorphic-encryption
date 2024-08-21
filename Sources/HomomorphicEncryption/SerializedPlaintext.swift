@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /// Serialized ``Plaintext`` type.
-public struct SerializedPlaintext: Hashable, Codable {
+public struct SerializedPlaintext: Hashable, Codable, Sendable {
     /// The serialized polynomial.
     public let poly: [UInt8]
 

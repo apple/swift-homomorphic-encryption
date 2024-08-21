@@ -16,7 +16,7 @@ import Foundation
 import HomomorphicEncryption
 
 /// Error type for ``PrivateNearestNeighborsSearch``.
-enum PnnsError: Error, Equatable {
+public enum PnnsError: Error, Equatable {
     case emptyCiphertextArray
     case emptyPlaintextArray
     case invalidMatrixDimensions(_ dimensions: MatrixDimensions)

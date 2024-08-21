@@ -35,17 +35,20 @@ let package = Package(
             name: "HomomorphicEncryption",
             targets: ["HomomorphicEncryption"]),
         .library(
+            name: "HomomorphicEncryptionProtobuf",
+            targets: ["HomomorphicEncryptionProtobuf"]),
+        .library(
             name: "PrivateInformationRetrieval",
             targets: ["PrivateInformationRetrieval"]),
+        .library(
+            name: "PrivateInformationRetrievalProtobuf",
+            targets: ["PrivateInformationRetrievalProtobuf"]),
         .library(
             name: "PrivateNearestNeighborsSearch",
             targets: ["PrivateNearestNeighborsSearch"]),
         .library(
-            name: "HomomorphicEncryptionProtobuf",
-            targets: ["HomomorphicEncryptionProtobuf"]),
-        .library(
-            name: "PrivateInformationRetrievalProtobuf",
-            targets: ["PrivateInformationRetrievalProtobuf"]),
+            name: "PrivateNearestNeighborsSearchProtobuf",
+            targets: ["PrivateNearestNeighborsSearchProtobuf"]),
         .executable(name: "PIRGenerateDatabase", targets: ["PIRGenerateDatabase"]),
         .executable(name: "PIRProcessDatabase", targets: ["PIRProcessDatabase"]),
         .executable(name: "PIRShardDatabase", targets: ["PIRShardDatabase"]),
@@ -103,6 +106,15 @@ let package = Package(
             ],
             swiftSettings: librarySettings),
         .target(
+            name: "PrivateNearestNeighborsSearchProtobuf",
+            dependencies: ["PrivateNearestNeighborsSearch",
+                           "HomomorphicEncryption",
+                           "HomomorphicEncryptionProtobuf",
+                           .product(name: "SwiftProtobuf", package: "swift-protobuf")],
+            exclude: ["generated/README.md", "protobuf_module_mappings.txtpb"],
+            swiftSettings: librarySettings),
+
+        .target(
             name: "TestUtilities",
             dependencies: [
                 "HomomorphicEncryption",
@@ -149,24 +161,6 @@ let package = Package(
                 "TestUtilities",
             ], swiftSettings: executableSettings),
         .testTarget(
-            name: "PrivateInformationRetrievalProtobufTests",
-            dependencies: [
-                "PrivateInformationRetrieval",
-                "PrivateInformationRetrievalProtobuf",
-                "TestUtilities",
-            ], swiftSettings: executableSettings),
-        .testTarget(
-            name: "PrivateInformationRetrievalTests",
-            dependencies: [
-                "PrivateInformationRetrieval", "TestUtilities",
-                .product(name: "Numerics", package: "swift-numerics"),
-            ], swiftSettings: executableSettings),
-        .testTarget(
-            name: "PrivateNearestNeighborsSearchTests",
-            dependencies: [
-                "PrivateNearestNeighborsSearch", "HomomorphicEncryption", "TestUtilities",
-            ], swiftSettings: executableSettings),
-        .testTarget(
             name: "PIRGenerateDatabaseTests",
             dependencies: ["PIRGenerateDatabase",
                            "TestUtilities",
@@ -176,6 +170,30 @@ let package = Package(
             dependencies: ["PIRProcessDatabase",
                            "TestUtilities",
                            .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
+        .testTarget(
+            name: "PrivateInformationRetrievalTests",
+            dependencies: [
+                "PrivateInformationRetrieval", "TestUtilities",
+                .product(name: "Numerics", package: "swift-numerics"),
+            ], swiftSettings: executableSettings),
+        .testTarget(
+            name: "PrivateInformationRetrievalProtobufTests",
+            dependencies: [
+                "PrivateInformationRetrieval",
+                "PrivateInformationRetrievalProtobuf",
+                "TestUtilities",
+            ], swiftSettings: executableSettings),
+        .testTarget(
+            name: "PrivateNearestNeighborsSearchTests",
+            dependencies: [
+                "PrivateNearestNeighborsSearch", "HomomorphicEncryption", "TestUtilities",
+            ], swiftSettings: executableSettings),
+        .testTarget(
+            name: "PrivateNearestNeighborsSearchProtobufTests",
+            dependencies: [
+                "PrivateNearestNeighborsSearch",
+                "PrivateNearestNeighborsSearchProtobuf",
+            ], swiftSettings: executableSettings),
     ])
 
 // MARK: - Benchmarks

@@ -311,7 +311,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_HeScheme {
 extension HeScheme {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
-    /// - Throws: Error upon unsupported object
+    /// - Throws: Error upon unsupported object.
     public static func proto() throws -> Apple_SwiftHomomorphicEncryption_V1_HeScheme {
         if Self.self is Bfv<UInt32>.Type || self is Bfv<UInt64>.Type {
             return .bfv
@@ -364,6 +364,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
 extension EncryptionParameters {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    /// - Throws: Error upon unsupported object.
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
         try Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters.with { encParams in
             encParams.polynomialDegree = UInt64(polyDegree)

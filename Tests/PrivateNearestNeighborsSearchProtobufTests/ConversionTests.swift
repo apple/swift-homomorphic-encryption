@@ -108,6 +108,19 @@ class ConversionTests: XCTestCase {
                 values: scalars.flatMap { $0 })
             let serialized = try plaintextMatrix.serialize()
             XCTAssertEqual(try serialized.proto().native(), serialized)
+            let deserialized = try PlaintextMatrix(deserialize: serialized, context: context)
+            XCTAssertEqual(deserialized, plaintextMatrix)
+
+            for moduliCount in 1..<encryptionParams.coefficientModuli.count {
+                let evalPlaintextMatrix = try plaintextMatrix.convertToEvalFormat(moduliCount: moduliCount)
+                let serialized = try evalPlaintextMatrix.serialize()
+                XCTAssertEqual(try serialized.proto().native(), serialized)
+                let deserialized = try PlaintextMatrix(
+                    deserialize: serialized,
+                    context: context,
+                    moduliCount: moduliCount)
+                XCTAssertEqual(deserialized, evalPlaintextMatrix)
+            }
         }
 
         try runTest(Bfv<UInt32>.self)
@@ -135,10 +148,25 @@ class ConversionTests: XCTestCase {
             XCTAssertEqual(try serializedProto.native(), serialized)
             let serializedSize = try serializedProto.serializedData().count
 
-            // TODO: test deserialization
             let serializedForDecryption = try ciphertextMatrix.serialize(forDecryption: true)
             let serializedForDecryptionSize = try serializedForDecryption.proto().serializedData().count
             XCTAssertLessThanOrEqual(serializedForDecryptionSize, serializedSize)
+            let deserialized = try CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>(
+                deserialize: serializedForDecryption,
+                context: context)
+            let decrypted = try deserialized.decrypt(using: secretKey)
+            XCTAssertEqual(decrypted, plaintextMatrix)
+
+            // Check Evaluation format
+            do {
+                let evalCiphertextMatrix = try ciphertextMatrix.convertToEvalFormat()
+                let serialized = try evalCiphertextMatrix.serialize()
+                XCTAssertEqual(try serialized.proto().native(), serialized)
+                let deserialized = try CiphertextMatrix<Scheme, Eval>(
+                    deserialize: serialized,
+                    context: context)
+                XCTAssertEqual(deserialized, evalCiphertextMatrix)
+            }
         }
 
         try runTest(Bfv<UInt32>.self)

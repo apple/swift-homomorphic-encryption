@@ -53,3 +53,37 @@ extension PlaintextMatrix {
             plaintexts: plaintexts.map { plaintext in plaintext.serialize() })
     }
 }
+
+extension PlaintextMatrix where Format == Coeff {
+    /// Deserializes a plaintext matrix.
+    /// - Parameters:
+    ///   - serialized: Serialized plaintext matrix.
+    ///   - context: Context to associate with the plaintext matrix.
+    /// - Throws: Error upon failure to deserialize.
+    init(deserialize serialized: SerializedPlaintextMatrix, context: Context<Scheme>) throws {
+        let plaintexts = try serialized.plaintexts.map { serializedPlaintext in
+            try Plaintext(deserialize: serializedPlaintext, context: context)
+        }
+        try self.init(dimensions: serialized.dimensions, packing: serialized.packing, plaintexts: plaintexts)
+    }
+}
+
+extension PlaintextMatrix where Format == Eval {
+    /// Deserializes a plaintext matrix.
+    /// - Parameters:
+    ///   - serialized: Serialized plaintext matrix.
+    ///   - context: Context to associate with the plaintext matrix.
+    ///   - moduliCount: Optional number of moduli to associate with each plaintext. If not set, each plaintext will
+    /// have the top-level ciphertext context with all the moduli.
+    /// - Throws: Error upon failure to deserialize.
+    init(
+        deserialize serialized: SerializedPlaintextMatrix,
+        context: Context<Scheme>,
+        moduliCount: Int? = nil) throws
+    {
+        let plaintexts = try serialized.plaintexts.map { serializedPlaintext in
+            try Plaintext(deserialize: serializedPlaintext, context: context, moduliCount: moduliCount)
+        }
+        try self.init(dimensions: serialized.dimensions, packing: serialized.packing, plaintexts: plaintexts)
+    }
+}

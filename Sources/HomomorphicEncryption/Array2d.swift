@@ -119,7 +119,7 @@ extension Array2d {
             throw HeError.invalidRotationParameter(range: range, columnCount: data.count)
         }
 
-        let effectiveStep = step.toRemainder(range)
+        let effectiveStep = step.toRemainder(range, variableTime: true)
         for index in stride(from: 0, to: data.count, by: range) {
             let replacement = data[index + effectiveStep..<index + range] + data[index..<index + effectiveStep]
             data.replaceSubrange(index..<index + range, with: replacement)

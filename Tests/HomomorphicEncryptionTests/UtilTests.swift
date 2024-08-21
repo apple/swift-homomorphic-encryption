@@ -38,12 +38,12 @@ class UtilTests: XCTestCase {
     }
 
     func testToRemainder() {
-        XCTAssertEqual((-8).toRemainder(7), 6)
-        XCTAssertEqual((-7).toRemainder(7), 0)
-        XCTAssertEqual((-6).toRemainder(7), 1)
-        XCTAssertEqual(6.toRemainder(7), 6)
-        XCTAssertEqual(7.toRemainder(7), 0)
-        XCTAssertEqual(8.toRemainder(7), 1)
+        XCTAssertEqual((-8).toRemainder(7, variableTime: true), 6)
+        XCTAssertEqual((-7).toRemainder(7, variableTime: true), 0)
+        XCTAssertEqual((-6).toRemainder(7, variableTime: true), 1)
+        XCTAssertEqual(6.toRemainder(7, variableTime: true), 6)
+        XCTAssertEqual(7.toRemainder(7, variableTime: true), 0)
+        XCTAssertEqual(8.toRemainder(7, variableTime: true), 1)
     }
 
     func testProduct() {

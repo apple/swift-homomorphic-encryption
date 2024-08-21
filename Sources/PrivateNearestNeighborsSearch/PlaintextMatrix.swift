@@ -137,19 +137,61 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     ///   - context: Parameter context to encode the data with.
     ///   - dimensions: Plaintext matrix dimensions.
     ///   - packing: The packing with which the data is stored.
-    ///   - values: The data values to store in the plaintext matrix; stored in row-major format.
+    ///   - signedValues: The signed data values to store in the plaintext matrix; stored in row-major format.
+    ///   - reduce: If true, values are reduced into the correct range before encoding.
     /// - Throws: Error upon failure to create the plaitnext matrix.
     @inlinable
     public init(
         context: Context<Scheme>,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
-        values: [some ScalarType]) throws
+        signedValues: [Scheme.SignedScalar],
+        reduce: Bool = false) throws where Format == Coeff
+    {
+        let modulus = Modulus(modulus: context.plaintextModulus, variableTime: true)
+        let centeredValues = if reduce {
+            signedValues.map { value in
+                Scheme.Scalar(modulus.reduce(value))
+            }
+        } else {
+            signedValues.map { value in
+                Scheme.Scalar(value.centeredToRemainder(modulus: modulus.modulus))
+            }
+        }
+        try self.init(
+            context: context,
+            dimensions: dimensions,
+            packing: packing,
+            values: centeredValues,
+            reduce: false)
+    }
+
+    /// Creates a new plaintext matrix.
+    /// - Parameters:
+    ///   - context: Parameter context to encode the data with.
+    ///   - dimensions: Plaintext matrix dimensions.
+    ///   - packing: The packing with which the data is stored.
+    ///   - values: The data values to store in the plaintext matrix; stored in row-major format.
+    ///   - reduce: If true, values are reduced into the correct range before encoding.
+    /// - Throws: Error upon failure to create the plaitnext matrix.
+    @inlinable
+    init(
+        context: Context<Scheme>,
+        dimensions: MatrixDimensions,
+        packing: MatrixPacking,
+        values: [Scheme.Scalar],
+        reduce: Bool = false) throws
         where Format == Coeff
     {
         guard values.count == dimensions.count, !values.isEmpty else {
             throw PnnsError.wrongEncodingValuesCount(got: values.count, expected: values.count)
         }
+        var values = values
+        if reduce {
+            let modulus = Modulus(modulus: context.plaintextModulus, variableTime: true)
+            values = values.map { value in modulus.reduce(value) }
+        }
+
         switch packing {
         case .denseColumn:
             let plaintexts = try PlaintextMatrix.denseColumnPlaintexts(
@@ -421,7 +463,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The stored data values in row-major format.
     /// - Throws: Error upon failure to unpack the matrix.
     @inlinable
-    func unpack<V: ScalarType>() throws -> [V] where Format == Coeff {
+    func unpack() throws -> [Scheme.Scalar] where Format == Coeff {
         switch packing {
         case .denseColumn:
             return try unpackDenseColumn()
@@ -430,6 +472,17 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         case .diagonal:
             // TODO: Implement
             preconditionFailure("Unpacking diagonal plaintext matrix not supported")
+        }
+    }
+
+    /// Unpacks the plaintext matrix into signed values.
+    /// - Returns: The stored data values in row-major format.
+    /// - Throws: Error upon failure to unpack the matrix.
+    @inlinable
+    func unpack() throws -> [Scheme.SignedScalar] where Format == Coeff {
+        let unsigned: [Scheme.Scalar] = try unpack()
+        return unsigned.map { unsigned in
+            unsigned.remainderToCentered(modulus: context.plaintextModulus)
         }
     }
 

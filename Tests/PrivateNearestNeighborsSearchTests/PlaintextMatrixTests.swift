@@ -155,6 +155,47 @@ final class PlaintextMatrixTests: XCTestCase {
             let decoded: [Scheme.Scalar] = try plaintext.decode(format: .simd)
             XCTAssertEqual(decoded, expected)
         }
+
+        // Test signed encoding/decoding
+        switch packing {
+        case .diagonal: // TODO: test .diagonal once implemented
+            break
+        default:
+            let signedValues: [Scheme.SignedScalar] = try plaintextMatrix.unpack()
+            let signedMatrix = try PlaintextMatrix<Scheme, Coeff>(
+                context: context,
+                dimensions: dimensions,
+                packing: packing,
+                signedValues: signedValues)
+            let signedRoundtrip: [Scheme.SignedScalar] = try signedMatrix.unpack()
+            XCTAssertEqual(signedRoundtrip, signedValues)
+
+            // Test modular reduction
+            let largerValues = encodeValues.flatMap { $0 }.map { $0 + t }
+            let largerSignedValues = signedValues.enumerated().map { index, value in
+                if index.isMultiple(of: 2) {
+                    value + Scheme.SignedScalar(t)
+                } else {
+                    value - Scheme.SignedScalar(t)
+                }
+            }
+
+            let largerPlaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
+                context: context,
+                dimensions: dimensions,
+                packing: packing,
+                values: largerValues,
+                reduce: true)
+            XCTAssertEqual(largerPlaintextMatrix, plaintextMatrix)
+
+            let largerSignedMatrix = try PlaintextMatrix<Scheme, Coeff>(
+                context: context,
+                dimensions: dimensions,
+                packing: packing,
+                signedValues: largerSignedValues,
+                reduce: true)
+            XCTAssertEqual(largerSignedMatrix, signedMatrix)
+        }
     }
 
     func testPlaintextMatrixDenseColumn() throws {

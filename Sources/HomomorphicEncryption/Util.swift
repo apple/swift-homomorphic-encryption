@@ -43,7 +43,8 @@ extension Sequence {
 extension FixedWidthInteger {
     // not a constant time operation
     @inlinable
-    func toRemainder(_ mod: Self) -> Self {
+    func toRemainder(_ mod: Self, variableTime: Bool) -> Self {
+        precondition(variableTime)
         precondition(mod > 0)
         var result = self % mod
         if result < 0 {

@@ -49,7 +49,7 @@ extension Plaintext where Format == Eval {
     ///   - serialized: Serialized plaintext.
     ///   - context: Context to associate with the plaintext.
     ///   - moduliCount: Optional number of moduli to associate with the plaintext. If not set, the plaintext will have
-    /// the top-level ciphertext context with all themoduli.
+    /// the top-level ciphertext context with all the moduli.
     /// - Throws: Error upon failure to deserialize.
     public init(deserialize serialized: SerializedPlaintext, context: Context<Scheme>, moduliCount: Int? = nil) throws {
         self.context = context

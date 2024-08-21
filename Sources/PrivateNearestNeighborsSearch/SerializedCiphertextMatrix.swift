@@ -44,6 +44,25 @@ public struct SerializedCiphertextMatrix<Scalar: ScalarType>: Equatable, Sendabl
 }
 
 extension CiphertextMatrix {
+    /// Deserializes a serialized ciphertext matrix.
+    /// - Parameters:
+    ///   - serialized: Serialized ciphertext matrix.
+    ///   - context: Context to associate with the ciphertext matrix.
+    ///   - moduliCount: Number of moduli in each serialized ciphertext. If not set, deserialization will use the
+    /// top-level ciphertext with all the moduli.
+    /// - Throws: Error upon failure to deserialize the ciphertext matrix.
+    @inlinable
+    public init(
+        deserialize serialized: SerializedCiphertextMatrix<Scheme.Scalar>,
+        context: Context<Scheme>,
+        moduliCount: Int? = nil) throws
+    {
+        let ciphertexts: [Ciphertext<Scheme, Format>] = try serialized.ciphertexts.map { serializedCiphertext in
+            try Ciphertext(deserialize: serializedCiphertext, context: context, moduliCount: moduliCount)
+        }
+        try self.init(dimensions: serialized.dimensions, packing: serialized.packing, ciphertexts: ciphertexts)
+    }
+
     /// Serializes the ciphertext matrix.
     /// - Parameter forDecryption: If true, serialization may use a more concise format, yielding ciphertexts which,
     /// once deserialized, are only compatible with decryption, and not any other HE operations.

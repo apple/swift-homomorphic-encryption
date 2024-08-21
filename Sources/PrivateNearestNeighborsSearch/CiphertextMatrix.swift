@@ -15,8 +15,8 @@
 import HomomorphicEncryption
 
 /// Stores a matrix of scalars as ciphertexts.
-struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
-    /// Dimensions of the scalars.
+public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
+    /// Dimensions of the matrix.
     @usableFromInline let dimensions: MatrixDimensions
 
     /// Dimensions of the scalar matrix in a SIMD-encoded plaintext.
@@ -51,12 +51,14 @@ struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
 
     /// Creates a new ciphertexts matrix.
     /// - Parameters:
-    ///   - dimensions: Ciphertext matrix dimensions
-    ///   - packing: The packing with which the data is stored
-    ///   - ciphertexts: ciphertexts encrypting the data; must not be empty.
+    ///   - dimensions: Ciphertext matrix dimensions.
+    ///   - packing: The packing with which the data is stored.
+    ///   - ciphertexts: Ciphertexts encrypting the data; must not be empty.
     /// - Throws: Error upon failure to initialize the ciphertext matrix.
     @inlinable
-    init(dimensions: MatrixDimensions, packing: MatrixPacking, ciphertexts: [Ciphertext<Scheme, Format>]) throws {
+    public init(dimensions: MatrixDimensions, packing: MatrixPacking,
+                ciphertexts: [Ciphertext<Scheme, Format>]) throws
+    {
         guard let context = ciphertexts.first?.context else {
             throw PnnsError.emptyCiphertextArray
         }

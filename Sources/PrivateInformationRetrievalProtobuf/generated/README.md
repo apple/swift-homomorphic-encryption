@@ -9,15 +9,8 @@ See the [dependencies](../../../README.md#dependencies) for the swift-protobuf v
 ## Generate Swift files
 To generate the Swift files:
 
-1. Change directory to `<REPOSITORY_ROOT>/swift-homomorphic-encryption-protobuf`
-2. Run the following commands:
+1. Change directory to `<REPOSITORY_ROOT>`
+2. Run
 ```sh
-find apple/swift_homomorphic_encryption/pir/ apple/swift_homomorphic_encryption/api/ -name "*.proto" -exec protoc \
-    --swift_opt=ProtoPathModuleMappings=../Sources/PrivateInformationRetrievalProtobuf/protobuf_module_mappings.txtpb \
-    --swift_opt=Visibility=Public \
-    --swift_opt=FileNaming=PathToUnderscores \
-    --swift_out ../Sources/PrivateInformationRetrievalProtobuf/generated  {} \;
+./Utilities/generate-protobuf-files.sh
 ```
-
-> [!NOTE]
-> When updating the protobuf files, remember to also update files in [HomomorphicEncryptionProtobuf](../../HomomorphicEncryptionProtobuf/generated/README.md) as needed.

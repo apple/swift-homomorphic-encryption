@@ -16,7 +16,7 @@ import Algorithms
 import HomomorphicEncryption
 
 /// Different algorithms for packing a matrix of scalar values into plaintexts / ciphertexts.
-enum MatrixPacking: Codable, Equatable, Hashable, Sendable {
+public enum MatrixPacking: Codable, Equatable, Hashable, Sendable {
     /// As many columns of data are packed sequentially into each plaintext SIMD row as possible, such that no SIMD row
     /// contains data from multiple columns.
     case denseColumn
@@ -36,14 +36,14 @@ enum MatrixPacking: Codable, Equatable, Hashable, Sendable {
 }
 
 /// The dimensions of a matrix, a 2d array.
-struct MatrixDimensions: Equatable, Sendable {
+public struct MatrixDimensions: Equatable, Sendable {
     /// Number of rows in the data.
-    @usableFromInline let rowCount: Int
+    public let rowCount: Int
     /// Number of columns in the data.
-    @usableFromInline let columnCount: Int
+    public let columnCount: Int
 
     /// Number of data values stored in the plaintext matrix.
-    @usableFromInline var count: Int {
+    public var count: Int {
         rowCount * columnCount
     }
 
@@ -53,7 +53,7 @@ struct MatrixDimensions: Equatable, Sendable {
     ///   - columnCount: Number of columns; must be positive.
     /// - Throws: Error upon failure to initialize the dimensions.
     @inlinable
-    init(rowCount: Int, columnCount: Int) throws {
+    public init(rowCount: Int, columnCount: Int) throws {
         self.rowCount = rowCount
         self.columnCount = columnCount
         guard rowCount > 0, columnCount > 0 else {
@@ -63,18 +63,18 @@ struct MatrixDimensions: Equatable, Sendable {
 }
 
 /// Stores a matrix of scalars as plaintexts.
-struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
-    /// Dimensions of the scalars.
+public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
+    /// Dimensions of the matrix.
     @usableFromInline let dimensions: MatrixDimensions
 
     /// Dimensions of the scalar matrix in a SIMD-encoded plaintext.
-    let simdDimensions: SimdEncodingDimensions
+    @usableFromInline let simdDimensions: SimdEncodingDimensions
 
     /// Plaintext packing with which the data is stored.
     @usableFromInline let packing: MatrixPacking
 
     /// Plaintexts encoding the scalars.
-    let plaintexts: [Plaintext<Scheme, Format>]
+    @usableFromInline let plaintexts: [Plaintext<Scheme, Format>]
 
     /// The parameter context.
     @usableFromInline var context: Context<Scheme> {
@@ -99,8 +99,8 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
 
     /// Creates a new plaintext matrix.
     /// - Parameters:
-    ///   - dimensions: Plaintext matrix dimensions
-    ///   - packing: The plaintext packing with which the data is stored
+    ///   - dimensions: Plaintext matrix dimensions.
+    ///   - packing: The packing with which the data is stored.
     ///   - plaintexts: Plaintexts encoding the data; must not be empty.
     /// - Throws: Error upon failure to initialize the plaintext matrix.
     @inlinable
@@ -136,11 +136,11 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
     /// - Parameters:
     ///   - context: Parameter context to encode the data with.
     ///   - dimensions: Plaintext matrix dimensions.
-    ///   - packing: The plaintext packing with which the data is stored.
+    ///   - packing: The packing with which the data is stored.
     ///   - values: The data values to store in the plaintext matrix; stored in row-major format.
     /// - Throws: Error upon failure to create the plaitnext matrix.
     @inlinable
-    init(
+    public init(
         context: Context<Scheme>,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
@@ -177,7 +177,7 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
     /// - Parameters:
     ///   - encryptionParameters: Encryption parameters to encode the data with.
     ///   - dimensions: Plaintext matrix dimensions.
-    ///   - packing: The plaintext packing with which the data is stored.
+    ///   - packing: The packing with which the data is stored.
     /// - Returns: The number of plaintexts.
     /// - Throws: Error upon failure to compute the plaintext count.
     @inlinable
@@ -517,7 +517,7 @@ struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendabl
     /// - Returns: A ciphertext encrypting the plaintext matrix.
     /// - Throws: Error upon failure to encrypt the plaintext matrix.
     @inlinable
-    func encrypt(using secretKey: SecretKey<Scheme>) throws
+    public func encrypt(using secretKey: SecretKey<Scheme>) throws
         -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat> where Format == Coeff
     {
         let ciphertexts = try plaintexts.map { plaintext in try plaintext.encrypt(using: secretKey) }

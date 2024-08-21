@@ -35,6 +35,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices {
 extension Query {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    /// - Throws: Error upon unsupported object.
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices {
         try Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices.with { encryptedIndices in
             encryptedIndices.ciphertexts = try ciphertexts.map { ciphertext in

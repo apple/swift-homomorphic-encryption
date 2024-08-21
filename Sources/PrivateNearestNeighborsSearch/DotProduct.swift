@@ -17,21 +17,28 @@ import Foundation
 /// Pre-computed values for matrix-vector multiplication using baby-step, giant-step algorithm.
 ///
 /// - seealso: Section 6.3 of <https://eprint.iacr.org/2018/244.pdf>.
-struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
+public struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
     /// Dimension of the vector; "D" in the reference.
-    let vectorDimension: Int
+    public let vectorDimension: Int
     /// Baby step; "g" in the reference.
-    let babyStep: Int
+    public let babyStep: Int
     /// Giant step; "h" in the reference.
-    let giantStep: Int
+    public let giantStep: Int
 
-    init(vectorDimension: Int, babyStep: Int, giantStep: Int) {
+    /// Creates a new ``BabyStepGiantStep``.
+    /// - Parameters:
+    ///   - vectorDimension: Number of entries in each vector.
+    ///   - babyStep: Baby step.
+    ///   - giantStep: Giant step.
+    public init(vectorDimension: Int, babyStep: Int, giantStep: Int) {
         self.vectorDimension = vectorDimension
         self.babyStep = babyStep
         self.giantStep = giantStep
     }
 
-    init(vectorDimension: Int) {
+    /// Creates a new ``BabyStepGiantStep``.
+    /// - Parameter vectorDimension: Number of entries in each vector.
+    public init(vectorDimension: Int) {
         let dimension = Int32(vectorDimension).nextPowerOfTwo
         let babyStep = Int32(Double(dimension).squareRoot().rounded(.up))
         let giantStep = dimension.dividingCeil(babyStep, variableTime: true)

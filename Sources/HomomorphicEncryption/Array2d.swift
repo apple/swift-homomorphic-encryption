@@ -74,7 +74,10 @@ extension Array2d {
         indices.map { data[$0] }
     }
 
-    package func transposed() -> Self {
+    /// Transposes the values.
+    /// - Returns: The transposed values.
+    @inlinable
+    public func transposed() -> Self {
         var transposed = Self(
             data: Array(repeating: T.zero, count: count),
             rowCount: columnCount,

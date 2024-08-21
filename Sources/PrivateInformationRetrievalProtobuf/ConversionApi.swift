@@ -35,6 +35,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_PIRResponse {
 extension Response {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    /// - Throws: Error upon unsupported object.
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Api_V1_PIRResponse {
         try Apple_SwiftHomomorphicEncryption_Api_V1_PIRResponse.with { pirResponse in
             pirResponse.replies = try ciphertexts.map { reply in

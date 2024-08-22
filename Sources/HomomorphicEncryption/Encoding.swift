@@ -51,7 +51,7 @@ extension Context {
             guard bounds.contains(Scheme.Scalar.SignedScalar(value)) else {
                 throw HeError.encodingDataOutOfBounds(for: bounds)
             }
-            return try Scheme.Scalar(value.centeredToRemainder(modulus: plaintextModulus))
+            return Scheme.Scalar(value.centeredToRemainder(modulus: plaintextModulus))
         }
         return try encode(values: centeredValues, format: format)
     }

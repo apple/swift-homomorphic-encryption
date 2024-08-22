@@ -115,6 +115,16 @@ class ScalarTests: XCTestCase {
         XCTAssertEqual(4.nextPowerOfTwo, 4)
     }
 
+    func testPreviousPowerOfTwo() {
+        XCTAssertEqual(1.previousPowerOfTwo, 1)
+        XCTAssertEqual(2.previousPowerOfTwo, 2)
+        XCTAssertEqual(3.previousPowerOfTwo, 2)
+        XCTAssertEqual(4.previousPowerOfTwo, 4)
+        XCTAssertEqual(63.previousPowerOfTwo, 32)
+        XCTAssertEqual(64.previousPowerOfTwo, 64)
+        XCTAssertEqual(65.previousPowerOfTwo, 64)
+    }
+
     func testNextMultiple() {
         XCTAssertEqual(0.nextMultiple(of: 0, variableTime: true), 0)
         XCTAssertEqual(0.nextMultiple(of: 7, variableTime: true), 0)
@@ -259,6 +269,36 @@ class ScalarTests: XCTestCase {
 
                     let xAny = T.random(in: p...T.max)
                     XCTAssertEqual(modulus.reduce(xAny), xAny % p)
+                }
+            }
+        }
+        runReduceSingleWordTest(UInt32.self)
+        runReduceSingleWordTest(UInt64.self)
+    }
+
+    func testReduceSignedSingleWord() {
+        func runReduceSingleWordTest<T: ScalarType>(_: T.Type) {
+            func slowSignedReduce(of x: T.SignedScalar, mod modulus: T) -> T {
+                let remainder = x.quotientAndRemainder(dividingBy: T.SignedScalar(modulus)).remainder
+                return T(remainder < 0 ? remainder + T.SignedScalar(modulus) : remainder)
+            }
+
+            for shift in 2..<T.bitWidth - 3 {
+                for _ in 0..<100 {
+                    let p = T.random(in: 3..<(1 << shift))
+                    let modulus = ReduceModulus<T>(
+                        modulus: p,
+                        bound: ReduceModulus.InputBound.SingleWord,
+                        variableTime: true)
+                    let pSigned = T.SignedScalar(p)
+                    let x = T.SignedScalar.random(in: -pSigned / 2..<pSigned / 2)
+                    XCTAssertEqual(modulus.reduce(x), slowSignedReduce(of: x, mod: p))
+
+                    let largePositive = T.SignedScalar.random(in: pSigned / 2...T.SignedScalar.max)
+                    XCTAssertEqual(modulus.reduce(largePositive), slowSignedReduce(of: largePositive, mod: p))
+
+                    let largeNegative = T.SignedScalar.random(in: -pSigned / 2..<0)
+                    XCTAssertEqual(modulus.reduce(largeNegative), slowSignedReduce(of: largeNegative, mod: p))
                 }
             }
         }
@@ -447,9 +487,9 @@ class ScalarTests: XCTestCase {
     }
 
     func testCenteredToRemainder() throws {
-        func runTest<T: SignedScalarType>(modulus: T) throws {
-            var remainders = try (-modulus / 2...((modulus - 1) / 2)).map { v in
-                let remainder = try v.centeredToRemainder(modulus: T.UnsignedScalar(modulus))
+        func runTest<T: SignedScalarType>(modulus: T) {
+            var remainders = (-modulus / 2...((modulus - 1) / 2)).map { v in
+                let remainder = v.centeredToRemainder(modulus: T.UnsignedScalar(modulus))
                 let centeredRoundtrip = remainder.remainderToCentered(modulus: T.UnsignedScalar(modulus))
                 XCTAssertEqual(centeredRoundtrip, v)
                 return remainder
@@ -458,18 +498,18 @@ class ScalarTests: XCTestCase {
             let expected: [T.UnsignedScalar] = Array(0..<T.UnsignedScalar(modulus))
             XCTAssertEqual(remainders, expected)
         }
-        try runTest(modulus: Int32(97))
-        try runTest(modulus: Int64(110))
+        runTest(modulus: Int32(97))
+        runTest(modulus: Int64(110))
     }
 
     func testCenteredRemainderRoundTrip() throws {
-        func runTest<T: SignedScalarType>(modulus: T) throws {
+        func runTest<T: SignedScalarType>(modulus: T) {
             let unsignedModulus = T.UnsignedScalar(modulus)
             let low: T = -modulus / 2
             let high: T = (modulus - 1) / 2
             let signedValues: [T] = [low, low + 1, low + 2, -1, 0, 1, high - 2, high - 1, high]
-            let signedRoundTrip = try signedValues.map { value in
-                try value.centeredToRemainder(modulus: unsignedModulus)
+            let signedRoundTrip = signedValues.map { value in
+                value.centeredToRemainder(modulus: unsignedModulus)
             }.map { value in
                 value.remainderToCentered(modulus: unsignedModulus)
             }
@@ -477,14 +517,14 @@ class ScalarTests: XCTestCase {
 
             let mid: T.UnsignedScalar = (unsignedModulus - 1) / 2
             let values: [T.UnsignedScalar] = [0, 1, 2, mid - 1, mid, mid + 1, unsignedModulus - 2, unsignedModulus - 1]
-            let roundTrip = try values.map { value in
+            let roundTrip = values.map { value in
                 value.remainderToCentered(modulus: unsignedModulus)
             }.map { value in
-                try value.centeredToRemainder(modulus: unsignedModulus)
+                value.centeredToRemainder(modulus: unsignedModulus)
             }
             XCTAssertEqual(values, roundTrip)
         }
-        try runTest(modulus: Int32(1 << 31 - 63))
-        try runTest(modulus: Int64(1 << 62))
+        runTest(modulus: Int32(1 << 31 - 63))
+        runTest(modulus: Int64(1 << 62))
     }
 }

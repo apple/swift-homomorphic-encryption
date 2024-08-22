@@ -61,13 +61,22 @@ extension SignedScalarType {
         return Self(bitPattern: result)
     }
 
+    /// Computes the high `Self.bitWidth` bits of `self * rhs`.
+    /// - Parameter rhs: Multiplicand.
+    /// - Returns: the high `Self.bitWidth` bits  of `self * rhs`.
+    @inlinable
+    public func multiplyHigh(_ rhs: Self) -> Self {
+        multipliedFullWidth(by: rhs).high
+    }
+
     /// Constant-time centered-to-remainder conversion.
     /// - Parameter modulus: Modulus.
-    /// - Returns: Given `self` in `[-floor(modulus/2), floor(modulus-1)/2]`,  returns `self % modulus` in `[0,
-    /// modulus)`.
-    /// - Throws: Error upon failure to encode.
+    /// - Returns: Given `self` in `[-floor(modulus/2), floor((modulus-1)/2)]`,
+    /// returns `self % modulus` in `[0, modulus)`.
     @inlinable
-    public func centeredToRemainder(modulus: some ScalarType) throws -> Self.UnsignedScalar {
+    public func centeredToRemainder(modulus: some ScalarType) -> Self.UnsignedScalar {
+        assert(self <= (Self(modulus) - 1) / 2)
+        assert(self >= -Self(modulus) / 2)
         let condition = Self.UnsignedScalar(bitPattern: self >> (bitWidth - 1))
         let thenValue = Self.UnsignedScalar(bitPattern: self &+ Self(bitPattern: Self.UnsignedScalar(modulus)))
         let elseValue = Self.UnsignedScalar(bitPattern: self)
@@ -198,7 +207,7 @@ extension FixedWidthInteger {
 }
 
 extension ScalarType {
-    /// Computes the high bits `Self.bitWidth` of `self * rhs`.
+    /// Computes the high `Self.bitWidth` bits of `self * rhs`.
     /// - Parameter rhs: Multiplicand.
     /// - Returns: the high `Self.bitWidth` bits  of `self * rhs`.
     @inlinable
@@ -388,6 +397,14 @@ extension FixedWidthInteger {
             return 1
         }
         return 1 &<< ((self &- 1).log2 &+ 1)
+    }
+
+    /// The next power of two greater than or equal to this value.
+    ///
+    /// This value must be positive.
+    @inlinable public var previousPowerOfTwo: Self {
+        precondition(self > 0)
+        return 1 &<< (Self.bitWidth &- 1 - leadingZeroBitCount)
     }
 
     /// Computes a modular multiplication.
@@ -629,7 +646,7 @@ extension ScalarType {
     /// - Parameter modulus: Modulus.
     /// - Returns: Given `self` in `[0,modulus)`, returns `self % modulus` in `[-floor(modulus/2), floor(modulus-1)/2]`.
     @inlinable
-    func remainderToCentered(modulus: Self) -> Self.SignedScalar {
+    public func remainderToCentered(modulus: Self) -> Self.SignedScalar {
         let condition = constantTimeGreaterThan((modulus - 1) >> 1)
         let thenValue = Self.SignedScalar(self) - Self.SignedScalar(bitPattern: modulus)
         let elseValue = Self.SignedScalar(bitPattern: self)

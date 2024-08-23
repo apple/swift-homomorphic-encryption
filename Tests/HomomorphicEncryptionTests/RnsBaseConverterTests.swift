@@ -35,8 +35,7 @@ final class RnsBaseConverterTests: XCTestCase {
             let referenceX = (0..<degree).map { _ in T.DoubleWidth.random(in: 0..<q) }
             let rnsBaseConverter = try RnsBaseConverter<T>(from: inputContext, to: outputContext)
             let data = referenceX.map { bigInt in TestUtils.crtDecompose(value: bigInt, moduli: inputContext.moduli) }
-            let inputData = Array2d(data: data.flatMap { $0 }, rowCount: degree, columnCount: inputContext.moduli.count)
-                .transposed()
+            let inputData = Array2d(data: data).transposed()
 
             let input = PolyRq<T, Coeff>(context: inputContext, data: inputData)
             let output = try rnsBaseConverter.convertApproximate(poly: input)
@@ -80,7 +79,7 @@ final class RnsBaseConverterTests: XCTestCase {
             let poly: PolyRq<T, Coeff> = PolyRq.random(context: inputContext)
 
             let rnsBaseConverter = try RnsBaseConverter<T>(from: inputContext, to: outputContext)
-            let composed: [QuadWidth<T>] = try rnsBaseConverter.crtCompose(poly: poly, variableTime: true)
+            let composed: [QuadWidth<T>] = try rnsBaseConverter.crtCompose(poly: poly)
 
             for (coeffIndex, composed) in composed.enumerated() {
                 let roundTripValues = TestUtils.crtDecompose(value: composed, moduli: inputContext.moduli)

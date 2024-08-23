@@ -206,7 +206,7 @@ extension FixedWidthInteger {
     }
 }
 
-extension ScalarType {
+extension UnsignedInteger where Self: FixedWidthInteger {
     /// Computes the high `Self.bitWidth` bits of `self * rhs`.
     /// - Parameter rhs: Multiplicand.
     /// - Returns: the high `Self.bitWidth` bits  of `self * rhs`.
@@ -269,7 +269,9 @@ extension ScalarType {
         let sum = self &+ modulus &- rhs
         return sum.subtractIfExceeds(modulus)
     }
+}
 
+extension ScalarType {
     /// Computes modular exponentiation.
     ///
     /// Computes self raised to the power of `exponent` mod `modulus, i.e., `self^exponent mod modulus`.

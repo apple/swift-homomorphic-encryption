@@ -636,7 +636,7 @@ public protocol HeScheme {
     /// - Parameters:
     ///   - ciphertext: Ciphertext whose noise budget to compute.
     ///   - secretKey: Secret key.
-    ///   - variableTime: Must be `true`, indicating the secret key coefficients are leaked through timing.
+    ///   - variableTime: If `true`, indicates the secret key coefficients may be leaked through timing.
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
@@ -651,7 +651,7 @@ public protocol HeScheme {
     /// - Parameters:
     ///   - ciphertext: Ciphertext whose noise budget to compute.
     ///   - secretKey: Secret key.
-    ///   - variableTime: Must be `true`, indicating the secret key coefficients are leaked through timing.
+    ///   - variableTime: If `true`, indicates the secret key coefficients may be leaked through timing.
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.

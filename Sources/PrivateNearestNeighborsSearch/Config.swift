@@ -39,6 +39,11 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     /// The first plaintext modulus will be the one in ``ClientConfig/encryptionParams``.
     public let extraPlaintextModuli: [Scheme.Scalar]
 
+    /// The plaintext CRT moduli.
+    var plaintextModuli: [Scheme.Scalar] {
+        [encryptionParams.plaintextModulus] + extraPlaintextModuli
+    }
+
     /// Creates a new ``ClientConfig``.
     /// - Parameters:
     ///   - encryptionParams: Encryption parameters.
@@ -65,6 +70,15 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
         self.evaluationKeyConfig = evaluationKeyConfig
         self.distanceMetric = distanceMetric
         self.extraPlaintextModuli = extraPlaintextModuli
+    }
+
+    static func maxScalingFactor(vectorDimension: Int, distanceMetric: DistanceMetric,
+                                 plaintextModuli: [Scheme.Scalar]) -> Int
+    {
+        precondition(distanceMetric == .cosineSimilarity)
+        let t = plaintextModuli.map { Float($0) }.reduce(1, *)
+        let scalingFactor = (((t - 1) / 2).squareRoot() - Float(vectorDimension).squareRoot() / 2).rounded(.down)
+        return Int(scalingFactor)
     }
 }
 

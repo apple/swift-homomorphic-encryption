@@ -82,8 +82,7 @@ final class RnsToolTests: XCTestCase {
 
             let referenceX = (0..<degree).map { _ in OctoWidth<T>.random(in: 0..<q) }
             let data = referenceX.map { bigInt in TestUtils.crtDecompose(value: bigInt, moduli: inputContext.moduli) }
-            let inputData = Array2d(data: data.flatMap { $0 }, rowCount: degree, columnCount: inputContext.moduli.count)
-                .transposed()
+            let inputData = Array2d(data: data).transposed()
 
             let input = PolyRq<T, Coeff>(context: inputContext, data: inputData)
             let output = try rnsTool.convertApproximateBskMTilde(poly: input)
@@ -177,8 +176,7 @@ final class RnsToolTests: XCTestCase {
 
             let referenceX = (0..<degree).map { _ in OctoWidth<T>.random(in: 0..<q) }
             let data = referenceX.map { bigInt in TestUtils.crtDecompose(value: bigInt, moduli: inputContext.moduli) }
-            let inputData = Array2d(data: data.flatMap { $0 }, rowCount: degree, columnCount: inputContext.moduli.count)
-                .transposed()
+            let inputData = Array2d(data: data).transposed()
             let input: PolyRq<T, Coeff> = PolyRq(context: inputContext, data: inputData)
             let output = try rnsTool.liftQToQBsk(poly: input)
 
@@ -232,11 +230,7 @@ final class RnsToolTests: XCTestCase {
                 value: bigInt,
                 moduli: rnsTool.qBskContext.moduli)
             }
-            let inputData = Array2d(
-                data: data.flatMap { $0 },
-                rowCount: degree,
-                columnCount: rnsTool.qBskContext.moduli.count)
-                .transposed()
+            let inputData = Array2d(data: data).transposed()
             let input: PolyRq<T, Coeff> = PolyRq(context: rnsTool.qBskContext, data: inputData)
             let output = try rnsTool.approximateFloor(poly: input)
 
@@ -284,8 +278,7 @@ final class RnsToolTests: XCTestCase {
 
             let referenceX = (0..<degree).map { _ in OctoWidth<T>.random(in: 0..<q) }
             let data = referenceX.map { bigInt in TestUtils.crtDecompose(value: bigInt, moduli: bskModuli) }
-            let inputData = Array2d(data: data.flatMap { $0 }, rowCount: degree, columnCount: bskModuli.count)
-                .transposed()
+            let inputData = Array2d(data: data).transposed()
 
             let input = PolyRq<T, Coeff>(context: bskContext, data: inputData)
             let output = try rnsTool.convertApproximateBskToQ(poly: input)

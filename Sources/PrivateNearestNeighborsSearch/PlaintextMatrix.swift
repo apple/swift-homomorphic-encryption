@@ -447,8 +447,8 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
                 let i = (plaintexts.count - chunkIndex) / plaintextsPerColumn
                 let rotationStep = i.previousMultiple(of: bsgs.babyStep, variableTime: true)
                 let middle = min(chunk.endIndex, chunk.startIndex + n / 2)
-                chunk[chunk.startIndex..<middle].rotate(toStartAt: chunk.startIndex + rotationStep)
-                chunk[middle...].rotate(toStartAt: middle + rotationStep)
+                chunk[chunk.startIndex..<middle].rotate(toStartAt: middle - rotationStep)
+                chunk[middle...].rotate(toStartAt: chunk.endIndex - rotationStep)
 
                 let plaintext = try context.encode(values: Array(chunk), format: .simd)
                 plaintexts.append(plaintext)

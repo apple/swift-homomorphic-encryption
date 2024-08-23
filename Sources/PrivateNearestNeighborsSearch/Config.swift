@@ -80,6 +80,22 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
         let scalingFactor = (((t - 1) / 2).squareRoot() - Float(vectorDimension).squareRoot() / 2).rounded(.down)
         return Int(scalingFactor)
     }
+
+    /// Computes the encryption parameters, one per plaintext modulus.
+    ///
+    /// - Returns: The encryption parameters
+    /// - Throws: Error upon failure to generate the encryption parameters.
+    func encryptionParameters() throws -> [EncryptionParameters<Scheme>] {
+        let extraEncryptionParams = try extraPlaintextModuli.map { plaintextModulus in
+            try EncryptionParameters<Scheme>(
+                polyDegree: encryptionParams.polyDegree,
+                plaintextModulus: plaintextModulus,
+                coefficientModuli: encryptionParams.coefficientModuli,
+                errorStdDev: encryptionParams.errorStdDev,
+                securityLevel: encryptionParams.securityLevel)
+        }
+        return [encryptionParams] + extraEncryptionParams
+    }
 }
 
 /// Server configuration.
@@ -88,6 +104,12 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     public let clientConfig: ClientConfig<Scheme>
     /// Packing for the plaintext database.
     public let databasePacking: MatrixPacking
+    /// Factor by which to scale floating-point entries before rounding to integers.
+    public var scalingFactor: Int { clientConfig.scalingFactor }
+    /// The plaintext CRT moduli.
+    public var plaintextModuli: [Scheme.Scalar] { clientConfig.plaintextModuli }
+    /// Distance metric.
+    public var distanceMetric: DistanceMetric { clientConfig.distanceMetric }
 
     /// Creates a new ``ServerConfig``.
     /// - Parameters:
@@ -99,5 +121,13 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     {
         self.clientConfig = clientConfig
         self.databasePacking = databasePacking
+    }
+
+    /// Computes the encryption parameters, one per plaintext modulus.
+    ///
+    /// - Returns: The encryption parameters
+    /// - Throws: Error upon failure to generate the encryption parameters.
+    public func encryptionParameters() throws -> [EncryptionParameters<Scheme>] {
+        try clientConfig.encryptionParameters()
     }
 }

@@ -25,7 +25,7 @@ struct Response<Scheme: HeScheme>: Sendable {
     // Encrypted response; one matrix per plaintext CRT modulus
     let ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]
     // A list of entry identifiers the server computed similarities for
-    let entryIDs: [UInt64]
+    let entryIds: [UInt64]
     // Metadata for each entry in the database
     let entryMetadatas: [[UInt8]]
 }
@@ -35,7 +35,7 @@ struct DatabaseDistances: Sendable {
     /// The distance from each query vector (outer dimension) to each database row (inner dimension).
     let distances: Array2d<Float>
     // Identifier for each entry in the database.
-    let entryIDs: [UInt64]
+    let entryIds: [UInt64]
     // Metadata for each entry in the database.
     let entryMetadatas: [[UInt8]]
 }

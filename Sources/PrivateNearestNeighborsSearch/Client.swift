@@ -119,7 +119,7 @@ struct Client<Scheme: HeScheme> {
             columnCount: dimensions.columnCount)
         return DatabaseDistances(
             distances: distances,
-            entryIDs: response.entryIDs,
+            entryIds: response.entryIds,
             entryMetadatas: response.entryMetadatas)
     }
 

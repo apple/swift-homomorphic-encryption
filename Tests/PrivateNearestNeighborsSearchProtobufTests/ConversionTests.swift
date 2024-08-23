@@ -81,7 +81,7 @@ class ConversionTests: XCTestCase {
     func testDatabase() throws {
         let rows = (0...10).map { rowIndex in
             DatabaseRow(
-                entryID: rowIndex,
+                entryId: rowIndex,
                 entryMetadata: rowIndex.littleEndianBytes,
                 vector: [Float(rowIndex)])
         }
@@ -169,6 +169,48 @@ class ConversionTests: XCTestCase {
             }
         }
 
+        try runTest(Bfv<UInt32>.self)
+        try runTest(Bfv<UInt64>.self)
+    }
+
+    func testSerializedProcessedDatabase() throws {
+        func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
+            let encryptionParams = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let vectorDimension = 4
+
+            let rows = (0...10).map { rowIndex in
+                DatabaseRow(
+                    entryId: rowIndex,
+                    entryMetadata: rowIndex.littleEndianBytes,
+                    vector: Array(repeating: Float(rowIndex), count: vectorDimension))
+            }
+            for row in rows {
+                XCTAssertEqual(row.proto().native(), row)
+            }
+            let database = Database(rows: rows)
+
+            let clientConfig = try ClientConfig<Scheme>(
+                encryptionParams: encryptionParams,
+                scalingFactor: 123,
+                queryPacking: .denseRow,
+                vectorDimension: vectorDimension,
+                evaluationKeyConfig: EvaluationKeyConfiguration(galoisElements: [3]),
+                distanceMetric: .cosineSimilarity,
+                extraPlaintextModuli: Scheme.Scalar
+                    .generatePrimes(
+                        significantBitCounts: [7],
+                        preferringSmall: true,
+                        nttDegree: encryptionParams.polyDegree))
+            let serverConfig = ServerConfig<Scheme>(
+                clientConfig: clientConfig,
+                databasePacking: MatrixPacking
+                    .diagonal(
+                        babyStepGiantStep: BabyStepGiantStep(vectorDimension: vectorDimension)))
+
+            let processed = try database.process(with: serverConfig)
+            let serialized = try processed.serialize()
+            XCTAssertEqual(try serialized.proto().native(), serialized)
+        }
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)
     }

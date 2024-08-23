@@ -143,9 +143,9 @@ final class ClientTests: XCTestCase {
                 let entryMetadatas = [42.littleEndianBytes]
                 let response = Response(
                     ciphertextMatrices: query.ciphertextMatrices,
-                    entryIDs: entryIds, entryMetadatas: entryMetadatas)
+                    entryIds: entryIds, entryMetadatas: entryMetadatas)
                 let databaseDistances = try client.decrypt(response: response, using: secretKey)
-                XCTAssertEqual(databaseDistances.entryIDs, entryIds)
+                XCTAssertEqual(databaseDistances.entryIds, entryIds)
                 XCTAssertEqual(databaseDistances.entryMetadatas, entryMetadatas)
 
                 let scaledQuery: Array2d<Scheme.SignedScalar> = queryValues

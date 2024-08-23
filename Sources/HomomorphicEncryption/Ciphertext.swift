@@ -292,7 +292,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// ``HeScheme/minNoiseBudget``, decryption may yield inaccurate plaintexts.
     /// - Parameters:
     ///   - secretKey: Secret key.
-    ///   - variableTime: Must be `true`, indicating the secret key coefficients are leaked through timing.
+    ///   - variableTime: If `true`, indicates the secret key coefficients may be leaked through timing.
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.

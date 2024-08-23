@@ -16,6 +16,23 @@
 import XCTest
 
 class Array2dTests: XCTestCase {
+    func testInit() {
+        func runTest<T: FixedWidthInteger & Sendable>(_: T.Type) {
+            let data = [T](1...6)
+            let array = Array2d(data: data, rowCount: 3, columnCount: 2)
+
+            let data2d: [[T]] = [[1, 2], [3, 4], [5, 6]]
+            XCTAssertEqual(array, Array2d(data: data2d))
+        }
+
+        runTest(Int.self)
+        runTest(Int32.self)
+        runTest(Int32.self)
+        runTest(Int64.self)
+        runTest(UInt64.self)
+        runTest(DWUInt128.self)
+    }
+
     func testZeroAndZeroize() {
         func runTest<T: FixedWidthInteger & Sendable>(_: T.Type) {
             let data = [T](1...16)
@@ -112,5 +129,17 @@ class Array2dTests: XCTestCase {
 
         array.append(rows: Array(40..<56))
         XCTAssertEqual(array, Array2d(data: [Int](0..<56), rowCount: 7, columnCount: 8))
+    }
+
+    func testMap() {
+        let data = [Int](0..<32)
+        let array = Array2d(data: data, rowCount: 4, columnCount: 8)
+
+        let arrayPlus1 = array.map { UInt($0) + 1 }
+        let expected = Array2d(data: [UInt](1..<33), rowCount: 4, columnCount: 8)
+        XCTAssertEqual(arrayPlus1, expected)
+
+        let roundtripArray = arrayPlus1.map { Int($0 - 1) }
+        XCTAssertEqual(roundtripArray, array)
     }
 }

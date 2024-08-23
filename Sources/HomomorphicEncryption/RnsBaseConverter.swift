@@ -22,8 +22,14 @@ struct RnsBaseConverter<T: ScalarType>: Sendable {
     @usableFromInline let outputContext: PolyContext<T>
     /// (i, j)'th entry stores `(q / q_i) % t_j`.
     @usableFromInline let puncturedProducts: Array2d<T>
-    /// i'th entry stores `(q_i / q) % q_i``.
-    @usableFromInline let inversePuncturedProducts: [MultiplyConstantModulus<T>]
+
+    /// Composes polynomials with `inputContext`.
+    @usableFromInline let crtComposer: CrtComposer<T>
+
+    /// i'th entry stores `(q_i / q) % q_i`.
+    @usableFromInline var inversePuncturedProducts: [MultiplyConstantModulus<T>] {
+        crtComposer.inversePuncturedProducts
+    }
 
     @inlinable
     init(from inputContext: PolyContext<T>, to outputContext: PolyContext<T>) throws {
@@ -46,23 +52,12 @@ struct RnsBaseConverter<T: ScalarType>: Sendable {
             rowCount: outputContext.moduli.count,
             columnCount: inputContext.moduli.count)
 
-        self.inversePuncturedProducts = try inputContext.reduceModuli.map { qi in
-            var puncturedProduct = T(1)
-            for qj in inputContext.moduli where qj != qi.modulus {
-                let prod = puncturedProduct.multipliedFullWidth(by: qj)
-                puncturedProduct = qi.reduce(T.DoubleWidth(prod))
-            }
-            let inversePuncturedProduct = try puncturedProduct.inverseMod(modulus: qi.modulus, variableTime: true)
-            return MultiplyConstantModulus(
-                multiplicand: inversePuncturedProduct,
-                modulus: qi.modulus,
-                variableTime: true)
-        }
+        self.crtComposer = try CrtComposer(polyContext: inputContext)
     }
 
     /// Performs approximate base conversion.
     ///
-    /// Converts input polynomial with coefficients `x_i mod q` to `(x_i + a_x * q) % t` where `a_x \in [0, L-1]`, for
+    /// Converts input polynomial with coefficients `x_i mod q` to `(x_i + a_x * q) % t` where `a_x \in [0, L - 1]`, for
     /// `L` the number of moduli in the input basis `q.
     /// - Parameter poly: Input polynomial with base `q`.
     /// - Returns: Converted polynomial with base `t`.
@@ -76,55 +71,17 @@ struct RnsBaseConverter<T: ScalarType>: Sendable {
         return convertApproximate(using: poly)
     }
 
-    /// Returns an upper bound on the maximum value during a `crtCompose` call.
-    @inlinable
-    func crtComposeMaxIntermediateValue() -> Double {
-        let moduli = inputContext.moduli.map { Double($0) }
-        if moduli.count == 1 {
-            return moduli[0]
-        }
-        let q = moduli.reduce(1.0, *)
-        return 2.0 * q
-    }
-
     /// Performs Chinese remainder theorem (CRT) composition of each coefficient in `poly`.
     ///
     /// The composition yields a polynomial with coefficients in `[0, q - 1]`.
-    /// - Parameters:
-    ///   - poly: Polynomial to compose.
-    ///   - variableTime: Must be `true`, indicating `poly`'s coefficients are leaked through timing.
+    /// - Parameter poly: Polynomial to compose.
     /// - Returns: The coefficients in the composed polynomial. Each coefficient must be able to store values up to
     /// `crtComposeMaxIntermediateValue`.
     /// - Throws: `HeError` upon failure to compose the polynomial.
-    /// - Warning: Leaks `poly` through timing.
+    /// - Warning: `V`'s operations must be constant time to prevent leaking `poly` through timing.
     @inlinable
-    func crtCompose<V: FixedWidthInteger>(poly: PolyRq<T, Coeff>, variableTime: Bool) throws -> [V] {
-        precondition(variableTime)
-        precondition(Double(V.max) >= crtComposeMaxIntermediateValue())
-        guard poly.context == inputContext else {
-            throw HeError.invalidPolyContext(poly.context)
-        }
-        if inputContext.moduli.count == 1 {
-            return poly.poly(rnsIndex: 0).map { V($0) }
-        }
-        let q: V = inputContext.moduli.product()
-        let puncturedProducts = inputContext.moduli.map { qi in
-            q / V(qi)
-        }
-        return poly.coeffIndices.map { coeffIndex in
-            var product: V = 0
-            for (rnsCoeff, (puncturedProduct, inversePuncturedProduct)) in zip(
-                poly.coefficient(coeffIndex: coeffIndex),
-                zip(puncturedProducts, inversePuncturedProducts))
-            {
-                let tmp = inversePuncturedProduct.multiplyMod(rnsCoeff)
-                product &+= V(tmp) &* puncturedProduct
-                if product >= q {
-                    product &-= q
-                }
-            }
-            return product
-        }
+    func crtCompose<V: FixedWidthInteger & UnsignedInteger>(poly: PolyRq<T, Coeff>) throws -> [V] {
+        try crtComposer.compose(poly: poly)
     }
 
     /// Computes approximate products.

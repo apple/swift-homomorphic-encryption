@@ -14,12 +14,18 @@
 
 /// Stores values in a 2 dimensional array.
 public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, Sendable {
+    /// Values stored in row-major order.
     @usableFromInline package var data: [T]
     @usableFromInline package var rowCount: Int
     @usableFromInline package var columnCount: Int
 
     @usableFromInline package var shape: (Int, Int) { (rowCount, columnCount) }
     @usableFromInline package var count: Int { rowCount * columnCount }
+
+    @inlinable
+    package init(data: [[T]]) {
+        self.init(data: data.flatMap { $0 }, rowCount: data.count, columnCount: data[0].count)
+    }
 
     @inlinable
     package init(data: [T], rowCount: Int, columnCount: Int) {
@@ -174,5 +180,17 @@ extension Array2d {
             // swiftlint:disable:next force_unwrapping
             HomomorphicEncryption.zeroize(dataPointer.baseAddress!, zeroizeSize)
         }
+    }
+
+    /// Returns the matrix after transforming each entry with a function.
+    /// - Parameter transform: A mapping closure. `transform` accepts an element of the array as its parameter and
+    /// returns a transformed value of the same or of a different type.
+    /// - Returns: The transformed matrix.
+    @inlinable
+    package func map<V: Equatable & AdditiveArithmetic & Sendable>(_ transform: (T) -> (V)) -> Array2d<V> {
+        Array2d<V>(
+            data: data.map { value in transform(value) },
+            rowCount: rowCount,
+            columnCount: columnCount)
     }
 }

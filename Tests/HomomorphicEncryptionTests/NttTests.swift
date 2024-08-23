@@ -52,8 +52,8 @@ final class NttTests: XCTestCase {
         precondition(evalData.count == rowCount)
         precondition(evalData[0].count == columnCount)
 
-        let coeffData = Array2d(data: coeffData.flatMap { $0 }, rowCount: rowCount, columnCount: columnCount)
-        let evalData = Array2d(data: evalData.flatMap { $0 }, rowCount: rowCount, columnCount: columnCount)
+        let coeffData = Array2d(data: coeffData)
+        let evalData = Array2d(data: evalData)
 
         let context = try PolyContext(degree: columnCount, moduli: moduli)
         let polyCoeff = PolyRq<T, Coeff>(context: context, data: coeffData)

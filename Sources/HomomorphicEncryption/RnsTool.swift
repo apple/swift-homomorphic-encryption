@@ -13,7 +13,7 @@
 // limitations under the License.
 
 @usableFromInline
-struct RnsTool<T: ScalarType>: Sendable {
+package struct RnsTool<T: ScalarType>: Sendable {
     /// `Q = q_0, ..., q_{L-1}`.
     @usableFromInline let inputContext: PolyContext<T>
     /// `t_0, ..., t_{M-1}`.
@@ -396,17 +396,16 @@ struct RnsTool<T: ScalarType>: Sendable {
     ///   - poly: Polynomial whose coefficients to compose.
     ///   - variableTime: Must be `true`, indicating the coefficients of the polynomial are leaked through timing.
     /// - Returns: The coefficients of `poly`, each in `[0, Q - 1]`.
-    /// - Warning: Leaks `poly` through timing.
+    /// - Warning: `V`'s operations must be constant time to prevent leaking `poly` through timing.
     @inlinable
-    func crtCompose<V: FixedWidthInteger>(poly: PolyRq<T, Coeff>, variableTime: Bool) throws -> [V] {
-        precondition(variableTime)
+    package func crtCompose<V: FixedWidthInteger & UnsignedInteger>(poly: PolyRq<T, Coeff>) throws -> [V] {
         // Use arbitrary base converter that has same inputContext
-        return try rnsConvertQToBSk.crtCompose(poly: poly, variableTime: variableTime)
+        try rnsConvertQToBSk.crtCompose(poly: poly)
     }
 
     /// Returns an upper bound on the maximum value during a `crtCompose` call.
     @inlinable
-    func crtComposeMaxIntermediateValue() -> Double {
-        rnsConvertQToBSk.crtComposeMaxIntermediateValue()
+    package func crtComposeMaxIntermediateValue() -> Double {
+        CrtComposer.composeMaxIntermediateValue(moduli: inputContext.moduli)
     }
 }

@@ -46,16 +46,14 @@ extension Bfv {
     {
         // See Definition 1 of
         // https://www.microsoft.com/en-us/research/wp-content/uploads/2017/06/sealmanual_v2.2.pdf.
-        precondition(variableTime)
         var vTimesT = try Self.dotProduct(ciphertext: ciphertext, with: secretKey)
         vTimesT *= Array(repeating: ciphertext.context.plaintextModulus, count: vTimesT.moduli.count)
         let rnsTool = ciphertext.context.getRnsTool(moduliCount: vTimesT.moduli.count)
 
-        func computeNoiseBudget<U: FixedWidthInteger>(of _: PolyRq<T, Coeff>, _: U.Type) throws -> Double {
-            let vTimesTComposed: [U] = try rnsTool.crtCompose(
-                poly: vTimesT,
-                variableTime: variableTime)
-
+        func computeNoiseBudget<U: FixedWidthInteger & UnsignedInteger>(of _: PolyRq<T, Coeff>,
+                                                                        _: U.Type) throws -> Double
+        {
+            let vTimesTComposed: [U] = try rnsTool.crtCompose(poly: vTimesT)
             let q: U = vTimesT.moduli.product()
             let qDiv2 = (q &+ 1) &>> 1
             let noiseInfinityNorm = Double(vTimesTComposed.map { coeff in
@@ -78,10 +76,13 @@ extension Bfv {
         case 0..<tMax:
             return try computeNoiseBudget(of: vTimesT, T.self)
         case tMax..<pow(tMax, 2):
+            precondition(variableTime)
             return try computeNoiseBudget(of: vTimesT, T.DoubleWidth.self)
         case tMax..<pow(tMax, 4):
+            precondition(variableTime)
             return try computeNoiseBudget(of: vTimesT, QuadWidth<T>.self)
         case tMax..<pow(tMax, 8):
+            precondition(variableTime)
             return try computeNoiseBudget(of: vTimesT, OctoWidth<T>.self)
         default:
             preconditionFailure("crtMaxIntermediateValue \(crtMaxIntermediateValue) too large")

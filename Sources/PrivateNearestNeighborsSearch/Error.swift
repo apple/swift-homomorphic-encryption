@@ -23,6 +23,7 @@ public enum PnnsError: Error, Equatable {
     case simdEncodingNotSupported(_ description: String)
     case wrongCiphertextCount(got: Int, expected: Int)
     case wrongContext(gotDescription: String, expectedDescription: String)
+    case wrongDistanceMetric(got: DistanceMetric, expected: DistanceMetric)
     case wrongEncodingValuesCount(got: Int, expected: Int)
     case wrongMatrixPacking(got: MatrixPacking, expected: MatrixPacking)
     case wrongPlaintextCount(got: Int, expected: Int)
@@ -55,6 +56,8 @@ extension PnnsError: LocalizedError {
             "Wrong ciphertext count \(got), expected \(expected)"
         case let .wrongContext(gotDescription, expectedDescription):
             "Wrong context: got \(gotDescription), expected \(expectedDescription)"
+        case let .wrongDistanceMetric(got, expected):
+            "Wrong distance metric: got \(got), expected \(expected)"
         case let .wrongEncodingValuesCount(got, expected):
             "Wrong encoding values count \(got), expected \(expected)"
         case let .wrongMatrixPacking(got: got, expected: expected):

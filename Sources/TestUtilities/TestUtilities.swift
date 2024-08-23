@@ -258,9 +258,7 @@ extension TestUtils {
         return variance
     }
 
-    package static func crtDecompose<V, T>(value: V, moduli: [T]) -> [T] where V: FixedWidthInteger,
-        T: ScalarType
-    {
+    package static func crtDecompose<V: FixedWidthInteger, T: ScalarType>(value: V, moduli: [T]) -> [T] {
         moduli.map { q in
             var remainder = value.quotientAndRemainder(dividingBy: V(q)).remainder
             if remainder < 0 {

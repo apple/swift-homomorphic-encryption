@@ -15,7 +15,7 @@
 /// One row in a nearest-neighbor search database.
 public struct DatabaseRow: Codable, Equatable, Hashable, Sendable {
     /// Unique identifier for the database entry.
-    public let entryID: UInt64
+    public let entryId: UInt64
 
     /// Metadata associated with the entry.
     public let entryMetadata: [UInt8]
@@ -25,11 +25,11 @@ public struct DatabaseRow: Codable, Equatable, Hashable, Sendable {
 
     /// Creates a new ``DatabaseRow``.
     /// - Parameters:
-    ///   - entryID: Unique identifier for the database entry.
+    ///   - entryId: Unique identifier for the database entry.
     ///   - entryMetadata: Metadata associated with the entry.
     ///   - vector: Vector for use in nearest neighbors computation
-    public init(entryID: UInt64, entryMetadata: [UInt8], vector: [Float]) {
-        self.entryID = entryID
+    public init(entryId: UInt64, entryMetadata: [UInt8], vector: [Float]) {
+        self.entryId = entryId
         self.entryMetadata = entryMetadata
         self.vector = vector
     }

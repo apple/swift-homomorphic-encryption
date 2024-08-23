@@ -181,7 +181,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow {
     /// - Returns: The converted native type.
     public func native() -> DatabaseRow {
         DatabaseRow(
-            entryID: entryID,
+            entryId: entryID,
             entryMetadata: Array(entryMetadata),
             vector: vector)
     }
@@ -192,7 +192,7 @@ extension DatabaseRow {
     /// - Returns: The converted protobuf object.
     public func proto() -> Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow {
         Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow.with { row in
-            row.entryID = entryID
+            row.entryID = entryId
             row.entryMetadata = Data(entryMetadata)
             row.vector = vector
         }
@@ -272,5 +272,33 @@ extension SerializedCiphertextMatrix {
             protoMatrix.ciphertexts = ciphertexts.map { ciphertext in ciphertext.proto() }
             protoMatrix.packing = try packing.proto()
         }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    /// - Throws: Error upon upon invalid object.
+    public func native<Scheme: HeScheme>() throws -> SerializedProcessedDatabase<Scheme> {
+        try SerializedProcessedDatabase(
+            plaintextMatrices: plaintextMatrices.map { matrix in try matrix.native() },
+            entryIds: entryIds,
+            entryMetadatas: entryMetadatas.map { metadata in Array(metadata) },
+            serverConfig: serverConfig.native())
+    }
+}
+
+extension SerializedProcessedDatabase {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    /// - Throws: Error upon unsupported object.
+    public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase {
+        try Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase
+            .with { protoDatabase in
+                protoDatabase.plaintextMatrices = try plaintextMatrices.map { matrix in try matrix.proto() }
+                protoDatabase.entryIds = entryIds
+                protoDatabase.entryMetadatas = entryMetadatas.map { metadata in Data(metadata) }
+                protoDatabase.serverConfig = try serverConfig.proto()
+            }
     }
 }

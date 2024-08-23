@@ -490,6 +490,54 @@ final class PlaintextMatrixTests: XCTestCase {
         try runTest(for: Bfv<UInt64>.self)
     }
 
+    func testDiagonalRotation() throws {
+        func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
+            let encryptionParams = try EncryptionParameters<Scheme>(
+                polyDegree: 16,
+                plaintextModulus: 1153,
+                coefficientModuli: Scheme.Scalar
+                    .generatePrimes(
+                        significantBitCounts: [25, 25],
+                        preferringSmall: false,
+                        nttDegree: 16),
+                errorStdDev: ErrorStdDev.stdDev32,
+                securityLevel: SecurityLevel.unchecked)
+            let context = try Context(encryptionParameters: encryptionParams)
+
+            let dimensions = try MatrixDimensions(rowCount: 4, columnCount: 5)
+            let bsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
+
+            let values: [[Scheme.Scalar]] = increasingData(
+                dimensions: dimensions,
+                modulus: encryptionParams.plaintextModulus)
+            let rotatedDiagonalPrefixes: [[Scheme.Scalar]] = [[1, 7, 13, 19],
+                                                              [2, 8, 14, 20],
+                                                              [3, 9, 15, 0],
+                                                              [0, 0, 0, 4, 10],
+                                                              [0, 0, 0, 5],
+                                                              [0, 0, 0, 0, 0, 0, 16],
+                                                              [11, 17],
+                                                              [12, 18, 0, 0, 0, 0, 0, 6]]
+
+            let expected: [[Scheme.Scalar]] = rotatedDiagonalPrefixes.map { diagonal in
+                diagonal + Array(repeating: 0, count: encryptionParams.polyDegree - diagonal.count)
+            }
+
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
+                context: context,
+                dimensions: dimensions,
+                packing: .diagonal(babyStepGiantStep: bsgs),
+                values: values.flatMap { $0 })
+
+            for (plaintext, expected) in zip(plaintextMatrix.plaintexts, expected) {
+                let decoded: [Scheme.Scalar] = try plaintext.decode(format: .simd)
+                XCTAssertEqual(decoded, expected)
+            }
+        }
+        try runTest(for: Bfv<UInt32>.self)
+        try runTest(for: Bfv<UInt64>.self)
+    }
+
     func testPlaintextMatrixConversion() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5

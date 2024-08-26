@@ -63,7 +63,10 @@ class ConversionTests: XCTestCase {
                 vectorDimension: vectorDimension,
                 evaluationKeyConfig: EvaluationKeyConfiguration(galoisElements: [3]),
                 distanceMetric: .cosineSimilarity,
-                extraPlaintextModuli: [536_903_681])
+                extraPlaintextModuli: Scheme.Scalar.generatePrimes(
+                    significantBitCounts: [15],
+                    preferringSmall: true,
+                    nttDegree: 8))
             XCTAssertEqual(try clientConfig.proto().native(), clientConfig)
 
             let serverConfig = ServerConfig<Scheme>(
@@ -142,23 +145,16 @@ class ConversionTests: XCTestCase {
                 dimensions: dimensions,
                 packing: .denseColumn,
                 values: scalars.flatMap { $0 })
-            let ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
-            let serialized = try ciphertextMatrix.serialize()
-            let serializedProto = try serialized.proto()
-            XCTAssertEqual(try serializedProto.native(), serialized)
-            let serializedSize = try serializedProto.serializedData().count
-
-            let serializedForDecryption = try ciphertextMatrix.serialize(forDecryption: true)
-            let serializedForDecryptionSize = try serializedForDecryption.proto().serializedData().count
-            XCTAssertLessThanOrEqual(serializedForDecryptionSize, serializedSize)
-            let deserialized = try CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>(
-                deserialize: serializedForDecryption,
-                context: context)
-            let decrypted = try deserialized.decrypt(using: secretKey)
-            XCTAssertEqual(decrypted, plaintextMatrix)
-
+            // Check Canonical Format
+            do {
+                let ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
+                let serialized = try ciphertextMatrix.serialize()
+                let serializedProto = try serialized.proto()
+                XCTAssertEqual(try serializedProto.native(), serialized)
+            }
             // Check Evaluation format
             do {
+                let ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
                 let evalCiphertextMatrix = try ciphertextMatrix.convertToEvalFormat()
                 let serialized = try evalCiphertextMatrix.serialize()
                 XCTAssertEqual(try serialized.proto().native(), serialized)
@@ -166,6 +162,24 @@ class ConversionTests: XCTestCase {
                     deserialize: serialized,
                     context: context)
                 XCTAssertEqual(deserialized, evalCiphertextMatrix)
+            }
+            // Check serializeForDecryption
+            do {
+                var ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
+                try ciphertextMatrix.modSwitchDownToSingle()
+                let serializedForDecryption = try ciphertextMatrix.serialize(forDecryption: true)
+                let serializedForDecryptionSize = try serializedForDecryption.proto().serializedData().count
+
+                let serialized = try ciphertextMatrix.serialize()
+                let serializedProto = try serialized.proto()
+                let serializedSize = try serializedProto.serializedData().count
+
+                XCTAssertLessThan(serializedForDecryptionSize, serializedSize)
+                let deserialized = try CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>(
+                    deserialize: serializedForDecryption,
+                    context: context, moduliCount: 1)
+                let decrypted = try deserialized.decrypt(using: secretKey)
+                XCTAssertEqual(decrypted, plaintextMatrix)
             }
         }
 
@@ -207,7 +221,7 @@ class ConversionTests: XCTestCase {
                     .diagonal(
                         babyStepGiantStep: BabyStepGiantStep(vectorDimension: vectorDimension)))
 
-            let processed = try database.process(with: serverConfig)
+            let processed = try database.process(config: serverConfig)
             let serialized = try processed.serialize()
             XCTAssertEqual(try serialized.proto().native(), serialized)
         }

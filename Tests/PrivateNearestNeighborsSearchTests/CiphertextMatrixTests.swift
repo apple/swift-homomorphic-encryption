@@ -43,9 +43,16 @@ final class CiphertextMatrixTests: XCTestCase {
                 packing: .denseRow,
                 values: encodeValues.flatMap { $0 })
             let secretKey = try context.generateSecretKey()
-            let ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
-            let plaintextMatrixroundTrip = try ciphertextMatrix.decrypt(using: secretKey)
-            XCTAssertEqual(plaintextMatrixroundTrip, plaintextMatrix)
+            var ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
+            let plaintextMatrixRoundTrip = try ciphertextMatrix.decrypt(using: secretKey)
+            XCTAssertEqual(plaintextMatrixRoundTrip, plaintextMatrix)
+
+            // modSwitchDownToSingle
+            do {
+                try ciphertextMatrix.modSwitchDownToSingle()
+                let plaintextMatrixRoundTrip = try ciphertextMatrix.decrypt(using: secretKey)
+                XCTAssertEqual(plaintextMatrixRoundTrip, plaintextMatrix)
+            }
         }
         try runTest(for: NoOpScheme.self)
         try runTest(for: Bfv<UInt32>.self)
@@ -103,9 +110,7 @@ final class CiphertextMatrixTests: XCTestCase {
 
             for rowCount in 1..<(2 * degree) {
                 for columnCount in 1..<degree / 2 {
-                    let dimensions = try MatrixDimensions(
-                        rowCount: rowCount,
-                        columnCount: columnCount)
+                    let dimensions = try MatrixDimensions((rowCount, columnCount))
                     let encodeValues: [[Scheme.Scalar]] = increasingData(
                         dimensions: dimensions,
                         modulus: plaintextModulus)

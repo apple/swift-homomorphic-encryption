@@ -33,9 +33,7 @@ final class PlaintextMatrixTests: XCTestCase {
             guard encryptionParams.supportsSimdEncoding, encryptionParams.polyDegree <= 16 else {
                 return
             }
-            let rowCount = encryptionParams.polyDegree
-            let columnCount = 2
-            let dims = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount)
+            let dims = try MatrixDimensions(rowCount: encryptionParams.polyDegree, columnCount: 2)
             let packing = MatrixPacking.denseRow
             let context = try Context(encryptionParameters: encryptionParams)
             let values = TestUtils.getRandomPlaintextData(
@@ -93,7 +91,7 @@ final class PlaintextMatrixTests: XCTestCase {
 
             // Wrong number of values
             do {
-                let wrongDims = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount + 1)
+                let wrongDims = try MatrixDimensions((rowCount, columnCount + 1))
                 XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(
                     context: context,
                     dimensions: wrongDims,
@@ -102,7 +100,7 @@ final class PlaintextMatrixTests: XCTestCase {
             }
             // Too many columns
             do {
-                let dims = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount + 1)
+                let dims = try MatrixDimensions((rowCount, columnCount + 1))
                 XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(
                     context: context,
                     dimensions: dims,
@@ -292,7 +290,7 @@ final class PlaintextMatrixTests: XCTestCase {
                 securityLevel: .unchecked)
             let context = try Context(encryptionParameters: encryptionParams)
             for ((rowCount, columnCount), expected) in kats {
-                let dimensions = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount)
+                let dimensions = try MatrixDimensions((rowCount, columnCount))
                 try runPlaintextMatrixInitTest(
                     context: context,
                     dimensions: dimensions,
@@ -374,7 +372,7 @@ final class PlaintextMatrixTests: XCTestCase {
             let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
             let context = try Context(encryptionParameters: encryptionParams)
             for ((rowCount, columnCount), expected) in kats {
-                let dimensions = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount)
+                let dimensions = try MatrixDimensions((rowCount, columnCount))
                 try runPlaintextMatrixInitTest(
                     context: context,
                     dimensions: dimensions,
@@ -476,7 +474,7 @@ final class PlaintextMatrixTests: XCTestCase {
                 securityLevel: SecurityLevel.unchecked)
             let context = try Context(encryptionParameters: encryptionParams)
             for ((rowCount, columnCount), expected) in kats {
-                let dimensions = try MatrixDimensions(rowCount: rowCount, columnCount: columnCount)
+                let dimensions = try MatrixDimensions((rowCount, columnCount))
                 let bsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount.nextPowerOfTwo)
                 try runPlaintextMatrixInitTest(
                     context: context,

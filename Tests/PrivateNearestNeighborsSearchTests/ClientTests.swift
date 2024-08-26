@@ -28,12 +28,12 @@ final class ClientTests: XCTestCase {
             }
             // Check scaling factor increases as we add plaintext moduli.
             let maxScalingFactor1 = ClientConfig<Scheme>.maxScalingFactor(
-                vectorDimension: 128,
                 distanceMetric: .cosineSimilarity,
+                vectorDimension: 128,
                 plaintextModuli: Array(plaintextModuli.prefix(1)))
             let maxScalingFactor2 = ClientConfig<Scheme>.maxScalingFactor(
-                vectorDimension: 128,
                 distanceMetric: .cosineSimilarity,
+                vectorDimension: 128,
                 plaintextModuli: plaintextModuli)
             XCTAssertGreaterThan(maxScalingFactor2, maxScalingFactor1)
 
@@ -75,6 +75,12 @@ final class ClientTests: XCTestCase {
             }
             let rounded: Array2d<T> = scaled.rounded()
             XCTAssertEqual(rounded.data, testCase.rounded.flatMap { $0 })
+
+            if testCase.norm == Array2d<Float>.Norm.Lp(p: 2.0) {
+                let normalizedScaledAndRounded: Array2d<T> = floatMatrix.normalizedScaledAndRounded(
+                    scalingFactor: testCase.scalingFactor)
+                XCTAssertEqual(normalizedScaledAndRounded.data, testCase.rounded.flatMap { $0 })
+            }
         }
 
         let testCases: [TestCase<Int32>] = [
@@ -96,7 +102,7 @@ final class ClientTests: XCTestCase {
         }
     }
 
-    func testQuery() throws {
+    func testQueryAsResponse() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let degree = 512
             let encryptionParams = try EncryptionParameters<Scheme>(
@@ -127,7 +133,7 @@ final class ClientTests: XCTestCase {
                 significantBitCounts: [17],
                 preferringSmall: true, nttDegree: degree)]
             {
-                let config = ClientConfig(
+                let config = try ClientConfig(
                     encryptionParams: encryptionParams,
                     scalingFactor: scalingFactor,
                     queryPacking: .denseRow,
@@ -136,11 +142,12 @@ final class ClientTests: XCTestCase {
                     distanceMetric: .cosineSimilarity,
                     extraPlaintextModuli: extraPlaintextModuli)
                 let client = try Client(config: config)
-                let query = try client.generateQuery(vectors: queryValues, using: secretKey)
+                let query = try client.generateQuery(for: queryValues, using: secretKey)
                 XCTAssertEqual(query.ciphertextMatrices.count, config.plaintextModuli.count)
 
                 let entryIds = [UInt64(42)]
                 let entryMetadatas = [42.littleEndianBytes]
+                // Treat the query as a response
                 let response = Response(
                     ciphertextMatrices: query.ciphertextMatrices,
                     entryIds: entryIds, entryMetadatas: entryMetadatas)
@@ -149,8 +156,7 @@ final class ClientTests: XCTestCase {
                 XCTAssertEqual(databaseDistances.entryMetadatas, entryMetadatas)
 
                 let scaledQuery: Array2d<Scheme.SignedScalar> = queryValues
-                    .normalizedRows(norm: Array2d<Float>.Norm.Lp(p: 2.0)).scaled(by: Float(config.scalingFactor))
-                    .rounded()
+                    .normalizedScaledAndRounded(scalingFactor: Float(config.scalingFactor))
                 // Cosine similarity response returns result scaled by scalingFactor^2
                 let expectedDistances = scaledQuery.map { value in
                     Float(value) / Float(config.scalingFactor * config.scalingFactor)
@@ -158,6 +164,103 @@ final class ClientTests: XCTestCase {
                 XCTAssertEqual(databaseDistances.distances, expectedDistances)
             }
         }
+        try runTest(for: Bfv<UInt32>.self)
+        try runTest(for: Bfv<UInt64>.self)
+    }
+
+    func testClientServer() throws {
+        func runSingleTest<Scheme: HeScheme>(
+            encryptionParams: EncryptionParameters<Scheme>,
+            dimensions: MatrixDimensions,
+            plaintextModuli: [Scheme.Scalar],
+            queryCount: Int) throws
+        {
+            let vectorDimension = dimensions.columnCount
+            let scalingFactor = ClientConfig<Scheme>.maxScalingFactor(
+                distanceMetric: .cosineSimilarity,
+                vectorDimension: vectorDimension,
+                plaintextModuli: plaintextModuli)
+            let evaluatonKeyConfig = try MatrixMultiplication.evaluationKeyConfig(
+                plaintextMatrixDimensions: dimensions,
+                encryptionParameters: encryptionParams)
+            let clientConfig = try ClientConfig<Scheme>(
+                encryptionParams: encryptionParams,
+                scalingFactor: scalingFactor,
+                queryPacking: .denseRow,
+                vectorDimension: vectorDimension,
+                evaluationKeyConfig: evaluatonKeyConfig,
+                distanceMetric: .cosineSimilarity,
+                extraPlaintextModuli: Array(plaintextModuli[1...]))
+            let serverConfig = ServerConfig(
+                clientConfig: clientConfig,
+                databasePacking: .diagonal(babyStepGiantStep: BabyStepGiantStep(vectorDimension: vectorDimension)))
+
+            let database = getDatabaseForTesting(config: DatabaseConfig(
+                rowCount: dimensions.rowCount,
+                vectorDimension: dimensions.columnCount))
+            let processed = try database.process(config: serverConfig)
+
+            let client = try Client(config: clientConfig, contexts: processed.contexts)
+            let server = try Server(database: processed, config: serverConfig)
+
+            // We query exact matches from rows in the database
+            let queryVectors = Array2d(data: database.rows.prefix(queryCount).map { row in row.vector })
+            let secretKey = try client.generateSecretKey()
+            let query = try client.generateQuery(for: queryVectors, using: secretKey)
+            let evaluationKey = try client.generateEvaluationKey(using: secretKey)
+
+            let response = try server.computeResponse(to: query, using: evaluationKey)
+            let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
+            XCTAssertGreaterThan(noiseBudget, 0)
+            let decrypted = try client.decrypt(response: response, using: secretKey)
+
+            XCTAssertEqual(decrypted.entryIds, processed.entryIds)
+            XCTAssertEqual(decrypted.entryMetadatas, processed.entryMetadatas)
+
+            let vectors = Array2d<Float>(data: database.rows.map { row in row.vector })
+            let modulus: UInt64 = client.config.plaintextModuli.map { UInt64($0) }.reduce(1, *)
+            let expected = try vectors.fixedPointCosineSimilarity(
+                queryVectors.transposed(),
+                modulus: modulus,
+                scalingFactor: Float(scalingFactor))
+            XCTAssertEqual(decrypted.distances, expected)
+        }
+
+        func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
+            let degree = 64
+            let maxPlaintextModuliCount = 2
+            let plaintextModuli = try Scheme.Scalar.generatePrimes(
+                significantBitCounts: Array(repeating: 10, count: maxPlaintextModuliCount),
+                preferringSmall: true,
+                nttDegree: degree)
+            let coefficientModuli = try Scheme.Scalar.generatePrimes(
+                significantBitCounts: Array(
+                    repeating: Scheme.Scalar.bitWidth - 4,
+                    count: 3),
+                preferringSmall: false,
+                nttDegree: degree)
+            let encryptionParams = try EncryptionParameters<Scheme>(
+                polyDegree: degree,
+                plaintextModulus: plaintextModuli[0],
+                coefficientModuli: coefficientModuli,
+                errorStdDev: .stdDev32,
+                securityLevel: .unchecked)
+            XCTAssert(encryptionParams.supportsSimdEncoding)
+
+            let queryCount = 1
+            for rowCount in [degree / 2, degree, degree + 1, 3 * degree] {
+                for dimensions in try [MatrixDimensions(rowCount: rowCount, columnCount: 16)] {
+                    for plaintextModuliCount in 1...maxPlaintextModuliCount {
+                        try runSingleTest(
+                            encryptionParams: encryptionParams,
+                            dimensions: dimensions,
+                            plaintextModuli: Array(plaintextModuli.prefix(plaintextModuliCount)),
+                            queryCount: queryCount)
+                    }
+                }
+            }
+        }
+
         try runTest(for: Bfv<UInt32>.self)
         try runTest(for: Bfv<UInt64>.self)
     }

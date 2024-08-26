@@ -17,49 +17,32 @@ import HomomorphicEncryption
 import TestUtilities
 import XCTest
 
-extension Array where Element: Collection, Element.Element: ScalarType, Element.Index == Int {
-    typealias BaseElement = Element.Element
-
-    func mul(_ vector: [BaseElement], modulus: BaseElement) throws -> [BaseElement] {
-        map { row in
-            precondition(row.count == vector.count)
-            return zip(row, vector).reduce(0) { sum, multiplicands in
-                let product = multiplicands.0.multiplyMod(multiplicands.1, modulus: modulus, variableTime: true)
-                return sum.addMod(product, modulus: modulus)
-            }
-        }
-    }
-}
-
 final class MatrixMultiplicationTests: XCTestCase {
     func testMulVector() throws {
         func checkProduct<Scheme: HeScheme>(
             _: Scheme.Type,
             _ plaintextRows: [[Scheme.Scalar]],
-            _ dimensions: MatrixDimensions,
+            _ plaintextMatrixDimensions: MatrixDimensions,
             _ queryValues: [Scheme.Scalar]) throws
         {
             let encryptionParameters = try EncryptionParameters<Scheme>(from: .n_4096_logq_27_28_28_logt_16)
             let context = try Context(encryptionParameters: encryptionParameters)
             let secretKey = try context.generateSecretKey()
+            let queryCount = queryValues.count / plaintextMatrixDimensions.columnCount
 
-            var expected: [Scheme.Scalar] = try plaintextRows.mul(
+            let expected: [Scheme.Scalar] = try plaintextRows.mul(
                 queryValues,
                 modulus: encryptionParameters.plaintextModulus)
-            let n = encryptionParameters.polyDegree
-            if expected.count % n > 0 {
-                expected += Array(repeating: 0, count: n - (expected.count % n))
-            }
 
             let babyStepGiantStep = BabyStepGiantStep(vectorDimension: queryValues.count)
             let plaintextMatrix = try PlaintextMatrix(
                 context: context,
-                dimensions: dimensions,
+                dimensions: plaintextMatrixDimensions,
                 packing: .diagonal(babyStepGiantStep: babyStepGiantStep),
                 values: plaintextRows.flatMap { $0 })
 
             let evaluationKeyConfig = try MatrixMultiplication.evaluationKeyConfig(
-                plaintextMatrixDimensions: dimensions,
+                plaintextMatrixDimensions: plaintextMatrixDimensions,
                 encryptionParameters: encryptionParameters)
             let evaluationKey = try context.generateEvaluationKey(
                 configuration: evaluationKeyConfig,
@@ -74,10 +57,15 @@ final class MatrixMultiplicationTests: XCTestCase {
                 values: queryValues).encrypt(using: secretKey)
 
             let dotProduct = try plaintextMatrix.mul(ciphertextVector: ciphertextVector, using: evaluationKey)
-            let expectedCiphertextsCount = dimensions.rowCount.dividingCeil(
+            let expectedCiphertextsCount = plaintextMatrixDimensions.rowCount.dividingCeil(
                 encryptionParameters.polyDegree,
                 variableTime: true)
             XCTAssertEqual(dotProduct.ciphertexts.count, expectedCiphertextsCount)
+            XCTAssertEqual(
+                dotProduct.dimensions,
+                try MatrixDimensions(
+                    rowCount: plaintextMatrixDimensions.rowCount,
+                    columnCount: queryCount))
 
             let resultMatrix = try dotProduct.decrypt(using: secretKey)
             let resultValues: [Scheme.Scalar] = try resultMatrix.unpack()

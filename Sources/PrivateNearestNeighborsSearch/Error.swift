@@ -15,16 +15,31 @@
 import Foundation
 import HomomorphicEncryption
 
+public enum InvalidQueryReason: Error, Equatable {
+    case wrongCiphertextMatrixCount(got: Int, expected: Int)
+}
+
+extension InvalidQueryReason: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case let .wrongCiphertextMatrixCount(got, expected):
+            "Wrong ciphertext matrix count \(got), expected \(expected)"
+        }
+    }
+}
+
 /// Error type for ``PrivateNearestNeighborsSearch``.
 public enum PnnsError: Error, Equatable {
     case emptyCiphertextArray
     case emptyPlaintextArray
     case invalidMatrixDimensions(_ dimensions: MatrixDimensions)
+    case invalidQuery(reason: InvalidQueryReason)
     case simdEncodingNotSupported(_ description: String)
     case wrongCiphertextCount(got: Int, expected: Int)
     case wrongContext(gotDescription: String, expectedDescription: String)
     case wrongDistanceMetric(got: DistanceMetric, expected: DistanceMetric)
     case wrongEncodingValuesCount(got: Int, expected: Int)
+    case wrongEncryptionParameters(gotDescription: String, expectedDescription: String)
     case wrongMatrixPacking(got: MatrixPacking, expected: MatrixPacking)
     case wrongPlaintextCount(got: Int, expected: Int)
 }
@@ -39,6 +54,14 @@ extension PnnsError {
     static func wrongContext(got: Context<some HeScheme>, expected: Context<some HeScheme>) -> Self {
         PnnsError.wrongContext(gotDescription: got.description, expectedDescription: expected.description)
     }
+
+    @inlinable
+    static func wrongEncryptionParameters(
+        got: EncryptionParameters<some HeScheme>,
+        expected: EncryptionParameters<some HeScheme>) -> Self
+    {
+        PnnsError.wrongEncryptionParameters(gotDescription: got.description, expectedDescription: expected.description)
+    }
 }
 
 extension PnnsError: LocalizedError {
@@ -52,14 +75,18 @@ extension PnnsError: LocalizedError {
             "Invalid matrix dimensions: rowCount \(dimensions.rowCount), columnCount \(dimensions.columnCount)"
         case let .simdEncodingNotSupported(encryptionParameters):
             "SIMD encoding is not supported for encryption parameters \(encryptionParameters)"
+        case let .invalidQuery(reason):
+            "Invalid query due to \(reason)"
         case let .wrongCiphertextCount(got, expected):
             "Wrong ciphertext count \(got), expected \(expected)"
         case let .wrongContext(gotDescription, expectedDescription):
-            "Wrong context: got \(gotDescription), expected \(expectedDescription)"
+            "Wrong context \(gotDescription), expected \(expectedDescription)"
         case let .wrongDistanceMetric(got, expected):
-            "Wrong distance metric: got \(got), expected \(expected)"
+            "Wrong distance metric \(got), expected \(expected)"
         case let .wrongEncodingValuesCount(got, expected):
             "Wrong encoding values count \(got), expected \(expected)"
+        case let .wrongEncryptionParameters(got, expected):
+            "Wrong encryption parameters \(got), expected \(expected)"
         case let .wrongMatrixPacking(got: got, expected: expected):
             "Wrong matrix packing \(got), expected \(expected)"
         case let .wrongPlaintextCount(got, expected):

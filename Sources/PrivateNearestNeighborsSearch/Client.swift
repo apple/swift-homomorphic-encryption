@@ -12,51 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Algorithms
 import Foundation
 import HomomorphicEncryption
 
 /// Private nearest neighbors client.
-struct Client<Scheme: HeScheme> {
+public struct Client<Scheme: HeScheme> {
     /// Configuration.
-    let config: ClientConfig<Scheme>
+    public let config: ClientConfig<Scheme>
 
     /// One context per plaintext modulus.
-    let contexts: [Context<Scheme>]
+    @usableFromInline let contexts: [Context<Scheme>]
 
     /// Performs composition of the plaintext CRT responses.
-    let crtComposer: CrtComposer<Scheme.Scalar>
+    @usableFromInline let crtComposer: CrtComposer<Scheme.Scalar>
 
     /// Context for the plaintext CRT moduli.
-    let plaintextContext: PolyContext<Scheme.Scalar>
+    @usableFromInline let plaintextContext: PolyContext<Scheme.Scalar>
 
-    var evaluationKeyConfiguration: HomomorphicEncryption.EvaluationKeyConfiguration {
+    /// The evaluation key configuration used by the ``Server``.
+    public var evaluationKeyConfiguration: EvaluationKeyConfiguration {
         config.evaluationKeyConfig
     }
 
     /// Creates a new ``Client``.
-    /// - Parameter config: Client configuration.
-    /// - Throws: Error upon failure to create a new client.
+    /// - Parameters:
+    ///   - config: Client configuration.
+    ///   - contexts: Contexts for HE computation, one per plaintext modulus.
+    /// - Throws: Error upon failure to create the client.
     @inlinable
-    init(config: ClientConfig<Scheme>) throws {
+    public init(config: ClientConfig<Scheme>, contexts: [Context<Scheme>] = []) throws {
         guard config.distanceMetric == .cosineSimilarity else {
             throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)
         }
         self.config = config
-        let extraEncryptionParams = try config.extraPlaintextModuli.map { plaintextModulus in
-            try EncryptionParameters<Scheme>(
-                polyDegree: config.encryptionParams.polyDegree,
-                plaintextModulus: plaintextModulus,
-                coefficientModuli: config.encryptionParams.coefficientModuli,
-                errorStdDev: config.encryptionParams.errorStdDev,
-                securityLevel: config.encryptionParams.securityLevel)
-        }
-        let encryptionParams = [config.encryptionParams] + extraEncryptionParams
-        self.contexts = try encryptionParams.map { encryptionParams in
-            try Context(encryptionParameters: encryptionParams)
+
+        if !contexts.isEmpty {
+            precondition(contexts.count == config.encryptionParameters.count)
+            for (context, encryptionParameters) in zip(contexts, config.encryptionParameters) {
+                guard context.encryptionParameters == encryptionParameters else {
+                    throw PnnsError.wrongEncryptionParameters(
+                        got: context.encryptionParameters,
+                        expected: encryptionParameters)
+                }
+            }
+            self.contexts = contexts
+        } else {
+            self.contexts = try config.encryptionParameters.map { encryptionParams in
+                try Context(encryptionParameters: encryptionParams)
+            }
         }
         self.plaintextContext = try PolyContext(
-            degree: config.encryptionParams.polyDegree,
+            degree: config.encryptionParameters[0].polyDegree,
             moduli: config.plaintextModuli)
         self.crtComposer = try CrtComposer(polyContext: plaintextContext)
     }
@@ -68,17 +74,17 @@ struct Client<Scheme: HeScheme> {
     /// - Returns: The query.
     /// - Throws: Error upon failure to generate the query.
     @inlinable
-    func generateQuery(vectors: Array2d<Float>, using secretKey: SecretKey<Scheme>) throws -> Query<Scheme> {
-        let scaledVectors: Array2d<Scheme.SignedScalar> = vectors.normalizedRows(norm: Array2d<Float>.Norm.Lp(p: 2.0))
-            .scaled(by: Float(config.scalingFactor)).rounded()
-        let dimensions = try MatrixDimensions(rowCount: vectors.rowCount, columnCount: vectors.columnCount)
-
+    public func generateQuery(for vectors: Array2d<Float>,
+                              using secretKey: SecretKey<Scheme>) throws -> Query<Scheme>
+    {
+        let scaledVectors: Array2d<Scheme.SignedScalar> = vectors
+            .normalizedScaledAndRounded(scalingFactor: Float(config.scalingFactor))
         let matrices = try contexts.map { context in
             // For a single plaintext modulus, reduction isn't necessary
             let shouldReduce = contexts.count > 1
             let plaintextMatrix = try PlaintextMatrix(
                 context: context,
-                dimensions: dimensions,
+                dimensions: MatrixDimensions(vectors.shape),
                 packing: config.queryPacking,
                 signedValues: scaledVectors.data,
                 reduce: shouldReduce)
@@ -94,7 +100,7 @@ struct Client<Scheme: HeScheme> {
     /// - Returns: The distances from the query vectors to the database rows.
     /// - Throws: Error upon failure to decrypt the response.
     @inlinable
-    func decrypt(response: Response<Scheme>, using secretKey: SecretKey<Scheme>) throws -> DatabaseDistances {
+    public func decrypt(response: Response<Scheme>, using secretKey: SecretKey<Scheme>) throws -> DatabaseDistances {
         guard let dimensions = response.ciphertextMatrices.first?.dimensions else {
             throw PnnsError.emptyCiphertextArray
         }
@@ -123,6 +129,14 @@ struct Client<Scheme: HeScheme> {
             entryMetadatas: response.entryMetadatas)
     }
 
+    /// Generates a secret key for query encryption and response decryption.
+    /// - Returns: A freshly generated secret key.
+    /// - Throws: Error upon failure to generate a secret key.
+    @inlinable
+    public func generateSecretKey() throws -> SecretKey<Scheme> {
+        try contexts[0].generateSecretKey()
+    }
+
     /// Generates an ``EvaluationKey`` for use in nearest neighbors search.
     /// - Parameter secretKey: Secret key used to generate the evaluation key.
     /// - Returns: The evaluation key.
@@ -130,58 +144,7 @@ struct Client<Scheme: HeScheme> {
     /// - Warning: Uses the first context to generate the evaluation key. So either the HE scheme should generate
     /// evaluation keys independent of the plaintext modulus (as in BFV), or there should be just one plaintext modulus.
     @inlinable
-    func generateEvaluationKey(using secretKey: SecretKey<Scheme>) throws -> EvaluationKey<Scheme> {
+    public func generateEvaluationKey(using secretKey: SecretKey<Scheme>) throws -> EvaluationKey<Scheme> {
         try contexts[0].generateEvaluationKey(configuration: evaluationKeyConfiguration, using: secretKey)
-    }
-}
-
-extension Array2d where T == Float {
-    /// A mapping from vectors to non-negative real numbers.
-    @usableFromInline
-    enum Norm {
-        case Lp(p: Float) // sum_i (|x_i|^p)^{1/p}
-    }
-
-    /// Normalizes each row in the matrix.
-    @inlinable
-    func normalizedRows(norm: Norm) -> Array2d<Float> {
-        switch norm {
-        case let Norm.Lp(p):
-            let normalizedValues = data.chunks(ofCount: columnCount).flatMap { row in
-                let sumOfPowers = row.map { pow($0, p) }.reduce(0, +)
-                let norm = pow(sumOfPowers, 1 / p)
-                return row.map { value in
-                    if sumOfPowers.isZero {
-                        Float.zero
-                    } else {
-                        value / norm
-                    }
-                }
-            }
-            return Array2d<Float>(
-                data: normalizedValues,
-                rowCount: rowCount,
-                columnCount: columnCount)
-        }
-    }
-
-    /// Returns the matrix where each entry is rounded to the closest integer.
-    @inlinable
-    func rounded<V: FixedWidthInteger & SignedInteger>() -> Array2d<V> {
-        Array2d<V>(
-            data: data.map { value in V(value.rounded()) },
-            rowCount: rowCount,
-            columnCount: columnCount)
-    }
-
-    /// Returns the matrix where each entry has been multiplied by a scaling factor.
-    /// - Parameter scalingFactor: The factor to multiply each entry by.
-    /// - Returns: The scaled matrix.
-    @inlinable
-    func scaled(by scalingFactor: Float) -> Array2d<Float> {
-        Array2d<Float>(
-            data: data.map { value in value * scalingFactor },
-            rowCount: rowCount,
-            columnCount: columnCount)
     }
 }

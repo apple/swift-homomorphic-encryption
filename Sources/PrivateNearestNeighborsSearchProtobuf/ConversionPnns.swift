@@ -138,7 +138,7 @@ extension ClientConfig {
     /// - Throws: Error upon unsupported object.
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig {
         try Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig.with { config in
-            config.encryptionParameters = try encryptionParams.proto()
+            config.encryptionParameters = try encryptionParameters[0].proto()
             config.scalingFactor = UInt64(scalingFactor)
             config.queryPacking = try queryPacking.proto()
             config.vectorDimension = UInt32(vectorDimension)
@@ -309,5 +309,23 @@ extension Query {
     /// - Throws: Error upon unsupported object.
     public func proto() throws -> [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] {
         try ciphertextMatrices.map { matrix in try matrix.serialize().proto() }
+    }
+}
+
+extension Query {
+    package func size() throws -> Int {
+        try proto().map { matrix in try matrix.serializedData().count }.sum()
+    }
+}
+
+extension Response {
+    package func size() throws -> Int {
+        try proto().serializedData().count
+    }
+}
+
+extension EvaluationKey {
+    package func size() throws -> Int {
+        try serialize().proto().serializedData().count
     }
 }

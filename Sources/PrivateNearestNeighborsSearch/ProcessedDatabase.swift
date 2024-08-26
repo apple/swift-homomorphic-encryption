@@ -15,7 +15,8 @@
 import HomomorphicEncryption
 
 public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
-    let contexts: [Context<Scheme>]
+    /// One context per plaintext modulus.
+    public let contexts: [Context<Scheme>]
 
     /// The processed vectors in the database.
     public let plaintextMatrices: [PlaintextMatrix<Scheme, Eval>]
@@ -28,6 +29,22 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
 
     /// Server configuration.
     public let serverConfig: ServerConfig<Scheme>
+
+    @inlinable
+    public init(
+        contexts: [Context<Scheme>],
+        plaintextMatrices: [PlaintextMatrix<Scheme, Eval>],
+        entryIds: [UInt64],
+        entryMetadatas: [[UInt8]],
+        serverConfig: ServerConfig<Scheme>)
+    {
+        precondition(contexts.count == plaintextMatrices.count)
+        self.contexts = contexts
+        self.plaintextMatrices = plaintextMatrices
+        self.entryIds = entryIds
+        self.entryMetadatas = entryMetadatas
+        self.serverConfig = serverConfig
+    }
 
     /// Serializes the processed database.
     /// - Returns: The serialized processed database.
@@ -44,39 +61,54 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
 
 extension Database {
     /// Processes the database for neareset neighbors computation.
-    /// - Parameter config: Configuration to process with.
+    /// - Parameters:
+    ///   - config: Configuration to process with.
+    ///   - contexts: Contexts for HE computation, one per plaintext modulus.
     /// - Returns: The processed database.
     /// - Throws: Error upon failure to process the database.
-    public func process<Scheme: HeScheme>(with config: ServerConfig<Scheme>) throws -> ProcessedDatabase<Scheme> {
+    @inlinable
+    public func process<Scheme: HeScheme>(config: ServerConfig<Scheme>,
+                                          contexts: [Context<Scheme>] = []) throws -> ProcessedDatabase<Scheme>
+    {
         guard config.distanceMetric == .cosineSimilarity else {
             throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)
         }
-        let vectors = Array2d(data: rows.map { row in row.vector })
-        let roundedVectors: Array2d<Scheme.SignedScalar> = vectors
-            .normalizedRows(norm: .Lp(p: 2.0))
-            .scaled(by: Float(config.clientConfig.scalingFactor)).rounded()
-
-        let contexts = try config.encryptionParameters().map { encryptionParams in
-            try Context(encryptionParameters: encryptionParams)
+        var contexts = contexts
+        if contexts.isEmpty {
+            contexts = try config.encryptionParameters.map { encryptionParams in
+                try Context(encryptionParameters: encryptionParams)
+            }
+        } else {
+            precondition(contexts.count == config.encryptionParameters.count)
+            for (context, encryptionParameters) in zip(contexts, config.encryptionParameters) {
+                guard context.encryptionParameters == encryptionParameters else {
+                    throw PnnsError.wrongEncryptionParameters(
+                        got: context.encryptionParameters,
+                        expected: encryptionParameters)
+                }
+            }
         }
+
+        let vectors = Array2d(data: rows.map { row in row.vector })
+        let roundedVectors: Array2d<Scheme.SignedScalar> = vectors.normalizedScaledAndRounded(
+            scalingFactor: Float(config.scalingFactor))
+
         let plaintextMatrices: [PlaintextMatrix<Scheme, Eval>] = try contexts.map { context in
             // For a single plaintext modulus, reduction isn't necessary
             let shouldReduce = contexts.count > 1
             return try PlaintextMatrix(
                 context: context,
-                dimensions: MatrixDimensions(
-                    rowCount: roundedVectors.rowCount,
-                    columnCount: roundedVectors.columnCount),
+                dimensions: MatrixDimensions(roundedVectors.shape),
                 packing: config.databasePacking,
                 signedValues: roundedVectors.data,
                 reduce: shouldReduce).convertToEvalFormat()
         }
-
+        let hasMetadata = rows.contains { row in !row.entryMetadata.isEmpty }
         return ProcessedDatabase(
             contexts: contexts,
             plaintextMatrices: plaintextMatrices,
             entryIds: rows.map { row in row.entryId },
-            entryMetadatas: rows.map { row in row.entryMetadata },
+            entryMetadatas: hasMetadata ? rows.map { row in row.entryMetadata } : [],
             serverConfig: config)
     }
 }

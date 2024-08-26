@@ -15,19 +15,34 @@
 import HomomorphicEncryption
 
 /// A nearest neighbor search query.
-struct Query<Scheme: HeScheme>: Sendable {
+public struct Query<Scheme: HeScheme>: Sendable {
     // Encrypted query; one matrix per plaintext CRT modulus
-    let ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]
+    public let ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]
 }
 
 /// A nearest neighbor search response.
-struct Response<Scheme: HeScheme>: Sendable {
+public struct Response<Scheme: HeScheme>: Sendable {
     // Encrypted response; one matrix per plaintext CRT modulus
-    let ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]
-    // A list of entry identifiers the server computed similarities for
-    let entryIds: [UInt64]
-    // Metadata for each entry in the database
-    let entryMetadatas: [[UInt8]]
+    public let ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]
+    // The entry identifiers the server computed distances for.
+    public let entryIds: [UInt64]
+    // Metadata for each entry the server computed distances for.
+    public let entryMetadatas: [[UInt8]]
+
+    /// Creates a new ``Response``.
+    /// - Parameters:
+    ///   - ciphertextMatrices: Ciphertext matrices.
+    ///   - entryIds: An identifiers the server computed distances for.
+    ///   - entryMetadatas: Metadata for each entry the server computed distances for.
+    public init(
+        ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>],
+        entryIds: [UInt64],
+        entryMetadatas: [[UInt8]])
+    {
+        self.ciphertextMatrices = ciphertextMatrices
+        self.entryIds = entryIds
+        self.entryMetadatas = entryMetadatas
+    }
 }
 
 /// Distances from one or more query vector to the database rows.

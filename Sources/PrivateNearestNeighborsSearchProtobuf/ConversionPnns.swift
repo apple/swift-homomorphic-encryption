@@ -302,3 +302,12 @@ extension SerializedProcessedDatabase {
             }
     }
 }
+
+extension Query {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    /// - Throws: Error upon unsupported object.
+    public func proto() throws -> [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] {
+        try ciphertextMatrices.map { matrix in try matrix.serialize().proto() }
+    }
+}

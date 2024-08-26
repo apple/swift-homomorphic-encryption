@@ -238,6 +238,20 @@ package.targets += [
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
         ]),
+    .executableTarget(
+        name: "PNNSBenchmark",
+        dependencies: [
+            .product(name: "Benchmark", package: "package-benchmark"),
+            "HomomorphicEncryption",
+            "HomomorphicEncryptionProtobuf",
+            "PrivateNearestNeighborsSearch",
+            "PrivateNearestNeighborsSearchProtobuf",
+        ],
+        path: "Benchmarks/PrivateNearestNeighborsSearchBenchmark",
+        swiftSettings: benchmarkSettings,
+        plugins: [
+            .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+        ]),
 ]
 
 // Set the minimum macOS version for the package

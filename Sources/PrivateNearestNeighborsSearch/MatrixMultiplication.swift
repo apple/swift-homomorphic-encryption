@@ -32,18 +32,28 @@ public struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
         self.giantStep = giantStep
     }
 
-    public init(vectorDimension: Int) {
-        let dimension = Int32(vectorDimension).nextPowerOfTwo
-        let babyStep = Int32(Double(dimension).squareRoot().rounded(.up))
+    @inlinable
+    public init(vectorDimension: Int, babyStep: Int) {
+        let dimension = vectorDimension.nextPowerOfTwo
         let giantStep = dimension.dividingCeil(babyStep, variableTime: true)
+        self.init(
+            vectorDimension: vectorDimension,
+            babyStep: babyStep,
+            giantStep: giantStep)
+    }
 
-        self.init(vectorDimension: Int(dimension), babyStep: Int(babyStep), giantStep: Int(giantStep))
+    @inlinable
+    public init(vectorDimension: Int) {
+        let dimension = vectorDimension.nextPowerOfTwo
+        let babyStep = Int(Double(dimension).squareRoot().rounded(.up))
+        self.init(vectorDimension: dimension, babyStep: babyStep)
     }
 }
 
 /// Helper function to compute evaluation key used in computing multiplication with a vector.
-enum MatrixMultiplication {
-    static func evaluationKeyConfig(
+package enum MatrixMultiplication {
+    @inlinable
+    package static func evaluationKeyConfig(
         plaintextMatrixDimensions: MatrixDimensions,
         encryptionParameters: EncryptionParameters<some HeScheme>) throws -> EvaluationKeyConfiguration
     {
@@ -69,6 +79,7 @@ extension PlaintextMatrix {
     ///   - evaluationKey: Evaluation key to perform BabyStepGiantStep rotations.
     /// - Returns: Encrypted dense-column packed vector containing dot products.
     /// - Throws: Error upon failure to compute the inner product.
+    @inlinable
     func mul(
         ciphertextVector: CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>,
         using evaluationKey: EvaluationKey<Scheme>) throws -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
@@ -157,7 +168,7 @@ extension PlaintextMatrix {
             }
         }
         let ciphertexMatrixDimensions = try MatrixDimensions(
-            rowCount: resultCiphertextCount * context.encryptionParameters.polyDegree,
+            rowCount: dimensions.rowCount,
             columnCount: 1)
         return try CiphertextMatrix(
             dimensions: ciphertexMatrixDimensions,

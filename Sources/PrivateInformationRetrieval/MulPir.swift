@@ -77,7 +77,7 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
     static func evaluationKeyConfiguration(
         expandedQueryCount: Int,
         degree: Int,
-        keyCompression: PirKeyCompressionStrategy) -> HomomorphicEncryption.EvaluationKeyConfiguration
+        keyCompression: PirKeyCompressionStrategy) -> EvaluationKeyConfiguration
     {
         let maxExpansionDepth = min(expandedQueryCount, degree).ceilLog2
         let smallestPower = degree.log2 - maxExpansionDepth + 1

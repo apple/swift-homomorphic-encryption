@@ -17,7 +17,7 @@ import HomomorphicEncryption
 /// Stores a matrix of scalars as ciphertexts.
 public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
     /// Dimensions of the matrix.
-    @usableFromInline let dimensions: MatrixDimensions
+    @usableFromInline var dimensions: MatrixDimensions
 
     /// Dimensions of the scalar matrix in a SIMD-encoded plaintext.
     @usableFromInline let simdDimensions: SimdEncodingDimensions
@@ -26,7 +26,7 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
     @usableFromInline let packing: MatrixPacking
 
     /// Encrypted data.
-    @usableFromInline let ciphertexts: [Ciphertext<Scheme, Format>]
+    @usableFromInline package var ciphertexts: [Ciphertext<Scheme, Format>]
 
     /// The parameter context.
     @usableFromInline var context: Context<Scheme> {
@@ -111,8 +111,8 @@ extension CiphertextMatrix {
             ciphertexts: evalCiphertexts)
     }
 
-    /// Converts the plaintext matrix to ``Coeff`` format.
-    /// - Returns: The converted plaintext ciphertext.
+    /// Converts the ciphertext matrix to ``Coeff`` format.
+    /// - Returns: The converted ciphertext matrix.
     /// - Throws: Error upon failure to convert the ciphertext matrix.
     @inlinable
     public func convertToCoeffFormat() throws -> CiphertextMatrix<Scheme, Coeff> {
@@ -125,6 +125,33 @@ extension CiphertextMatrix {
             dimensions: dimensions,
             packing: packing,
             ciphertexts: coeffCiphertexts)
+    }
+
+    /// Converts the ciphertext matrix to canonical format.
+    /// - Returns: The converted ciphertext matrix.
+    /// - Throws: Error upon failure to convert the ciphertext matrix.
+    @inlinable
+    public func convertToCanonicalFormat() throws -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat> {
+        if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            return try convertToCoeffFormat() as! CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
+        }
+        if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+            // swiftlint:disable:next force_cast
+            return try convertToEvalFormat() as! CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
+        }
+        fatalError("Unsupported Format \(Format.description)")
+    }
+
+    /// Performs modulus switching to a single modulus.
+    ///
+    /// If the ciphertexts already have a single modulus, this is a no-op.
+    /// - Throws: Error upon failure to modulus switch.
+    @inlinable
+    public mutating func modSwitchDownToSingle() throws where Format == Scheme.CanonicalCiphertextFormat {
+        for index in 0..<ciphertexts.count {
+            try ciphertexts[index].modSwitchDownToSingle()
+        }
     }
 }
 
@@ -277,5 +304,18 @@ extension CiphertextMatrix {
             dimensions: MatrixDimensions(rowCount: 1, columnCount: columnCount),
             packing: packing,
             ciphertexts: [ciphertext])
+    }
+
+    /// Returns the noise budget.
+    /// - Parameters:
+    ///   - secretKey: Secret key.
+    ///   - variableTime: If `true`, indicates the secret key coefficients may be leaked through timing.
+    /// - Returns: The noise budget.
+    /// - Throws: Error upon failure to compute the noise budget.
+    @inlinable
+    func noiseBudget(using secretKey: Scheme.SecretKey, variableTime: Bool) throws -> Double {
+        try ciphertexts.map { ciphertext in
+            try ciphertext.noiseBudget(using: secretKey, variableTime: variableTime)
+        }.min() ?? -Double.infinity
     }
 }

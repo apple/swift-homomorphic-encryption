@@ -60,6 +60,14 @@ public struct MatrixDimensions: Equatable, Sendable {
             throw PnnsError.invalidMatrixDimensions(self)
         }
     }
+
+    /// Initializes a ``MatrixDimensions``.
+    /// - Parameter shape: The (rowCount, columnCount).
+    /// - Throws: Error upon failure to initialize the dimensions.
+    @inlinable
+    public init(_ shape: (Int, Int)) throws {
+        try self.init(rowCount: shape.0, columnCount: shape.1)
+    }
 }
 
 /// Stores a matrix of scalars as plaintexts.
@@ -446,10 +454,11 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
                 chunk += repeatElement(0, count: n - chunk.count)
                 let i = (plaintexts.count - chunkIndex) / plaintextsPerColumn
                 let rotationStep = i.previousMultiple(of: bsgs.babyStep, variableTime: true)
-                let middle = min(chunk.endIndex, chunk.startIndex + n / 2)
-                chunk[chunk.startIndex..<middle].rotate(toStartAt: middle - rotationStep)
-                chunk[middle...].rotate(toStartAt: chunk.endIndex - rotationStep)
-
+                if rotationStep != 0 {
+                    let middle = chunk.startIndex + n / 2
+                    chunk[chunk.startIndex..<middle].rotate(toStartAt: middle - rotationStep)
+                    chunk[middle...].rotate(toStartAt: chunk.endIndex - rotationStep)
+                }
                 let plaintext = try context.encode(values: Array(chunk), format: .simd)
                 plaintexts.append(plaintext)
             }

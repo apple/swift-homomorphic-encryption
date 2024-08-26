@@ -16,22 +16,28 @@ import HomomorphicEncryption
 
 /// A nearest neighbor search query.
 public struct Query<Scheme: HeScheme>: Sendable {
-    // Encrypted query; one matrix per plaintext CRT modulus
+    /// Encrypted query; one matrix per plaintext CRT modulus.
     public let ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]
+
+    /// Creates a ``Query``.
+    /// - Parameter ciphertextMatrices: Encrypted query.
+    public init(ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]) {
+        self.ciphertextMatrices = ciphertextMatrices
+    }
 }
 
 /// A nearest neighbor search response.
 public struct Response<Scheme: HeScheme>: Sendable {
-    // Encrypted response; one matrix per plaintext CRT modulus
+    /// Encrypted distances; one matrix per plaintext CRT modulus.
     public let ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]
-    // The entry identifiers the server computed distances for.
+    /// The entry identifiers the server computed distances for.
     public let entryIds: [UInt64]
-    // Metadata for each entry the server computed distances for.
+    /// Metadata for each entry the server computed distances for.
     public let entryMetadatas: [[UInt8]]
 
     /// Creates a new ``Response``.
     /// - Parameters:
-    ///   - ciphertextMatrices: Ciphertext matrices.
+    ///   - ciphertextMatrices: Encrypted distances; one matrix per plaintext CRT modulus.
     ///   - entryIds: An identifiers the server computed distances for.
     ///   - entryMetadatas: Metadata for each entry the server computed distances for.
     public init(
@@ -46,11 +52,46 @@ public struct Response<Scheme: HeScheme>: Sendable {
 }
 
 /// Distances from one or more query vector to the database rows.
-struct DatabaseDistances: Sendable {
-    /// The distance from each query vector (outer dimension) to each database row (inner dimension).
-    let distances: Array2d<Float>
-    // Identifier for each entry in the database.
-    let entryIds: [UInt64]
-    // Metadata for each entry in the database.
-    let entryMetadatas: [[UInt8]]
+public struct DatabaseDistances: Sendable {
+    /// Each row contains the distances from a database entry to each query vector.
+    public let distances: Array2d<Float>
+    /// Identifier for each entry in the database.
+    public let entryIds: [UInt64]
+    /// Metadata for each entry in the database.
+    public let entryMetadatas: [[UInt8]]
+
+    /// Creates a new ``DatabaseDistances``.
+    /// - Parameters:
+    ///   - distances: Each row contains the distances from a database entry to each query vector.
+    ///   - entryIds: Identifier for each entry in the database
+    ///   - entryMetadatas: Metadata for each entry in the database
+    public init(
+        distances: Array2d<Float>,
+        entryIds: [UInt64],
+        entryMetadatas: [[UInt8]])
+    {
+        self.distances = distances
+        self.entryIds = entryIds
+        self.entryMetadatas = entryMetadatas
+    }
+}
+
+extension Response {
+    /// Computes the noise budget of the ciphertext.
+    ///
+    /// The *noise budget* of the ciphertext decreases throughout HE operations. Once a ciphertext's noise budget is
+    /// below
+    /// ``HeScheme/minNoiseBudget``, decryption may yield inaccurate plaintexts.
+    /// - Parameters:
+    ///   - secretKey: Secret key.
+    ///   - variableTime: If `true`, indicates the secret key coefficients may be leaked through timing.
+    /// - Returns: The noise budget.
+    /// - Throws: Error upon failure to compute the noise budget.
+    /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
+    @inlinable
+    public func noiseBudget(using secretKey: Scheme.SecretKey, variableTime: Bool) throws -> Double {
+        try ciphertextMatrices.map { ciphertextMatrix in
+            try ciphertextMatrix.noiseBudget(using: secretKey, variableTime: variableTime)
+        }.min() ?? -Double.infinity
+    }
 }

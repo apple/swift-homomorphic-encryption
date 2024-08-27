@@ -260,7 +260,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
             .map { encryptionParams in try Context(encryptionParameters: encryptionParams) }
         self.processedDatabase = try database.process(config: serverConfig, contexts: contexts)
         self.client = try Client(config: clientConfig, contexts: contexts)
-        self.server = try Server(database: processedDatabase, config: serverConfig)
+        self.server = try Server(database: processedDatabase)
         self.secretKey = try client.generateSecretKey()
         self.evaluationKey = try client.generateEvaluationKey(using: secretKey)
 

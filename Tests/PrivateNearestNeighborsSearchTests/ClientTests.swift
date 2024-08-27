@@ -201,7 +201,7 @@ final class ClientTests: XCTestCase {
             let processed = try database.process(config: serverConfig)
 
             let client = try Client(config: clientConfig, contexts: processed.contexts)
-            let server = try Server(database: processed, config: serverConfig)
+            let server = try Server(database: processed)
 
             // We query exact matches from rows in the database
             let queryVectors = Array2d(data: database.rows.prefix(queryCount).map { row in row.vector })

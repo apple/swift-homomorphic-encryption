@@ -347,7 +347,7 @@ struct CuckooTable {
                         """
                         Unable to insert value with keyword \(keywordValuePair.keyword) \
                         into table with \(entryCount) entries. \
-                        Consider enabling table expansion in config.
+                        Consider setting `allowExpansion` or increasing `bucketCount`.
                         """)
             }
         }

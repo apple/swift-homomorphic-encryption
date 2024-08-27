@@ -22,3 +22,4 @@ The PIR implementation in Swift Homomorphic Encryption uses homomorphic encrypti
 ### Articles
 - <doc:EncodingPipeline>
 - <doc:ParameterTuning>
+- <doc:ReusingPirParameters>

@@ -16,7 +16,7 @@ import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import PrivateInformationRetrieval
 
-extension Apple_SwiftHomomorphicEncryption_Api_V1_PIRResponse {
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse {
     /// Converts the protobuf object to a native type.
     /// - Parameter context: Context to associate with the native type.
     /// - Returns: The converted native type.
@@ -36,8 +36,8 @@ extension Response {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
-    public func proto() throws -> Apple_SwiftHomomorphicEncryption_Api_V1_PIRResponse {
-        try Apple_SwiftHomomorphicEncryption_Api_V1_PIRResponse.with { pirResponse in
+    public func proto() throws -> Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse {
+        try Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse.with { pirResponse in
             pirResponse.replies = try ciphertexts.map { reply in
                 try reply.map { try $0.serialize(forDecryption: true) }.proto()
             }
@@ -45,7 +45,7 @@ extension Response {
     }
 }
 
-extension Apple_SwiftHomomorphicEncryption_Api_V1_PIRShardConfig {
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig {
     /// Converts the protobuf object to a native type.
     /// - Parameters:
     ///   - batchSize: Number of queries in a batch.
@@ -65,8 +65,8 @@ extension IndexPirParameter {
     /// Converts the native object into a protobuf object.
     /// - Parameter shardID: Optional identifier to associate with the shard
     /// - Returns: The converted protobuf object.
-    public func proto(shardID: String = "") -> Apple_SwiftHomomorphicEncryption_Api_V1_PIRShardConfig {
-        Apple_SwiftHomomorphicEncryption_Api_V1_PIRShardConfig.with { shardConfig in
+    public func proto(shardID: String = "") -> Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig {
+        Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig.with { shardConfig in
             shardConfig.numEntries = UInt64(entryCount)
             shardConfig.entrySize = UInt64(entrySizeInBytes)
             shardConfig.dimensions = dimensions.map(UInt64.init)

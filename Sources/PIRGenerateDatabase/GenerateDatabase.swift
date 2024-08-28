@@ -73,10 +73,13 @@ struct GenerateDatabaseCommand: ParsableCommand {
 
     @Option var valueType: ValueTypeArguments
 
+    @Option(help: "The first keyword")
+    var firstKeyword: Int = 0
+
     mutating func run() throws {
         let databaseRows = (0..<rowCount)
             .map { rowIndex in
-                let keyword = [UInt8](String(rowIndex).utf8)
+                let keyword = [UInt8](String(firstKeyword + rowIndex).utf8)
                 guard let valueSize = valueSize.range.randomElement() else {
                     preconditionFailure("Could not sample valueSize from range \(valueSize.range)")
                 }

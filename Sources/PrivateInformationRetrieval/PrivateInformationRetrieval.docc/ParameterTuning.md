@@ -1,6 +1,6 @@
 # Parameter Tuning
 
- Keyword PIR Parameter Tuning
+Learn how to tune parameters for Keyword PIR.
 
 ## Overview
 
@@ -68,7 +68,7 @@ executables.
 PIRGenerateDatabase \
     --output-database thinDatabase.txtpb \
     --row-count 100000 \
-    --value-size '2' \
+    --value-size 2 \
     --value-type random
 ```
 

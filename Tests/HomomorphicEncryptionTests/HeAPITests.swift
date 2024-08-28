@@ -1031,12 +1031,10 @@ class HeAPITests: XCTestCase {
     private func runBfvTests<T: ScalarType>(_: T.Type) throws {
         let predefined: [EncryptionParameters<Bfv<T>>] = try PredefinedRlweParameters.allCases
             .filter { rlweParams in rlweParams.supportsScalar(T.self) }
+            .filter { rlweParams in rlweParams.polyDegree <= 512 } // large degrees are slow
             .map { rlweParams in
                 try EncryptionParameters<Bfv<T>>(from: rlweParams)
-            }.filter { encryptParams in
-                encryptParams.polyDegree <= 512 // large degrees are slow
             }
-
         let custom = try EncryptionParameters<Bfv<T>>(
             polyDegree: TestUtils.testPolyDegree,
             plaintextModulus: T

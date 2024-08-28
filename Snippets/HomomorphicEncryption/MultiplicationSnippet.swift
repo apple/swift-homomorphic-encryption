@@ -18,6 +18,13 @@
 
 import HomomorphicEncryption
 
+// For this example, we make use of SIMD encoding. In SIMD format, addition and
+// multiplication are performed element-wise on the encoded values. By contrast,
+// in coefficient format, addition is element-wise, but multiplication is a
+// negacyclic convolution of coefficients.
+precondition(PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
+    .supportsSimdEncoding)
+
 // We start by choosing some encryption parameters for the Bfv<UInt32> scheme.
 // When all the coefficient moduli are small enough, using UInt32 can yield
 // significant speedups compared to UInt64.
@@ -29,11 +36,6 @@ precondition(encryptParams.plaintextModulus == 17)
 // Perform pre-computation for HE computation with these parameters.
 let context = try Context(encryptionParameters: encryptParams)
 
-// For this example, we make use of SIMD encoding. In SIMD format, addition and
-// multiplication are performed element-wise on the encoded values. By contrast,
-// in coefficient format, addition is element-wise, but multiplication is a
-// negacyclic convolution of coefficients.
-precondition(encryptParams.supportsSimdEncoding)
 // We don't need to use all the slots in the encoding.
 // However, performing HE operations on ciphertexts with fewer slots doesn't give
 // any runtime savings.

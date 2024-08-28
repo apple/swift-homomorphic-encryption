@@ -162,229 +162,12 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     /// - Parameter rlweParameters: Predefined RLWE parameters.
     /// - Throws: ``HeError`` upon failure to initialize encryption parameters.
     public init(from rlweParameters: PredefinedRlweParameters) throws {
-        switch rlweParameters {
-        case .insecure_n_8_logq_5x18_logt_5:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 17) + 177, // 131249
-                (1 << 17) + 225, // 131297
-                (1 << 17) + 369, // 131441
-                (1 << 17) + 417, // 131489
-                (1 << 17) + 545, // 131617
-            ]
-            try self.init(
-                polyDegree: 8,
-                plaintextModulus: (1 << 4) + 1 /* 17 */,
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .unchecked)
-
-        case .insecure_n_512_logq_4x60_logt_20:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 59) + 13313, // 576460752303436801
-                (1 << 59) + 16385, // 576460752303439873
-                (1 << 59) + 23553, // 576460752303447041
-                (1 << 59) + 48129, // 576460752303471617
-            ]
-            try self.init(
-                polyDegree: 512,
-                plaintextModulus: (1 << 19) + 1025, /* 525313 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .unchecked)
-
-        case .n_4096_logq_16_33_33_logt_4:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 16) - 24575, // 40961
-                (1 << 33) - 81919, // 8589852673
-                (1 << 33) - 90111, // 8589844481
-            ]
-            try self.init(
-                polyDegree: 4096,
-                plaintextModulus: (1 << 3) + 3, /* 11 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_4096_logq_27_28_28_logt_13:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 27) - 40959, // 134176769
-                (1 << 28) - 65535, // 268369921
-                (1 << 28) - 73727, // 268361729
-            ]
-            try self.init(
-                polyDegree: 4096,
-                plaintextModulus: (1 << 12) + 3, /* 4099 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_4096_logq_27_28_28_logt_5:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 27) - 40959, // 134176769
-                (1 << 28) - 65535, // 268369921
-                (1 << 28) - 73727, // 268361729
-            ]
-            try self.init(
-                polyDegree: 4096,
-                plaintextModulus: (1 << 4) + 1, /* 17 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_8192_logq_3x55_logt_42:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 55) - 311_295, // 36028797018652673
-                (1 << 55) - 1_392_639, // 36028797017571329
-                (1 << 55) - 1_507_327, // 36028797017456641
-            ]
-            try self.init(
-                polyDegree: 8192,
-                plaintextModulus: (1 << 41) + 32769, /* 2199023288321 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_8192_logq_3x55_logt_30:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 55) - 311_295, // 36028797018652673
-                (1 << 55) - 1_392_639, // 36028797017571329
-                (1 << 55) - 1_507_327, // 36028797017456641
-            ]
-            try self.init(
-                polyDegree: 8192,
-                plaintextModulus: (1 << 29) + 32769, /* 536903681 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_8192_logq_3x55_logt_29:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 55) - 311_295, // 36028797018652673
-                (1 << 55) - 1_392_639, // 36028797017571329
-                (1 << 55) - 1_507_327, // 36028797017456641
-            ]
-            try self.init(
-                polyDegree: 8192,
-                plaintextModulus: (1 << 28) + 147_457, /* 268582913 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_8192_logq_3x55_logt_24:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 55) - 311_295, // 36028797018652673
-                (1 << 55) - 1_392_639, // 36028797017571329
-                (1 << 55) - 1_507_327, // 36028797017456641
-            ]
-            try self.init(
-                polyDegree: 8192,
-                plaintextModulus: (1 << 23) + 16385, /* 8404993 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_8192_logq_29_60_60_logt_15:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 29) - 180_223, // 536690689
-                (1 << 60) - 16383, // 1152921504606830593
-                (1 << 60) - 98303, // 1152921504606748673
-            ]
-            try self.init(
-                polyDegree: 8192,
-                plaintextModulus: (1 << 14) + 27, /* 16411 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_8192_logq_40_60_60_logt_26:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 40) - 147_455, // 1099511480321
-                (1 << 60) - 16383, // 1152921504606830593
-                (1 << 60) - 98303, // 1152921504606748673
-            ]
-            try self.init(
-                polyDegree: 8192,
-                plaintextModulus: (1 << 25) + 278_529, /* 33832961 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_8192_logq_28_60_60_logt_20:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 28) - 65535, // 268369921
-                (1 << 60) - 16383, // 1152921504606830593
-                (1 << 60) - 98303, // 1152921504606748673
-            ]
-            try self.init(
-                polyDegree: 8192,
-                plaintextModulus: (1 << 19) + 32769, /* 557057 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .insecure_n_16_logq_60_logt_15:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 60) - 16383, // 1152921504606830593
-            ]
-            try self.init(
-                polyDegree: 16,
-                plaintextModulus: (1 << 14) + 33, /* 16417 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .unchecked)
-
-        case .n_4096_logq_27_28_28_logt_6:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 27) - 40959, // 134176769
-                (1 << 28) - 65535, // 268369921
-                (1 << 28) - 73727, // 268361729
-            ]
-            try self.init(
-                polyDegree: 4096,
-                plaintextModulus: (1 << 5) + 5, /* 37 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_4096_logq_27_28_28_logt_16:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 27) - 40959, // 134176769
-                (1 << 28) - 65535, // 268369921
-                (1 << 28) - 73727, // 268361729
-            ]
-            try self.init(
-                polyDegree: 4096,
-                plaintextModulus: (1 << 15) + 8193, /* 40961 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_4096_logq_27_28_28_logt_17:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 27) - 40959, // 134176769
-                (1 << 28) - 65535, // 268369921
-                (1 << 28) - 73727, // 268361729
-            ]
-            try self.init(
-                polyDegree: 4096,
-                plaintextModulus: (1 << 16) + 1, /* 65537 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-
-        case .n_4096_logq_27_28_28_logt_4:
-            let coefficientModuli: [Scheme.Scalar] = [
-                (1 << 27) - 40959, // 134176769
-                (1 << 28) - 65535, // 268369921
-                (1 << 28) - 73727, // 268361729
-            ]
-            try self.init(
-                polyDegree: 4096,
-                plaintextModulus: (1 << 3) + 3, /* 11 */
-                coefficientModuli: coefficientModuli,
-                errorStdDev: .stdDev32,
-                securityLevel: .quantum128)
-        }
+        try self.init(
+            polyDegree: rlweParameters.polyDegree,
+            plaintextModulus: Scheme.Scalar(rlweParameters.plaintextModulus),
+            coefficientModuli: rlweParameters.coefficientModuli.map { Scheme.Scalar($0) },
+            errorStdDev: rlweParameters.errorStdDev,
+            securityLevel: rlweParameters.securityLevel)
     }
 
     /// Returns the maximum log2 of the coefficient modulus to ensure security.
@@ -557,6 +340,152 @@ public enum PredefinedRlweParameters: String, Hashable, CaseIterable, CustomStri
             "n_4096_logq_27_28_28_logt_4"
         }
         return "PredefinedRlweParameters: \(rlweDescription)"
+    }
+
+    /// The RLWE polynomial degree.
+    public var polyDegree: Int {
+        switch self {
+        case .insecure_n_8_logq_5x18_logt_5: 8
+        case .insecure_n_16_logq_60_logt_15: 16
+        case .insecure_n_512_logq_4x60_logt_20: 512
+        case .n_4096_logq_27_28_28_logt_6,
+             .n_4096_logq_27_28_28_logt_16,
+             .n_4096_logq_27_28_28_logt_17,
+             .n_4096_logq_27_28_28_logt_4,
+             .n_4096_logq_16_33_33_logt_4,
+             .n_4096_logq_27_28_28_logt_13,
+             .n_4096_logq_27_28_28_logt_5: 4096
+        case .n_8192_logq_3x55_logt_42,
+             .n_8192_logq_3x55_logt_30,
+             .n_8192_logq_3x55_logt_29,
+             .n_8192_logq_3x55_logt_24,
+             .n_8192_logq_29_60_60_logt_15,
+             .n_8192_logq_40_60_60_logt_26,
+             .n_8192_logq_28_60_60_logt_20: 8192
+        }
+    }
+
+    /// The security level.
+    public var securityLevel: SecurityLevel {
+        switch self {
+        case .insecure_n_8_logq_5x18_logt_5, .insecure_n_512_logq_4x60_logt_20, .insecure_n_16_logq_60_logt_15:
+            return .unchecked
+        case .n_4096_logq_16_33_33_logt_4, .n_4096_logq_27_28_28_logt_13, .n_4096_logq_27_28_28_logt_4,
+             .n_4096_logq_27_28_28_logt_5, .n_4096_logq_27_28_28_logt_6, .n_4096_logq_27_28_28_logt_16,
+             .n_4096_logq_27_28_28_logt_17, .n_8192_logq_29_60_60_logt_15, .n_8192_logq_28_60_60_logt_20,
+             .n_8192_logq_3x55_logt_24, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_30,
+             .n_8192_logq_40_60_60_logt_26, .n_8192_logq_3x55_logt_42:
+            return .quantum128
+        }
+    }
+
+    /// The standard deviation of the error polynomial.
+    public var errorStdDev: ErrorStdDev {
+        switch self {
+        case .insecure_n_8_logq_5x18_logt_5, .insecure_n_512_logq_4x60_logt_20, .insecure_n_16_logq_60_logt_15,
+             .n_4096_logq_16_33_33_logt_4, .n_4096_logq_27_28_28_logt_13, .n_4096_logq_27_28_28_logt_4,
+             .n_4096_logq_27_28_28_logt_5, .n_4096_logq_27_28_28_logt_6, .n_4096_logq_27_28_28_logt_16,
+             .n_4096_logq_27_28_28_logt_17, .n_8192_logq_29_60_60_logt_15, .n_8192_logq_28_60_60_logt_20,
+             .n_8192_logq_3x55_logt_24, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_30,
+             .n_8192_logq_40_60_60_logt_26, .n_8192_logq_3x55_logt_42:
+            return .stdDev32
+        }
+    }
+
+    /// The plaintext modulus.
+    public var plaintextModulus: UInt64 {
+        switch self {
+        case .insecure_n_8_logq_5x18_logt_5: (1 << 4) + 1 // 17
+        case .insecure_n_16_logq_60_logt_15: (1 << 14) + 33 // 16417
+        case .insecure_n_512_logq_4x60_logt_20: (1 << 19) + 1025 // 525_313
+        case .n_4096_logq_16_33_33_logt_4: (1 << 3) + 3 // 11
+        case .n_4096_logq_27_28_28_logt_4: (1 << 3) + 3 // 11
+        case .n_4096_logq_27_28_28_logt_5: (1 << 4) + 1 // 17
+        case .n_4096_logq_27_28_28_logt_6: (1 << 5) + 5 // 37
+        case .n_4096_logq_27_28_28_logt_13: (1 << 12) + 3 // 4099
+        case .n_4096_logq_27_28_28_logt_16: (1 << 15) + 8193 // 40961,
+        case .n_4096_logq_27_28_28_logt_17: (1 << 16) + 1 // 65537
+        case .n_8192_logq_3x55_logt_24: (1 << 23) + 16385 // 8404993
+        case .n_8192_logq_3x55_logt_29: (1 << 28) + 147_457 // 268582913
+        case .n_8192_logq_3x55_logt_30: (1 << 29) + 32769 // 536903681
+        case .n_8192_logq_3x55_logt_42: (1 << 41) + 32769 // 2199023288321
+        case .n_8192_logq_29_60_60_logt_15: (1 << 14) + 27 // 16411
+        case .n_8192_logq_28_60_60_logt_20: (1 << 19) + 32769 // 557057
+        case .n_8192_logq_40_60_60_logt_26: (1 << 25) + 278_529 // 33832961
+        }
+    }
+
+    /// The ciphertext coefficient moduli.
+    public var coefficientModuli: [UInt64] {
+        switch self {
+        case .insecure_n_8_logq_5x18_logt_5:
+            [
+                (1 << 17) + 177, // 131249
+                (1 << 17) + 225, // 131297
+                (1 << 17) + 369, // 131441
+                (1 << 17) + 417, // 131489
+                (1 << 17) + 545, // 131617
+            ]
+        case .insecure_n_16_logq_60_logt_15:
+            [
+                (1 << 60) - 16383, // 1152921504606830593
+            ]
+        case .insecure_n_512_logq_4x60_logt_20:
+            [
+                (1 << 59) + 13313, // 576460752303436801
+                (1 << 59) + 16385, // 576460752303439873
+                (1 << 59) + 23553, // 576460752303447041
+                (1 << 59) + 48129, // 576460752303471617
+            ]
+        case .n_4096_logq_16_33_33_logt_4:
+            [
+                (1 << 16) - 24575, // 40961
+                (1 << 33) - 81919, // 8589852673
+                (1 << 33) - 90111, // 8589844481
+            ]
+        case .n_4096_logq_27_28_28_logt_4, .n_4096_logq_27_28_28_logt_5, .n_4096_logq_27_28_28_logt_6,
+             .n_4096_logq_27_28_28_logt_13,
+             .n_4096_logq_27_28_28_logt_16, .n_4096_logq_27_28_28_logt_17:
+            [
+                (1 << 27) - 40959, // 134176769
+                (1 << 28) - 65535, // 268369921
+                (1 << 28) - 73727, // 268361729
+            ]
+        case .n_8192_logq_3x55_logt_24, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_30, .n_8192_logq_3x55_logt_42:
+            [
+                (1 << 55) - 311_295, // 36028797018652673
+                (1 << 55) - 1_392_639, // 36028797017571329
+                (1 << 55) - 1_507_327, // 36028797017456641
+            ]
+        case .n_8192_logq_29_60_60_logt_15:
+            [
+                (1 << 29) - 180_223, // 536690689
+                (1 << 60) - 16383, // 1152921504606830593
+                (1 << 60) - 98303, // 1152921504606748673
+            ]
+        case .n_8192_logq_40_60_60_logt_26:
+            [
+                (1 << 40) - 147_455, // 1099511480321
+                (1 << 60) - 16383, // 1152921504606830593
+                (1 << 60) - 98303, // 1152921504606748673
+            ]
+        case .n_8192_logq_28_60_60_logt_20:
+            [
+                (1 << 28) - 65535, // 268369921
+                (1 << 60) - 16383, // 1152921504606830593
+                (1 << 60) - 98303, // 1152921504606748673
+            ]
+        }
+    }
+
+    /// Whether or not the encryption parameters support generation of an evaluation key.
+    public var supportsEvaluationKey: Bool {
+        coefficientModuli.count > 1
+    }
+
+    /// Whether or not the encryption parameters support ``EncodeFormat/simd`` encoding.
+    public var supportsSimdEncoding: Bool {
+        plaintextModulus.isNttModulus(for: polyDegree)
     }
 
     /// Computes whether or not the predefined RLWE parameters supports representing polynomial coefficients using a

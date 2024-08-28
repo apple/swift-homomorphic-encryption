@@ -16,11 +16,13 @@ import HomomorphicEncryption
 
 /// Private nearest neighbors server.
 public struct Server<Scheme: HeScheme> {
-    /// Configuration.
-    public let config: ServerConfig<Scheme>
-
     /// The database.
     public let database: ProcessedDatabase<Scheme>
+
+    /// Configuration.
+    public var config: ServerConfig<Scheme> {
+        database.serverConfig
+    }
 
     /// Configuration needed for private nearest neighbors search..
     public var evaluationKeyConfiguration: EvaluationKeyConfiguration {
@@ -33,16 +35,13 @@ public struct Server<Scheme: HeScheme> {
     }
 
     /// Creates a new ``Server``.
-    /// - Parameters:
-    ///   - database: Processed database.
-    ///   - config: Server configuration.
+    /// - Parameter database: Processed database.
     /// - Throws: Error upon failure to create the server.
     @inlinable
-    public init(database: ProcessedDatabase<Scheme>, config: ServerConfig<Scheme>) throws {
-        guard config.distanceMetric == .cosineSimilarity else {
-            throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)
+    public init(database: ProcessedDatabase<Scheme>) throws {
+        guard database.serverConfig.distanceMetric == .cosineSimilarity else {
+            throw PnnsError.wrongDistanceMetric(got: database.serverConfig.distanceMetric, expected: .cosineSimilarity)
         }
-        self.config = config
         self.database = database
     }
 

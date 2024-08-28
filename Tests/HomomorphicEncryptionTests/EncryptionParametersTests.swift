@@ -209,6 +209,12 @@ class EncryptionParametersTests: XCTestCase {
         func checkParameters(
             _ kat: ParametersKAT) throws
         {
+            XCTAssertEqual(kat.predefined.polyDegree, kat.polyDegree)
+            XCTAssertEqual(kat.predefined.coefficientModuli.map { qi in qi.ceilLog2 }, kat.coefficientModuliBitCounts)
+            XCTAssertEqual(kat.predefined.plaintextModulus.ceilLog2, kat.plaintextModulusBitCount)
+            XCTAssertEqual(kat.predefined.supportsSimdEncoding, kat.supportsSimdEncoding)
+            XCTAssertEqual(kat.predefined.supportsEvaluationKey, kat.supportsEvaluationKey)
+
             let params = try EncryptionParameters<Bfv<UInt64>>(from: kat.predefined)
             XCTAssertEqual(params.polyDegree, kat.polyDegree)
             XCTAssertEqual(params.coefficientModuli.map { qi in qi.ceilLog2 }, kat.coefficientModuliBitCounts)

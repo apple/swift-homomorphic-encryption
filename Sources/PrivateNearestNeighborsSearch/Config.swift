@@ -28,7 +28,7 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     public let scalingFactor: Int
     /// Packing for the query.
     public let queryPacking: MatrixPacking
-    /// Number of entries in each vector vector.
+    /// Number of entries in each vector.
     public let vectorDimension: Int
     /// Evaluation key configuration for nearest neighbors computation.
     public let evaluationKeyConfig: EvaluationKeyConfiguration
@@ -47,7 +47,7 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     ///   - encryptionParams: Encryption parameters.
     ///   - scalingFactor: Factor by which to scale floating-point entries before rounding to integers.
     ///   - queryPacking: Packing for the query.
-    ///   - vectorDimension: Number of entries in each vector vector.
+    ///   - vectorDimension: Number of entries in each vector.
     ///   - evaluationKeyConfig: Evaluation key configuration for nearest neighbors computation.
     ///   - distanceMetric: Metric for nearest neighbors computation
     ///   - extraPlaintextModuli: For plaintext CRT, the list of extra plaintext moduli. The first plaintext modulus
@@ -88,23 +88,60 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
         let scalingFactor = (((t - 1) / 2).squareRoot() - Float(vectorDimension).squareRoot() / 2).rounded(.down)
         return Int(scalingFactor)
     }
+
+    /// Validates the contexts are suitable for computing with this configuration.
+    /// - Parameter contexts: Contexts; one per plaintext modulus.
+    /// - Throws: Error if the contexts are not valid.
+    @inlinable
+    func validateContexts(contexts: [Context<Scheme>]) throws {
+        guard contexts.count == encryptionParameters.count else {
+            throw PnnsError.wrongContextsCount(got: contexts.count, expected: encryptionParameters.count)
+        }
+        for (context, params) in zip(contexts, encryptionParameters) {
+            guard context.encryptionParameters == params else {
+                throw PnnsError.wrongEncryptionParameters(got: context.encryptionParameters, expected: params)
+            }
+        }
+    }
 }
 
 /// Server configuration.
 public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Sendable {
     /// Configuration shared with the client.
     public let clientConfig: ClientConfig<Scheme>
+
     /// Packing for the plaintext database.
     public let databasePacking: MatrixPacking
+
     /// Factor by which to scale floating-point entries before rounding to integers.
     public var scalingFactor: Int { clientConfig.scalingFactor }
+
     /// The plaintext CRT moduli.
     public var plaintextModuli: [Scheme.Scalar] { clientConfig.plaintextModuli }
+
+    /// For plaintext CRT, the list of extra plaintext moduli.
+    ///
+    /// The first plaintext modulus will be the one in ``ClientConfig/encryptionParams``.
+    public var extraPlaintextModuli: [Scheme.Scalar] {
+        clientConfig.extraPlaintextModuli
+    }
+
     /// Distance metric.
     public var distanceMetric: DistanceMetric { clientConfig.distanceMetric }
+
     /// The encryption parameters, one per plaintext modulus.
     public var encryptionParameters: [EncryptionParameters<Scheme>] {
         clientConfig.encryptionParameters
+    }
+
+    /// Number of entries in each vector.
+    public var vectorDimension: Int {
+        clientConfig.vectorDimension
+    }
+
+    /// Packing for the query.
+    public var queryPacking: MatrixPacking {
+        clientConfig.queryPacking
     }
 
     /// Creates a new ``ServerConfig``.
@@ -117,5 +154,13 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     {
         self.clientConfig = clientConfig
         self.databasePacking = databasePacking
+    }
+
+    /// Validates the contexts are suitable for computing with this configuration.
+    /// - Parameter contexts: Contexts; one per plaintext modulus.
+    /// - Throws: Error if the contexts are not valid.
+    @inlinable
+    func validateContexts(contexts: [Context<Scheme>]) throws {
+        try clientConfig.validateContexts(contexts: contexts)
     }
 }

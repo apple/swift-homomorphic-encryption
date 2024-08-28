@@ -36,14 +36,40 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
         plaintextMatrices: [PlaintextMatrix<Scheme, Eval>],
         entryIds: [UInt64],
         entryMetadatas: [[UInt8]],
-        serverConfig: ServerConfig<Scheme>)
+        serverConfig: ServerConfig<Scheme>) throws
     {
-        precondition(contexts.count == plaintextMatrices.count)
+        try serverConfig.validateContexts(contexts: contexts)
         self.contexts = contexts
         self.plaintextMatrices = plaintextMatrices
         self.entryIds = entryIds
         self.entryMetadatas = entryMetadatas
         self.serverConfig = serverConfig
+    }
+
+    /// Initializes a ``ProcessedDatabase`` from a ``SerializedProcessedDatabase``.
+    /// - Parameters:
+    ///   - serialized: Serialized processed database.
+    ///   - contexts: Contexts for HE computation, one per plaintext modulus.
+    /// - Throws: Error upon failure to load the database.
+    public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Context<Scheme>] = []) throws {
+        var contexts = contexts
+        if contexts.isEmpty {
+            contexts = try serialized.serverConfig.encryptionParameters.map { encryptionParams in
+                try Context(encryptionParameters: encryptionParams)
+            }
+        }
+        try serialized.serverConfig.validateContexts(contexts: contexts)
+
+        let plaintextMatrices = try zip(serialized.plaintextMatrices, contexts)
+            .map { matrix, context in
+                try PlaintextMatrix<Scheme, Eval>(deserialize: matrix, context: context)
+            }
+        try self.init(
+            contexts: contexts,
+            plaintextMatrices: plaintextMatrices,
+            entryIds: serialized.entryIds,
+            entryMetadatas: serialized.entryMetadatas,
+            serverConfig: serialized.serverConfig)
     }
 
     /// Serializes the processed database.
@@ -78,16 +104,8 @@ extension Database {
             contexts = try config.encryptionParameters.map { encryptionParams in
                 try Context(encryptionParameters: encryptionParams)
             }
-        } else {
-            precondition(contexts.count == config.encryptionParameters.count)
-            for (context, encryptionParameters) in zip(contexts, config.encryptionParameters) {
-                guard context.encryptionParameters == encryptionParameters else {
-                    throw PnnsError.wrongEncryptionParameters(
-                        got: context.encryptionParameters,
-                        expected: encryptionParameters)
-                }
-            }
         }
+        try config.validateContexts(contexts: contexts)
 
         let vectors = Array2d(data: rows.map { row in row.vector })
         let roundedVectors: Array2d<Scheme.SignedScalar> = vectors.normalizedScaledAndRounded(
@@ -104,7 +122,7 @@ extension Database {
                 reduce: shouldReduce).convertToEvalFormat()
         }
         let hasMetadata = rows.contains { row in !row.entryMetadata.isEmpty }
-        return ProcessedDatabase(
+        return try ProcessedDatabase(
             contexts: contexts,
             plaintextMatrices: plaintextMatrices,
             entryIds: rows.map { row in row.entryId },

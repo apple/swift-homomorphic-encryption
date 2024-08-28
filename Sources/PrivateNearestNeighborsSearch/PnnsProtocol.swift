@@ -15,7 +15,7 @@
 import HomomorphicEncryption
 
 /// A nearest neighbor search query.
-public struct Query<Scheme: HeScheme>: Sendable {
+public struct Query<Scheme: HeScheme>: Equatable, Sendable {
     /// Encrypted query; one matrix per plaintext CRT modulus.
     public let ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>]
 

@@ -312,6 +312,19 @@ extension Query {
     }
 }
 
+extension [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    /// - Throws: Error upon unsupported object.
+    public func native<Scheme: HeScheme>(context: Context<Scheme>) throws -> Query<Scheme> {
+        let matrices: [CiphertextMatrix<Scheme, Coeff>] = try map { matrix in
+            let native: SerializedCiphertextMatrix<Scheme.Scalar> = try matrix.native()
+            return try CiphertextMatrix(deserialize: native, context: context)
+        }
+        return Query(ciphertextMatrices: matrices)
+    }
+}
+
 extension Query {
     package func size() throws -> Int {
         try proto().map { matrix in try matrix.serializedData().count }.sum()

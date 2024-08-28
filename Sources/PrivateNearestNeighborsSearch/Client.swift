@@ -46,21 +46,15 @@ public struct Client<Scheme: HeScheme> {
         }
         self.config = config
 
-        if !contexts.isEmpty {
-            precondition(contexts.count == config.encryptionParameters.count)
-            for (context, encryptionParameters) in zip(contexts, config.encryptionParameters) {
-                guard context.encryptionParameters == encryptionParameters else {
-                    throw PnnsError.wrongEncryptionParameters(
-                        got: context.encryptionParameters,
-                        expected: encryptionParameters)
-                }
-            }
-            self.contexts = contexts
-        } else {
-            self.contexts = try config.encryptionParameters.map { encryptionParams in
+        var contexts = contexts
+        if contexts.isEmpty {
+            contexts = try config.encryptionParameters.map { encryptionParams in
                 try Context(encryptionParameters: encryptionParams)
             }
         }
+        try config.validateContexts(contexts: contexts)
+        self.contexts = contexts
+
         self.plaintextContext = try PolyContext(
             degree: config.encryptionParameters[0].polyDegree,
             moduli: config.plaintextModuli)

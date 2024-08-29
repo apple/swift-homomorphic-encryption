@@ -71,10 +71,10 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking {
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
     public func native() throws -> MatrixPacking {
-        guard let plaintextPackingType else {
-            throw ConversionError.unsetOneof(oneof: Self.self, field: \Self.plaintextPackingType)
+        guard let matrixPackingType else {
+            throw ConversionError.unsetOneof(oneof: Self.self, field: \Self.matrixPackingType)
         }
-        switch plaintextPackingType {
+        switch matrixPackingType {
         case .denseColumn:
             return MatrixPacking.denseColumn
         case .denseRow:
@@ -98,16 +98,15 @@ extension MatrixPacking {
             switch self {
             case .denseColumn:
                 let protoDenseColumn = Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseColumn()
-                packing.plaintextPackingType = .denseColumn(protoDenseColumn)
+                packing.matrixPackingType = .denseColumn(protoDenseColumn)
             case .denseRow:
                 let protoDenseRow = Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseRow()
-                packing.plaintextPackingType = .denseRow(protoDenseRow)
+                packing.matrixPackingType = .denseRow(protoDenseRow)
             case let .diagonal(babyStepGiantStep):
                 let diagonal = Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDiagonal.with { diagonalPacking in
-                    diagonalPacking.babyStepGiantStep = babyStepGiantStep
-                        .proto()
+                    diagonalPacking.babyStepGiantStep = babyStepGiantStep.proto()
                 }
-                packing.plaintextPackingType = .diagonal(diagonal)
+                packing.matrixPackingType = .diagonal(diagonal)
             }
         }
     }

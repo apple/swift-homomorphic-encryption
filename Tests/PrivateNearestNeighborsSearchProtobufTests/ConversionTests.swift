@@ -187,6 +187,33 @@ class ConversionTests: XCTestCase {
         try runTest(Bfv<UInt64>.self)
     }
 
+    func testQuery() throws {
+        func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
+            let encryptionParams = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            let secretKey = try context.generateSecretKey()
+
+            let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
+            let scalars: [[Scheme.Scalar]] = increasingData(
+                dimensions: dimensions,
+                modulus: encryptionParams.plaintextModulus)
+            let plaintextMatrix = try PlaintextMatrix(
+                context: context,
+                dimensions: dimensions,
+                packing: .denseColumn,
+                values: scalars.flatMap { $0 })
+            let ciphertextMatrices = try (0...3).map { _ in
+                try plaintextMatrix.encrypt(using: secretKey).convertToCoeffFormat()
+            }
+
+            let query = Query(ciphertextMatrices: ciphertextMatrices)
+            let roundtrip = try query.proto().native(context: context)
+            XCTAssertEqual(roundtrip, query)
+        }
+        try runTest(Bfv<UInt32>.self)
+        try runTest(Bfv<UInt64>.self)
+    }
+
     func testSerializedProcessedDatabase() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParams = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)

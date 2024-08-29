@@ -15,7 +15,7 @@
 import HomomorphicEncryption
 
 /// Private nearest neighbors server.
-public struct Server<Scheme: HeScheme> {
+public struct Server<Scheme: HeScheme>: Sendable {
     /// The database.
     public let database: ProcessedDatabase<Scheme>
 

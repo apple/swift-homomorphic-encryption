@@ -37,6 +37,7 @@ public enum PnnsError: Error, Equatable {
     case simdEncodingNotSupported(_ description: String)
     case wrongCiphertextCount(got: Int, expected: Int)
     case wrongContext(gotDescription: String, expectedDescription: String)
+    case wrongContextsCount(got: Int, expected: Int)
     case wrongDistanceMetric(got: DistanceMetric, expected: DistanceMetric)
     case wrongEncodingValuesCount(got: Int, expected: Int)
     case wrongEncryptionParameters(gotDescription: String, expectedDescription: String)
@@ -79,6 +80,8 @@ extension PnnsError: LocalizedError {
             "Invalid query due to \(reason)"
         case let .wrongCiphertextCount(got, expected):
             "Wrong ciphertext count \(got), expected \(expected)"
+        case let .wrongContextsCount(got, expected):
+            "Wrong contexts count \(got), expected \(expected)"
         case let .wrongContext(gotDescription, expectedDescription):
             "Wrong context \(gotDescription), expected \(expectedDescription)"
         case let .wrongDistanceMetric(got, expected):

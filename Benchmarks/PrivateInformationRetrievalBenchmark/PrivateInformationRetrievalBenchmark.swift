@@ -13,18 +13,16 @@
 // limitations under the License.
 
 // Benchmarks for Pir functions.
-// These benchmarks can be triggered with
-// `swift package benchmark --target PIRBenchmark`
-// for more readable results
+// These benchmarks can be triggered with `swift package benchmark --target PIRBenchmark`
 
-@preconcurrency import Benchmark
+import Benchmark
 import Foundation
 import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import PrivateInformationRetrieval
 import PrivateInformationRetrievalProtobuf
 
-@usableFromInline let benchmarkConfiguration = Benchmark.Configuration(
+@usableFromInline nonisolated(unsafe) let benchmarkConfiguration = Benchmark.Configuration(
     metrics: [
         .wallClock,
         .mallocCountTotal,

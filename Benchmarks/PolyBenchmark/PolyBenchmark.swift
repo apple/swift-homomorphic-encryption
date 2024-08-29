@@ -14,12 +14,11 @@
 
 // Benchmarks for PolyRq functions.
 // These benchmarks can be triggered with `swift package benchmark --target PolyBenchmark`
-// for more readable results
 
-@preconcurrency import Benchmark
+import Benchmark
 import HomomorphicEncryption
 
-@usableFromInline let benchmarkConfiguration = Benchmark.Configuration(
+@usableFromInline nonisolated(unsafe) let benchmarkConfiguration = Benchmark.Configuration(
     metrics: [.wallClock, .mallocCountTotal, .peakMemoryResident],
     scalingFactor: .kilo,
     maxDuration: .seconds(3))

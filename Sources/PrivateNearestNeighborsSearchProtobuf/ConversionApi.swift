@@ -18,7 +18,7 @@ import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import PrivateNearestNeighborsSearch
 
-extension Apple_SwiftHomomorphicEncryption_Api_V1_PNNSShardResponse {
+extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse {
     /// Converts the protobuf object to a native type.
     /// - Parameter context: Context to associate with the native type.
     /// - Returns: The converted native type.
@@ -39,8 +39,8 @@ extension Response {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
-    public func proto() throws -> Apple_SwiftHomomorphicEncryption_Api_V1_PNNSShardResponse {
-        try Apple_SwiftHomomorphicEncryption_Api_V1_PNNSShardResponse.with { pnnsResponse in
+    public func proto() throws -> Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse {
+        try Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse.with { pnnsResponse in
             pnnsResponse.reply = try ciphertextMatrices.map { matrix in
                 try matrix.serialize(forDecryption: true).proto()
             }

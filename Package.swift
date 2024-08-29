@@ -113,7 +113,6 @@ let package = Package(
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
             exclude: ["generated/README.md", "protobuf_module_mappings.txtpb"],
             swiftSettings: librarySettings),
-
         .target(
             name: "TestUtilities",
             dependencies: [

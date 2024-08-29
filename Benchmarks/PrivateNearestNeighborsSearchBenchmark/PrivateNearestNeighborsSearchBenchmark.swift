@@ -13,18 +13,16 @@
 // limitations under the License.
 
 // Benchmarks for Pnns functions.
-// These benchmarks can be triggered with
-// `swift package benchmark --target PNNSBenchmark`
-// for more readable results
+// These benchmarks can be triggered with `swift package benchmark --target PNNSBenchmark`
 
-@preconcurrency import Benchmark
+import Benchmark
 import Foundation
 import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import PrivateNearestNeighborsSearch
 import PrivateNearestNeighborsSearchProtobuf
 
-@usableFromInline let benchmarkConfiguration = Benchmark.Configuration(
+@usableFromInline nonisolated(unsafe) let benchmarkConfiguration = Benchmark.Configuration(
     metrics: [
         .wallClock,
         .mallocCountTotal,

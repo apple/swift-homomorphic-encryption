@@ -55,15 +55,15 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: @unchecke
   /// Factor by which to scale floating-point entries to integers.
   public var scalingFactor: UInt64 = 0
 
-  /// Plaintext packing for the query.
-  public var plaintextPacking: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking {
-    get {return _plaintextPacking ?? Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking()}
-    set {_plaintextPacking = newValue}
+  /// Packing for the query.
+  public var queryPacking: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking {
+    get {return _queryPacking ?? Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking()}
+    set {_queryPacking = newValue}
   }
-  /// Returns true if `plaintextPacking` has been explicitly set.
-  public var hasPlaintextPacking: Bool {return self._plaintextPacking != nil}
-  /// Clears the value of `plaintextPacking`. Subsequent reads from it will return its default value.
-  public mutating func clearPlaintextPacking() {self._plaintextPacking = nil}
+  /// Returns true if `queryPacking` has been explicitly set.
+  public var hasQueryPacking: Bool {return self._queryPacking != nil}
+  /// Clears the value of `queryPacking`. Subsequent reads from it will return its default value.
+  public mutating func clearQueryPacking() {self._queryPacking = nil}
 
   /// Number of entries in each vector.
   public var vectorDimension: UInt32 = 0
@@ -83,7 +83,7 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: @unchecke
   public init() {}
 
   fileprivate var _encryptionParameters: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters? = nil
-  fileprivate var _plaintextPacking: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking? = nil
+  fileprivate var _queryPacking: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking? = nil
 }
 
 /// PNNS Request
@@ -172,7 +172,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: SwiftProtobuf
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "encryption_parameters"),
     2: .standard(proto: "scaling_factor"),
-    3: .standard(proto: "plaintext_packing"),
+    3: .standard(proto: "query_packing"),
     4: .standard(proto: "vector_dimension"),
     5: .standard(proto: "distance_metric"),
     6: .standard(proto: "evaluation_key_config_hash"),
@@ -187,7 +187,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: SwiftProtobuf
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._encryptionParameters) }()
       case 2: try { try decoder.decodeSingularUInt64Field(value: &self.scalingFactor) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._plaintextPacking) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._queryPacking) }()
       case 4: try { try decoder.decodeSingularUInt32Field(value: &self.vectorDimension) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self.distanceMetric) }()
       case 6: try { try decoder.decodeSingularBytesField(value: &self.evaluationKeyConfigHash) }()
@@ -208,7 +208,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: SwiftProtobuf
     if self.scalingFactor != 0 {
       try visitor.visitSingularUInt64Field(value: self.scalingFactor, fieldNumber: 2)
     }
-    try { if let v = self._plaintextPacking {
+    try { if let v = self._queryPacking {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     } }()
     if self.vectorDimension != 0 {
@@ -229,7 +229,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: SwiftProtobuf
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig, rhs: Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig) -> Bool {
     if lhs._encryptionParameters != rhs._encryptionParameters {return false}
     if lhs.scalingFactor != rhs.scalingFactor {return false}
-    if lhs._plaintextPacking != rhs._plaintextPacking {return false}
+    if lhs._queryPacking != rhs._queryPacking {return false}
     if lhs.vectorDimension != rhs.vectorDimension {return false}
     if lhs.distanceMetric != rhs.distanceMetric {return false}
     if lhs.evaluationKeyConfigHash != rhs.evaluationKeyConfigHash {return false}

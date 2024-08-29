@@ -62,15 +62,15 @@ public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking: Sendable {
   // methods supported on all messages.
 
   /// Different packing formats.
-  public var plaintextPackingType: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking.OneOf_PlaintextPackingType? = nil
+  public var matrixPackingType: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking.OneOf_MatrixPackingType? = nil
 
   /// Dense row packing.
   public var denseRow: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseRow {
     get {
-      if case .denseRow(let v)? = plaintextPackingType {return v}
+      if case .denseRow(let v)? = matrixPackingType {return v}
       return Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseRow()
     }
-    set {plaintextPackingType = .denseRow(newValue)}
+    set {matrixPackingType = .denseRow(newValue)}
   }
 
   //// Packs the values using a generalized diagonal packing.
@@ -79,10 +79,10 @@ public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking: Sendable {
   //// <https://eprint.iacr.org/2018/244.pdf>.
   public var diagonal: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDiagonal {
     get {
-      if case .diagonal(let v)? = plaintextPackingType {return v}
+      if case .diagonal(let v)? = matrixPackingType {return v}
       return Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDiagonal()
     }
-    set {plaintextPackingType = .diagonal(newValue)}
+    set {matrixPackingType = .diagonal(newValue)}
   }
 
   //// As many rows of data are packed sequentially into each SIMD plaintext
@@ -93,16 +93,16 @@ public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking: Sendable {
   //// row are repeated.
   public var denseColumn: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseColumn {
     get {
-      if case .denseColumn(let v)? = plaintextPackingType {return v}
+      if case .denseColumn(let v)? = matrixPackingType {return v}
       return Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseColumn()
     }
-    set {plaintextPackingType = .denseColumn(newValue)}
+    set {matrixPackingType = .denseColumn(newValue)}
   }
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Different packing formats.
-  public enum OneOf_PlaintextPackingType: Equatable, Sendable {
+  public enum OneOf_MatrixPackingType: Equatable, Sendable {
     /// Dense row packing.
     case denseRow(Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseRow)
     //// Packs the values using a generalized diagonal packing.
@@ -239,40 +239,40 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking: SwiftProtobuf.
       case 1: try {
         var v: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseRow?
         var hadOneofValue = false
-        if let current = self.plaintextPackingType {
+        if let current = self.matrixPackingType {
           hadOneofValue = true
           if case .denseRow(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.plaintextPackingType = .denseRow(v)
+          self.matrixPackingType = .denseRow(v)
         }
       }()
       case 2: try {
         var v: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDiagonal?
         var hadOneofValue = false
-        if let current = self.plaintextPackingType {
+        if let current = self.matrixPackingType {
           hadOneofValue = true
           if case .diagonal(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.plaintextPackingType = .diagonal(v)
+          self.matrixPackingType = .diagonal(v)
         }
       }()
       case 3: try {
         var v: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseColumn?
         var hadOneofValue = false
-        if let current = self.plaintextPackingType {
+        if let current = self.matrixPackingType {
           hadOneofValue = true
           if case .denseColumn(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.plaintextPackingType = .denseColumn(v)
+          self.matrixPackingType = .denseColumn(v)
         }
       }()
       default: break
@@ -285,17 +285,17 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking: SwiftProtobuf.
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    switch self.plaintextPackingType {
+    switch self.matrixPackingType {
     case .denseRow?: try {
-      guard case .denseRow(let v)? = self.plaintextPackingType else { preconditionFailure() }
+      guard case .denseRow(let v)? = self.matrixPackingType else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     }()
     case .diagonal?: try {
-      guard case .diagonal(let v)? = self.plaintextPackingType else { preconditionFailure() }
+      guard case .diagonal(let v)? = self.matrixPackingType else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     }()
     case .denseColumn?: try {
-      guard case .denseColumn(let v)? = self.plaintextPackingType else { preconditionFailure() }
+      guard case .denseColumn(let v)? = self.matrixPackingType else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     }()
     case nil: break
@@ -304,7 +304,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking: SwiftProtobuf.
   }
 
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking, rhs: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking) -> Bool {
-    if lhs.plaintextPackingType != rhs.plaintextPackingType {return false}
+    if lhs.matrixPackingType != rhs.matrixPackingType {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

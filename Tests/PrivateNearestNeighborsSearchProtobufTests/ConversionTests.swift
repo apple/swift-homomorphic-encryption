@@ -61,7 +61,7 @@ class ConversionTests: XCTestCase {
                 scalingFactor: 123,
                 queryPacking: .denseRow,
                 vectorDimension: vectorDimension,
-                evaluationKeyConfig: EvaluationKeyConfiguration(galoisElements: [3]),
+                evaluationKeyConfig: EvaluationKeyConfig(galoisElements: [3]),
                 distanceMetric: .cosineSimilarity,
                 extraPlaintextModuli: Scheme.Scalar.generatePrimes(
                     significantBitCounts: [15],
@@ -235,7 +235,7 @@ class ConversionTests: XCTestCase {
                 scalingFactor: 123,
                 queryPacking: .denseRow,
                 vectorDimension: vectorDimension,
-                evaluationKeyConfig: EvaluationKeyConfiguration(galoisElements: [3]),
+                evaluationKeyConfig: EvaluationKeyConfig(galoisElements: [3]),
                 distanceMetric: .cosineSimilarity,
                 extraPlaintextModuli: Scheme.Scalar
                     .generatePrimes(

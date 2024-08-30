@@ -27,14 +27,14 @@ extension Bfv {
     // swiftlint:disable:next missing_docs attributes
     public static func generateEvaluationKey(
         context: Context<Bfv<T>>,
-        configuration: EvaluationKeyConfiguration,
+        config: EvaluationKeyConfig,
         using secretKey: borrowing SecretKey<Bfv<T>>) throws -> EvaluationKey<Bfv<T>>
     {
         guard context.supportsEvaluationKey else {
             throw HeError.unsupportedHeOperation()
         }
         var galoisKeys: [Int: KeySwitchKey<Self>] = [:]
-        for element in configuration.galoisElements where !galoisKeys.keys.contains(element) {
+        for element in config.galoisElements where !galoisKeys.keys.contains(element) {
             let switchedKey = try secretKey.poly.applyGalois(element: element)
             galoisKeys[element] = try generateKeySwitchKey(
                 context: context,
@@ -46,7 +46,7 @@ extension Bfv {
             galoisKey = GaloisKey(keys: galoisKeys)
         }
         var relinearizationKey: RelinearizationKey<Self>?
-        if configuration.hasRelinearizationKey {
+        if config.hasRelinearizationKey {
             relinearizationKey = try Self.generateRelinearizationKey(context: context, secretKey: secretKey)
         }
         return EvaluationKey(galoisKey: galoisKey, relinearizationKey: relinearizationKey)
@@ -115,7 +115,7 @@ extension Bfv {
     ///   - keySwitchingKey: keySwitchingKey. The paper calls this `P_{Q_i}(a)`
     /// - Returns: The key-switching update for a 2-polynomial ciphertext.
     /// - Throws: Error upon failure to compute key-switching update.
-    /// - seealso: ``Bfv/generateEvaluationKey(context:configuration:using:)``.
+    /// - seealso: ``Bfv/generateEvaluationKey(context:config:using:)``.
     @inlinable
     static func computeKeySwitchingUpdate(
         context: Context<Bfv<T>>,

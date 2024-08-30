@@ -77,7 +77,7 @@ var ciphertext = try plaintext.encrypt(using: secretKey)
 // * rotate columns by 1, indicating a right rotation
 // * rotate the columns by -2, indicating a left rotation
 // * relinearize.
-let evaluationKeyConfig = try EvaluationKeyConfiguration(
+let evaluationKeyConfig = try EvaluationKeyConfig(
     galoisElements: [
         GaloisElement.swappingRows(degree: encryptionParameters.polyDegree),
         GaloisElement.rotatingColumns(
@@ -89,7 +89,7 @@ let evaluationKeyConfig = try EvaluationKeyConfiguration(
     ],
     hasRelinearizationKey: true)
 let evaluationKey = try context.generateEvaluationKey(
-    configuration: evaluationKeyConfig,
+    config: evaluationKeyConfig,
     using: secretKey)
 
 // We swap the first row, [0, 1, 2, 3] and the second row, [4, 5, 6, 7].
@@ -158,7 +158,7 @@ precondition(ciphertext.polyCount == Bfv<UInt32>.freshCiphertextPolyCount + 1)
 // together many ciphertext products. In this case, the relinearization can be
 // delayed until after the summation, so the relinearization operation is only
 // performed once, rather than on every intermediate product.
-precondition(evaluationKey.configuration.hasRelinearizationKey)
+precondition(evaluationKey.config.hasRelinearizationKey)
 try ciphertext.relinearize(using: evaluationKey)
 precondition(ciphertext.polyCount == Bfv<UInt32>.freshCiphertextPolyCount)
 try checkDecryptsDecodes(

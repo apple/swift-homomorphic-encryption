@@ -240,12 +240,12 @@ extension SerializedEvaluationKey {
 extension Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
-    public func native() -> EvaluationKeyConfiguration {
+    public func native() -> EvaluationKeyConfig {
         .init(galoisElements: galoisElements.map(Int.init), hasRelinearizationKey: hasRelinKey_p)
     }
 }
 
-extension EvaluationKeyConfiguration {
+extension EvaluationKeyConfig {
     /// Converts the native object into a protobuf object.
     /// - Parameter encryptionParameters: Encryption parameters to associate with the protobuf object.
     /// - Returns: The converted protobuf object.

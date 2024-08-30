@@ -127,7 +127,7 @@ final class CiphertextMatrixTests: XCTestCase {
                         for: encryptionParams,
                         dimensions: dimensions)
                     let evaluationKey = try context.generateEvaluationKey(
-                        configuration: evaluationKeyConfig,
+                        config: evaluationKeyConfig,
                         using: secretKey)
 
                     for rowIndex in 0..<rowCount {

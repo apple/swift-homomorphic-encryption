@@ -63,7 +63,7 @@ extension ProcessedDatabaseWithParameters {
             }
             params.algorithm = algorithm.proto()
             params.batchSize = UInt64(pirParameter.batchSize)
-            params.evaluationKeyConfig = try evaluationKeyConfiguration
+            params.evaluationKeyConfig = try evaluationKeyConfig
                 .proto(encryptionParameters: encryptionParameters)
             params.keyCompressionStrategy = .unspecified
         }
@@ -110,7 +110,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
         try ProcessedDatabaseWithParameters(
             database: database,
             algorithm: algorithm.native(),
-            evaluationKeyConfiguration: evaluationKeyConfig.native(),
+            evaluationKeyConfig: evaluationKeyConfig.native(),
             pirParameter: native(),
             keywordPirParameter: hasKeywordPirParams ? keywordPirParams.native() : nil)
     }

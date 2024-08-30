@@ -48,7 +48,7 @@ enum PirUtil<Scheme: HeScheme> {
         let targetElement = 1 << (degree.log2 - logStep + 1) + 1
         var c1 = ciphertext
 
-        guard let galoisElement = evaluationKey.configuration.galoisElements.filter({ element in
+        guard let galoisElement = evaluationKey.config.galoisElements.filter({ element in
             element <= targetElement }).max()
         else {
             throw HeError.missingGaloisKey

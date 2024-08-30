@@ -177,8 +177,8 @@ class SerializationTests: XCTestCase {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
-            let evaluationKeyConfig = EvaluationKeyConfiguration(galoisElements: [3, 5, 7])
-            let evaluationKey = try context.generateEvaluationKey(configuration: evaluationKeyConfig, using: secretKey)
+            let evaluationKeyConfig = EvaluationKeyConfig(galoisElements: [3, 5, 7])
+            let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let galoisKey = try XCTUnwrap(evaluationKey.galoisKey)
             let serialized = galoisKey.serialize()
             let deserialized = try GaloisKey(deserialize: serialized, context: context)
@@ -194,8 +194,8 @@ class SerializationTests: XCTestCase {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
-            let evaluationKeyConfig = EvaluationKeyConfiguration(hasRelinearizationKey: true)
-            let evaluationKey = try context.generateEvaluationKey(configuration: evaluationKeyConfig, using: secretKey)
+            let evaluationKeyConfig = EvaluationKeyConfig(hasRelinearizationKey: true)
+            let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let relinearizationKey = try XCTUnwrap(evaluationKey.relinearizationKey)
             let serialized = relinearizationKey.serialize()
             let deserialized = try RelinearizationKey(deserialize: serialized, context: context)
@@ -211,10 +211,10 @@ class SerializationTests: XCTestCase {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
-            let evaluationKeyConfig = EvaluationKeyConfiguration(
+            let evaluationKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 7],
                 hasRelinearizationKey: true)
-            let evaluationKey = try context.generateEvaluationKey(configuration: evaluationKeyConfig, using: secretKey)
+            let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let serialized = evaluationKey.serialize()
             let deserialized = try EvaluationKey(deserialize: serialized, context: context)
             XCTAssertEqual(deserialized, evaluationKey)

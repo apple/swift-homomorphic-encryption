@@ -218,8 +218,7 @@ class HeAPITests: XCTestCase {
         XCTAssert(evalCiphertext.isTransparent())
         XCTAssert(canonicalCiphertext.isTransparent())
 
-        let zeroPlaintext: Scheme.CoeffPlaintext = try context.encode(values: zeros,
-                                                                      format: .coefficient)
+        let zeroPlaintext: Scheme.CoeffPlaintext = try context.encode(values: zeros, format: .coefficient)
         let nonTransparentZero = try zeroPlaintext.encrypt(using: testEnv.secretKey)
         if Scheme.self != NoOpScheme.self {
             XCTAssertFalse(nonTransparentZero.isTransparent())

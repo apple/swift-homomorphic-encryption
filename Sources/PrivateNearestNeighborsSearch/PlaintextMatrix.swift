@@ -270,8 +270,8 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The plaintexts for `denseColumn` packing.
     /// - Throws: Error upon plaintext to compute the plaintexts.
     @inlinable
-    static func denseColumnPlaintexts<V: ScalarType>(context: Context<Scheme>, dimensions: MatrixDimensions,
-                                                     values: [V]) throws -> [Scheme.CoeffPlaintext]
+    static func denseColumnPlaintexts(context: Context<Scheme>, dimensions: MatrixDimensions,
+                                      values: [Scheme.Scalar]) throws -> [Scheme.CoeffPlaintext]
     {
         let degree = context.degree
         guard let simdColumnCount = context.simdDimensions?.columnCount else {
@@ -286,7 +286,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         var plaintexts: [Scheme.CoeffPlaintext] = []
         plaintexts.reserveCapacity(expectedPlaintextCount)
 
-        var packedValues: [V] = []
+        var packedValues: [Scheme.Scalar] = []
         packedValues.reserveCapacity(degree)
         for colIndex in 0..<dimensions.columnCount {
             for rowIndex in 0..<dimensions.rowCount {
@@ -303,7 +303,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
             if packedValues.count < simdColumnCount, (simdColumnCount + 1...degree).contains(nextColumnCount) {
                 // Next data column fits in next SIMD row; pad 0s to this SIMD row
                 let padCount = (context.degree - packedValues.count) % simdColumnCount
-                packedValues += [V](repeating: 0, count: padCount)
+                packedValues += [Scheme.Scalar](repeating: 0, count: padCount)
             } else if nextColumnCount > degree {
                 // Next data column requires new plaintext
                 try plaintexts.append(context.encode(values: packedValues, format: .simd))
@@ -326,10 +326,10 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The plaintexts for `denseRow` packing.
     /// - Throws: Error upon failure to compute the plaintexts.
     @inlinable
-    static func denseRowPlaintexts<V: ScalarType>(
+    static func denseRowPlaintexts(
         context: Context<Scheme>,
         dimensions: MatrixDimensions,
-        values: [V]) throws -> [Plaintext<Scheme, Coeff>]
+        values: [Scheme.Scalar]) throws -> [Plaintext<Scheme, Coeff>]
     {
         let encryptionParameters = context.encryptionParameters
         guard let simdDimensions = context.simdDimensions else {
@@ -350,9 +350,9 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
 
         // Pad number of columns to next power of two
         let padColCount = dimensions.columnCount.nextPowerOfTwo - dimensions.columnCount
-        let padValues = [V](repeating: 0, count: padColCount)
+        let padValues = [Scheme.Scalar](repeating: 0, count: padColCount)
 
-        var packedValues: [V] = []
+        var packedValues: [Scheme.Scalar] = []
         packedValues.reserveCapacity(context.degree)
         var valuesIdx = 0
         for _ in 0..<dimensions.rowCount {
@@ -400,11 +400,11 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The plaintexts for diagonal packing.
     /// - Throws: Error upon failure to compute the plaintexts.
     @inlinable
-    static func diagonalPlaintexts<V: ScalarType>(
+    static func diagonalPlaintexts(
         context: Context<Scheme>,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
-        values: [V]) throws -> [Scheme.CoeffPlaintext]
+        values: [Scheme.Scalar]) throws -> [Scheme.CoeffPlaintext]
     {
         let encryptionParameters = context.encryptionParameters
         guard let simdDimensions = context.simdDimensions else {
@@ -424,7 +424,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         let data = Array2d(data: values, rowCount: dimensions.rowCount, columnCount: dimensions.columnCount)
         // Transposed from original shape, with extra zero columns.
         // Encode diagonals
-        var packedValues = Array2d<V>.zero(
+        var packedValues = Array2d<Scheme.Scalar>.zero(
             rowCount: dimensions.columnCount.nextPowerOfTwo,
             columnCount: dimensions.rowCount)
         for rowIndex in 0..<packedValues.rowCount {
@@ -459,7 +459,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
                     chunk[chunk.startIndex..<middle].rotate(toStartAt: middle - rotationStep)
                     chunk[middle...].rotate(toStartAt: chunk.endIndex - rotationStep)
                 }
-                let plaintext = try context.encode(values: Array(chunk), format: .simd)
+                let plaintext = try context.encode(values: chunk, format: .simd)
                 plaintexts.append(plaintext)
             }
         }

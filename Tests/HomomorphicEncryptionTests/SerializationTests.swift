@@ -111,15 +111,13 @@ class SerializationTests: XCTestCase {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             do { // CoeffPlaintext
-                let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values,
-                                                                          format: format)
+                let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: format)
                 let serialized = plaintext.serialize()
                 let deserialized: Scheme.CoeffPlaintext = try Plaintext(deserialize: serialized, context: context)
                 XCTAssertEqual(deserialized, plaintext)
             }
             do { // EvalPlaintext
-                let plaintext: Scheme.EvalPlaintext = try context.encode(values: values,
-                                                                         format: format)
+                let plaintext: Scheme.EvalPlaintext = try context.encode(values: values, format: format)
                 let serialized = plaintext.serialize()
                 let deserialized: Scheme.EvalPlaintext = try Plaintext(deserialize: serialized, context: context)
                 XCTAssertEqual(deserialized, plaintext)

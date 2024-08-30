@@ -56,19 +56,19 @@ public enum NoOpScheme: HeScheme {
         return SimdEncodingDimensions(rowCount: 2, columnCount: parameters.polyDegree / 2)
     }
 
-    public static func encode(context: Context<NoOpScheme>, values: [some ScalarType],
+    public static func encode(context: Context<NoOpScheme>, values: some Collection<Scalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(values: values, format: format)
     }
 
-    public static func encode(context: Context<NoOpScheme>, signedValues: [some SignedScalarType],
+    public static func encode(context: Context<NoOpScheme>, signedValues: some Collection<SignedScalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(signedValues: signedValues, format: format)
     }
 
-    public static func encode(context: Context<NoOpScheme>, values: [some ScalarType],
+    public static func encode(context: Context<NoOpScheme>, values: some Collection<Scalar>,
                               format: EncodeFormat, moduliCount _: Int?) throws -> EvalPlaintext
     {
         let coeffPlaintext = try Self.encode(context: context, values: values, format: format)
@@ -77,7 +77,7 @@ public enum NoOpScheme: HeScheme {
 
     public static func encode(
         context: Context<NoOpScheme>,
-        signedValues: [some SignedScalarType],
+        signedValues: some Collection<SignedScalar>,
         format: EncodeFormat,
         moduliCount _: Int?) throws -> EvalPlaintext
     {

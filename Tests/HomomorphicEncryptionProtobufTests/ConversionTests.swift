@@ -153,15 +153,13 @@ class ConversionTests: XCTestCase {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             do { // CoeffPlaintext
-                let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values,
-                                                                          format: format)
+                let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: format)
                 let proto = plaintext.serialize().proto()
                 let deserialized: Scheme.CoeffPlaintext = try Plaintext(deserialize: proto.native(), context: context)
                 XCTAssertEqual(deserialized, plaintext)
             }
             do { // EvalPlaintext
-                let plaintext: Scheme.EvalPlaintext = try context.encode(values: values,
-                                                                         format: format)
+                let plaintext: Scheme.EvalPlaintext = try context.encode(values: values, format: format)
                 let proto = plaintext.serialize().proto()
                 let deserialized: Scheme.EvalPlaintext = try Plaintext(deserialize: proto.native(), context: context)
                 XCTAssertEqual(deserialized, plaintext)

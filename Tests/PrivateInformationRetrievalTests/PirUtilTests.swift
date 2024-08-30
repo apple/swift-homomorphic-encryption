@@ -45,8 +45,7 @@ class PirUtilTests: XCTestCase {
             let data: [Scheme.Scalar] = TestUtils.getRandomPlaintextData(
                 count: degree,
                 in: 0..<plaintextModulus)
-            let plaintext: Plaintext<Scheme, Coeff> = try context.encode(values: data,
-                                                                         format: .coefficient)
+            let plaintext: Plaintext<Scheme, Coeff> = try context.encode(values: data, format: .coefficient)
             let secretKey = try context.generateSecretKey()
 
             let expandedQueryCount = degree

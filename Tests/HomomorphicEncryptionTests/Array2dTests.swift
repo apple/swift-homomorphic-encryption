@@ -23,6 +23,9 @@ class Array2dTests: XCTestCase {
 
             let data2d: [[T]] = [[1, 2], [3, 4], [5, 6]]
             XCTAssertEqual(array, Array2d(data: data2d))
+
+            XCTAssert(Array2d<T>(data: []).shape == (0, 0))
+            XCTAssert(Array2d<T>(data: [[]]).shape == (0, 0))
         }
 
         runTest(Int.self)

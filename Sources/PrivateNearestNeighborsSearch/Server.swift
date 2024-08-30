@@ -24,7 +24,12 @@ public struct Server<Scheme: HeScheme>: Sendable {
         database.serverConfig
     }
 
-    /// Configuration needed for private nearest neighbors search..
+    /// Client configuration.
+    public var clientConfig: ClientConfig<Scheme> {
+        config.clientConfig
+    }
+
+    /// Configuration needed for private nearest neighbors search.
     public var evaluationKeyConfig: EvaluationKeyConfig {
         config.clientConfig.evaluationKeyConfig
     }

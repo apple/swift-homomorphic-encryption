@@ -52,6 +52,8 @@ let package = Package(
         .executable(name: "PIRGenerateDatabase", targets: ["PIRGenerateDatabase"]),
         .executable(name: "PIRProcessDatabase", targets: ["PIRProcessDatabase"]),
         .executable(name: "PIRShardDatabase", targets: ["PIRShardDatabase"]),
+        .executable(name: "PNNSGenerateDatabase", targets: ["PNNSGenerateDatabase"]),
+        .executable(name: "PNNSProcessDatabase", targets: ["PNNSProcessDatabase"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.2.0"),
@@ -144,6 +146,24 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "HomomorphicEncryption",
                 "PrivateInformationRetrievalProtobuf",
+            ],
+            swiftSettings: executableSettings),
+        .executableTarget(
+            name: "PNNSGenerateDatabase",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "HomomorphicEncryption",
+                "PrivateNearestNeighborsSearchProtobuf",
+            ],
+            swiftSettings: executableSettings),
+        .executableTarget(
+            name: "PNNSProcessDatabase",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "HomomorphicEncryptionProtobuf",
+                "PrivateNearestNeighborsSearchProtobuf",
+                "HomomorphicEncryption",
+                .product(name: "Logging", package: "swift-log"),
             ],
             swiftSettings: executableSettings),
         .testTarget(

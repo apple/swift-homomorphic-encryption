@@ -28,18 +28,17 @@ Run `PIRProcessDatabase --help` to get a sample JSON configuration.
 There are four required parameters:
 1. `rlweParameters` is one of the [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/predefinedrlweparameters),
 e.g., `n_4096_logq_27_28_28_logt_5`.
-1. `inputDatabase` is the path to the unprocessed input database. It must be a
+2. `inputDatabase` is the path to the unprocessed input database. It must be a
 serialized [Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_pir_v1_keyworddatabase).
 
 > Note: The `PIRGenerateDatabase` binary can be used to generate a sample database.
 
 3. `outputDatabase` is the path to where the processed database’s shards will be
 written. This string must contain `SHARD_ID`, unless `sharding` is
-`shardCount(1)`, and have extension `.txtpb` or `binpb`. `SHARD_ID` will be
-replaced with the shard number of each shard.
+`shardCount(1)`. `SHARD_ID` will be replaced with the shard number of each shard.
 4. `outputPirParameters` is the path to where each shard’s PIR parameters will be
 written. This string must end contain `SHARD_ID`, unless `sharding` is
-`shardCount(1)`, and have extension `.txtpb` or `binpb`. Again, `SHARD_ID` will
+`shardCount(1)`, and have extension `.txtpb` or `.binpb`. Again, `SHARD_ID` will
 be replaced with the shard number of each shard.
 
 A minimal configuration sample is

@@ -322,11 +322,11 @@ public enum ProcessKeywordDatabase {
 
         /// Initializes a ``ShardValidationResult``.
         /// - Parameters:
-        ///   - evaluationKey: Evaluation key
+        ///   - evaluationKey: Evaluation key.
         ///   - query: Query.
         ///   - response: Response.
         ///   - noiseBudget: Noise budget of the response.
-        ///   - computeTimes: Server runtimes.
+        ///   - computeTimes: Server runtime for each trial.
         ///   - entryCountPerResponse: Number of entries in a single PIR response.
         public init(
             evaluationKey: EvaluationKey<Scheme>,
@@ -337,10 +337,10 @@ public enum ProcessKeywordDatabase {
             entryCountPerResponse: [Int])
         {
             self.evaluationKey = evaluationKey
-            self.response = response
-            self.computeTimes = computeTimes
             self.query = query
+            self.response = response
             self.noiseBudget = noiseBudget
+            self.computeTimes = computeTimes
             self.entryCountPerResponse = entryCountPerResponse
         }
     }

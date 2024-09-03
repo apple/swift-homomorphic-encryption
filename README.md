@@ -18,6 +18,8 @@ and executables:
 * [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase)
 * [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase)
 
+The documentation is hosted on the [Swift Package Index](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/documentation/homomorphicencryption).
+
 ## Background
 ### Homomorphic Encryption (HE)
 Swift Homomorphic Encryption implements a special form of cryptography called homomorphic encryption (HE).

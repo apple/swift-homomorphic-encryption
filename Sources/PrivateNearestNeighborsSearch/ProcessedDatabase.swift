@@ -83,6 +83,99 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
             entryMetadatas: entryMetadatas,
             serverConfig: serverConfig)
     }
+
+    @inlinable
+    public func validate(query vector: Array2d<Float>, trials: Int) throws -> ValidationResult<Scheme> {
+        guard trials > 0 else {
+            throw PnnsError.validationError("Invalid trialsPerShard: \(trials)")
+        }
+        guard vector.count == serverConfig.vectorDimension else {
+            throw PnnsError
+                .validationError("Wrong vector count \(vector.count), expected \(serverConfig.vectorDimension)")
+        }
+
+        let server = try Server(database: self)
+        let client = try Client(config: server.clientConfig, contexts: contexts)
+
+        var evaluationKey: EvaluationKey<Scheme>?
+        var query: Query<Scheme>?
+        var response = Response<Scheme>()
+        var databaseDistances = DatabaseDistances()
+        let clock = ContinuousClock()
+        var minNoiseBudget = Double.infinity
+        let computeTimes = try (0..<trials).map { trial in
+            let secretKey = try client.generateSecretKey()
+            let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
+            let trialQuery = try client.generateQuery(for: vector, using: secretKey)
+            let computeTime = try clock.measure {
+                response = try server.computeResponse(to: trialQuery, using: trialEvaluationKey)
+            }
+            let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
+            guard noiseBudget >= Scheme.minNoiseBudget else {
+                throw PnnsError.validationError("Insufficient noise budget \(noiseBudget)")
+            }
+            let trialDatabaseDistances = try client.decrypt(response: response, using: secretKey)
+
+            minNoiseBudget = min(minNoiseBudget, noiseBudget)
+            if trial == 0 {
+                evaluationKey = trialEvaluationKey
+                query = trialQuery
+                databaseDistances = trialDatabaseDistances
+            }
+            return computeTime
+        }
+        guard let evaluationKey, let query else {
+            throw PnnsError.validationError("Empty evaluation key or query")
+        }
+
+        return ValidationResult(
+            evaluationKey: evaluationKey,
+            query: query,
+            response: response,
+            databaseDistances: databaseDistances,
+            noiseBudget: minNoiseBudget,
+            computeTimes: computeTimes)
+    }
+}
+
+/// Validation results for a nearest neighbor search.
+public struct ValidationResult<Scheme: HeScheme> {
+    /// An evaluation key.
+    public let evaluationKey: EvaluationKey<Scheme>
+    /// A query.
+    public let query: Query<Scheme>
+    /// A response.
+    public let response: Response<Scheme>
+    /// Database distances in the response.
+    public let databaseDistances: DatabaseDistances
+    /// Minimum noise budget over all responses.
+    public let noiseBudget: Double
+    /// Server runtimes.
+    public let computeTimes: [Duration]
+
+    /// Initializes a ``ValidationResult``.
+    /// - Parameters:
+    ///   - evaluationKey: Evaluation key.
+    ///   - query: Query.
+    ///   - response: Response.
+    ///   - databaseDistances: Database distances in the response.
+    ///   - noiseBudget: Noise budget of the response.
+    ///   - computeTimes: Server runtime for each trial.
+    public init(
+        evaluationKey: EvaluationKey<Scheme>,
+        query: Query<Scheme>,
+        response: Response<Scheme>,
+        databaseDistances: DatabaseDistances,
+        noiseBudget: Double,
+        computeTimes: [Duration])
+    {
+        self.evaluationKey = evaluationKey
+        self.query = query
+        self.databaseDistances = databaseDistances
+        self.response = response
+        self.computeTimes = computeTimes
+        self.noiseBudget = noiseBudget
+    }
 }
 
 extension Database {

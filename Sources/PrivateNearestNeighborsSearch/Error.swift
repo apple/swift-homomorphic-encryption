@@ -31,10 +31,12 @@ extension InvalidQueryReason: LocalizedError {
 /// Error type for ``PrivateNearestNeighborsSearch``.
 public enum PnnsError: Error, Equatable {
     case emptyCiphertextArray
+    case emptyDatabase
     case emptyPlaintextArray
     case invalidMatrixDimensions(_ dimensions: MatrixDimensions)
     case invalidQuery(reason: InvalidQueryReason)
     case simdEncodingNotSupported(_ description: String)
+    case validationError(_ description: String)
     case wrongCiphertextCount(got: Int, expected: Int)
     case wrongContext(gotDescription: String, expectedDescription: String)
     case wrongContextsCount(got: Int, expected: Int)
@@ -72,6 +74,8 @@ extension PnnsError: LocalizedError {
             "Empty ciphertext array"
         case .emptyPlaintextArray:
             "Empty plaintext array"
+        case .emptyDatabase:
+            "Empty database"
         case let .invalidMatrixDimensions(dimensions):
             "Invalid matrix dimensions: rowCount \(dimensions.rowCount), columnCount \(dimensions.columnCount)"
         case let .simdEncodingNotSupported(encryptionParameters):
@@ -94,6 +98,8 @@ extension PnnsError: LocalizedError {
             "Wrong matrix packing \(got), expected \(expected)"
         case let .wrongPlaintextCount(got, expected):
             "Wrong plaintext count \(got), expected \(expected)"
+        case let .validationError(description):
+            "Validation error \(description)"
         }
     }
 }

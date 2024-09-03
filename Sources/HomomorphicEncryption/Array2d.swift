@@ -23,8 +23,17 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
     @usableFromInline package var count: Int { rowCount * columnCount }
 
     @inlinable
-    package init(data: [[T]]) {
-        self.init(data: data.flatMap { $0 }, rowCount: data.count, columnCount: data[0].count)
+    package init(data: [[T]] = []) {
+        if data.isEmpty {
+            self.init(data: [], rowCount: 0, columnCount: 0)
+        } else {
+            let flatData = data.flatMap { $0 }
+            if flatData.isEmpty {
+                self.init(data: [], rowCount: 0, columnCount: 0)
+            } else {
+                self.init(data: flatData, rowCount: data.count, columnCount: data[0].count)
+            }
+        }
     }
 
     @inlinable
@@ -165,7 +174,7 @@ extension Array2d {
     /// Appends extra rows to the array.
     /// - Parameter rows: The row-major elements to append. Must have count dividing `columnCount`.
     @inlinable
-    mutating func append(rows: [T]) {
+    package mutating func append(rows: [T]) {
         let (newRowCount, leftover) = rows.count.quotientAndRemainder(dividingBy: columnCount)
         precondition(leftover == 0)
         data.append(contentsOf: rows)

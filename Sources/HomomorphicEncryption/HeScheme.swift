@@ -184,7 +184,7 @@ public protocol HeScheme {
     /// - Returns: A plaintext encoding `signedValues`.
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(signedValues:format:)`` for an alternative API.
-    /// - seealso: ``HeScheme/encode(context:values:format)`` to encode unsigned values.
+    /// - seealso: ``HeScheme/encode(context:values:format:)`` to encode unsigned values.
     static func encode(context: Context<Self>, signedValues: some Collection<SignedScalar>, format: EncodeFormat) throws
         -> CoeffPlaintext
 

@@ -41,9 +41,9 @@ public struct Response<Scheme: HeScheme>: Sendable {
     ///   - entryIds: An identifiers the server computed distances for.
     ///   - entryMetadatas: Metadata for each entry the server computed distances for.
     public init(
-        ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>],
-        entryIds: [UInt64],
-        entryMetadatas: [[UInt8]])
+        ciphertextMatrices: [CiphertextMatrix<Scheme, Coeff>] = [],
+        entryIds: [UInt64] = [],
+        entryMetadatas: [[UInt8]] = [])
     {
         self.ciphertextMatrices = ciphertextMatrices
         self.entryIds = entryIds
@@ -66,9 +66,9 @@ public struct DatabaseDistances: Sendable {
     ///   - entryIds: Identifier for each entry in the database
     ///   - entryMetadatas: Metadata for each entry in the database
     public init(
-        distances: Array2d<Float>,
-        entryIds: [UInt64],
-        entryMetadatas: [[UInt8]])
+        distances: Array2d<Float> = Array2d(),
+        entryIds: [UInt64] = [],
+        entryMetadatas: [[UInt8]] = [])
     {
         self.distances = distances
         self.entryIds = entryIds

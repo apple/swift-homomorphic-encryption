@@ -78,11 +78,31 @@ cat /tmp/database-v1.txtpb /tmp/database-update.txtpb > /tmp/database-v2.txtpb
 To ensure processing the update database yields the same configuration, we use the `.fixedSize` cuckoo table argument, specifying a bucket count.
 A larger bucket count will leave more room for new entries, without changing the configuration.
 However, a larger bucket count will also increase server runtime.
-One way to choose the `bucketCount` is to start with `bucketCount : 1` and try larger `bucketCounts` until the processing works.
-If the processing throws a `PirError.failedToConstructCuckooTable` or logs `Failed to construct Cuckoo table`, this is an indication the chosen bucket count was too small.
+
+There are a few ways to find a good `bucketCount`:
+* Start with a small bucket count.
+  If the processing throws a `PirError.failedToConstructCuckooTable` or logs `Failed to construct Cuckoo table`, this is an indication the chosen bucket count was too small.
+  Choose larger `bucketCounts` until the processing works.
+
+* Add a callback to [ProcessKeywordDatabase.processShard](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval/processkeyworddatabase/processshard(shard:with:)).
+  This callback can be used to report the bucketCount after the cuckoo table was created.
+A sample callback is
+```swift
+func onEvent(event: ProcessKeywordDatabase.ProcessShardEvent) throws {
+    switch event {
+    case let .cuckooTableEvent(.createdTable(table)):
+        let summary = try table.summarize()
+        let bucketCount = summary.bucketCount
+    default:
+        ()
+    }
+}
+```
+
+For our example, we use `bucketCount: 256`.
 
 We create `/tmp/config-v1-fixed-size.json` with the following contents
-```
+```json
 {
   "algorithm" : "mulPir",
   "cuckooTableArguments" : {

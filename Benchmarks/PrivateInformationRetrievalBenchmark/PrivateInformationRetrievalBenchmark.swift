@@ -278,9 +278,30 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
             unevenDimensions: true,
             keyCompression: keyCompression)
 
+        func logEvent(event: ProcessKeywordDatabase.ProcessShardEvent) throws {
+            switch event {
+            case let .cuckooTableEvent(CuckooTable.Event.createdTable(table)):
+                let summary = try table.summarize()
+                print("Created cuckoo table \(summary)")
+            case let .cuckooTableEvent(.expandingTable(table)):
+                let summary = try table.summarize()
+                print("Expanding cuckoo table \(summary)")
+            case let .cuckooTableEvent(.finishedExpandingTable(table)):
+                let summary = try table.summarize()
+                print("Finished expanding cuckoo table \(summary)")
+            case let .cuckooTableEvent(.insertedKeywordValuePair(index, _)):
+                let reportingPercentage = 10
+                let shardFraction = databaseCount / reportingPercentage
+                if (index + 1).isMultiple(of: shardFraction) {
+                    let percentage = Float(reportingPercentage * (index + 1)) / Float(shardFraction)
+                    print("Inserted \(index + 1) / \(databaseCount) keywords \(percentage)%")
+                }
+            }
+        }
+
         let processed = try Server.process(database: rows,
                                            config: config,
-                                           with: context)
+                                           with: context, onEvent: logEvent)
 
         self.server = try Server(context: context, processed: processed)
         self.client = Client(

@@ -347,8 +347,33 @@ struct ProcessDatabase: ParsableCommand {
         for (shardID, shard) in keywordDatabase.shards
             .sorted(by: { $0.0.localizedStandardCompare($1.0) == .orderedAscending })
         {
-            ProcessDatabase.logger.info("Processing shard \(shardID)")
-            let processed = try ProcessKeywordDatabase.processShard(shard: shard, with: processArgs)
+            func logEvent(event: ProcessKeywordDatabase.ProcessShardEvent) throws {
+                switch event {
+                case let .cuckooTableEvent(.createdTable(table)):
+                    let summary = try table.summarize()
+                    ProcessDatabase.logger.info("Created cuckoo table \(summary)")
+                case let .cuckooTableEvent(.expandingTable(table)):
+                    let summary = try table.summarize()
+                    ProcessDatabase.logger.info("Expanding cuckoo table \(summary)")
+                case let .cuckooTableEvent(.finishedExpandingTable(table)):
+                    let summary = try table.summarize()
+                    ProcessDatabase.logger.info("Finished expanding cuckoo table \(summary)")
+                case let .cuckooTableEvent(.insertedKeywordValuePair(index, _)):
+                    let reportingPercentage = 10
+                    let shardFraction = shard.rows.count / reportingPercentage
+                    if (index + 1).isMultiple(of: shardFraction) {
+                        let percentage = Float(reportingPercentage * (index + 1)) / Float(shardFraction)
+                        ProcessDatabase.logger
+                            .info("Inserted \(index + 1) / \(shard.rows.count) keywords \(percentage)%")
+                    }
+                }
+            }
+
+            ProcessDatabase.logger.info("Processing shard \(shardID) with \(shard.rows.count) rows")
+            let processed = try ProcessKeywordDatabase.processShard(
+                shard: shard,
+                with: processArgs,
+                onEvent: logEvent)
             if config.trialsPerShard > 0 {
                 guard let row = shard.rows.first else {
                     throw PirError.emptyDatabase

@@ -122,8 +122,8 @@ public struct EvaluationKey<Scheme: HeScheme>: Equatable, Sendable {
     @usableFromInline let relinearizationKey: RelinearizationKey<Scheme>?
 
     /// Returns the configuration for the evaluation key.
-    public var configuration: EvaluationKeyConfiguration {
-        EvaluationKeyConfiguration(
+    public var config: EvaluationKeyConfig {
+        EvaluationKeyConfig(
             // swiftlint:disable:next array_init
             galoisElements: galoisKey?.keys.keys.map { $0 } ?? [],
             hasRelinearizationKey: relinearizationKey != nil)
@@ -140,7 +140,7 @@ public struct EvaluationKey<Scheme: HeScheme>: Equatable, Sendable {
 }
 
 /// A configuration for generating an evaluation key.
-public struct EvaluationKeyConfiguration: Codable, Equatable, Hashable, Sendable {
+public struct EvaluationKeyConfig: Codable, Equatable, Hashable, Sendable {
     /// Galois elements.
     /// - seealso: ``GaloisElement``and ``HeScheme/applyGalois(ciphertext:element:using:)`` for more information.
     public let galoisElements: [Int]
@@ -156,7 +156,7 @@ public struct EvaluationKeyConfiguration: Codable, Equatable, Hashable, Sendable
         galoisElements.count + (hasRelinearizationKey ? 1 : 0)
     }
 
-    /// Initializes an ``EvaluationKeyConfiguration``.
+    /// Initializes an ``EvaluationKeyConfig``.
     /// - Parameters:
     ///   - galoisElements: Galois elements.
     ///   - hasRelinearizationKey: Whether the configuration includes a relinearization key.
@@ -168,10 +168,10 @@ public struct EvaluationKeyConfiguration: Codable, Equatable, Hashable, Sendable
     }
 }
 
-extension Sequence<EvaluationKeyConfiguration> {
-    /// Computes the union of ``EvaluationKeyConfiguration``s.
+extension Sequence<EvaluationKeyConfig> {
+    /// Computes the union of ``EvaluationKeyConfig``s.
     ///
-    /// The union of ``EvaluationKeyConfiguration``s is a configuration whose:
+    /// The union of ``EvaluationKeyConfig``s is a configuration whose:
     ///  * Galois elements is a union of each configuration's Galois elements
     ///  * `hasRelinearizationKey` is true when any of the sequence of configurations has
     /// `hasRelinearizationKey: true`.
@@ -179,7 +179,7 @@ extension Sequence<EvaluationKeyConfiguration> {
     ///  > Note: The union can be used to generate an `EvaluationKey` which supports the HE operations of any of the
     /// evaluation key configurations.
     /// - Returns: The joint evaluation configuration
-    public func union() -> EvaluationKeyConfiguration {
+    public func union() -> EvaluationKeyConfig {
         var galoisElements: Set<Int> = []
         var hasRelinearizationKey = false
         for config in self {

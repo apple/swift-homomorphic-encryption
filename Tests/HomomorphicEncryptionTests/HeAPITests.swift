@@ -49,13 +49,11 @@ class HeAPITests: XCTestCase {
             self.ciphertext1 = try coeffPlaintext1.encrypt(using: secretKey)
             self.ciphertext2 = try coeffPlaintext2.encrypt(using: secretKey)
             self.evalCiphertext1 = try ciphertext1.convertToEvalFormat()
-            let evaluationkeyConfig = EvaluationKeyConfiguration(
+            let evaluationkeyConfig = EvaluationKeyConfig(
                 galoisElements: galoisElements,
                 hasRelinearizationKey: true)
             self.evaluationKey = if context.supportsEvaluationKey, !galoisElements.isEmpty || relinearizationKey {
-                try context.generateEvaluationKey(
-                    configuration: evaluationkeyConfig,
-                    using: secretKey)
+                try context.generateEvaluationKey(config: evaluationkeyConfig, using: secretKey)
             } else {
                 nil
             }
@@ -111,19 +109,19 @@ class HeAPITests: XCTestCase {
 
     private func schemeEvaluationKeyTest(context _: Context<some HeScheme>) throws {
         do {
-            let config = EvaluationKeyConfiguration()
+            let config = EvaluationKeyConfig()
             XCTAssertFalse(config.hasRelinearizationKey)
             XCTAssertEqual(config.galoisElements, [])
             XCTAssertEqual(config.keyCount, 0)
         }
         do {
-            let config = EvaluationKeyConfiguration(hasRelinearizationKey: true)
+            let config = EvaluationKeyConfig(hasRelinearizationKey: true)
             XCTAssertTrue(config.hasRelinearizationKey)
             XCTAssertEqual(config.galoisElements, [])
             XCTAssertEqual(config.keyCount, 1)
         }
         do {
-            let config = EvaluationKeyConfiguration(galoisElements: [1, 3], hasRelinearizationKey: true)
+            let config = EvaluationKeyConfig(galoisElements: [1, 3], hasRelinearizationKey: true)
             XCTAssertTrue(config.hasRelinearizationKey)
             XCTAssertEqual(config.galoisElements, [1, 3])
             XCTAssertEqual(config.keyCount, 3)

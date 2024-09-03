@@ -30,7 +30,7 @@ public struct Client<Scheme: HeScheme> {
     @usableFromInline let plaintextContext: PolyContext<Scheme.Scalar>
 
     /// The evaluation key configuration used by the ``Server``.
-    public var evaluationKeyConfiguration: EvaluationKeyConfiguration {
+    public var evaluationKeyConfig: EvaluationKeyConfig {
         config.evaluationKeyConfig
     }
 
@@ -139,6 +139,6 @@ public struct Client<Scheme: HeScheme> {
     /// evaluation keys independent of the plaintext modulus (as in BFV), or there should be just one plaintext modulus.
     @inlinable
     public func generateEvaluationKey(using secretKey: SecretKey<Scheme>) throws -> EvaluationKey<Scheme> {
-        try contexts[0].generateEvaluationKey(configuration: evaluationKeyConfiguration, using: secretKey)
+        try contexts[0].generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
     }
 }

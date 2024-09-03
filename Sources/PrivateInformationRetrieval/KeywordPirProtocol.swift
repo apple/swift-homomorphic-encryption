@@ -96,7 +96,7 @@ public protocol KeywordPirProtocol {
     /// Evaluation key configuration.
     ///
     /// This tells the client what to include in the evaluation key. Must be the same between client and server.
-    var evaluationKeyConfiguration: EvaluationKeyConfiguration { get }
+    var evaluationKeyConfig: EvaluationKeyConfig { get }
 }
 
 /// A server that can compute encrypted keyword PIR results.
@@ -116,7 +116,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     /// Must be the same between client and server.
     public var indexPirParameter: IndexPirParameter { indexPirServer.parameter }
 
-    public var evaluationKeyConfiguration: EvaluationKeyConfiguration { indexPirServer.evaluationKeyConfiguration }
+    public var evaluationKeyConfig: EvaluationKeyConfig { indexPirServer.evaluationKeyConfig }
 
     /// Initializes a ``KeywordPirServer``.
     /// - Parameters:
@@ -197,7 +197,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
         return ProcessedDatabaseWithParameters(
             database: processedDb,
             algorithm: PirServer.IndexPir.algorithm,
-            evaluationKeyConfiguration: evaluationKeyConfig,
+            evaluationKeyConfig: evaluationKeyConfig,
             pirParameter: indexPirParameter,
             keywordPirParameter: config.parameter)
     }
@@ -238,7 +238,7 @@ public final class KeywordPirClient<PirClient: IndexPirClient>: KeywordPirProtoc
     /// Must be the same between client and server.
     var indexPirParameter: IndexPirParameter { indexPirClient.parameter }
 
-    public var evaluationKeyConfiguration: EvaluationKeyConfiguration { indexPirClient.evaluationKeyConfiguration }
+    public var evaluationKeyConfig: EvaluationKeyConfig { indexPirClient.evaluationKeyConfig }
 
     /// Initializes a ``KeywordPirClient``.
     /// - Parameters:

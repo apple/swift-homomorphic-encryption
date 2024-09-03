@@ -279,7 +279,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
         precondition(decrypted.distances.data == expected.data, "Wrong response")
 
         self.evaluationKeySize = try evaluationKey.size()
-        self.evaluationKeyCount = evaluationKey.configuration.keyCount
+        self.evaluationKeyCount = evaluationKey.config.keyCount
         self.querySize = try query.size()
         self.queryCiphertextCount = query.ciphertextMatrices.map { matrix in matrix.ciphertexts.count }.sum()
         self.responseSize = try response.size()

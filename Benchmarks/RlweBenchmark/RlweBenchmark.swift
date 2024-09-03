@@ -76,7 +76,7 @@ struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
         let columnElement = GaloisElement.swappingRows(degree: polyDegree)
         let rowElement = try GaloisElement.rotatingColumns(by: rotateColumnsStep, degree: polyDegree)
         self.evaluationKey = try context.generateEvaluationKey(
-            configuration: EvaluationKeyConfiguration(galoisElements: [
+            config: EvaluationKeyConfig(galoisElements: [
                 applyGaloisElement,
                 rowElement,
                 columnElement,
@@ -190,11 +190,11 @@ func generateEvaluationKeyBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> V
         benchmark("generateEvaluationKey", Scheme.self) { benchmark in
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
             benchmark.startMeasurement()
-            let configuration = EvaluationKeyConfiguration(galoisElements: [3], hasRelinearizationKey: true)
+            let config = EvaluationKeyConfig(galoisElements: [3], hasRelinearizationKey: true)
             for _ in benchmark.scaledIterations {
                 try blackHole(
                     benchmarkContext.context.generateEvaluationKey(
-                        configuration: configuration,
+                        config: config,
                         using: benchmarkContext.secretKey))
             }
         }

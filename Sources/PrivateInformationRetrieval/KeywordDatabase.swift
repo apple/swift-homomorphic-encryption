@@ -348,19 +348,19 @@ public enum ProcessKeywordDatabase {
     /// A processed keyword database.
     public struct Processed<Scheme: HeScheme> {
         /// Evaluation key configuration.
-        public let evaluationKeyConfiguration: EvaluationKeyConfiguration
+        public let evaluationKeyConfig: EvaluationKeyConfig
         /// Maps each shardID to the associated database shard and PIR parameters.
         public let shards: [String: ProcessedDatabaseWithParameters<Scheme>]
 
         /// Initializes a processed keyword database.
         /// - Parameters:
-        ///   - evaluationKeyConfiguration: Evaluation key configuration.
+        ///   - evaluationKeyConfig: Evaluation key configuration.
         ///   - shards: Database shards.
         @inlinable
-        init(evaluationKeyConfiguration: EvaluationKeyConfiguration,
+        init(evaluationKeyConfig: EvaluationKeyConfig,
              shards: [String: ProcessedDatabaseWithParameters<Scheme>])
         {
-            self.evaluationKeyConfiguration = evaluationKeyConfiguration
+            self.evaluationKeyConfig = evaluationKeyConfig
             self.shards = shards
         }
     }
@@ -477,7 +477,7 @@ public enum ProcessKeywordDatabase {
     public static func process<Scheme: HeScheme>(rows: some Collection<KeywordValuePair>,
                                                  with arguments: Arguments<Scheme>) throws -> Processed<Scheme>
     {
-        var evaluationKeyConfiguration = EvaluationKeyConfiguration()
+        var evaluationKeyConfig = EvaluationKeyConfig()
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
 
         let context = try Context(encryptionParameters: arguments.encryptionParameters)
@@ -491,13 +491,13 @@ public enum ProcessKeywordDatabase {
             let processed = try KeywordPirServer<MulPirServer<Scheme>>.process(database: shardedDatabase,
                                                                                config: keywordConfig,
                                                                                with: context)
-            evaluationKeyConfiguration = [evaluationKeyConfiguration, processed.pirParameter.evaluationKeyConfig]
+            evaluationKeyConfig = [evaluationKeyConfig, processed.pirParameter.evaluationKeyConfig]
                 .union()
 
             processedShards[shardID] = processed
         }
         return Processed(
-            evaluationKeyConfiguration: evaluationKeyConfiguration,
+            evaluationKeyConfig: evaluationKeyConfig,
             shards: processedShards)
     }
 }

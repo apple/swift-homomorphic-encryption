@@ -31,7 +31,7 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     /// Number of entries in each vector.
     public let vectorDimension: Int
     /// Evaluation key configuration for nearest neighbors computation.
-    public let evaluationKeyConfig: EvaluationKeyConfiguration
+    public let evaluationKeyConfig: EvaluationKeyConfig
     /// Metric for distances between vectors.
     public let distanceMetric: DistanceMetric
     /// For plaintext CRT, the list of extra plaintext moduli.
@@ -58,7 +58,7 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
         scalingFactor: Int,
         queryPacking: MatrixPacking,
         vectorDimension: Int,
-        evaluationKeyConfig: EvaluationKeyConfiguration,
+        evaluationKeyConfig: EvaluationKeyConfig,
         distanceMetric: DistanceMetric,
         extraPlaintextModuli: [Scheme.Scalar] = []) throws
     {

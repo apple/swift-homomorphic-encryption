@@ -25,7 +25,7 @@ public struct Server<Scheme: HeScheme>: Sendable {
     }
 
     /// Configuration needed for private nearest neighbors search..
-    public var evaluationKeyConfiguration: EvaluationKeyConfiguration {
+    public var evaluationKeyConfig: EvaluationKeyConfig {
         config.clientConfig.evaluationKeyConfig
     }
 

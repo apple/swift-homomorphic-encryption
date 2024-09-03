@@ -98,7 +98,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Number of indices in a query to the database.
     public let batchSize: Int
     /// Evaluation key configuration.
-    public let evaluationKeyConfig: EvaluationKeyConfiguration
+    public let evaluationKeyConfig: EvaluationKeyConfig
 
     /// The number of dimensions in the database.
     @usableFromInline var dimensionCount: Int { dimensions.count }
@@ -117,7 +117,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
         entrySizeInBytes: Int,
         dimensions: [Int],
         batchSize: Int,
-        evaluationKeyConfig: EvaluationKeyConfiguration)
+        evaluationKeyConfig: EvaluationKeyConfig)
     {
         self.entryCount = entryCount
         self.entrySizeInBytes = entrySizeInBytes
@@ -261,7 +261,7 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
     /// The algorithm that this database was processed for.
     public let algorithm: PirAlgorithm
     /// Evaluation key configuration.
-    public let evaluationKeyConfiguration: EvaluationKeyConfiguration
+    public let evaluationKeyConfig: EvaluationKeyConfig
     /// Parameters for Index PIR queries.
     public let pirParameter: IndexPirParameter
     /// Parameters for keyword-value PIR queries.
@@ -271,19 +271,19 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
     /// - Parameters:
     ///   - database: Processed database.
     ///   - algorithm: The PIR algorithm used.
-    ///   - evaluationKeyConfiguration: Evaluation key configuration.
+    ///   - evaluationKeyConfig: Evaluation key configuration.
     ///   - pirParameter: Index PIR parameters.
     ///   - keywordPirParameter: Optional keyword PIR parameters.
     public init(
         database: ProcessedDatabase<Scheme>,
         algorithm: PirAlgorithm,
-        evaluationKeyConfiguration: EvaluationKeyConfiguration,
+        evaluationKeyConfig: EvaluationKeyConfig,
         pirParameter: IndexPirParameter,
         keywordPirParameter: KeywordPirParameter? = nil)
     {
         self.database = database
         self.algorithm = algorithm
-        self.evaluationKeyConfiguration = evaluationKeyConfiguration
+        self.evaluationKeyConfig = evaluationKeyConfig
         self.pirParameter = pirParameter
         self.keywordPirParameter = keywordPirParameter
     }
@@ -363,7 +363,7 @@ public protocol IndexPirServer: Sendable {
     /// Evaluation key configuration.
     ///
     /// This tells the client what to include in the evaluation key. Must be the same between client and server.
-    var evaluationKeyConfiguration: EvaluationKeyConfiguration { get }
+    var evaluationKeyConfig: EvaluationKeyConfig { get }
 
     /// Initializes an ``IndexPirServer`` with a database.
     /// - Parameters:
@@ -445,7 +445,7 @@ public protocol IndexPirClient: Sendable {
     /// Evaluation key configuration.
     ///
     /// Must be the same between client and server.
-    var evaluationKeyConfiguration: EvaluationKeyConfiguration { get }
+    var evaluationKeyConfig: EvaluationKeyConfig { get }
 
     /// Initializes an ``IndexPirClient``.
     /// - Parameters:

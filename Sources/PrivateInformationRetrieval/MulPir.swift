@@ -63,7 +63,7 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
             }
         }
 
-        let evalKeyConfig = Self.evaluationKeyConfiguration(
+        let evalKeyConfig = Self.evaluationKeyConfig(
             expandedQueryCount: dimensions.sum() * config.batchSize,
             degree: context.encryptionParameters.polyDegree,
             keyCompression: config.keyCompression)
@@ -74,10 +74,10 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
             evaluationKeyConfig: evalKeyConfig)
     }
 
-    static func evaluationKeyConfiguration(
+    static func evaluationKeyConfig(
         expandedQueryCount: Int,
         degree: Int,
-        keyCompression: PirKeyCompressionStrategy) -> EvaluationKeyConfiguration
+        keyCompression: PirKeyCompressionStrategy) -> EvaluationKeyConfig
     {
         let maxExpansionDepth = min(expandedQueryCount, degree).ceilLog2
         let smallestPower = degree.log2 - maxExpansionDepth + 1
@@ -119,7 +119,7 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
     /// Context for HE computation.
     public let context: HomomorphicEncryption.Context<Scheme>
 
-    public var evaluationKeyConfiguration: HomomorphicEncryption.EvaluationKeyConfiguration {
+    public var evaluationKeyConfig: EvaluationKeyConfig {
         parameter.evaluationKeyConfig
     }
 
@@ -149,7 +149,7 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
     public func generateEvaluationKey(using secretKey: SecretKey<Scheme>) throws -> EvaluationKey<Scheme> {
         try Scheme.generateEvaluationKey(
             context: context,
-            configuration: evaluationKeyConfiguration,
+            config: evaluationKeyConfig,
             using: secretKey)
     }
 }
@@ -284,7 +284,7 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     public let context: HomomorphicEncryption.Context<Scheme>
 
     /// Evaluation key configuration.
-    public var evaluationKeyConfiguration: EvaluationKeyConfiguration {
+    public var evaluationKeyConfig: EvaluationKeyConfig {
         parameter.evaluationKeyConfig
     }
 

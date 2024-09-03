@@ -55,10 +55,10 @@ package enum MatrixMultiplication {
     @inlinable
     package static func evaluationKeyConfig(
         plaintextMatrixDimensions: MatrixDimensions,
-        encryptionParameters: EncryptionParameters<some HeScheme>) throws -> EvaluationKeyConfiguration
+        encryptionParameters: EncryptionParameters<some HeScheme>) throws -> EvaluationKeyConfig
     {
         let babyStepGiantStep = BabyStepGiantStep(vectorDimension: plaintextMatrixDimensions.columnCount)
-        return try EvaluationKeyConfiguration(
+        return try EvaluationKeyConfig(
             galoisElements: [
                 GaloisElement.rotatingColumns(
                     by: -1,

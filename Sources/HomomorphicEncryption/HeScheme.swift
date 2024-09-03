@@ -147,14 +147,14 @@ public protocol HeScheme {
     /// Generates an ``EvaluationKey``.
     /// - Parameters:
     ///   - context: Context for HE computation.
-    ///   - configuration: Evaluation key configuration.
+    ///   - config: Evaluation key configuration.
     ///   - secretKey: Secret key used to generate the evaluation key.
     /// - Returns: A freshly generated evaluation key.
     /// - Throws: Error upon failure to generate an evaluation key.
-    /// - seealso: ``Context/generateEvaluationKey(configuration:using:)`` for an alternative API.
+    /// - seealso: ``Context/generateEvaluationKey(config:using:)`` for an alternative API.
     static func generateEvaluationKey(
         context: Context<Self>,
-        configuration: EvaluationKeyConfiguration,
+        config: EvaluationKeyConfig,
         using secretKey: SecretKey) throws
         -> EvaluationKey
 
@@ -1060,17 +1060,17 @@ extension Context {
 
     /// Generates an ``EvaluationKey``.
     /// - Parameters:
-    ///   - configuration: Evaluation key configuration.
+    ///   - config: Evaluation key configuration.
     ///   - secretKey: Secret key used to generate the evaluation key.
     /// - Returns: A freshly generated evaluation key.
     /// - Throws: Error upon failure to generate an evaluation key.
-    /// - seealso: ``HeScheme/generateEvaluationKey(context:configuration:using:)`` for an alternative API.
+    /// - seealso: ``HeScheme/generateEvaluationKey(context:config:using:)`` for an alternative API.
     @inlinable
     public func generateEvaluationKey(
-        configuration: EvaluationKeyConfiguration,
+        config: EvaluationKeyConfig,
         using secretKey: SecretKey<Scheme>) throws
         -> EvaluationKey<Scheme>
     {
-        try Scheme.generateEvaluationKey(context: self, configuration: configuration, using: secretKey)
+        try Scheme.generateEvaluationKey(context: self, config: config, using: secretKey)
     }
 }

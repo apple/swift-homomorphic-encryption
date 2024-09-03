@@ -164,11 +164,11 @@ extension CiphertextMatrix {
     /// - Throws: Error upon failure to generate the evaluation key configuration.
     @inlinable
     static func extractDenseRowConfig(for encryptionParams: EncryptionParameters<Scheme>,
-                                      dimensions: MatrixDimensions) throws -> EvaluationKeyConfiguration
+                                      dimensions: MatrixDimensions) throws -> EvaluationKeyConfig
     {
         if dimensions.rowCount == 1 {
             // extractDenseRow is a No-op, so no evaluation key required
-            return EvaluationKeyConfiguration()
+            return EvaluationKeyConfig()
         }
         guard let simdDimensions = encryptionParams.simdDimensions else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParams)
@@ -179,7 +179,7 @@ extension CiphertextMatrix {
         if columnCountPowerOfTwo != simdDimensions.columnCount {
             try galoisElements.append(GaloisElement.rotatingColumns(by: columnCountPowerOfTwo, degree: degree))
         }
-        return EvaluationKeyConfiguration(galoisElements: galoisElements)
+        return EvaluationKeyConfig(galoisElements: galoisElements)
     }
 
     /// Extracts a ciphertext matrix with a single row and `.denseRow` packing.

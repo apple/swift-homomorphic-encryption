@@ -172,7 +172,8 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(values:format:)`` for an alternative API.
     /// - seealso: ``HeScheme/encode(context:signedValues:format:)`` to encode signed values.
-    static func encode(context: Context<Self>, values: [some ScalarType], format: EncodeFormat) throws -> CoeffPlaintext
+    static func encode(context: Context<Self>, values: some Collection<Scalar>, format: EncodeFormat) throws
+        -> CoeffPlaintext
 
     /// Encodes signed values into a plaintext with coefficient format.
     ///
@@ -184,7 +185,7 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(signedValues:format:)`` for an alternative API.
     /// - seealso: ``HeScheme/encode(context:values:format)`` to encode unsigned values.
-    static func encode(context: Context<Self>, signedValues: [some SignedScalarType], format: EncodeFormat) throws
+    static func encode(context: Context<Self>, signedValues: some Collection<SignedScalar>, format: EncodeFormat) throws
         -> CoeffPlaintext
 
     /// Encodes values into a plaintext with evaluation format.
@@ -194,13 +195,14 @@ public protocol HeScheme {
     ///   - context: Context for HE computation.
     ///   - values: Values to encode.
     ///   - format: Encoding format.
-    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext with all the
+    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext context with
+    /// all the
     /// moduli.
     /// - Returns: A plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(values:format:moduliCount:)`` for an alternative API.
     /// - seealso: ``HeScheme/encode(context:signedValues:format:moduliCount:)`` to encode signed values.
-    static func encode(context: Context<Self>, values: [some ScalarType], format: EncodeFormat,
+    static func encode(context: Context<Self>, values: some Collection<Scalar>, format: EncodeFormat,
                        moduliCount: Int?) throws -> EvalPlaintext
 
     /// Encodes signed values into a plaintext with evaluation format.
@@ -210,13 +212,14 @@ public protocol HeScheme {
     ///   - context: Context for HE computation.
     ///   - signedValues: Signed values to encode.
     ///   - format: Encoding format.
-    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext with all the
+    ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext context with
+    /// all the
     /// moduli.
     /// - Returns: A plaintext encoding `signedValues`.
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(signedValues:format:moduliCount:)`` for an alternative API.
     /// - seealso: ``HeScheme/encode(context:values:format:moduliCount:)`` to encode unsigned values.
-    static func encode(context: Context<Self>, signedValues: [some SignedScalarType], format: EncodeFormat,
+    static func encode(context: Context<Self>, signedValues: some Collection<Scalar.SignedScalar>, format: EncodeFormat,
                        moduliCount: Int?) throws -> EvalPlaintext
 
     /// Decodes a plaintext in ``Coeff`` format.

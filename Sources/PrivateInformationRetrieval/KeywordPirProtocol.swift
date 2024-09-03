@@ -148,16 +148,24 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     ///   - database: Collection of database entries.
     ///   - config: Keyword PIR configuration.
     ///   - context: Context for HE computation.
+    ///   - onEvent: Function to call when a ``ProcessKeywordDatabase.ProcessShardEvent`` happens.
     /// - Returns: A processed database.
     /// - Throws: Error upon failure to process the database.
     @inlinable
     public static func process(database: some Collection<KeywordValuePair>,
                                config: KeywordPirConfig,
-                               with context: Context<Scheme>)
+                               with context: Context<Scheme>,
+                               onEvent: @escaping (ProcessKeywordDatabase.ProcessShardEvent) throws -> Void = { _ in })
         throws -> ProcessedDatabaseWithParameters<Scheme>
     {
+        func onCuckooEvent(event: CuckooTable.Event) throws {
+            try onEvent(
+                ProcessKeywordDatabase.ProcessShardEvent
+                    .cuckooTableEvent(event))
+        }
+
         let cuckooTableConfig = config.cuckooTableConfig
-        let cuckooTable = try CuckooTable(config: cuckooTableConfig, database: database)
+        let cuckooTable = try CuckooTable(config: cuckooTableConfig, database: database, onEvent: onCuckooEvent)
         let entryTable = try cuckooTable.serializeBuckets()
         let maxEntrySize: Int
         if config.useMaxSerializedBucketSize {

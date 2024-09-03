@@ -223,14 +223,20 @@ extension CuckooBucket: RangeReplaceableCollection {
 
 /// A Cuckoo table is a data structure that stores a set of keyword-value pairs, using cuckoo hashing to resolve
 /// conflicts.
-@usableFromInline
-struct CuckooTable {
+public struct CuckooTable {
     typealias KeywordHash = UInt64
-    struct CuckooTableInformation: Equatable {
-        let entryCount: Int
-        let bucketCount: Int
-        let emptyBucketCount: Int
-        let loadFactor: Float
+    /// Information about the cuckoo table.
+    public struct CuckooTableInformation: Equatable {
+        /// The number of entries stored in the table.
+        public let entryCount: Int
+        /// The number of cuckoo buckets in the table.
+        public let bucketCount: Int
+        /// The number of empty buckets.
+        public let emptyBucketCount: Int
+        /// The fraction of capacity that is occupied.
+        ///
+        /// A small load factor indicates there is unused capacity in the table.
+        public let loadFactor: Float
     }
 
     @usableFromInline
@@ -245,8 +251,22 @@ struct CuckooTable {
         }
     }
 
-    @usableFromInline let config: CuckooTableConfig
+    /// Events happening in a ``CuckooTable``.
+    public enum Event {
+        /// The table was initialized.
+        case createdTable(CuckooTable)
+        /// The table is being expanded.
+        case expandingTable(CuckooTable)
+        /// The table is done expanding.
+        case finishedExpandingTable(CuckooTable)
+        /// The `index'th` keyword-value pair was inserted.
+        case insertedKeywordValuePair(index: Int, KeywordValuePair)
+    }
+
+    /// Configuration used to create the table.
+    public let config: CuckooTableConfig
     @usableFromInline var buckets: [CuckooBucket]
+    @usableFromInline let onEvent: (Event) throws -> Void
     @usableFromInline var rng: RandomNumberGenerator
 
     @usableFromInline var entryCount: Int {
@@ -259,11 +279,13 @@ struct CuckooTable {
     init(
         config: CuckooTableConfig,
         database: some Collection<(KeywordValuePair.Keyword, KeywordValuePair.Value)>,
+        onEvent: @escaping (Event) throws -> Void = { _ in },
         using rng: RandomNumberGenerator = SystemRandomNumberGenerator()) throws
     {
         try self.init(
             config: config,
             database: database.map { keyword, value in KeywordValuePair(keyword: keyword, value: value) },
+            onEvent: onEvent,
             using: rng)
     }
 
@@ -271,11 +293,13 @@ struct CuckooTable {
     init(
         config: CuckooTableConfig,
         database: some Collection<KeywordValuePair>,
+        onEvent: @escaping (Event) throws -> Void = { _ in },
         using rng: RandomNumberGenerator = SystemRandomNumberGenerator()) throws
     {
         self.config = config
         let targetBucketCount: Int
         self.buckets = []
+        self.onEvent = onEvent
         self.rng = rng
         switch config.bucketCount {
         case let .allowExpansion(_, targetLoadFactor: targetLoadFactor):
@@ -290,12 +314,16 @@ struct CuckooTable {
         }
         self.buckets = Array(repeating: CuckooBucket(), count: targetBucketCount)
 
-        for keywordValuePair in database {
+        for (index, keywordValuePair) in database.enumerated() {
             try insert(keywordValuePair)
+            try onEvent(Event.insertedKeywordValuePair(index: index, keywordValuePair))
         }
+        try onEvent(Event.createdTable(self))
     }
 
-    func summarize() throws -> CuckooTableInformation {
+    /// Creates a summary of the cuckoo table.
+    /// - Throws: Error upon failure to summary the table.
+    public func summarize() throws -> CuckooTableInformation {
         let bucketEntryCounts = buckets.map(\.count)
         let emptyBucketCount: Int = bucketEntryCounts.map { entryCount in entryCount == 0 ? 1 : 0 }.sum()
         let entryCount: Int = bucketEntryCounts.sum()
@@ -403,6 +431,7 @@ struct CuckooTable {
     mutating func expand() throws {
         switch config.bucketCount {
         case let .allowExpansion(expansionFactor: expansionFactor, _):
+            try onEvent(Event.expandingTable(self))
             let oldTable = buckets
             let bucketCount = Int(ceil(Double(buckets.count) * expansionFactor)).nextMultiple(
                 of: tableCount,
@@ -417,6 +446,7 @@ struct CuckooTable {
                     }
                 }
             }
+            try onEvent(Event.finishedExpandingTable(self))
         default:
             throw PirError
                 .failedToConstructCuckooTable(

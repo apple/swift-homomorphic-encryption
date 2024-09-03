@@ -365,15 +365,24 @@ public enum ProcessKeywordDatabase {
         }
     }
 
+    /// Events happening during shard processing.
+    public enum ProcessShardEvent {
+        /// A ``CuckooTable`` event.
+        case cuckooTableEvent(CuckooTable.Event)
+    }
+
     /// Processes a database shard.
     /// - Parameters:
     ///   - shard: Shard of a keyword database.
     ///   - arguments: Processing arguments.
+    ///   - onEvent: Function to call when a ``ProcessShardEvent`` happens.
     /// - Returns: The processed database.
     /// - Throws: Error upon failure to process the shard.
     @inlinable
     public static func processShard<Scheme: HeScheme>(shard: KeywordDatabaseShard,
-                                                      with arguments: Arguments<Scheme>) throws
+                                                      with arguments: Arguments<Scheme>,
+                                                      onEvent: @escaping (ProcessShardEvent) throws -> Void = { _ in
+                                                      }) throws
         -> ProcessedDatabaseWithParameters<Scheme>
     {
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
@@ -383,7 +392,7 @@ public enum ProcessKeywordDatabase {
         }
         return try KeywordPirServer<MulPirServer<Scheme>>.process(database: shard,
                                                                   config: keywordConfig,
-                                                                  with: context)
+                                                                  with: context, onEvent: onEvent)
     }
 
     /// Validates the correctness of processing on a shard.

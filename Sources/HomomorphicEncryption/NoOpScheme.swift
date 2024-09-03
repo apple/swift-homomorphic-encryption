@@ -35,11 +35,11 @@ public enum NoOpScheme: HeScheme {
 
     public static func generateEvaluationKey(
         context: Context<NoOpScheme>,
-        configuration: EvaluationKeyConfiguration, using _: SecretKey<NoOpScheme>) throws -> EvaluationKey<NoOpScheme>
+        config: EvaluationKeyConfig, using _: SecretKey<NoOpScheme>) throws -> EvaluationKey<NoOpScheme>
     {
         let keySwitchKey = KeySwitchKey(context: context, ciphers: [])
         let galoisKeys = [Int: KeySwitchKey<NoOpScheme>](
-            configuration.galoisElements
+            config.galoisElements
                 .map { g in (g, keySwitchKey) }) { first, _ in first }
         return EvaluationKey(
             galoisKey: GaloisKey(keys: galoisKeys),

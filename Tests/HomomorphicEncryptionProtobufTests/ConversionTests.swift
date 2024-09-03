@@ -219,7 +219,7 @@ class ConversionTests: XCTestCase {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
             let evaluationKey = try context.generateEvaluationKey(
-                configuration: EvaluationKeyConfiguration(galoisElements: [3, 5, 7]), using: secretKey)
+                config: EvaluationKeyConfig(galoisElements: [3, 5, 7]), using: secretKey)
             let galoisKey = try XCTUnwrap(evaluationKey.galoisKey)
             let proto = galoisKey.serialize().proto()
             let deserialized = try GaloisKey(deserialize: proto.native(), context: context)
@@ -236,7 +236,7 @@ class ConversionTests: XCTestCase {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
             let evaluationKey = try context.generateEvaluationKey(
-                configuration: EvaluationKeyConfiguration(
+                config: EvaluationKeyConfig(
                     hasRelinearizationKey: true), using: secretKey)
             let relinearizationKey = try XCTUnwrap(evaluationKey.relinearizationKey)
             let proto = relinearizationKey.serialize().proto()
@@ -254,7 +254,7 @@ class ConversionTests: XCTestCase {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
             let evaluationKey = try context.generateEvaluationKey(
-                configuration: EvaluationKeyConfiguration(
+                config: EvaluationKeyConfig(
                     galoisElements: [3, 5, 7],
                     hasRelinearizationKey: true), using: secretKey)
             let proto = evaluationKey.serialize().proto()

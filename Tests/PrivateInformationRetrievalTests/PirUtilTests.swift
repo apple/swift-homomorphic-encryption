@@ -49,12 +49,12 @@ class PirUtilTests: XCTestCase {
             let secretKey = try context.generateSecretKey()
 
             let expandedQueryCount = degree
-            let evaluationKeyConfiguration = MulPir<Scheme>.evaluationKeyConfiguration(
+            let EvaluationKeyConfig = MulPir<Scheme>.evaluationKeyConfig(
                 expandedQueryCount: expandedQueryCount,
                 degree: degree,
                 keyCompression: keyCompression)
             let evaluationKey = try context.generateEvaluationKey(
-                configuration: evaluationKeyConfiguration, using: secretKey)
+                config: EvaluationKeyConfig, using: secretKey)
             let ciphertext = try plaintext.encrypt(using: secretKey)
             let expandedCiphertexts = try PirUtil.expandCiphertextForOneStep(
                 ciphertext,
@@ -84,8 +84,8 @@ class PirUtilTests: XCTestCase {
                 nonZeroInputs: nonZeroInputs,
                 context: context)
             let secretKey = try context.generateSecretKey()
-            let evaluationKeyConfig = EvaluationKeyConfiguration(galoisElements: (1...logDegree).map { (1 << $0) + 1 })
-            let evaluationKey = try context.generateEvaluationKey(configuration: evaluationKeyConfig, using: secretKey)
+            let evaluationKeyConfig = EvaluationKeyConfig(galoisElements: (1...logDegree).map { (1 << $0) + 1 })
+            let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let ciphertext = try plaintext.encrypt(using: secretKey)
             let expandedCiphertexts = try PirUtil.expandCiphertext(
                 ciphertext,
@@ -118,9 +118,9 @@ class PirUtilTests: XCTestCase {
                 nonZeroInputs: nonZeroInputs,
                 context: context,
                 using: secretKey)
-            let evaluationKeyConfig = EvaluationKeyConfiguration(galoisElements: (1...logDegree).map { (1 << $0) + 1 })
+            let evaluationKeyConfig = EvaluationKeyConfig(galoisElements: (1...logDegree).map { (1 << $0) + 1 })
             let evaluationKey = try context.generateEvaluationKey(
-                configuration: evaluationKeyConfig,
+                config: evaluationKeyConfig,
                 using: secretKey)
             let expandedCiphertexts = try PirUtil.expandCiphertexts(
                 ciphertexts,

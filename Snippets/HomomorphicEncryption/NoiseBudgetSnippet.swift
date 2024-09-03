@@ -98,9 +98,9 @@ precondition(noiseBudgetAfterMultiplication < noiseBudgetAfterAddition - 3)
 // meaningfully affect the noise budget, when encryption parameters are chosen
 // with the last ciphertext modulus at least as large as all the other
 // ciphertext moduli.
-let evaluationKeyConfig = EvaluationKeyConfiguration(hasRelinearizationKey: true)
+let evaluationKeyConfig = EvaluationKeyConfig(hasRelinearizationKey: true)
 let evaluationKey = try context.generateEvaluationKey(
-    configuration: evaluationKeyConfig,
+    config: evaluationKeyConfig,
     using: secretKey)
 try ciphertext.relinearize(using: evaluationKey)
 let noiseBudgetAfterRelinearization = try ciphertext.noiseBudget(

@@ -43,7 +43,7 @@ final class ClientTests: XCTestCase {
                     scalingFactor: maxScalingFactor2,
                     queryPacking: .denseRow,
                     vectorDimension: 128,
-                    evaluationKeyConfig: EvaluationKeyConfiguration(),
+                    evaluationKeyConfig: EvaluationKeyConfig(),
                     distanceMetric: .cosineSimilarity,
                     extraPlaintextModuli: [plaintextModuli[1]]))
         }
@@ -138,7 +138,7 @@ final class ClientTests: XCTestCase {
                     scalingFactor: scalingFactor,
                     queryPacking: .denseRow,
                     vectorDimension: vectorDimension,
-                    evaluationKeyConfig: EvaluationKeyConfiguration(),
+                    evaluationKeyConfig: EvaluationKeyConfig(),
                     distanceMetric: .cosineSimilarity,
                     extraPlaintextModuli: extraPlaintextModuli)
                 let client = try Client(config: config)

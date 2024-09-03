@@ -339,7 +339,7 @@ struct ProcessDatabase: ParsableCommand {
                                                                        keyCompression: config.keyCompression,
                                                                        trialsPerShard: config.trialsPerShard)
 
-        var evaluationKeyConfig = EvaluationKeyConfiguration()
+        var evaluationKeyConfig = EvaluationKeyConfig()
         let context = try Context(encryptionParameters: processArgs.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(rows: database, sharding: processArgs.databaseConfig.sharding)
         ProcessDatabase.logger
@@ -368,7 +368,7 @@ struct ProcessDatabase: ParsableCommand {
             try processed.database.save(to: outputDatabaseFilename)
             ProcessDatabase.logger.info("Saved shard \(shardID) to \(outputDatabaseFilename)")
 
-            let shardEvaluationKeyConfig = processed.evaluationKeyConfiguration
+            let shardEvaluationKeyConfig = processed.evaluationKeyConfig
             evaluationKeyConfig = [evaluationKeyConfig, shardEvaluationKeyConfig].union()
 
             let shardPirParameters = try processed.proto(context: context)
@@ -411,7 +411,7 @@ extension ProcessKeywordDatabase.ShardValidationResult {
                                                        label: "ciphertexts")
         descriptionDict["evaluation key size"] = try sizeString(
             byteCount: evaluationKey.size(),
-            count: evaluationKey.configuration.keyCount,
+            count: evaluationKey.config.keyCount,
             label: "keys"
         )
         descriptionDict["response size"] = try sizeString(byteCount: response.size(),

@@ -444,7 +444,7 @@ class KeywordPirTests: XCTestCase {
             let evaluationKey = try PirClient.Scheme
                 .generateEvaluationKey(
                     context: testContext,
-                    configuration: processed.evaluationKeyConfiguration,
+                    config: processed.evaluationKeyConfig,
                     using: secretKey)
             let shuffledValues = Array(testDatabase.indices).shuffled()
             for index in shuffledValues.prefix(3) {

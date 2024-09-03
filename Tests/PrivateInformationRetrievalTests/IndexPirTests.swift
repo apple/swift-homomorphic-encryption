@@ -81,7 +81,7 @@ class IndexPirTests: XCTestCase {
                                             unevenDimensions: true,
                                             keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
-            let evalKeyConfig = EvaluationKeyConfiguration(
+            let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
                 hasRelinearizationKey: true)
             XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)
@@ -95,7 +95,7 @@ class IndexPirTests: XCTestCase {
                                             unevenDimensions: true,
                                             keyCompression: .hybridCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
-            let evalKeyConfig = EvaluationKeyConfiguration(
+            let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
                 hasRelinearizationKey: true)
             XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)
@@ -109,7 +109,7 @@ class IndexPirTests: XCTestCase {
                                             unevenDimensions: true,
                                             keyCompression: .maxCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
-            let evalKeyConfig = EvaluationKeyConfiguration(
+            let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9],
                 hasRelinearizationKey: true)
             XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)

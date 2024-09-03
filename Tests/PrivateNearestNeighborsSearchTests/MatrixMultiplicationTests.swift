@@ -45,7 +45,7 @@ final class MatrixMultiplicationTests: XCTestCase {
                 plaintextMatrixDimensions: plaintextMatrixDimensions,
                 encryptionParameters: encryptionParameters)
             let evaluationKey = try context.generateEvaluationKey(
-                configuration: evaluationKeyConfig,
+                config: evaluationKeyConfig,
                 using: secretKey)
 
             // Query ciphertext matrix

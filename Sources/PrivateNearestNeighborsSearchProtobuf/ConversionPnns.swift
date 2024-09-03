@@ -125,7 +125,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig {
             scalingFactor: Int(scalingFactor),
             queryPacking: queryPacking.native(),
             vectorDimension: Int(vectorDimension),
-            evaluationKeyConfig: EvaluationKeyConfiguration(galoisElements: galoisElements.map { Int($0) }),
+            evaluationKeyConfig: EvaluationKeyConfig(galoisElements: galoisElements.map { Int($0) }),
             distanceMetric: distanceMetric.native(),
             extraPlaintextModuli: extraPlaintextModuli.map { Scheme.Scalar($0) })
     }

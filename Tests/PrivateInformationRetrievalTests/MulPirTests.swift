@@ -18,9 +18,9 @@ import TestUtilities
 import XCTest
 
 class MulPirTests: XCTestCase {
-    func testEvaluationKeyConfiguration() throws {
+    func testEvaluationKeyConfig() throws {
         func runTest(queryCount: Int, degree: Int, _ keyCompression: PirKeyCompressionStrategy, expected: [Int]) {
-            let evalKeyConfig = MulPir<Bfv<UInt32>>.evaluationKeyConfiguration(
+            let evalKeyConfig = MulPir<Bfv<UInt32>>.evaluationKeyConfig(
                 expandedQueryCount: queryCount,
                 degree: degree,
                 keyCompression: keyCompression)
@@ -211,7 +211,7 @@ class MulPirTests: XCTestCase {
 
     func testComputeCoordinates() throws {
         let context: Context<NoOpScheme> = try TestUtils.getTestContext()
-        let evalKeyConfig = EvaluationKeyConfiguration()
+        let evalKeyConfig = EvaluationKeyConfig()
         // two dimensional case
         do {
             let parameter = IndexPirParameter(

@@ -433,7 +433,7 @@ extension PolyRq {
     /// If the polynomial is already in ``Coeff`` format, the input polynomial is returned with no conversion.
     /// - Returns: The polynomial in ``Coeff`` format.
     @inlinable
-    public func convertToCoeff() throws -> PolyRq<T, Coeff> {
+    public func convertToCoeffFormat() throws -> PolyRq<T, Coeff> {
         switch F.self {
         case is Coeff.Type:
             guard let poly = self as? PolyRq<T, Coeff> else {
@@ -453,7 +453,7 @@ extension PolyRq {
     /// If the polynomial is already in ``Eval`` format, the input polynomial is returned with no conversion.
     /// - Returns: The polynomial in ``Eval`` format.
     @inlinable
-    public func convertToEval() throws -> PolyRq<T, Eval> {
+    public func convertToEvalFormat() throws -> PolyRq<T, Eval> {
         switch F.self {
         case is Coeff.Type:
             guard let poly = self as? PolyRq<T, Coeff> else {
@@ -476,12 +476,12 @@ extension PolyRq {
     public func convertFormat<Format: PolyFormat>() throws -> PolyRq<T, Format> {
         switch Format.self {
         case is Coeff.Type:
-            guard let poly = try convertToCoeff() as? PolyRq<T, Format> else {
+            guard let poly = try convertToCoeffFormat() as? PolyRq<T, Format> else {
                 throw HeError.errorCastingPolyFormat(from: F.self, to: Format.self)
             }
             return poly
         case is Eval.Type:
-            guard let poly = try convertToEval() as? PolyRq<T, Format> else {
+            guard let poly = try convertToEvalFormat() as? PolyRq<T, Format> else {
                 throw HeError.errorCastingPolyFormat(from: F.self, to: Format.self)
             }
             return poly

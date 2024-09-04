@@ -61,10 +61,10 @@ final class NttTests: XCTestCase {
 
         XCTAssertEqual(try polyCoeff.forwardNtt(), polyEval)
         XCTAssertEqual(try polyEval.inverseNtt(), polyCoeff)
-        XCTAssertEqual(try polyEval.convertToCoeff(), polyCoeff)
-        XCTAssertEqual(try polyCoeff.convertToCoeff(), polyCoeff)
-        XCTAssertEqual(try polyEval.convertToEval(), polyEval)
-        XCTAssertEqual(try polyCoeff.convertToEval(), polyEval)
+        XCTAssertEqual(try polyEval.convertToCoeffFormat(), polyCoeff)
+        XCTAssertEqual(try polyCoeff.convertToCoeffFormat(), polyCoeff)
+        XCTAssertEqual(try polyEval.convertToEvalFormat(), polyEval)
+        XCTAssertEqual(try polyCoeff.convertToEvalFormat(), polyEval)
     }
 
     func testNtt2() throws {

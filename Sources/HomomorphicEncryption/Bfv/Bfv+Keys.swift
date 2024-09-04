@@ -143,7 +143,7 @@ extension Bfv {
         var ciphertextProd: EvalCiphertext = Ciphertext(context: context,
                                                         polys: polys,
                                                         correctionFactor: 1)
-        let targetCoeff = try target.convertToCoeff()
+        let targetCoeff = try target.convertToCoeffFormat()
 
         let keyCiphers = keySwitchingKey.ciphers
         for rnsIndex in 0..<rnsModuliCount {

@@ -159,7 +159,7 @@ extension Plaintext {
             return plaintext
         }
         let rnsTool = context.getRnsTool(moduliCount: moduli.count)
-        var plaintextData = try poly.convertToCoeff().data
+        var plaintextData = try poly.convertToCoeffFormat().data
         for index in plaintextData.rowIndices(row: 0) {
             let condition = plaintextData[index].constantTimeGreaterThanOrEqual(rnsTool.tThreshold)
             plaintextData[index] = Scheme.Scalar.constantTimeSelect(

@@ -229,7 +229,7 @@ public protocol HeScheme {
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
-    static func decodeCoeff<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
+    static func decodeCoeff(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [Scalar]
 
     /// Decodes a plaintext in ``Coeff`` format into signed values.
     /// - Parameters:
@@ -238,7 +238,7 @@ public protocol HeScheme {
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
-    static func decodeCoeff<T: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T]
+    static func decodeCoeff(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [SignedScalar]
 
     /// Decodes a plaintext in ``Eval`` format.
     /// - Parameters:
@@ -247,7 +247,7 @@ public protocol HeScheme {
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
-    static func decodeEval<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
+    static func decodeEval(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [Scalar]
 
     /// Decodes a plaintext in ``Eval`` format to signed values.
     /// - Parameters:
@@ -256,7 +256,7 @@ public protocol HeScheme {
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
-    static func decodeEval<T: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T]
+    static func decodeEval(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [SignedScalar]
 
     /// Symmetric secret key encryption of a plaintext.
     /// - Parameters:
@@ -933,9 +933,9 @@ extension HeScheme {
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
     @inlinable
-    public static func decode<T: ScalarType, Format: PolyFormat>(
+    public static func decode<Format: PolyFormat>(
         plaintext: Plaintext<Self, Format>,
-        format: EncodeFormat) throws -> [T]
+        format: EncodeFormat) throws -> [Scalar]
     {
         if Format.self == Coeff.self {
             // swiftlint:disable:next force_cast
@@ -958,9 +958,9 @@ extension HeScheme {
     /// - Throws: Error upon failure to decode the plaintext.
     /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
     @inlinable
-    public static func decode<T: SignedScalarType, Format: PolyFormat>(
+    public static func decode<Format: PolyFormat>(
         plaintext: Plaintext<Self, Format>,
-        format: EncodeFormat) throws -> [T]
+        format: EncodeFormat) throws -> [SignedScalar]
     {
         if Format.self == Coeff.self {
             // swiftlint:disable:next force_cast

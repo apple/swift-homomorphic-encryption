@@ -85,19 +85,19 @@ public enum NoOpScheme: HeScheme {
         return try EvalPlaintext(context: context, poly: coeffPlaintext.poly.forwardNtt())
     }
 
-    public static func decodeCoeff<T: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T] {
+    public static func decodeCoeff(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [Scalar] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
-    public static func decodeEval<T: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T] {
+    public static func decodeEval(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [Scalar] {
         try plaintext.inverseNtt().decode(format: format)
     }
 
-    public static func decodeCoeff<T: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [T] {
+    public static func decodeCoeff(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [SignedScalar] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
-    public static func decodeEval<T: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [T] {
+    public static func decodeEval(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [SignedScalar] {
         try plaintext.inverseNtt().decode(format: format)
     }
 

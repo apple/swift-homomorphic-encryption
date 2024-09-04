@@ -11,16 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 /// Plaintext type.
 public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
+    public typealias SignedScalar = Scheme.SignedScalar
+
     /// Context for HE computation.
     public let context: Context<Scheme>
 
-    @usableFromInline package var poly: PolyRq<Scheme.Scalar, Format>
+    @usableFromInline package var poly: PolyRq<Scalar, Format>
 
     @inlinable
-    package init(context: Context<Scheme>, poly: PolyRq<Scheme.Scalar, Format>) {
+    package init(context: Context<Scheme>, poly: PolyRq<Scalar, Format>) {
         self.context = context
         self.poly = poly
     }
@@ -72,7 +73,7 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
     }
 
     @inlinable
-    subscript(_ index: Int) -> Scheme.Scalar {
+    subscript(_ index: Int) -> Scalar {
         get {
             poly.data[index]
         }
@@ -86,7 +87,7 @@ extension Plaintext: PolyCollection {
     public typealias Scalar = Scheme.Scalar
 
     @inlinable
-    public func polyContext() -> PolyContext<Scheme.Scalar> {
+    public func polyContext() -> PolyContext<Scalar> {
         poly.context
     }
 }
@@ -135,13 +136,13 @@ extension Plaintext {
         let rnsTool = context.getRnsTool(moduliCount: moduliCount)
         let polyContext = try context.ciphertextContext.getContext(moduliCount: moduliCount)
 
-        var poly: PolyRq<Scheme.Scalar, Coeff> = PolyRq.zero(context: polyContext)
+        var poly: PolyRq<Scalar, Coeff> = PolyRq.zero(context: polyContext)
         let tThreshold = rnsTool.tThreshold
         let sourcePoly = self.poly.poly(rnsIndex: 0)
         for (rnsIndex, tIncrement) in rnsTool.tIncrement.enumerated() {
             for (valueIndex, index) in poly.polyIndices(rnsIndex: rnsIndex).enumerated() {
                 let condition = sourcePoly[valueIndex].constantTimeLessThan(tThreshold)
-                poly[index] = Scheme.Scalar.constantTimeSelect(
+                poly[index] = Scalar.constantTimeSelect(
                     if: condition,
                     then: sourcePoly[valueIndex],
                     else: sourcePoly[valueIndex] &+ tIncrement)
@@ -162,13 +163,13 @@ extension Plaintext {
         var plaintextData = try poly.convertToCoeffFormat().data
         for index in plaintextData.rowIndices(row: 0) {
             let condition = plaintextData[index].constantTimeGreaterThanOrEqual(rnsTool.tThreshold)
-            plaintextData[index] = Scheme.Scalar.constantTimeSelect(
+            plaintextData[index] = Scalar.constantTimeSelect(
                 if: condition,
                 then: plaintextData[index] &- rnsTool.tIncrement[0],
                 else: plaintextData[index])
         }
         plaintextData.removeLastRows(plaintextData.rowCount - 1)
-        let coeffPoly: PolyRq<Scheme.Scalar, Coeff> = PolyRq(
+        let coeffPoly: PolyRq<Scalar, Coeff> = PolyRq(
             context: context.plaintextContext,
             data: Array2d(array: plaintextData))
         return Plaintext<Scheme, Coeff>(context: context, poly: coeffPoly)
@@ -179,7 +180,7 @@ extension Plaintext {
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
     @inlinable
-    public func decode<T: ScalarType>(format: EncodeFormat) throws -> [T] {
+    public func decode(format: EncodeFormat) throws -> [Scalar] {
         try Scheme.decode(plaintext: self, format: format)
     }
 
@@ -188,7 +189,7 @@ extension Plaintext {
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
     @inlinable
-    public func decode<T: SignedScalarType>(format: EncodeFormat) throws -> [T] {
+    public func decode(format: EncodeFormat) throws -> [SignedScalar] {
         try Scheme.decode(plaintext: self, format: format)
     }
 

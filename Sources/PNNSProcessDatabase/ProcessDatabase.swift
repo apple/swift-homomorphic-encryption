@@ -255,7 +255,7 @@ struct ProcessDatabase: ParsableCommand {
             ProcessDatabase.logger.info("Validating")
             let validationResult = try processed.validate(query: queryRows, trials: config.trials)
             for row in 0..<min(database.rows.count, config.batchSize) {
-                let selfProduct = validationResult.databaseDistances.distances.row(row: row)[row]
+                let selfProduct = validationResult.databaseDistances.distances.row(row)[row]
                 let error = abs(selfProduct - 1.0)
                 guard error <= config.trialDistanceTolerance else {
                     ProcessDatabase.logger

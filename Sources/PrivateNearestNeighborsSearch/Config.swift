@@ -80,8 +80,8 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     }
 
     @inlinable
-    package static func maxScalingFactor(distanceMetric: DistanceMetric, vectorDimension: Int,
-                                         plaintextModuli: [Scheme.Scalar]) -> Int
+    public static func maxScalingFactor(distanceMetric: DistanceMetric, vectorDimension: Int,
+                                        plaintextModuli: [Scheme.Scalar]) -> Int
     {
         precondition(distanceMetric == .cosineSimilarity)
         let t = plaintextModuli.map { Float($0) }.reduce(1, *)

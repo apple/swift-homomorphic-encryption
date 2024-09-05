@@ -13,7 +13,8 @@
 // limitations under the License.
 
 /// Wrapper for random number generator that adds a buffer.
-public final class BufferedRng<R: PseudoRandomNumberGenerator> {
+@usableFromInline
+package final class BufferedRng<R: PseudoRandomNumberGenerator> {
     /// Random number generator.
     @usableFromInline var rng: R
     /// Offset into ``buffer``, pointing to the next unused random byte.
@@ -29,7 +30,8 @@ public final class BufferedRng<R: PseudoRandomNumberGenerator> {
     /// - Parameters:
     ///   - rng: Random number generator.
     ///   - bufferCount: Number of bytes in the buffer.
-    public init(rng: R, bufferCount: Int) {
+    @inlinable
+    init(rng: R, bufferCount: Int) {
         self.rng = rng
         self.offset = bufferCount
         self.buffer = UnsafeMutableRawBufferPointer.allocate(byteCount: bufferCount, alignment: 16)
@@ -44,7 +46,7 @@ extension BufferedRng: PseudoRandomNumberGenerator {
     /// Fills a buffer with random values.
     /// - Parameter bufferPointer: Buffer to fill.
     @inlinable
-    public func fill(_ bufferPointer: UnsafeMutableRawBufferPointer) {
+    package func fill(_ bufferPointer: UnsafeMutableRawBufferPointer) {
         var filled = 0
         while filled < bufferPointer.count {
             if remaining == 0 {

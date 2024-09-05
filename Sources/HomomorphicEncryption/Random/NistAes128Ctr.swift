@@ -13,14 +13,16 @@
 // limitations under the License.
 
 /// Random number generator using AES-128 NIST `CTR_DRBG` mode, without derivation function.
-public typealias NistAes128Ctr = BufferedRng<NistCtrDrbg>
+@usableFromInline
+package typealias NistAes128Ctr = BufferedRng<NistCtrDrbg>
 
 extension NistAes128Ctr {
     /// Number of bytes in the AES-128 seed.
-    public static let SeedCount: Int = NistCtrDrbg.SeedCount
+    @usableFromInline static let SeedCount: Int = NistCtrDrbg.SeedCount
 
     /// Initializes a ``NistAes128Ctr``.
-    public convenience init() {
+    @inlinable
+    package convenience init() {
         do {
             try self.init(rng: NistCtrDrbg(), bufferCount: 4096)
         } catch {
@@ -31,7 +33,8 @@ extension NistAes128Ctr {
     /// Initializes a ``NistAes128Ctr`` with a seed.
     /// - Parameter seed: Seed for the random number generator. Must have ``SeedCount`` bytes.
     /// - Throws: Error upon failure to initialize the random number generator.
-    public convenience init(seed: [UInt8]) throws {
+    @inlinable
+    convenience init(seed: [UInt8]) throws {
         try self.init(rng: NistCtrDrbg(entropy: seed), bufferCount: 4096)
     }
 }

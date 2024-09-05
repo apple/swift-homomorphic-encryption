@@ -203,7 +203,7 @@ extension TestUtils {
     }
 
     package static func uniformnessTest<T>(poly: PolyRq<T, some Any>) {
-        XCTAssert(poly.isValidData())
+        XCTAssert(poly.hasValidData())
         for (rnsIndex, modulus) in poly.moduli.enumerated() {
             var valueCounts = [T: Int]()
             for coeff in poly.poly(rnsIndex: rnsIndex) {
@@ -269,7 +269,7 @@ extension TestUtils {
     }
 
     package static func centeredBinomialDistributionTest<T>(poly: PolyRq<T, some Any>) {
-        XCTAssert(poly.isValidData())
+        XCTAssert(poly.hasValidData())
         let variance = computeVariance(poly: poly)
         let bounds = 9.0..<12.0
         XCTAssert(bounds.contains(variance), "variance \(variance) not in bounds \(bounds)")
@@ -303,7 +303,7 @@ extension TestUtils {
     }
 
     package static func ternaryDistributionTest(poly: PolyRq<some Any, some Any>, pValue: Double) {
-        XCTAssert(poly.isValidData())
+        XCTAssert(poly.hasValidData())
         // Maps {-1, 0, 1} to coefficient count
         var valueCounts = [Int: Int]()
 

@@ -342,7 +342,7 @@ extension UInt32 {
     /// - Parameter bitCount: Number of bits to reverse. Must be in `[1, 32]`.
     /// - Returns: The reversed bits of this value.
     @inlinable
-    public func reverseBits(bitCount: Int) -> UInt32 {
+    func reverseBits(bitCount: Int) -> UInt32 {
         var x = self
         assert((1...32).contains(bitCount))
         // swap consecutive bits
@@ -411,7 +411,7 @@ extension FixedWidthInteger {
 
     /// Computes a modular multiplication.
     ///
-    /// Is not constant time. Use `ReduceModulus` for a constant-time alternative, which is also faster when the modulus
+    /// Is not constant time. Use ``Modulus`` for a constant-time alternative, which is also faster when the modulus
     /// is re-used across multiple computations.
     /// - Parameters:
     ///   - rhs: Multiplicand.

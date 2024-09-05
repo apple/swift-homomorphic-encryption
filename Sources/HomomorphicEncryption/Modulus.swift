@@ -81,8 +81,8 @@ public struct Modulus<T: ScalarType>: Equatable, Sendable {
         doubleWordModulus.reduce(x)
     }
 
-    /// Performs modular reduction with modulus `p`.
-    /// - Parameter x: Must be `< p^2`.
+    /// Performs modular reduction of a product with modulus `p`.
+    /// - Parameter x: Must be in `[0, p^2)`.
     /// - Returns: `x mod p` in `[0, p).`
     @inlinable
     public func reduceProduct(_ x: T.DoubleWidth) -> T {
@@ -314,8 +314,8 @@ struct ReduceModulus<T: ScalarType>: Equatable, Sendable {
         return z.low.subtractIfExceeds(modulus)
     }
 
-    /// Performs modular reduction with modulus `p`.
-    /// - Parameter x: Must be `< p^2`.
+    /// Performs modular reduction of a product with modulus `p`.
+    /// - Parameter x: Must be in `[0, p^2)`.
     /// - Returns: `x mod p` for `p`.
     @inlinable
     func reduceProduct(_ x: T.DoubleWidth) -> T {

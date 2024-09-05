@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ extension ConversionError: LocalizedError {
             "Invalid HE scheme"
         case let .unimplementedScheme(scheme: scheme):
             "Unimplemented encryption scheme: \(scheme)"
-        case let .unrecognizedEnumValue(enum: enume, value: value):
-            "Unrecognized value \(value) in enum \(enume)"
+        case let .unrecognizedEnumValue(enum: enumeration, value: value):
+            "Unrecognized value \(value) in enum \(enumeration)"
         case let .unsetOneof(oneof: oneof, field: field):
             "Unset oneof in message \(oneof) for field \(field)"
         }

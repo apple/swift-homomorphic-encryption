@@ -24,8 +24,8 @@ class Array2dTests: XCTestCase {
             let data2d: [[T]] = [[1, 2], [3, 4], [5, 6]]
             XCTAssertEqual(array, Array2d(data: data2d))
 
-            XCTAssert(Array2d<T>(data: []).shape == (0, 0))
-            XCTAssert(Array2d<T>(data: [[]]).shape == (0, 0))
+            XCTAssert(Array2d<T>(data: []).shape == (rowCount: 0, columnCount: 0))
+            XCTAssert(Array2d<T>(data: [[]]).shape == (rowCount: 0, columnCount: 0))
         }
 
         runTest(Int.self)
@@ -60,7 +60,7 @@ class Array2dTests: XCTestCase {
     func testShape() {
         let data = [Int](0..<16)
         let array = Array2d(data: data, rowCount: 2, columnCount: 8)
-        XCTAssert(array.shape == (2, 8))
+        XCTAssert(array.shape == (rowCount: 2, columnCount: 8))
     }
 
     func testIndices4x4() {

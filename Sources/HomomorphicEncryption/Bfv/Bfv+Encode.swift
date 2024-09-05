@@ -34,7 +34,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func encode(context: Context<Bfv<T>>, signedValues: some Collection<Scalar.SignedScalar>,
+    public static func encode(context: Context<Bfv<T>>, signedValues: some Collection<SignedScalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(signedValues: signedValues, format: format)
@@ -53,7 +53,7 @@ extension Bfv {
     // swiftlint:disable:next missing_docs attributes
     public static func encode(
         context: Context<Bfv<T>>,
-        signedValues: some Collection<Scalar.SignedScalar>,
+        signedValues: some Collection<SignedScalar>,
         format: EncodeFormat,
         moduliCount: Int?) throws -> EvalPlaintext
     {
@@ -63,25 +63,25 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decodeCoeff<V: ScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] {
+    public static func decodeCoeff(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [Scalar] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decodeCoeff<V: SignedScalarType>(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [V] {
+    public static func decodeCoeff(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [SignedScalar] {
         try plaintext.context.decode(plaintext: plaintext, format: format)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decodeEval<V: ScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
+    public static func decodeEval(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [Scalar] {
         try plaintext.convertToCoeffFormat().decode(format: format)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decodeEval<V: SignedScalarType>(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [V] {
+    public static func decodeEval(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [SignedScalar] {
         try plaintext.convertToCoeffFormat().decode(format: format)
     }
 }

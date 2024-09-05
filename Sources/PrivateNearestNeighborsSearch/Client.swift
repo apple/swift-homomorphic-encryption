@@ -21,7 +21,7 @@ public struct Client<Scheme: HeScheme> {
     public let config: ClientConfig<Scheme>
 
     /// One context per plaintext modulus.
-    @usableFromInline let contexts: [Context<Scheme>]
+    public let contexts: [Context<Scheme>]
 
     /// Performs composition of the plaintext CRT responses.
     @usableFromInline let crtComposer: CrtComposer<Scheme.Scalar>

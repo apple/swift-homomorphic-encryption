@@ -49,10 +49,10 @@ extension Context {
     public func encode(signedValues: some Collection<Scheme.SignedScalar>,
                        format: EncodeFormat) throws -> Plaintext<Scheme, Coeff>
     {
-        let signedModulus = Scheme.Scalar.SignedScalar(plaintextModulus)
+        let signedModulus = Scheme.SignedScalar(plaintextModulus)
         let bounds = -(signedModulus >> 1)...((signedModulus - 1) >> 1)
         let centeredValues = try signedValues.map { value in
-            guard bounds.contains(Scheme.Scalar.SignedScalar(value)) else {
+            guard bounds.contains(Scheme.SignedScalar(value)) else {
                 throw HeError.encodingDataOutOfBounds(for: bounds)
             }
             return Scheme.Scalar(value.centeredToRemainder(modulus: plaintextModulus))
@@ -102,9 +102,7 @@ extension Context {
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode.
     @inlinable
-    func decode<T: ScalarType>(plaintext: Plaintext<Scheme, Coeff>,
-                               format: EncodeFormat) throws -> [T]
-    {
+    func decode(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [Scheme.Scalar] {
         switch format {
         case .coefficient:
             return decodeCoefficient(plaintext: plaintext)
@@ -121,10 +119,10 @@ extension Context {
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode.
     @inlinable
-    func decode<T: SignedScalarType>(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [T] {
+    func decode(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [Scheme.SignedScalar] {
         let unsignedValues: [Scheme.Scalar] = try decode(plaintext: plaintext, format: format)
         return unsignedValues.map { value in
-            T(value.remainderToCentered(modulus: plaintextModulus))
+            value.remainderToCentered(modulus: plaintextModulus)
         }
     }
 
@@ -136,7 +134,7 @@ extension Context {
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode.
     @inlinable
-    func decode<T: SignedScalarType>(plaintext: Plaintext<Scheme, Eval>, format: EncodeFormat) throws -> [T] {
+    func decode(plaintext: Plaintext<Scheme, Eval>, format: EncodeFormat) throws -> [Scheme.SignedScalar] {
         try Scheme.decodeEval(plaintext: plaintext, format: format)
     }
 
@@ -167,12 +165,11 @@ extension Context {
         if values.isEmpty {
             return Plaintext<Scheme, Coeff>(context: self, poly: PolyRq.zero(context: plaintextContext))
         }
-        let polyDegree = plaintextContext.degree
-        var array: Array2d<Scheme.Scalar> = Array2d(array: Array2d(
-            data: Array(values),
-            rowCount: 1,
-            columnCount: values.count))
-        array.resizeColumn(newColumnCount: polyDegree, defaultValue: Scheme.Scalar(0))
+        var valuesArray = Array(values)
+        if valuesArray.count < degree {
+            valuesArray.append(contentsOf: repeatElement(0, count: degree - valuesArray.count))
+        }
+        let array: Array2d<Scheme.Scalar> = Array2d(data: valuesArray, rowCount: 1, columnCount: valuesArray.count)
         return Plaintext<Scheme, Coeff>(
             context: self,
             poly: PolyRq(context: plaintextContext, data: array))
@@ -185,10 +182,8 @@ extension Context {
     /// - Parameter plaintext: Plaintext to decode.
     /// - Returns: The decoded plaintext values, each in `[0, t - 1]` for plaintext modulus `t`.
     @inlinable
-    func decodeCoefficient<T: ScalarType>(plaintext: Plaintext<Scheme, Coeff>)
-        -> [T]
-    {
-        Array2d(array: plaintext.poly.data).data
+    func decodeCoefficient(plaintext: Plaintext<Scheme, Coeff>) -> [Scheme.Scalar] {
+        plaintext.poly.data.data
     }
 }
 
@@ -233,13 +228,13 @@ extension Context {
     }
 
     @inlinable
-    func decodeSimd<T: ScalarType>(plaintext: Plaintext<Scheme, Coeff>) throws -> [T] {
+    func decodeSimd(plaintext: Plaintext<Scheme, Coeff>) throws -> [Scheme.Scalar] {
         guard !simdEncodingMatrix.isEmpty else {
             throw HeError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let poly = try plaintext.poly.forwardNtt()
         return (0..<encryptionParameters.polyDegree).map { index in
-            T(poly.data[0, simdEncodingMatrix[index]])
+            poly.data[0, simdEncodingMatrix[index]]
         }
     }
 }

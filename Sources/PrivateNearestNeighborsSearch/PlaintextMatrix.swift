@@ -449,7 +449,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         // See Section 6.3 of <https://eprint.iacr.org/2018/244.pdf>.
         let n = context.degree
         for rowIndex in 0..<packedValues.rowCount {
-            let row = packedValues.row(row: rowIndex)
+            let row = packedValues.row(rowIndex)
             for (chunkIndex, var chunk) in row.chunks(ofCount: n).enumerated() {
                 chunk += repeatElement(0, count: n - chunk.count)
                 let i = (plaintexts.count - chunkIndex) / plaintextsPerColumn
@@ -499,7 +499,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The stored data values in row-major format.
     /// - Throws: Error upon failure to unpack the matrix.
     @inlinable
-    func unpackDenseColumn<V: ScalarType>() throws -> [V] where Format == Coeff {
+    func unpackDenseColumn() throws -> [Scheme.Scalar] where Format == Coeff {
         guard case packing = .denseColumn else {
             throw PnnsError.wrongMatrixPacking(got: packing, expected: .denseColumn)
         }
@@ -508,10 +508,10 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         precondition(simdRowCount == 2, "SIMD row count must be 2")
         let columnsPerPlaintextCount = simdRowCount * (simdColumnCount / rowCount)
 
-        var valuesColumnMajor: [V] = []
+        var valuesColumnMajor: [Scheme.Scalar] = []
         valuesColumnMajor.reserveCapacity(count)
         for plaintext in plaintexts {
-            let decoded: [V] = try plaintext.decode(format: .simd)
+            let decoded: [Scheme.Scalar] = try plaintext.decode(format: .simd)
             if columnsPerPlaintextCount > 1 {
                 let valsPerSimdRowCount = rowCount * (simdColumnCount / rowCount)
                 // Ignore padding at the end of each SIMD row
@@ -543,7 +543,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The stored data values in row-major format.
     /// - Throws: Error upon failure to unpack the matrix.
     @inlinable
-    func unpackDenseRow<V: ScalarType>() throws -> [V] where Format == Coeff {
+    func unpackDenseRow() throws -> [Scheme.Scalar] where Format == Coeff {
         guard case packing = .denseRow else {
             throw PnnsError.wrongMatrixPacking(got: packing, expected: MatrixPacking.denseRow)
         }
@@ -552,10 +552,10 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         // zero-pad each row to next power of two length
         let columnCountPerSimdRow = (simdColumnCount / columnCount.nextPowerOfTwo)
         let columnPadCount = columnCount.nextPowerOfTwo - columnCount
-        var values: [V] = []
+        var values: [Scheme.Scalar] = []
         values.reserveCapacity(count)
         for plaintext in plaintexts {
-            let decoded: [V] = try plaintext.decode(format: .simd)
+            let decoded: [Scheme.Scalar] = try plaintext.decode(format: .simd)
             for simdRowIndex in 0..<simdRowCount {
                 for columnIndex in 0..<columnCountPerSimdRow {
                     let decodeStartIndex = (simdRowIndex * simdColumnCount) + columnIndex * columnCount +

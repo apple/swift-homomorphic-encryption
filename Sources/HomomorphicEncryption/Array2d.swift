@@ -19,11 +19,15 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
     @usableFromInline package var rowCount: Int
     @usableFromInline package var columnCount: Int
 
-    @usableFromInline package var shape: (Int, Int) { (rowCount, columnCount) }
-    @usableFromInline package var count: Int { rowCount * columnCount }
+    /// The row and column counts.
+    public var shape: (rowCount: Int, columnCount: Int) { (rowCount: rowCount, columnCount: columnCount) }
+    /// The number of entries in the array.
+    public var count: Int { rowCount * columnCount }
 
+    /// Creates a new ``Array2d``.
+    /// - Parameter data: Row-major entries of the array. Each row must have the same number of entries.
     @inlinable
-    package init(data: [[T]] = []) {
+    public init(data: [[T]] = []) {
         if data.isEmpty {
             self.init(data: [], rowCount: 0, columnCount: 0)
         } else {
@@ -36,23 +40,36 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
         }
     }
 
+    /// Creates a new ``Array2d``.
+    /// - Parameters:
+    ///   - data: Row-major entries of the array. Must have `rowCount * columnCount` entries.
+    ///   - rowCount: Number of rows. Must be non-negative.
+    ///   - columnCount: Number of columns. Must be non-negative.
     @inlinable
-    package init(data: [T], rowCount: Int, columnCount: Int) {
-        precondition(data.count == rowCount * columnCount)
+    public init(data: [T], rowCount: Int, columnCount: Int) {
+        precondition(data.count == rowCount * columnCount, "Wrong data count \(data.count)")
+        precondition(rowCount >= 0 && columnCount >= 0)
         self.data = data
         self.rowCount = rowCount
         self.columnCount = columnCount
     }
 
+    /// Creates a new ``Array2d`` from an existing array.
+    /// - Parameter array: Existing array; must have entry type representable by `T`.
     @inlinable
-    init(array: Array2d<some FixedWidthInteger>) where T: FixedWidthInteger {
+    public init(array: Array2d<some FixedWidthInteger>) where T: FixedWidthInteger {
         self.columnCount = array.columnCount
         self.rowCount = array.rowCount
         self.data = array.data.map { T($0) }
     }
 
+    /// Creates a new array of zeros.
+    /// - Parameters:
+    ///   - rowCount: Number of rows.
+    ///   - columnCount: Number of columns.
+    /// - Returns: The array of zeros.
     @inlinable
-    package static func zero(rowCount: Int, columnCount: Int) -> Self {
+    public static func zero(rowCount: Int, columnCount: Int) -> Self {
         self.init(
             data: [T](Array(repeating: T.zero, count: rowCount * columnCount)),
             rowCount: rowCount,
@@ -62,22 +79,25 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
 
 extension Array2d {
     @inlinable
-    package func index(row: Int, column: Int) -> Int {
+    func index(row: Int, column: Int) -> Int {
         row &* columnCount &+ column
     }
 
     @inlinable
-    package func rowIndices(row: Int) -> Range<Int> {
+    func rowIndices(row: Int) -> Range<Int> {
         index(row: row, column: 0)..<index(row: row, column: columnCount)
     }
 
     @inlinable
-    package func columnIndices(column: Int) -> StrideTo<Int> {
+    func columnIndices(column: Int) -> StrideTo<Int> {
         stride(from: index(row: 0, column: column), to: index(row: rowCount, column: column), by: columnCount)
     }
 
+    /// Returns the entries in the row.
+    /// - Parameter row: Index of the row. Must be in `[0, rowCount)`.
+    /// - Returns: The entries in the row.
     @inlinable
-    package func row(row: Int) -> [T] {
+    public func row(_ row: Int) -> [T] {
         Array(data[rowIndices(row: row)])
     }
 
@@ -85,7 +105,7 @@ extension Array2d {
     /// - Parameter indices: Indices whose values to gather.
     /// - Returns: The values of the array in order of the given indices.
     @inlinable
-    public func collectValues(indices: any Sequence<Int>) -> [T] {
+    func collectValues(indices: any Sequence<Int>) -> [T] {
         indices.map { data[$0] }
     }
 
@@ -106,7 +126,7 @@ extension Array2d {
     }
 
     @inlinable
-    package subscript(_ index: Int) -> T {
+    subscript(_ index: Int) -> T {
         get {
             data[index]
         }
@@ -115,8 +135,12 @@ extension Array2d {
         }
     }
 
+    /// Access for the `(row, column)` entry.
+    /// - Parameters:
+    ///     - `row`: Must be in `[0, rowCount)`
+    ///     - `column`: Must be in `[0, columnCount)`
     @inlinable
-    package subscript(_ row: Int, _ column: Int) -> T {
+    public subscript(_ row: Int, _ column: Int) -> T {
         get {
             data[index(row: row, column: column)]
         }
@@ -196,7 +220,7 @@ extension Array2d {
     /// returns a transformed value of the same or of a different type.
     /// - Returns: The transformed matrix.
     @inlinable
-    package func map<V: Equatable & AdditiveArithmetic & Sendable>(_ transform: (T) -> (V)) -> Array2d<V> {
+    public func map<V: Equatable & AdditiveArithmetic & Sendable>(_ transform: (T) -> (V)) -> Array2d<V> {
         Array2d<V>(
             data: data.map { value in transform(value) },
             rowCount: rowCount,

@@ -50,10 +50,16 @@ public struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
     }
 }
 
-/// Helper function to compute evaluation key used in computing multiplication with a vector.
-package enum MatrixMultiplication {
+/// Utilities for matrix multiplication.
+public enum MatrixMultiplication {
+    /// Computes the evaluation key configuration for matrix multiplication.
+    /// - Parameters:
+    ///   - plaintextMatrixDimensions: Dimensions of the plaintext matrix.
+    ///   - encryptionParameters: Encryption paramterss
+    /// - Returns: The evaluation key configuration.
+    /// - Throws: Error upon failure to compute the configuration.
     @inlinable
-    package static func evaluationKeyConfig(
+    public static func evaluationKeyConfig(
         plaintextMatrixDimensions: MatrixDimensions,
         encryptionParameters: EncryptionParameters<some HeScheme>) throws -> EvaluationKeyConfig
     {

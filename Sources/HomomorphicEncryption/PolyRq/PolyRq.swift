@@ -107,7 +107,7 @@ extension PolyRq {
     /// - Returns: The coefficients mod `rnsIndex`.
     @inlinable
     public func poly(rnsIndex: Int) -> [T] {
-        data.row(row: rnsIndex)
+        data.row(rnsIndex)
     }
 
     /// Returns a polynomial's coefficient RNS residues.
@@ -382,7 +382,7 @@ extension PolyRq where F == Coeff {
         }
 
         // Add `q_last  >> 1` to change from flooring to rounding
-        var dataLast = data.row(row: context.moduli.count - 1)
+        var dataLast = data.row(context.moduli.count - 1)
         data.removeLastRows(1)
         let qLastDiv2 = qLast >> 1
         for coeff in dataLast.indices {

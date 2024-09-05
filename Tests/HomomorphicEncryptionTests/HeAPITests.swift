@@ -131,58 +131,68 @@ class HeAPITests: XCTestCase {
     private func encodingTest<Scheme: HeScheme>(
         context: Context<Scheme>,
         encodeFormat: EncodeFormat,
-        polyFormat: (some PolyFormat).Type) throws
+        polyFormat: (some PolyFormat).Type,
+        valueCount: Int) throws
     {
         guard context.supportsSimdEncoding || encodeFormat != .simd else {
             return
         }
         let data = TestUtils.getRandomPlaintextData(
-            count: context.degree,
+            count: valueCount,
             in: 0..<Scheme.Scalar(context.plaintextModulus))
         var signedData = data.map { v in
             v.remainderToCentered(modulus: context.plaintextModulus)
         }
+        let paddedData = data + repeatElement(0, count: context.degree - data.count)
+        let paddedSignedData = signedData + repeatElement(0, count: context.degree - data.count)
+
         switch polyFormat {
         case is Coeff.Type:
             let plaintextCoeff: Plaintext<Scheme, Coeff> = try context.encode(values: data, format: encodeFormat)
             let decoded = try plaintextCoeff.decode(format: encodeFormat) as [Scheme.Scalar]
-            XCTAssertEqual(decoded, data)
+            XCTAssertEqual(decoded, paddedData)
 
-            let decodedSigned: [Scheme.Scalar.SignedScalar] = try plaintextCoeff.decode(format: encodeFormat)
-            XCTAssertEqual(decodedSigned, signedData)
+            let decodedSigned: [Scheme.SignedScalar] = try plaintextCoeff.decode(format: encodeFormat)
+            XCTAssertEqual(decodedSigned, paddedSignedData)
 
             let plaintextCoeffSigned: Plaintext<Scheme, Coeff> = try context.encode(
                 signedValues: signedData,
                 format: encodeFormat)
-            let roundTrip: [Scheme.Scalar.SignedScalar] = try plaintextCoeffSigned.decode(
+            let roundTrip: [Scheme.SignedScalar] = try plaintextCoeffSigned.decode(
                 format: encodeFormat)
-            XCTAssertEqual(roundTrip, signedData)
+            XCTAssertEqual(roundTrip, paddedSignedData)
         case is Eval.Type:
             let plaintextEval: Plaintext<Scheme, Eval> = try context.encode(values: data, format: encodeFormat)
             let decoded = try plaintextEval.decode(format: encodeFormat) as [Scheme.Scalar]
-            XCTAssertEqual(decoded, data)
+            XCTAssertEqual(decoded, paddedData)
 
-            let decodedSigned: [Scheme.Scalar.SignedScalar] = try plaintextEval.decode(format: encodeFormat)
-            XCTAssertEqual(decodedSigned, signedData)
+            let decodedSigned: [Scheme.SignedScalar] = try plaintextEval.decode(format: encodeFormat)
+            XCTAssertEqual(decodedSigned, paddedSignedData)
 
             let plaintextEvalSigned: Plaintext<Scheme, Eval> = try context.encode(
                 signedValues: signedData,
                 format: encodeFormat)
-            let roundTrip: [Scheme.Scalar.SignedScalar] = try plaintextEvalSigned.decode(format: encodeFormat)
-            XCTAssertEqual(signedData, roundTrip)
+            let roundTrip: [Scheme.SignedScalar] = try plaintextEvalSigned.decode(format: encodeFormat)
+            XCTAssertEqual(roundTrip, paddedSignedData)
         default:
             XCTFail("Invalid PolyFormat \(polyFormat)")
         }
-        signedData[0] = (Scheme.Scalar.SignedScalar(context.plaintextModulus) - 1) / 2 + 1
+        signedData[0] = (Scheme.SignedScalar(context.plaintextModulus) - 1) / 2 + 1
         XCTAssertThrowsError(try context.encode(signedValues: signedData, format: encodeFormat))
-        signedData[0] = -Scheme.Scalar.SignedScalar(context.plaintextModulus) / 2 - 1
+        signedData[0] = -Scheme.SignedScalar(context.plaintextModulus) / 2 - 1
         XCTAssertThrowsError(try context.encode(signedValues: signedData, format: encodeFormat))
     }
 
     private func schemeEncodeDecodeTest(context: Context<some HeScheme>) throws {
         for encodeFormat in EncodeFormat.allCases {
             for polyFormat: PolyFormat.Type in [Coeff.self, Eval.self] {
-                try encodingTest(context: context, encodeFormat: encodeFormat, polyFormat: polyFormat)
+                for valueCount in [context.degree / 2, context.degree] {
+                    try encodingTest(
+                        context: context,
+                        encodeFormat: encodeFormat,
+                        polyFormat: polyFormat,
+                        valueCount: valueCount)
+                }
             }
         }
     }

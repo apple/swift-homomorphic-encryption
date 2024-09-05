@@ -65,7 +65,7 @@ struct PolyContextTests {
     }
 
     @Test
-    func testInitChild() throws {
+    func initChild() throws {
         let context1 = try PolyContext<UInt32>(degree: 4, moduli: [2])
         let context2 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3])
         let context3 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3, 5], child: context1)

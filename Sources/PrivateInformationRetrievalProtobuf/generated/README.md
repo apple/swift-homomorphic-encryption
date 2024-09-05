@@ -1,6 +1,6 @@
 # Generated files
 
-Files in this directory are auto-generated using swift-protobuf.
+Files in this directory are generated using swift-protobuf.
 See the [dependencies](../../../README.md#dependencies) for the swift-protobuf version.
 
 ## Requirements

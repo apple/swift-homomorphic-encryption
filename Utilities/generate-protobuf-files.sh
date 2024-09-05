@@ -21,12 +21,16 @@ echo "Updating protobuf files"
 cd swift-homomorphic-encryption-protobuf
 
 echo "Removing HomomorphicEncryptionProtobuf swift protobuf files"
-rm ../Sources/HomomorphicEncryptionProtobuf/generated/*.pb.swift
+rm -f ../Sources/HomomorphicEncryptionProtobuf/generated/*.pb.swift
 echo "Regenerating HomomorphicEncryptionProtobuf swift protobuf files"
-find apple/swift_homomorphic_encryption/v1/ -name "*.proto" -exec protoc --swift_opt=Visibility=Public --swift_opt=FileNaming=PathToUnderscores --swift_out ../Sources/HomomorphicEncryptionProtobuf/generated  {} \;
+find apple/swift_homomorphic_encryption/v1/ \
+    -name "*.proto" -exec protoc \
+    --swift_opt=Visibility=Public \
+    --swift_opt=FileNaming=PathToUnderscores \
+    --swift_out ../Sources/HomomorphicEncryptionProtobuf/generated  {} \;
 
 echo "Removing PrivateInformationRetrievalProtobuf swift protobuf files"
-rm ../Sources/PrivateInformationRetrievalProtobuf/generated/*.pb.swift
+rm -f ../Sources/PrivateInformationRetrievalProtobuf/generated/*.pb.swift
 echo "Regenerating PrivateInformationRetrievalProtobuf swift protobuf files"
 find apple/swift_homomorphic_encryption/pir/ \
     apple/swift_homomorphic_encryption/api/shared/v1/ \
@@ -48,6 +52,21 @@ find apple/swift_homomorphic_encryption/pnns/ \
     --swift_opt=Visibility=Public \
     --swift_opt=FileNaming=PathToUnderscores \
     --swift_out ../Sources/PrivateNearestNeighborSearchProtobuf/generated  {} \;
+
+echo "Removing ServiceProtobuf swift protobuf files"
+rm -f ../Sources/ServiceProtobuf/generated/*.pb.swift
+echo "Regenerating ServiceProtobuf swift protobuf files"
+find apple/swift_homomorphic_encryption/pnns/ \
+    apple/swift_homomorphic_encryption/pir/ \
+    apple/swift_homomorphic_encryption/api/shared/ \
+    apple/swift_homomorphic_encryption/api/v1/ \
+    apple/swift_homomorphic_encryption/api/pir/v1/pir.proto \
+    apple/swift_homomorphic_encryption/api/pnns/v1/pnns.proto \
+    -name "*.proto" -exec protoc \
+    --swift_opt=ProtoPathModuleMappings=../Sources/ServiceProtobuf/protobuf_module_mappings.txtpb \
+    --swift_opt=Visibility=Public \
+    --swift_opt=FileNaming=PathToUnderscores \
+    --swift_out ../Sources/ServiceProtobuf/generated  {} \;
 
 cd -
 echo "Done updating protobuf files"

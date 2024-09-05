@@ -77,17 +77,21 @@ public struct DatabaseDistances: Sendable {
 }
 
 extension Response {
-    /// Computes the noise budget of the ciphertext.
+    /// Computes the noise budget of the response.
     ///
-    /// The *noise budget* of the ciphertext decreases throughout HE operations. Once a ciphertext's noise budget is
+    /// The *noise budget* of the each ciphertext in the response decreases throughout HE operations. Once a
+    /// ciphertext's noise budget is
     /// below
-    /// ``HeScheme/minNoiseBudget``, decryption may yield inaccurate plaintexts.
+    /// `HeScheme/minNoiseBudget`, decryption may yield inaccurate plaintexts.
     /// - Parameters:
     ///   - secretKey: Secret key.
     ///   - variableTime: If `true`, indicates the secret key coefficients may be leaked through timing.
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
+    /// - Warning: The noise budget depends on the encrypted message, which is impractical to know apriori. So this
+    /// function should be treated only as a rough proxy for correct decryption, rather than a source of truth.
+    ///   See Section 2 of <https://eprint.iacr.org/2016/510.pdf> for more details.
     @inlinable
     public func noiseBudget(using secretKey: Scheme.SecretKey, variableTime: Bool) throws -> Double {
         try ciphertextMatrices.map { ciphertextMatrix in

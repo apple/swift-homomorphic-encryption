@@ -121,7 +121,7 @@ print("Minimum noise budget", Bfv<UInt32>.minNoiseBudget)
 noiseBudget = noiseBudgetAfterRelinearization
 ciphertext = try plaintext.encrypt(using: secretKey)
 var expected = plaintext
-while noiseBudget > minNoiseBudget {
+while noiseBudget > minNoiseBudget + 1 {
     let decrypted = try ciphertext.decrypt(using: secretKey)
     precondition(decrypted == expected)
     try ciphertext += ciphertext
@@ -134,8 +134,10 @@ while noiseBudget > minNoiseBudget {
     // snippet.show
 }
 
-// One more addition yields incorrect results
+// Two more additions yields incorrect results
 ciphertext = try ciphertext + ciphertext
+ciphertext = try ciphertext + ciphertext
+try expected += expected
 try expected += expected
 let decrypted = try ciphertext.decrypt(using: secretKey)
 precondition(decrypted != expected)

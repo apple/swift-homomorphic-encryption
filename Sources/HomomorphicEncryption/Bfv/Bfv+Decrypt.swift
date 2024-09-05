@@ -46,6 +46,10 @@ extension Bfv {
     {
         // See Definition 1 of
         // https://www.microsoft.com/en-us/research/wp-content/uploads/2017/06/sealmanual_v2.2.pdf.
+        // More precisely, we should use Theorem 1 from https://eprint.iacr.org/2016/510.pdf, but it's more complicated
+        // and unlikely to make a difference in practice, especially as the noise budget in itself is just a rough
+        // proxy for correct decryption. For example, with `q=131249, t=17`, a ciphertext has noise budget 0.67181 with
+        // Definition 1, but noise budget 0.66854 with Theorem 1.
         var vTimesT = try Self.dotProduct(ciphertext: ciphertext, with: secretKey)
         vTimesT *= Array(repeating: ciphertext.context.plaintextModulus, count: vTimesT.moduli.count)
         let rnsTool = ciphertext.context.getRnsTool(moduliCount: vTimesT.moduli.count)

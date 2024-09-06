@@ -189,3 +189,16 @@ extension Sequence<EvaluationKeyConfig> {
         return .init(galoisElements: galoisElements.sorted(), hasRelinearizationKey: hasRelinearizationKey)
     }
 }
+
+extension EvaluationKeyConfig {
+    /// Checks if this configuration contains the `other` evaluation key configuration.
+    ///
+    /// If true, this configuration can be used whenever `other` is used.
+    /// - Parameter other: The `EvaluationKeyConfig` to check containment with.
+    /// - Returns: `true` if containment holds, `false` otherwise.
+    package func contains(_ other: EvaluationKeyConfig) -> Bool {
+        let containsRelinearizationKey: Bool = hasRelinearizationKey || !other.hasRelinearizationKey
+        let containsGaloisElements: Bool = Set(galoisElements).isSuperset(of: other.galoisElements)
+        return containsRelinearizationKey && containsGaloisElements
+    }
+}

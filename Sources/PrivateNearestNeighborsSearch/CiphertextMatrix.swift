@@ -17,7 +17,7 @@ import HomomorphicEncryption
 /// Stores a matrix of scalars as ciphertexts.
 public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
     /// Dimensions of the matrix.
-    @usableFromInline var dimensions: MatrixDimensions
+    @usableFromInline let dimensions: MatrixDimensions
 
     /// Dimensions of the scalar matrix in a SIMD-encoded plaintext.
     @usableFromInline let simdDimensions: SimdEncodingDimensions
@@ -196,11 +196,13 @@ extension CiphertextMatrix {
         guard packing == .denseRow else {
             throw PnnsError.wrongMatrixPacking(got: packing, expected: .denseRow)
         }
-        precondition(simdDimensions.rowCount == 2, "SIMD row count must be 2")
+        guard simdDimensions.rowCount == 2 else {
+            throw PnnsError.incorrectSimdRowsCount(got: simdDimensions.rowCount, expected: 2)
+        }
 
         let columnCountPowerOfTwo = dimensions.columnCount.nextPowerOfTwo
         let degree = context.degree.nextPowerOfTwo
-        let rowsPerSimdRow = simdDimensions.columnCount / columnCount
+        let rowsPerSimdRow = simdDimensions.columnCount / columnCountPowerOfTwo
         let rowsPerCiphertext = rowsPerSimdRow * simdDimensions.rowCount
         let ciphertextIndex = rowIndex / rowsPerCiphertext
         if rowCount == 1 {

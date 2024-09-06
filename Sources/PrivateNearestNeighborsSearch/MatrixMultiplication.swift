@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Algorithms
 import Foundation
 import HomomorphicEncryption
 
@@ -56,39 +57,68 @@ public enum MatrixMultiplication {
     /// - Parameters:
     ///   - plaintextMatrixDimensions: Dimensions of the plaintext matrix.
     ///   - encryptionParameters: Encryption paramterss
+    ///   - maxQueryCount: Maximum number of queries in one batch. The returned`EvaluationKeyConfig` will support all
+    /// batch sizes up to and including `maxQueryCount`.
     /// - Returns: The evaluation key configuration.
     /// - Throws: Error upon failure to compute the configuration.
     @inlinable
-    public static func evaluationKeyConfig(
+    package static func evaluationKeyConfig<Scheme: HeScheme>(
         plaintextMatrixDimensions: MatrixDimensions,
-        encryptionParameters: EncryptionParameters<some HeScheme>) throws -> EvaluationKeyConfig
+        encryptionParameters: EncryptionParameters<Scheme>,
+        maxQueryCount: Int) throws -> EvaluationKeyConfig
     {
+        guard let simdColumnCount = encryptionParameters.simdDimensions?.columnCount else {
+            throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
+        }
+        let degree = encryptionParameters.polyDegree
         let babyStepGiantStep = BabyStepGiantStep(vectorDimension: plaintextMatrixDimensions.columnCount)
-        return try EvaluationKeyConfig(
-            galoisElements: [
-                GaloisElement.rotatingColumns(
-                    by: -1,
-                    degree: encryptionParameters.polyDegree),
-                GaloisElement.rotatingColumns(
-                    by: -babyStepGiantStep.babyStep,
-                    degree: encryptionParameters.polyDegree),
-            ],
+        var galoisElements = try [
+            GaloisElement.rotatingColumns(
+                by: -1,
+                degree: degree),
+            GaloisElement.rotatingColumns(
+                by: -babyStepGiantStep.babyStep,
+                degree: degree),
+            GaloisElement.swappingRows(degree: degree),
+        ]
+
+        let resultColumnsPerRowCount = simdColumnCount / plaintextMatrixDimensions.rowCount
+        if resultColumnsPerRowCount > 1 {
+            try galoisElements.append(GaloisElement.rotatingColumns(by: 1, degree: degree))
+            if simdColumnCount > 16 {
+                try galoisElements.append(GaloisElement.rotatingColumns(by: 16, degree: degree))
+            }
+            if simdColumnCount > 256 {
+                try galoisElements.append(GaloisElement.rotatingColumns(by: 256, degree: degree))
+            }
+        }
+        let multiplicationConfig = EvaluationKeyConfig(
+            galoisElements: galoisElements,
             hasRelinearizationKey: false)
+
+        let ciphertextMatrixDimensions = try MatrixDimensions(
+            rowCount: maxQueryCount,
+            columnCount: plaintextMatrixDimensions.columnCount)
+        let denseRowConfig: EvaluationKeyConfig = try CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
+            .extractDenseRowConfig(
+                for: encryptionParameters,
+                dimensions: ciphertextMatrixDimensions)
+
+        return [multiplicationConfig, denseRowConfig].union()
     }
 }
 
 extension PlaintextMatrix {
-    /// Computes dot product of each row in the PlaintextMatrix with vector encrypted in `ciphertextVector`.
-    ///
+    /// Computes matrix product between the `PlaintextMatrix` and transpose of row vector encrypted in `vector`.
     /// - Parameters:
     ///   - ciphertextVector: Encrypted dense-row packed vector.
     ///   - evaluationKey: Evaluation key to perform BabyStepGiantStep rotations.
     /// - Returns: Encrypted dense-column packed vector containing dot products.
     /// - Throws: Error upon failure to compute the inner product.
     @inlinable
-    func mul(
-        ciphertextVector: CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>,
-        using evaluationKey: EvaluationKey<Scheme>) throws -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
+    func mulTranspose(
+        vector ciphertextVector: CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>,
+        using evaluationKey: EvaluationKey<Scheme>) throws -> [Scheme.CanonicalCiphertext]
     {
         guard case .diagonal = packing else {
             let expectedBsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
@@ -100,10 +130,10 @@ extension PlaintextMatrix {
         guard ciphertextVector.context == context else {
             throw PnnsError.wrongContext(got: ciphertextVector.context, expected: context)
         }
-        guard dimensions.columnCount == ciphertextVector.dimensions.rowCount else {
+        guard ciphertextVector.dimensions.columnCount == dimensions.columnCount else {
             throw PnnsError.invalidMatrixDimensions(ciphertextVector.dimensions)
         }
-        guard ciphertextVector.columnCount == 1 else {
+        guard ciphertextVector.rowCount == 1 else {
             throw PnnsError.invalidMatrixDimensions(ciphertextVector.dimensions)
         }
         guard ciphertextVector.ciphertexts.count == 1 else {
@@ -173,12 +203,75 @@ extension PlaintextMatrix {
                 try resultCiphertexts[resultCiphertextIndex] += innerProduct
             }
         }
-        let ciphertexMatrixDimensions = try MatrixDimensions(
+        return resultCiphertexts
+    }
+
+    /// Computes matrix product between the `PlaintextMatrix` and transpose of row vectors encrypted in `matrix`.
+    /// - Parameters:
+    ///   - ciphertextMatrix: Encrypted dense-row packed matrix.
+    ///   - evaluationKey: Evaluation key to perform BabyStepGiantStep rotations, extracting dense column, and for
+    /// packing ciphertexts.
+    /// - Returns: Encrypted dense-column packed matrix.
+    /// - Throws: Error upon failure to compute the product.
+    @inlinable
+    func mulTranspose(
+        matrix ciphertextMatrix: CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>,
+        using evaluationKey: EvaluationKey<Scheme>) throws
+        -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
+    {
+        guard dimensions.columnCount == ciphertextMatrix.dimensions.columnCount else {
+            throw PnnsError.invalidMatrixDimensions(ciphertextMatrix.dimensions)
+        }
+        guard ciphertextMatrix.context == context else {
+            throw PnnsError.wrongContext(got: ciphertextMatrix.context, expected: context)
+        }
+        guard case .diagonal = packing else {
+            let expectedBsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
+            throw PnnsError.wrongMatrixPacking(got: packing, expected: .diagonal(babyStepGiantStep: expectedBsgs))
+        }
+        guard case .denseRow = ciphertextMatrix.packing else {
+            throw PnnsError.wrongMatrixPacking(got: ciphertextMatrix.packing, expected: .denseRow)
+        }
+        guard simdDimensions.rowCount == 2 else {
+            throw PnnsError.incorrectSimdRowsCount(got: simdDimensions.rowCount, expected: 2)
+        }
+
+        var innerProducts: [Scheme.CanonicalCiphertext] = try (0..<ciphertextMatrix.rowCount).map { rowIndex in
+            let ciphertextRow = try ciphertextMatrix.extractDenseRow(rowIndex: rowIndex, evaluationKey: evaluationKey)
+            return try mulTranspose(vector: ciphertextRow, using: evaluationKey)
+        }.flatMap { $0 }
+
+        // Pack resulting ciphertexts such that no two result ciphertexts span multiple simd rows.
+        let columnsPerSimdRowCount = simdColumnCount / dimensions.rowCount
+        if columnsPerSimdRowCount > 0 {
+            let columnsPerCiphertextCount = simdRowCount * columnsPerSimdRowCount
+            let packedCiphertexts = try innerProducts.chunks(ofCount: columnsPerCiphertextCount)
+                .map { columnsForCiphertext in
+                    var packedRows: [Scheme.CanonicalCiphertext] = try columnsForCiphertext
+                        .chunks(ofCount: columnsPerSimdRowCount).map { columnsForRow in
+                            guard var packedRow = columnsForRow.last else {
+                                throw PnnsError.emptyCiphertextArray
+                            }
+                            for column in columnsForRow.dropLast().reversed() {
+                                try packedRow.rotateColumnsMultiStep(by: dimensions.rowCount, using: evaluationKey)
+                                try packedRow += column
+                            }
+                            return packedRow
+                        }
+                    if columnsForCiphertext.count > columnsPerSimdRowCount {
+                        try packedRows[1].swapRows(using: evaluationKey)
+                        return try packedRows[0] + packedRows[1]
+                    }
+                    return packedRows[0]
+                }
+            innerProducts = packedCiphertexts
+        }
+        let resultMatrixDimensions = try MatrixDimensions(
             rowCount: dimensions.rowCount,
-            columnCount: 1)
+            columnCount: ciphertextMatrix.rowCount)
         return try CiphertextMatrix(
-            dimensions: ciphertexMatrixDimensions,
+            dimensions: resultMatrixDimensions,
             packing: .denseColumn,
-            ciphertexts: resultCiphertexts)
+            ciphertexts: innerProducts)
     }
 }

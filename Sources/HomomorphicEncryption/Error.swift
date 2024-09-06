@@ -33,6 +33,7 @@ public enum HeError: Error, Equatable {
     case invalidDegree(_ degree: Int)
     case invalidEncryptionParameters(_ description: String)
     case invalidFormat(_ description: String)
+    case invalidGaloisElement(_ element: Int)
     case invalidModulus(_ modulus: Int64)
     case invalidNttModulus(modulus: Int64, degree: Int)
     case invalidPolyContext(_ description: String)
@@ -214,6 +215,8 @@ extension HeError: LocalizedError {
             "Invalid encryption parameters \(description)"
         case let .invalidFormat(description):
             "An unrecognized format \(description) is used"
+        case let .invalidGaloisElement(element):
+            "Invalid Galois element is used: \(element)"
         case let .invalidModulus(modulus):
             "Invalid modulus \(modulus)"
         case let .invalidNttModulus(modulus, degree):

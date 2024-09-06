@@ -335,7 +335,9 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         guard let simdDimensions = context.simdDimensions else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
-        precondition(simdDimensions.rowCount == 2, "SIMD row count must be 2")
+        guard simdDimensions.rowCount == 2 else {
+            throw PnnsError.incorrectSimdRowsCount(got: simdDimensions.rowCount, expected: 2)
+        }
         let simdColumnCount = simdDimensions.columnCount
         guard dimensions.columnCount <= simdColumnCount else {
             throw PnnsError.invalidMatrixDimensions(dimensions)
@@ -505,7 +507,9 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         }
         let simdColumnCount = simdDimensions.columnCount
         let simdRowCount = simdDimensions.rowCount
-        precondition(simdRowCount == 2, "SIMD row count must be 2")
+        guard simdRowCount == 2 else {
+            throw PnnsError.incorrectSimdRowsCount(got: simdRowCount, expected: 2)
+        }
         let columnsPerPlaintextCount = simdRowCount * (simdColumnCount / rowCount)
 
         var valuesColumnMajor: [Scheme.Scalar] = []

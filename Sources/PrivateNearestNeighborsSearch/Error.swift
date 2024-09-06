@@ -33,6 +33,7 @@ public enum PnnsError: Error, Equatable {
     case emptyCiphertextArray
     case emptyDatabase
     case emptyPlaintextArray
+    case incorrectSimdRowsCount(got: Int, expected: Int)
     case invalidMatrixDimensions(_ dimensions: MatrixDimensions)
     case invalidQuery(reason: InvalidQueryReason)
     case simdEncodingNotSupported(_ description: String)
@@ -78,6 +79,8 @@ extension PnnsError: LocalizedError {
             "Empty database"
         case let .invalidMatrixDimensions(dimensions):
             "Invalid matrix dimensions: rowCount \(dimensions.rowCount), columnCount \(dimensions.columnCount)"
+        case let .incorrectSimdRowsCount(got, expected):
+            "Invalid simd rows count \(got), expected \(expected)"
         case let .simdEncodingNotSupported(encryptionParameters):
             "SIMD encoding is not supported for encryption parameters \(encryptionParameters)"
         case let .invalidQuery(reason):

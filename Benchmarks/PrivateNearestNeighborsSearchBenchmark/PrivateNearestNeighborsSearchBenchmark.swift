@@ -125,11 +125,13 @@ struct ProcessBenchmarkContext<Scheme: HeScheme> {
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.quantum128)
 
+        let batchSize = 1
         let evaluationKeyConfig = try MatrixMultiplication.evaluationKeyConfig(
             plaintextMatrixDimensions: MatrixDimensions(
                 rowCount: databaseConfig.rowCount,
                 columnCount: databaseConfig.vectorDimension),
-            encryptionParameters: encryptionParams)
+            encryptionParameters: encryptionParams,
+            maxQueryCount: batchSize)
         let scalingFactor = ClientConfig<Scheme>
             .maxScalingFactor(
                 distanceMetric: .cosineSimilarity,
@@ -233,7 +235,8 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
             plaintextMatrixDimensions: MatrixDimensions(
                 rowCount: databaseConfig.rowCount,
                 columnCount: databaseConfig.vectorDimension),
-            encryptionParameters: encryptionParams)
+            encryptionParameters: encryptionParams,
+            maxQueryCount: queryCount)
         let scalingFactor = ClientConfig<Scheme>
             .maxScalingFactor(
                 distanceMetric: .cosineSimilarity,

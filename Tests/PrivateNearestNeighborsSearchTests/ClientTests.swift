@@ -182,7 +182,8 @@ final class ClientTests: XCTestCase {
                 plaintextModuli: plaintextModuli)
             let evaluatonKeyConfig = try MatrixMultiplication.evaluationKeyConfig(
                 plaintextMatrixDimensions: dimensions,
-                encryptionParameters: encryptionParams)
+                encryptionParameters: encryptionParams,
+                maxQueryCount: queryCount)
             let clientConfig = try ClientConfig<Scheme>(
                 encryptionParams: encryptionParams,
                 scalingFactor: scalingFactor,

@@ -210,4 +210,111 @@ public enum GaloisElement {
             modulus: UInt32(degree) &<< 1,
             variableTime: true))
     }
+
+    /// Returns all Galois elements up to logarithm of `degree / 2`.
+    ///
+    /// - Parameter degree: The is the RLWE ring dimension `N`, given by
+    /// ``EncryptionParameters/polyDegree``.
+    /// - Returns: Array of Galois elements.
+    /// - Throws: Error upon invalid step or degree.
+    @inlinable
+    package static func rotatingColumnsMultiStep(degree: Int) throws -> [Int] {
+        var elements: [Int] = []
+        for logStep in 0..<(degree / 2).log2 {
+            let step = 1 << logStep
+            try elements.append(rotatingColumns(by: step, degree: degree))
+            try elements.append(rotatingColumns(by: -step, degree: degree))
+        }
+        return elements
+    }
+
+    /// Computes rotation steps corresponding to Galois elements.
+    ///
+    /// - Parameters:
+    ///   - elements: Galois elements.
+    ///   - degree: The RLWE ring dimension `N`, given by
+    /// ``EncryptionParameters/polyDegree``.
+    /// - Returns: Dictionary mapping Galois elements to their corresponding rotation steps.
+    @inlinable
+    package static func stepsFor(elements: [Int], degree: Int) -> [Int: Int?] {
+        var result: [Int: Int?] = Dictionary(elements.map { ($0, nil) }) { first, _ in
+            first
+        }
+
+        let modulus = 2 * degree
+        var resultCount = 0
+        var gPowStep = 1
+        for step in 0...(degree / 2) {
+            if elements.contains(gPowStep) {
+                result[gPowStep] = degree / 2 - step
+                resultCount += 1
+                if resultCount == elements.count {
+                    return result
+                }
+            }
+            gPowStep = gPowStep.multiplyMod(Int(GaloisElementGenerator.value), modulus: modulus, variableTime: true)
+        }
+        return result
+    }
+
+    /// Decomposes `step` into smaller rotation steps and associated number of repetitions.
+    ///
+    /// When the smaller rotation steps are applied with specified repetitions, the result is rotation by `step`.
+    /// - Parameters:
+    ///   - supportedSteps: Smaller rotation steps to decompose into.
+    ///   - step: Number of slots to rotate. Negative values indicate a left rotation, and positive values indicate
+    /// right rotation.
+    ///   - degree: This is the RLWE ring dimension `N`, given by
+    /// ``EncryptionParameters/polyDegree``.
+    /// - Returns: Dictionary mapping rotation steps to their counts, and `nil` if no plan was found.
+    /// - Throws: Error upon invalid step or degree.
+    @inlinable
+    package static func planMultiStep(supportedSteps: [Int], step: Int, degree: Int) throws -> [Int: Int]? {
+        guard abs(step) < degree else {
+            throw HeError.invalidRotationStep(step: step, degree: degree)
+        }
+        if supportedSteps.contains(step) {
+            return [step: 1]
+        }
+
+        let sortedSteps = supportedSteps.sorted(by: >)
+        let positiveStepsPlan = planMultiStepGreedy(sortedSteps: sortedSteps, step: step) { $0 }
+        let negativeStepsPlan = planMultiStepGreedy(sortedSteps: sortedSteps.reversed(), step: step) { step in
+            let columnsCount = degree >> 1
+            return columnsCount - step
+        }
+
+        return switch (positiveStepsPlan, negativeStepsPlan) {
+        case (nil, nil):
+            nil
+        case let (nil, negativePlan?):
+            negativePlan
+        case let (positivePlan?, nil):
+            positivePlan
+        case let (positivePlan?, negativePlan?):
+            if positivePlan.values.reduce(0, +) <= negativePlan.values.reduce(0, +) {
+                positivePlan
+            } else {
+                negativePlan
+            }
+        }
+    }
+
+    @inlinable
+    static func planMultiStepGreedy(sortedSteps: [Int], step: Int, stepTransform: (Int) -> Int) -> [Int: Int]? {
+        var resultSteps: [Int: Int] = [:]
+        var remainingStep = stepTransform(step)
+        for supportedStep in sortedSteps {
+            let transformedStep = stepTransform(supportedStep)
+            let stepCount = remainingStep / transformedStep
+            if stepCount > 0 {
+                resultSteps[supportedStep] = (resultSteps[supportedStep] ?? 0) + stepCount
+            }
+            remainingStep %= transformedStep
+        }
+        if remainingStep == 0 {
+            return resultSteps
+        }
+        return nil
+    }
 }

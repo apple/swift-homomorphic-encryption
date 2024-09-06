@@ -880,29 +880,39 @@ class HeAPITests: XCTestCase {
     }
 
     private func schemeRotationTest(context: Context<some HeScheme>) throws {
+        func runRotationTest(context: Context<some HeScheme>, galoisElements: [Int], multiStep: Bool) throws {
+            let degree = context.degree
+            let testEnv = try TestEnv(context: context, format: .simd, galoisElements: galoisElements)
+            let evaluationKey = try XCTUnwrap(testEnv.evaluationKey)
+            for step in 1..<min(8, degree / 2) {
+                let expectedData = Array(testEnv.data1[degree / 2 - step..<degree / 2] + testEnv
+                    .data1[0..<degree / 2 - step] + testEnv
+                    .data1[degree - step..<degree] + testEnv.data1[degree / 2..<degree - step])
+                var rotatedCiphertext = testEnv.ciphertext1
+                if multiStep {
+                    try rotatedCiphertext.rotateColumnsMultiStep(by: step, using: evaluationKey)
+                } else {
+                    try rotatedCiphertext.rotateColumns(by: step, using: evaluationKey)
+                }
+                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: expectedData)
+
+                if multiStep {
+                    try rotatedCiphertext.rotateColumnsMultiStep(by: -step, using: evaluationKey)
+                } else {
+                    try rotatedCiphertext.rotateColumns(by: -step, using: evaluationKey)
+                }
+                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: testEnv.data1)
+            }
+        }
+
         guard context.supportsSimdEncoding, context.supportsEvaluationKey else {
             return
         }
-        let degree = context.degree
-        let galoisElements = try (1..<(context.degree >> 1)).flatMap { step in
-            try [
-                GaloisElement.rotatingColumns(by: step, degree: degree),
-                GaloisElement.rotatingColumns(by: -step, degree: degree),
-            ]
-        } + [GaloisElement.swappingRows(degree: degree)]
-        let testEnv = try TestEnv(context: context, format: .simd, galoisElements: galoisElements)
-        let evaluationKey = try XCTUnwrap(testEnv.evaluationKey)
-        for step in 1..<min(8, degree / 2) {
-            let expectedData = Array(testEnv.data1[degree / 2 - step..<degree / 2] + testEnv
-                .data1[0..<degree / 2 - step] + testEnv
-                .data1[degree - step..<degree] + testEnv.data1[degree / 2..<degree - step])
-            var rotatedCiphertext = testEnv.ciphertext1
-            try rotatedCiphertext.rotateColumns(by: step, using: evaluationKey)
-            try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: expectedData)
 
-            try rotatedCiphertext.rotateColumns(by: -step, using: evaluationKey)
-            try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: testEnv.data1)
-        }
+        let degree = context.degree
+        let galoisElementsSwap = [GaloisElement.swappingRows(degree: degree)]
+        let testEnv = try TestEnv(context: context, format: .simd, galoisElements: galoisElementsSwap)
+        let evaluationKey = try XCTUnwrap(testEnv.evaluationKey)
         let expectedData = Array(testEnv.data1[degree / 2..<degree] + testEnv.data1[0..<degree / 2])
         var ciphertext = testEnv.ciphertext1
         try ciphertext.swapRows(using: evaluationKey)
@@ -910,6 +920,17 @@ class HeAPITests: XCTestCase {
 
         try ciphertext.swapRows(using: evaluationKey)
         try testEnv.checkDecryptsDecodes(ciphertext: ciphertext, format: .simd, expected: testEnv.data1)
+
+        let galoisElementsRotate = try (1..<(degree >> 1)).flatMap { step in
+            try [
+                GaloisElement.rotatingColumns(by: step, degree: degree),
+                GaloisElement.rotatingColumns(by: -step, degree: degree),
+            ]
+        }
+        let galoisElementsMultiStep = try GaloisElement.rotatingColumnsMultiStep(degree: degree)
+
+        try runRotationTest(context: context, galoisElements: galoisElementsRotate, multiStep: false)
+        try runRotationTest(context: context, galoisElements: galoisElementsMultiStep, multiStep: true)
     }
 
     private func schemeApplyGaloisTest<Scheme: HeScheme>(context: Context<Scheme>) throws {

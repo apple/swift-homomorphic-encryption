@@ -1004,6 +1004,46 @@ extension HeScheme {
         let element = GaloisElement.swappingRows(degree: ciphertext.context.degree)
         try applyGalois(ciphertext: &ciphertext, element: element, using: evaluationKey)
     }
+
+    @inlinable
+    package static func rotateColumnsMultiStep(
+        of ciphertext: inout CanonicalCiphertext,
+        by step: Int,
+        using evaluationKey: EvaluationKey) throws
+    {
+        if step == 0 {
+            return
+        }
+
+        guard let galoisKey = evaluationKey.galoisKey else {
+            throw HeError.missingGaloisKey
+        }
+
+        // Short-circuit to single rotation if possible.
+        let degree = ciphertext.degree
+        let galoisElement = try GaloisElement.rotatingColumns(by: step, degree: degree)
+        if galoisKey.keys.keys.contains(galoisElement) {
+            try ciphertext.rotateColumns(by: step, using: evaluationKey)
+            return
+        }
+
+        let galoisElements = Array(galoisKey.keys.keys)
+        let steps = try GaloisElement.stepsFor(elements: galoisElements, degree: degree).values.compactMap { $0 }
+
+        let positiveStep = if step < 0 {
+            step + degree / 2
+        } else {
+            step
+        }
+
+        let plan = try GaloisElement.planMultiStep(supportedSteps: steps, step: positiveStep, degree: degree)
+        guard let plan else {
+            throw HeError.invalidRotationStep(step: step, degree: degree)
+        }
+        for (step, count) in plan {
+            try (0..<count).forEach { _ in try ciphertext.rotateColumns(by: step, using: evaluationKey) }
+        }
+    }
 }
 
 extension HeScheme {

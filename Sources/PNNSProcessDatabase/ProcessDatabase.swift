@@ -238,7 +238,8 @@ struct ProcessDatabase: ParsableCommand {
             evaluationKeyConfig: MatrixMultiplication
                 .evaluationKeyConfig(
                     plaintextMatrixDimensions: plaintextMatrixDimensions,
-                    encryptionParameters: encryptionParameters),
+                    encryptionParameters: encryptionParameters,
+                    maxQueryCount: config.batchSize),
             distanceMetric: config.distanceMetric)
         let serverConfig = ServerConfig<Scheme>(
             clientConfig: clientConfig,

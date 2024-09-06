@@ -68,14 +68,8 @@ public struct Server<Scheme: HeScheme>: Sendable {
 
         let responseMatrices = try zip(query.ciphertextMatrices, database.plaintextMatrices)
             .map { ciphertextMatrix, plaintextMatrix in
-                // Client query has transposed dimensions
-                // TODO: remove (and make CiphertextMatrix.dimensions `let` instead of `var)
-                var ciphertextMatrix = ciphertextMatrix
-                ciphertextMatrix.dimensions = try MatrixDimensions(
-                    rowCount: ciphertextMatrix.columnCount,
-                    columnCount: ciphertextMatrix.rowCount)
-                var responseMatrix = try plaintextMatrix.mul(
-                    ciphertextVector: ciphertextMatrix.convertToCanonicalFormat(),
+                var responseMatrix = try plaintextMatrix.mulTranspose(
+                    matrix: ciphertextMatrix.convertToCanonicalFormat(),
                     using: evaluationKey)
                 // Reduce response size by mod-switching to a single modulus.
                 try responseMatrix.modSwitchDownToSingle()

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 @testable import HomomorphicEncryption
+import TestUtilities
 import XCTest
 
 final class GaloisTests: XCTestCase {
@@ -101,5 +102,121 @@ final class GaloisTests: XCTestCase {
     func testApplyGalois() throws {
         try testApplyGaloisForType(type: UInt32.self)
         try testApplyGaloisForType(type: UInt64.self)
+    }
+
+    func testGaloisElementsToSteps() throws {
+        let galoisElements = [2, 3, 9, 11]
+        let degree = 8
+        let result = try GaloisElement.stepsFor(elements: galoisElements, degree: degree)
+        let expected = [2: nil, 3: 3, 9: 2, 11: 1]
+        XCTAssertEqual(result, expected)
+
+        // roundtrip
+        for degree in [16, 32, 1024] {
+            let steps = 1..<degree / 2
+            var elementToStep: [Int: Int] = [:]
+            for step in steps {
+                try elementToStep[GaloisElement.rotatingColumns(by: step, degree: degree)] = step
+            }
+
+            let result = try GaloisElement.stepsFor(elements: Array(elementToStep.keys), degree: degree)
+            XCTAssertEqual(result, elementToStep)
+        }
+    }
+
+    func testPlanMultiStepSmall() throws {
+        let degree = 32
+
+        do {
+            // No plan found.
+            let supportedSteps = [2, 4, 8]
+            for step in [1, 3, 5, 7, 9, 11, 13, 15] {
+                let plan = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
+                XCTAssertNil(plan)
+            }
+        }
+
+        do {
+            // Positive steps are always cheaper.
+            let supportedSteps = [1, 4, 8]
+            let transformNegative: (Int) -> Int = { step in
+                (degree >> 1) - step
+            }
+            let negativeSteps = supportedSteps.map { step in
+                transformNegative(step)
+            }
+
+            let knownAnswers = [
+                (1, [1: 1]),
+                (2, [1: 2]),
+                (3, [1: 3]),
+                (4, [4: 1]),
+                (4, [4: 1]),
+                (5, [4: 1, 1: 1]),
+                (6, [4: 1, 1: 2]),
+                (7, [4: 1, 1: 3]),
+                (8, [8: 1]),
+                (9, [8: 1, 1: 1]),
+                (10, [8: 1, 1: 2]),
+                (11, [8: 1, 1: 3]),
+                (12, [8: 1, 4: 1]),
+                (13, [8: 1, 4: 1, 1: 1]),
+                (14, [8: 1, 4: 1, 1: 2]),
+                (15, [8: 1, 4: 1, 1: 3]),
+            ]
+
+            for (step, counts) in knownAnswers {
+                var result = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
+                XCTAssertEqual(result, counts)
+
+                // Negative steps yields same plan, just with negative rotations.
+                let negativeStep = transformNegative(step)
+                let negativeStepCounts = Dictionary(uniqueKeysWithValues: counts.map { step, count in
+                    (transformNegative(step), count)
+                })
+
+                result = try GaloisElement.planMultiStep(
+                    supportedSteps: negativeSteps,
+                    step: negativeStep,
+                    degree: degree)
+                XCTAssertEqual(result, negativeStepCounts)
+            }
+        }
+
+        do {
+            // Positive or negative steps may be cheaper.
+            let supportedSteps = [1, 2, 6, 12, 15]
+            let knownAnswers = [
+                (4, [2: 2]), // Positive steps are cheaper.
+                (11, [12: 1, 15: 1]), // Negative steps are cheaper.
+            ]
+
+            for (step, counts) in knownAnswers {
+                let result = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
+                XCTAssertEqual(result, counts)
+            }
+        }
+    }
+
+    func testMultiStepBig() throws {
+        let degree = 8192
+        let transformPositive: (Int) -> Int = { step in
+            var step = step
+            if step < 0 {
+                step += degree / 2
+            }
+            return step
+        }
+        let steps = [1, transformPositive(-1), transformPositive(-16), transformPositive(-256)]
+        let knownAnswers = [
+            (transformPositive(-15), [transformPositive(-16): 1, 1: 1]),
+            (transformPositive(-191), [transformPositive(-16): 11,
+                                       transformPositive(-1): 15]),
+            (transformPositive(-192), [transformPositive(-16): 12]),
+        ]
+        for (step, counts) in knownAnswers {
+            let result = try GaloisElement.planMultiStep(supportedSteps: steps, step: step, degree: degree)
+            XCTAssertEqual(result, counts)
+        }
     }
 }

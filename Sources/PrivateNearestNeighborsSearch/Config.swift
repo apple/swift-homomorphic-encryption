@@ -20,6 +20,28 @@ public enum DistanceMetric: CaseIterable, Codable, Equatable, Hashable, Sendable
     case cosineSimilarity
 }
 
+/// CosineSimilarity configuration.
+public enum CosineSimilarity {
+    /// Computes the evaluation key configuration for matrix multiplication.
+    /// - Parameters:
+    ///   - plaintextMatrixDimensions: Dimensions of the plaintext matrix.
+    ///   - encryptionParameters: Encryption parameters.
+    ///   - maxQueryCount: Maximum number of queries in one batch. The returned`EvaluationKeyConfig` will support all
+    /// batch sizes up to and including `maxQueryCount`.
+    /// - Returns: The evaluation key configuration.
+    /// - Throws: Error upon failure to compute the configuration.
+    public static func evaluationKeyConfig(
+        plaintextMatrixDimensions: MatrixDimensions,
+        encryptionParameters: EncryptionParameters<some HeScheme>,
+        maxQueryCount: Int) throws -> EvaluationKeyConfig
+    {
+        try MatrixMultiplication.evaluationKeyConfig(
+            plaintextMatrixDimensions: plaintextMatrixDimensions,
+            encryptionParameters: encryptionParameters,
+            maxQueryCount: maxQueryCount)
+    }
+}
+
 /// Client configuration.
 public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Sendable {
     /// Encryption parameters.

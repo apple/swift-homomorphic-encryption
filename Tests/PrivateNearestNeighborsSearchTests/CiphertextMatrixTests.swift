@@ -26,6 +26,12 @@ func increasingData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> 
     }
 }
 
+func randomData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> [[T]] {
+    (0..<dimensions.rowCount).map { _ in
+        (0..<dimensions.columnCount).map { _ in T.random(in: 0..<modulus) }
+    }
+}
+
 final class CiphertextMatrixTests: XCTestCase {
     func testEncryptDecryptRoundTrip() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {

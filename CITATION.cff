@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+authors:
+  - name: Apple Inc.
+  - name: Swift Homomorphic Encryption project authors
+title: Swift Homomorphic Encryption
+url: https://github.com/apple/swift-homomorphic-encryption'
+license: Apache-2.0

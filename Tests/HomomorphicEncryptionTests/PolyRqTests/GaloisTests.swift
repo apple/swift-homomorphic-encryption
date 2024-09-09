@@ -107,7 +107,7 @@ final class GaloisTests: XCTestCase {
     func testGaloisElementsToSteps() throws {
         let galoisElements = [2, 3, 9, 11]
         let degree = 8
-        let result = try GaloisElement.stepsFor(elements: galoisElements, degree: degree)
+        let result = GaloisElement.stepsFor(elements: galoisElements, degree: degree)
         let expected = [2: nil, 3: 3, 9: 2, 11: 1]
         XCTAssertEqual(result, expected)
 
@@ -119,7 +119,7 @@ final class GaloisTests: XCTestCase {
                 try elementToStep[GaloisElement.rotatingColumns(by: step, degree: degree)] = step
             }
 
-            let result = try GaloisElement.stepsFor(elements: Array(elementToStep.keys), degree: degree)
+            let result = GaloisElement.stepsFor(elements: Array(elementToStep.keys), degree: degree)
             XCTAssertEqual(result, elementToStep)
         }
     }

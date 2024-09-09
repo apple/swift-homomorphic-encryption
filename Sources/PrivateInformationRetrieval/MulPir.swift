@@ -453,7 +453,7 @@ extension MulPirServer {
                     return nil
                 }
                 let bytes = Array(entry[startIndex..<endIndex])
-                let coefficients: [Scheme.Scalar] = CoefficientPacking.bytesToCoefficients(
+                let coefficients: [Scheme.Scalar] = try CoefficientPacking.bytesToCoefficients(
                     bytes: bytes,
                     bitsPerCoeff: context.plaintextModulus.log2,
                     decode: false)
@@ -502,7 +502,7 @@ extension MulPirServer {
             .map { startIndex in
                 let endIndex = min(startIndex + bytesPerPlaintext, flatDatabase.count)
                 let values = Array(flatDatabase[startIndex..<endIndex])
-                let plaintextCoefficients: [Scheme.Scalar] = CoefficientPacking.bytesToCoefficients(
+                let plaintextCoefficients: [Scheme.Scalar] = try CoefficientPacking.bytesToCoefficients(
                     bytes: values,
                     bitsPerCoeff: context.plaintextModulus.log2,
                     decode: false)

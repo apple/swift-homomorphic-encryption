@@ -28,6 +28,7 @@ public enum HeError: Error, Equatable {
     case insecureEncryptionParameters(_ description: String)
     case invalidCiphertext(_ description: String)
     case invalidCoefficientIndex(index: Int, degree: Int)
+    case invalidCoefficientPacking(bitsPerCoeff: Int, skipLSBs: Int)
     case invalidContext(_ description: String)
     case invalidCorrectionFactor(_ description: String)
     case invalidDegree(_ degree: Int)
@@ -203,6 +204,8 @@ extension HeError: LocalizedError {
             "Insecure encryption parameters \(description)"
         case let .invalidCoefficientIndex(index, degree):
             "Invalid coefficient index \(index) for degree \(degree)"
+        case let .invalidCoefficientPacking(bitsPerCoeff, skipLSBs):
+            "Invalid coefficint packing: bitsPerCoeff \(bitsPerCoeff), skipLSBs \(skipLSBs)"
         case let .invalidCiphertext(description):
             "\(description)"
         case let .invalidContext(description):

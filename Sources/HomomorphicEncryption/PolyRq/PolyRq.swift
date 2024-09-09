@@ -18,7 +18,7 @@
 /// The number-theoretic transform is used for efficient arithmetic.
 public struct PolyRq<T: ScalarType, F: PolyFormat>: Equatable, Sendable {
     /// Context for the polynomial.
-    @usableFromInline var context: PolyContext<T>
+    public var context: PolyContext<T>
     /// Residue number system (RNS) decomposition of each coefficient.
     ///
     /// Coefficients are stored in coefficient-major order. That is, `data[rns_index, coeff_index]` stores the
@@ -26,12 +26,12 @@ public struct PolyRq<T: ScalarType, F: PolyFormat>: Equatable, Sendable {
     public var data: Array2d<T>
 
     @inlinable
-    init(context: PolyContext<T>, data: Array2d<T>) {
+    public init(context: PolyContext<T>, data: Array2d<T>) {
         precondition(context.degree == data.columnCount)
         precondition(context.moduli.count == data.rowCount)
         self.context = context
         self.data = data
-        assert(isValidData())
+        assert(hasValidData())
     }
 
     @inlinable
@@ -80,7 +80,7 @@ extension PolyRq {
 
     /// Returns true if the polynomial data is valid for its ``PolyContext``, false otherwise.
     @inlinable
-    public func isValidData() -> Bool {
+    public func hasValidData() -> Bool {
         for (rnsIndex, modulus) in moduli.enumerated() {
             for index in data.rowIndices(row: rnsIndex) {
                 guard data[index] < modulus else {
@@ -183,7 +183,7 @@ extension PolyRq {
     /// > Note: `secretPoly` will not be copied or change size, so this functions is suitable for use
     /// with sensitive polynomials.
     @inlinable
-    public static func mulAssign(_ lhs: inout Self, secretPoly: borrowing Self) where F == Eval {
+    static func mulAssign(_ lhs: inout Self, secretPoly: borrowing Self) where F == Eval {
         let context = lhs.context
         precondition(secretPoly.context.isParentOfOrEqual(to: context))
         lhs.data.data.withUnsafeMutableBufferPointer { lhsData in
@@ -211,7 +211,7 @@ extension PolyRq {
     ///
     /// - Warning: Doesn't check for overflow.
     @inlinable
-    public static func addingLazyProduct(_ lhs: Self, _ rhs: Self, to accumulator: inout Array2d<T.DoubleWidth>)
+    static func addingLazyProduct(_ lhs: Self, _ rhs: Self, to accumulator: inout Array2d<T.DoubleWidth>)
         where F == Eval
     {
         precondition(accumulator.shape == rhs.data.shape)
@@ -352,14 +352,14 @@ extension PolyRq {
     /// - Returns: Whether the polynomial is zero.
     /// - Warning: Leaks `self` through timing.
     @inlinable
-    public func isZero(variableTime: Bool) -> Bool {
+    func isZero(variableTime: Bool) -> Bool {
         precondition(variableTime)
         return data.data.allSatisfy { coefficient in coefficient == 0 }
     }
 
     /// Clears the memory in the polynomial.
     @inlinable
-    public mutating func zeroize() {
+    mutating func zeroize() {
         data.zeroize()
     }
 }

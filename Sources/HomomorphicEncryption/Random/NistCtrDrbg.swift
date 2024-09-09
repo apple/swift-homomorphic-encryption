@@ -21,27 +21,29 @@ import Foundation
 /// Implements the NIST `CTR_DRBG` using AES without derivation function.
 /// Description is in NIST SP 800-90A:
 /// <https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf>.
-public struct NistCtrDrbg {
-    static let ReseedInterval: Int64 = 1 << 48
-    static let MaxByteCountPerRequest: Int = 1 << 16
+@usableFromInline
+package struct NistCtrDrbg {
+    @usableFromInline static let ReseedInterval: Int64 = 1 << 48
+    @usableFromInline static let MaxByteCountPerRequest: Int = 1 << 16
     /// Size of AES block.
-    static let BlockCount: Int = 16
+    @usableFromInline static let BlockCount: Int = 16
     /// Size of AES key.
-    static let KeyCount: Int = 16
+    @usableFromInline static let KeyCount: Int = 16
     /// Size of the seed.
-    static let SeedCount: Int = KeyCount + BlockCount
+    @usableFromInline static let SeedCount: Int = KeyCount + BlockCount
 
-    var key: SymmetricKey
+    @usableFromInline var key: SymmetricKey
     /// This is called `V` in the NIST specification.
-    var nonce: DWUInt128
-    var reseedCounter: Int64
+    @usableFromInline var nonce: DWUInt128
+    @usableFromInline var reseedCounter: Int64
 
-    var nonceBytes: [UInt8] {
+    @usableFromInline var nonceBytes: [UInt8] {
         // Because of a mismatch between pre-increment & post-increment we always implicitly add one to the nonce before
         // we call `AES._CTR.encrypt()`
         (nonce &+ 1).bigEndianBytes
     }
 
+    @inlinable
     init(entropy: [UInt8] = [UInt8](
         randomByteCount: Self.SeedCount)) throws
     {
@@ -51,6 +53,7 @@ public struct NistCtrDrbg {
         try ctrDrbgUpdate(providedData: entropy)
     }
 
+    @inlinable
     mutating func ctrDrbgUpdate(providedData: [UInt8]) throws {
         precondition(providedData.count == Self.SeedCount)
 

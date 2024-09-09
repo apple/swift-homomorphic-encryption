@@ -23,7 +23,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     public static var minNoiseBudget: Double {
-        0.5
+        0
     }
 
     // MARK: HE operations

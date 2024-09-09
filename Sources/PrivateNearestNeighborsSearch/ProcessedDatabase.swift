@@ -14,6 +14,7 @@
 
 import HomomorphicEncryption
 
+/// A database after processing to prepare for PNNS queries.
 public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     /// One context per plaintext modulus.
     public let contexts: [Context<Scheme>]

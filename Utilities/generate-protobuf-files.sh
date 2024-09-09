@@ -2,6 +2,8 @@
 
 # Updates swift protobuf files
 
+set -e
+
 echo "Updating protobuf files"
 cd swift-homomorphic-encryption-protobuf
 

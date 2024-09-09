@@ -17,6 +17,8 @@ import HomomorphicEncryption
 /// Metric for distances between vectors.
 public enum DistanceMetric: CaseIterable, Codable, Equatable, Hashable, Sendable {
     /// Cosine similarity.
+    ///
+    /// The cosine similarity between zero vectors is defined as zero.
     case cosineSimilarity
 }
 

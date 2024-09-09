@@ -228,7 +228,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-28hb7`` for an alternative API.
     static func decodeCoeff(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [Scalar]
 
     /// Decodes a plaintext in ``Coeff`` format into signed values.
@@ -237,7 +237,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-2agje`` for an alternative API.
     static func decodeCoeff(plaintext: CoeffPlaintext, format: EncodeFormat) throws -> [SignedScalar]
 
     /// Decodes a plaintext in ``Eval`` format.
@@ -246,7 +246,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-28hb7`` for an alternative API.
     static func decodeEval(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [Scalar]
 
     /// Decodes a plaintext in ``Eval`` format to signed values.
@@ -255,7 +255,7 @@ public protocol HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-2agje`` for an alternative API.
     static func decodeEval(plaintext: EvalPlaintext, format: EncodeFormat) throws -> [SignedScalar]
 
     /// Symmetric secret key encryption of a plaintext.
@@ -937,7 +937,7 @@ extension HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-i0qm`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-28hb7`` for an alternative API.
     @inlinable
     public static func decode<Format: PolyFormat>(
         plaintext: Plaintext<Self, Format>,
@@ -962,7 +962,7 @@ extension HeScheme {
     ///   - format: Encoding format of the plaintext.
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode the plaintext.
-    /// - seealso: ``Plaintext/decode(format:)-5081e`` for an alternative API.
+    /// - seealso: ``Plaintext/decode(format:)-2agje`` for an alternative API.
     @inlinable
     public static func decode<Format: PolyFormat>(
         plaintext: Plaintext<Self, Format>,

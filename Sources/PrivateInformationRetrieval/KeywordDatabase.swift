@@ -403,7 +403,7 @@ public enum ProcessKeywordDatabase {
     ///   - context: Context for HE computation.
     /// - Returns: The shard validation results.
     /// - Throws: Error upon failure to validate the sharding.
-    /// - seealso: ``ProcessKeywordDatabase/processShard(shard:with:)`` to process a shard before validation.
+    /// - seealso: ``ProcessKeywordDatabase/processShard(shard:with:onEvent:)`` to process a shard before validation.
     @inlinable
     public static func validateShard<Scheme: HeScheme>(
         shard: ProcessedDatabaseWithParameters<Scheme>,

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 echo "installing swiftlint"
 DIR=$PWD
 mkdir -p /tmp/swiftlint

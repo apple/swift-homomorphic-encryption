@@ -111,6 +111,10 @@ To run the `EncryptionParametersSnippet` example, run
 swift run -c release EncryptionParametersSnippet
 ```
 
+> [!NOTE]
+> If you are using Swift Homomorphic Encryption for research, please cite using the
+> [CITATION.cff](CITATION.cff) file.
+
 ## Developing Swift Homomorphic Encryption
 ### Dependencies
 Building Swift Homomorphic Encryption requires:

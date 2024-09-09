@@ -51,7 +51,7 @@ extension PolyRq {
             }
 
             let bytes = buffer[offset..<(offset &+ byteCount)]
-            CoefficientPacking.bytesToCoefficientsInplace(
+            try CoefficientPacking.bytesToCoefficientsInplace(
                 bytes: bytes,
                 coeffs: &data.data[polyIndices(rnsIndex: rnsIndex)],
                 bitsPerCoeff: bitsPerCoeff,

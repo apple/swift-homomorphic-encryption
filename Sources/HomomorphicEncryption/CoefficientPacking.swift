@@ -16,6 +16,18 @@
 public enum CoefficientPacking {}
 
 extension CoefficientPacking {
+    /// Checks `bitsPerCoeff` and `skipLSBs` are valid.
+    /// - Parameters:
+    ///   - bitsPerCoeff: Number of bits in each coefficient.
+    ///   - skipLSBs: How many least-significant bits from each coefficient are omitted from serialization to bytes.
+    /// - Throws: Error upon invalid `bitsPerCoeff` or `skipLSBs` arguments.
+    @inlinable
+    static func validate(bitsPerCoeff: Int, skipLSBs: Int) throws {
+        guard bitsPerCoeff > 0, bitsPerCoeff > skipLSBs, skipLSBs >= 0 else {
+            throw HeError.invalidCoefficientPacking(bitsPerCoeff: bitsPerCoeff, skipLSBs: skipLSBs)
+        }
+    }
+
     @inlinable
     static func bytesToCoefficientsCoeffCount(byteCount: Int, bitsPerCoeff: Int, decode: Bool,
                                               skipLSBs: Int = 0) -> Int
@@ -39,10 +51,11 @@ extension CoefficientPacking {
     ///   - skipLSBs: How many least-significant bits from each coefficient are assumed to be 0, and not present in
     /// `bytes`.
     /// - Returns: The deserialized coefficients.
+    /// - Throws: Error upon failure to convert bytes to coefficients.
     /// - seealso: ``CoefficientPacking/coefficientsToBytes(coeffs:bitsPerCoeff:skipLSBs:)``
     @inlinable
     public static func bytesToCoefficients<T: ScalarType>(bytes: [UInt8], bitsPerCoeff: Int, decode: Bool,
-                                                          skipLSBs: Int = 0) -> [T]
+                                                          skipLSBs: Int = 0) throws -> [T]
     {
         var coeffs: [T] = .init(
             repeating: 0,
@@ -51,56 +64,76 @@ extension CoefficientPacking {
                 bitsPerCoeff: bitsPerCoeff,
                 decode: decode,
                 skipLSBs: skipLSBs))
-        bytesToCoefficientsInplace(bytes: bytes, coeffs: &coeffs, bitsPerCoeff: bitsPerCoeff, skipLSBs: skipLSBs)
+        try bytesToCoefficientsInplace(bytes: bytes, coeffs: &coeffs, bitsPerCoeff: bitsPerCoeff, skipLSBs: skipLSBs)
         return coeffs
     }
 
     ///  Converts an sequence of bytes into coefficients, unused bits in the last coefficient will be set to zero.
     @inlinable
-    static func bytesToCoefficientsInplace<T, C>(
-        bytes: some Sequence<UInt8>,
-        coeffs: inout C,
+    static func bytesToCoefficientsInplace<C, T, B>(
+        bytes: B,
+        coeffs coeffsCollection: inout C,
         bitsPerCoeff: Int,
-        skipLSBs: Int = 0)
+        skipLSBs: Int = 0) throws
         where T: ScalarType,
-        C: MutableCollection,
-        C.Element == T,
-        C.Index == Int
+        B: Collection, B.Element == UInt8, B.Index == Int,
+        C: MutableCollection, C.Element == T, C.Index == Int
     {
-        precondition(bitsPerCoeff > 0)
-        precondition(bitsPerCoeff > skipLSBs)
-
+        typealias BufferType = UInt64
+        precondition(T.bitWidth <= BufferType.bitWidth)
+        try validate(bitsPerCoeff: bitsPerCoeff, skipLSBs: skipLSBs)
         let serializedBitCount = bitsPerCoeff - skipLSBs
-        var coeffIndex = coeffs.startIndex
-        var coeff: T = 0
-        var remainingCoeffBits = serializedBitCount
 
-        // consume bytes and populate coefficients
-        for byte in bytes {
-            var remainingBits = UInt8.bitWidth
-            var byte = byte
-            repeat {
-                let shift = min(remainingBits, remainingCoeffBits)
-                coeff &<<= shift
-                coeff |= T(byte &>> (UInt8.bitWidth - shift))
-                byte = byte &<< shift
-                remainingCoeffBits &-= shift
-                remainingBits &-= shift
+        let foundContiguousBuffer: ()? = coeffsCollection.withContiguousMutableStorageIfAvailable { coeffs in
+            var coeffIndex = 0
+            var unusedBitCount = 0
+            var unusedBits: BufferType = 0
+            // Read bytes into BufferType.
+            // Bits from a coefficient will be in at most two buffers
+            let bytesPerBuffer = BufferType.bitWidth / UInt8.bitWidth
+            for byteChunkIndex in stride(from: bytes.startIndex, to: bytes.endIndex, by: bytesPerBuffer) {
+                let coeffStartIndex = byteChunkIndex
+                let endIndex = min(coeffStartIndex &+ bytesPerBuffer, bytes.endIndex)
+                let buffer = BufferType(bigEndianBytes: bytes[coeffStartIndex..<endIndex])
+                var newBitsCount = 0
 
-                if remainingCoeffBits == 0 {
-                    remainingCoeffBits = serializedBitCount
-                    coeffs[coeffIndex] = coeff &<< skipLSBs
+                // Deal with unused bits from previous round
+                if unusedBitCount != 0 {
+                    newBitsCount = serializedBitCount &- unusedBitCount
+                    var coeff = buffer &>> (BufferType.bitWidth &- newBitsCount)
+                    coeff |= (unusedBits &<< newBitsCount)
+                    coeffs[coeffIndex] = T(coeff &<< skipLSBs)
                     coeffIndex &+= 1
-                    coeff = 0
                 }
-            } while remainingBits > 0
+
+                // Parse as many complete coefficients from the buffer as possible
+                let remainingCoeffs = coeffs.count &- coeffIndex
+                let coeffsPerFullCoeff = (BufferType.bitWidth &- newBitsCount) / serializedBitCount
+                for i in 0..<min(remainingCoeffs, coeffsPerFullCoeff) {
+                    let msbsToClear = newBitsCount &+ i &* serializedBitCount
+                    var coeff = buffer &<< msbsToClear
+                    let lsbsToClear = BufferType.bitWidth &- serializedBitCount
+                    coeff &>>= lsbsToClear
+                    coeffs[coeffIndex] = T(coeff &<< skipLSBs)
+                    coeffIndex &+= 1
+                }
+                unusedBitCount &+= (BufferType.bitWidth % serializedBitCount)
+                if unusedBitCount >= serializedBitCount {
+                    unusedBitCount &-= serializedBitCount
+                }
+                unusedBits = buffer & ((1 &<< unusedBitCount) &- 1)
+            }
+            // Process unused bits from the last coefficient
+            if coeffIndex < coeffs.count {
+                let coeff = unusedBits &<< (serializedBitCount &- unusedBitCount &+ skipLSBs)
+                coeffs[coeffIndex] = T(coeff)
+                coeffIndex &+= 1
+            }
+            precondition(coeffIndex == coeffs.count)
         }
-        if coeffIndex < coeffs.endIndex {
-            coeff &<<= (remainingCoeffBits &+ skipLSBs)
-            coeffs[coeffIndex] = coeff
-            coeffIndex &+= 1
+        guard foundContiguousBuffer != nil else {
+            throw HeError.serializationBufferNotContiguous
         }
-        precondition(coeffIndex == coeffs.endIndex)
     }
 
     @inlinable
@@ -142,9 +175,7 @@ extension CoefficientPacking {
         C.Element == UInt8,
         C.Index == Int
     {
-        precondition(bitsPerCoeff > 0)
-        precondition(bitsPerCoeff > skipLSBs)
-
+        try validate(bitsPerCoeff: bitsPerCoeff, skipLSBs: skipLSBs)
         var byteIndex = 0
         let bytesCount = bytes.count
         let serializedBitCount = bitsPerCoeff - skipLSBs
@@ -174,7 +205,6 @@ extension CoefficientPacking {
                     remainingBits &-= shift
                 } while remainingCoeffBits > 0
             }
-
             if byteIndex < bytesCount {
                 byte &<<= remainingBits
                 bytesPtr[byteIndex] = byte

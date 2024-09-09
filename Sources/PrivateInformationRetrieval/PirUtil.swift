@@ -184,11 +184,11 @@ enum PirUtil<Scheme: HeScheme> {
         return try plaintexts.map { plaintext in try plaintext.encrypt(using: secretKey) }
     }
 
-    static func encodeDatabase<Scalar: ScalarType>(database: [[UInt8]], plaintextModulus: Scalar) -> [[Scalar]] {
-        database.map { entry in
-            CoefficientPacking.bytesToCoefficients(bytes: entry,
-                                                   bitsPerCoeff: plaintextModulus.log2,
-                                                   decode: false)
+    static func encodeDatabase<Scalar: ScalarType>(database: [[UInt8]], plaintextModulus: Scalar) throws -> [[Scalar]] {
+        try database.map { entry in
+            try CoefficientPacking.bytesToCoefficients(bytes: entry,
+                                                       bitsPerCoeff: plaintextModulus.log2,
+                                                       decode: false)
         }
     }
 }

@@ -26,7 +26,7 @@ class CoefficientPackingTests: XCTestCase {
             var rng = NistAes128Ctr()
             rng.fill(&bytes)
 
-            let coeffs: [T] = CoefficientPacking.bytesToCoefficients(
+            let coeffs: [T] = try CoefficientPacking.bytesToCoefficients(
                 bytes: bytes,
                 bitsPerCoeff: log2t,
                 decode: false)
@@ -64,7 +64,7 @@ class CoefficientPackingTests: XCTestCase {
             }
 
             let bytes = try CoefficientPacking.coefficientsToBytes(coeffs: coeffs, bitsPerCoeff: log2t + 1)
-            let decodedCoeffs: [T] = CoefficientPacking.bytesToCoefficients(
+            let decodedCoeffs: [T] = try CoefficientPacking.bytesToCoefficients(
                 bytes: bytes,
                 bitsPerCoeff: log2t + 1,
                 decode: true)
@@ -76,7 +76,7 @@ class CoefficientPackingTests: XCTestCase {
         try runTest(UInt64.self)
     }
 
-    func testBytesToCoeffKAT() {
+    func testBytesToCoeffKAT() throws {
         struct BytesToCoeffKAT<T: ScalarType> {
             let bytes: [UInt8]
             let bitsPerCoeff: Int
@@ -85,7 +85,7 @@ class CoefficientPackingTests: XCTestCase {
             let expectedCoefficients: [T]
         }
 
-        func runTest<T: ScalarType>(_: T.Type) {
+        func runTest<T: ScalarType>(_: T.Type) throws {
             let kats: [BytesToCoeffKAT<T>] = [
                 BytesToCoeffKAT(
                     bytes: [3, 24, 95, 141, 179, 34, 113],
@@ -132,7 +132,7 @@ class CoefficientPackingTests: XCTestCase {
             ]
 
             for kat in kats {
-                let coeffs: [T] = CoefficientPacking.bytesToCoefficients(
+                let coeffs: [T] = try CoefficientPacking.bytesToCoefficients(
                     bytes: kat.bytes,
                     bitsPerCoeff: kat.bitsPerCoeff,
                     decode: kat.decode,
@@ -141,8 +141,8 @@ class CoefficientPackingTests: XCTestCase {
             }
         }
 
-        runTest(UInt32.self)
-        runTest(UInt64.self)
+        try runTest(UInt32.self)
+        try runTest(UInt64.self)
     }
 
     func testCoeffsToBytesKAT() throws {

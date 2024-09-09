@@ -95,7 +95,7 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
 // MARK: format conversion
 
 extension CiphertextMatrix {
-    /// Converts the ciphertext matrix to ``Eval`` format.
+    /// Converts the ciphertext matrix to `Eval` format.
     /// - Returns: The converted ciphertext matrix.
     /// - Throws: Error upon failure to convert the ciphertext matrix.
     @inlinable
@@ -111,7 +111,7 @@ extension CiphertextMatrix {
             ciphertexts: evalCiphertexts)
     }
 
-    /// Converts the ciphertext matrix to ``Coeff`` format.
+    /// Converts the ciphertext matrix to `Coeff` format.
     /// - Returns: The converted ciphertext matrix.
     /// - Throws: Error upon failure to convert the ciphertext matrix.
     @inlinable

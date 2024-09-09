@@ -15,6 +15,7 @@
 import Foundation
 import HomomorphicEncryption
 
+/// Reeasons for an invalid ``PrivateNearestNeighborsSearch`` query.
 public enum InvalidQueryReason: Error, Equatable {
     case wrongCiphertextMatrixCount(got: Int, expected: Int)
 }

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 echo "installing Lockwood swiftformat"
 DIR=$PWD
 mkdir -p /tmp/swiftformat

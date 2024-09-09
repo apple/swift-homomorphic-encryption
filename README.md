@@ -12,11 +12,15 @@ For more information, refer to documentation for the libraries:
 * [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval)
 * [HomomorphicEncryptionProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryptionprotobuf)
 * [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf)
+* [PrivateNearestNeighborsSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborssearch)
+* [PrivateNearestNeighborsSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborssearchprotobuf)
 
 and executables:
 * [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase)
 * [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase)
 * [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase)
+* [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsgeneratedatabase)
+* [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsprocessdatabase)
 
 The documentation is hosted on the [Swift Package Index](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/documentation/homomorphicencryption).
 
@@ -45,12 +49,12 @@ This scheme can be configured to support post-quantum 128-bit security.
 
 ### Private Information Retrieval (PIR)
 Private information retrieval (PIR) is one application of HE.
-PIR allows a client to perform a database lookup from a server hosting a keyword-value database, *without the server learning the keyword in the client's query.*.
+PIR enables a client to perform a database lookup from a server hosting a keyword-value database, *without the server learning the keyword in the client's query.*.
 Each row in the database is a *keyword* with an associated *value*.
 During the PIR protocol, the client issues a query using its private keyword, and learns the value associated with the keyword.
 
 A trivial implementation of PIR is to have the client issue a generic "fetch database" request, independent of its private keyword.
-Then the server server sends the entire database to the client.
+Then the server sends the entire database to the client.
 While this *trivial PIR* protocol satisfies the privacy and correctness requirements of PIR, it is only feasible for small databases.
 
 The PIR implementation in Swift Homomorphic Encryption uses HE to improve upon the trivial PIR protocol.
@@ -58,6 +62,19 @@ The PIR implementation in Swift Homomorphic Encryption uses HE to improve upon t
 > [!WARNING]
 > PIR is asymmetric, meaning the client may learn keyword-value pairs not requested, as happens in trivial PIR for instance.
 > A variant of PIR, known as *symmetric PIR*, would be required to ensure the client does not learn anything about values it did not request.
+
+### Private Nearest Neighbors Search (PNNS)
+Private nearest neighbors search (PNNS) enables a client with a private vector to search for the nearest vectors in a database hosted by a server, *without the server learning the client's vector.*.
+Each row in the database is a *vector* with an associated *entry identifier* and *entry metadata*.
+During the PNNS protocol, the client issues a query using its private vector, and learns the nearest neighbors according to a ``DistanceMetric``.
+Specifically, the client learns the distances between the client's query vector to the nearest neighbors, as well as the entry identifier and entry metadata of the nearest neighbors.
+
+A trivial implementation of PNNS is to have the client issue a generic "fetch database" request, independent of its private vector.
+Then the server sends the entire database to the client, who computes the distances locally.
+While this *trivial PNNS* protocol satisfies the privacy and correctness requirements of PNNS, it is only feasible for small databases.
+
+The PNNS implementation in Swift Homomorphic Encryption uses homomorphic encryption to improve upon the trivial PNNS protocol.
+
 
 ## Using Swift Homomorphic Encryption
 Swift Homomorphic Encryption requires:

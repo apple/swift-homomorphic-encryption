@@ -50,9 +50,9 @@ The output is the index of the shard where this keyword and associated value sho
 To process a single shard we recommend writing your own tool that imports data in the format most convenient for your
 data. Each data row needs to be converted to ``KeywordValuePair`` with ``KeywordValuePair/init(keyword:value:)``, where
 `keyword` and `value` are both `[UInt8]`. Once you have a collection of ``KeywordValuePair``s you have two options:
-1. You can use ``KeywordPirServer/process(database:config:with:)`` to process the shard directly.
+1. You can use ``KeywordPirServer/process(database:config:with:onEvent:)`` to process the shard directly.
 2. Or you can construct a ``KeywordDatabaseShard`` by using ``KeywordDatabaseShard/init(shardID:rows:)`` and then
-   ``ProcessKeywordDatabase/processShard(shard:with:)``.
+``ProcessKeywordDatabase/processShard(shard:with:onEvent:)``.
 
 Both options give as output a ``ProcessedDatabaseWithParameters``.
 

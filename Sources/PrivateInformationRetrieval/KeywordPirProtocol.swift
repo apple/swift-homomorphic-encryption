@@ -148,7 +148,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     ///   - database: Collection of database entries.
     ///   - config: Keyword PIR configuration.
     ///   - context: Context for HE computation.
-    ///   - onEvent: Function to call when a ``ProcessKeywordDatabase.ProcessShardEvent`` happens.
+    ///   - onEvent: Function to call when a ``ProcessKeywordDatabase/ProcessShardEvent`` happens.
     /// - Returns: A processed database.
     /// - Throws: Error upon failure to process the database.
     @inlinable

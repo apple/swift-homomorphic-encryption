@@ -131,7 +131,7 @@ public struct Client<Scheme: HeScheme> {
         try contexts[0].generateSecretKey()
     }
 
-    /// Generates an ``EvaluationKey`` for use in nearest neighbors search.
+    /// Generates an `EvaluationKey` for use in nearest neighbors search.
     /// - Parameter secretKey: Secret key used to generate the evaluation key.
     /// - Returns: The evaluation key.
     /// - Throws: Error upon failure to generate the evaluation key.

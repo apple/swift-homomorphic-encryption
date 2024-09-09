@@ -127,7 +127,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     }
 }
 
-/// A database after processing to prepare to PIR queries.
+/// A database after processing to prepare for PIR queries.
 public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     /// Type of the serialization version.
     @usableFromInline typealias SerializationVersionType = UInt8

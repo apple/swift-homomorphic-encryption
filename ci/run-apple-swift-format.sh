@@ -1,7 +1,10 @@
 #!/bin/bash
 
+set -e
+
 lint_folders="\
     Benchmarks \
+    Snippets \
     Sources \
     Tests \
     "

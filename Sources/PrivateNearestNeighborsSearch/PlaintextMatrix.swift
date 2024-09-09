@@ -594,9 +594,9 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
 // MARK: format conversion
 
 extension PlaintextMatrix {
-    /// Converts the plaintext matrix to ``Eval`` format.
+    /// Converts the plaintext matrix to `Eval` format.
     ///
-    /// This makes the plaintext matrix suitable for operations with ciphertexts in ``Eval`` format, with `moduliCount`
+    /// This makes the plaintext matrix suitable for operations with ciphertexts in `Eval` format, with `moduliCount`
     /// moduli.
     /// - Parameter moduliCount: Number of coefficient moduli in the context.
     /// - Returns: The converted plaintext matrix.
@@ -611,7 +611,7 @@ extension PlaintextMatrix {
         return try PlaintextMatrix<Scheme, Eval>(dimensions: dimensions, packing: packing, plaintexts: plaintexts)
     }
 
-    /// Converts the plaintext matrix to ``Coeff`` format.
+    /// Converts the plaintext matrix to `Coeff` format.
     /// - Returns: The converted plaintext matrix.
     /// - Throws: Error upon failure to convert the plaintext matrix.
     @inlinable

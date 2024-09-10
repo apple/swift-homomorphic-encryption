@@ -239,9 +239,9 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     ///   - evaluationKey: Evaluation key to use in the HE computation. Must contain Galois elements which can be
     /// combined for the desired rotation step.
     /// - Throws: Error upon failure to rotate ciphertext's columns.
-    /// - seealso: ``HeScheme/rotateColumnsMultiStep(of:by:using:)`` for an alternative API and more information.
+    /// - seealso: `HeScheme/rotateColumnsMultiStep(of:by:using:)` for an alternative API and more information.
     @inlinable
-    public mutating func rotateColumnsMultiStep(by step: Int, using evaluationKey: EvaluationKey<Scheme>) throws
+    package mutating func rotateColumnsMultiStep(by step: Int, using evaluationKey: EvaluationKey<Scheme>) throws
         where Format == Scheme.CanonicalCiphertextFormat
     {
         try Scheme.rotateColumnsMultiStep(of: &self, by: step, using: evaluationKey)

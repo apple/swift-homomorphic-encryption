@@ -17,9 +17,13 @@ builder:
   configs:
     - documentation_targets:
       - HomomorphicEncryption
-      - PrivateInformationRetrieval
       - HomomorphicEncryptionProtobuf
-      - PrivateInformationRetrievalProtobuf
       - PIRGenerateDatabase
       - PIRProcessDatabase
       - PIRShardDatabase
+      - PNNSGenerateDatabase
+      - PNNSProcessDatabase
+      - PrivateInformationRetrieval
+      - PrivateInformationRetrievalProtobuf
+      - PrivateNearestNeighborsSearch
+      - PrivateNearestNeighborsSearchProtobuf

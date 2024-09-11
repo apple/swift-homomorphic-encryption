@@ -185,7 +185,7 @@ extension PolyRq {
     @inlinable
     static func mulAssign(_ lhs: inout Self, secretPoly: borrowing Self) where F == Eval {
         let context = lhs.context
-        precondition(secretPoly.context.isParentOfOrEqual(to: context))
+        assert(secretPoly.context.isParentOfOrEqual(to: context))
         lhs.data.data.withUnsafeMutableBufferPointer { lhsData in
             secretPoly.data.data.withUnsafeBufferPointer { rhsData in
                 for (rnsIndex, modulus) in context.reduceModuli.enumerated() {

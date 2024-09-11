@@ -51,7 +51,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     @inlinable
-    public static func addAssignSameType<F: PolyFormat>(
+    static func addAssignSameType<F: PolyFormat>(
         _ lhs: inout Ciphertext<Bfv<T>, F>,
         _ rhs: Ciphertext<Bfv<T>, F>) throws
     {

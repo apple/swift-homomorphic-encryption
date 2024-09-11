@@ -481,8 +481,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         case .denseRow:
             return try unpackDenseRow()
         case .diagonal:
-            // TODO: Implement
-            preconditionFailure("Unpacking diagonal plaintext matrix not supported")
+            return try unpackDiagonal()
         }
     }
 
@@ -576,6 +575,59 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
             throw PnnsError.wrongEncodingValuesCount(got: values.count, expected: count)
         }
         return values
+    }
+
+    /// Unpacks a plaintext matrix with `diagonal` packing.
+    /// - Returns: The stored data values in row-major format.
+    /// - Throws: Error upon failure to unpack the matrix.
+    @inlinable
+    func unpackDiagonal() throws -> [Scheme.Scalar] where Format == Coeff {
+        guard case let .diagonal(babyStepGiantStep) = packing else {
+            let expectedBabyStepGiantStep = BabyStepGiantStep(vectorDimension: columnCount)
+            throw PnnsError.wrongMatrixPacking(
+                got: packing,
+                expected: .diagonal(babyStepGiantStep: expectedBabyStepGiantStep))
+        }
+        var packedValues = Array2d<Scheme.Scalar>.zero(rowCount: 0, columnCount: rowCount)
+        let expectedPlaintextCount = try PlaintextMatrix.plaintextCount(
+            encryptionParameters: context.encryptionParameters,
+            dimensions: dimensions,
+            packing: packing)
+        let plaintextsPerColumn = expectedPlaintextCount / columnCount.nextPowerOfTwo
+        let middle = context.degree / 2
+
+        for (chunkIndex, babyStepChunk) in plaintexts.chunks(ofCount: babyStepGiantStep.babyStep * plaintextsPerColumn)
+            .enumerated()
+        {
+            let rotationStep = chunkIndex * babyStepGiantStep.babyStep
+            let rotated: [[Scheme.Scalar]] = try babyStepChunk.map { plaintext in
+                var decodedValues: [Scheme.Scalar] = try plaintext.decode(format: .simd)
+                decodedValues[0..<middle].rotate(toStartAt: rotationStep)
+                decodedValues[middle...].rotate(toStartAt: middle + rotationStep)
+                return decodedValues
+            }
+            let diagonals = rotated.chunks(ofCount: plaintextsPerColumn).map { diagonalChunks in
+                diagonalChunks.flatMap { $0 }[0..<rowCount]
+            }
+            packedValues.append(rows: diagonals.flatMap { $0 })
+        }
+        var values = Array2d<Scheme.Scalar>.zero(rowCount: rowCount, columnCount: columnCount)
+        let columnNextPowerOfTwo = columnCount.nextPowerOfTwo
+        var valuesCount = 0
+        for rowIndex in 0..<packedValues.rowCount {
+            for columnIndex in 0..<packedValues.columnCount {
+                let valuesRowIndex = columnIndex
+                let valuesColumnIndex = (rowIndex + columnIndex) % columnNextPowerOfTwo
+                if valuesColumnIndex < columnCount {
+                    values[valuesRowIndex, valuesColumnIndex] = packedValues[rowIndex, columnIndex]
+                    valuesCount += 1
+                }
+            }
+        }
+        guard valuesCount == count else {
+            throw PnnsError.wrongEncodingValuesCount(got: valuesCount, expected: count)
+        }
+        return values.data
     }
 
     /// Symmetric secret key encryption of the plaintext matrix.

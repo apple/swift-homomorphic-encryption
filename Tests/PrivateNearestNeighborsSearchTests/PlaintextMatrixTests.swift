@@ -140,12 +140,7 @@ final class PlaintextMatrixTests: XCTestCase {
         XCTAssertEqual(plaintextMatrix.packing, packing)
         XCTAssertEqual(plaintextMatrix.context, context)
         // Test round-trip
-        switch packing {
-        case .diagonal: // TODO: test .diagonal once implemented
-            break
-        default:
-            XCTAssertEqual(try plaintextMatrix.unpack(), encodeValues.flatMap { $0 })
-        }
+        XCTAssertEqual(try plaintextMatrix.unpack(), encodeValues.flatMap { $0 })
 
         // Test representation
         XCTAssertEqual(plaintextMatrix.plaintexts.count, expected.count)
@@ -155,45 +150,40 @@ final class PlaintextMatrixTests: XCTestCase {
         }
 
         // Test signed encoding/decoding
-        switch packing {
-        case .diagonal: // TODO: test .diagonal once implemented
-            break
-        default:
-            let signedValues: [Scheme.SignedScalar] = try plaintextMatrix.unpack()
-            let signedMatrix = try PlaintextMatrix<Scheme, Coeff>(
-                context: context,
-                dimensions: dimensions,
-                packing: packing,
-                signedValues: signedValues)
-            let signedRoundtrip: [Scheme.SignedScalar] = try signedMatrix.unpack()
-            XCTAssertEqual(signedRoundtrip, signedValues)
+        let signedValues: [Scheme.SignedScalar] = try plaintextMatrix.unpack()
+        let signedMatrix = try PlaintextMatrix<Scheme, Coeff>(
+            context: context,
+            dimensions: dimensions,
+            packing: packing,
+            signedValues: signedValues)
+        let signedRoundtrip: [Scheme.SignedScalar] = try signedMatrix.unpack()
+        XCTAssertEqual(signedRoundtrip, signedValues)
 
-            // Test modular reduction
-            let largerValues = encodeValues.flatMap { $0 }.map { $0 + t }
-            let largerSignedValues = signedValues.enumerated().map { index, value in
-                if index.isMultiple(of: 2) {
-                    value + Scheme.SignedScalar(t)
-                } else {
-                    value - Scheme.SignedScalar(t)
-                }
+        // Test modular reduction
+        let largerValues = encodeValues.flatMap { $0 }.map { $0 + t }
+        let largerSignedValues = signedValues.enumerated().map { index, value in
+            if index.isMultiple(of: 2) {
+                value + Scheme.SignedScalar(t)
+            } else {
+                value - Scheme.SignedScalar(t)
             }
-
-            let largerPlaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
-                context: context,
-                dimensions: dimensions,
-                packing: packing,
-                values: largerValues,
-                reduce: true)
-            XCTAssertEqual(largerPlaintextMatrix, plaintextMatrix)
-
-            let largerSignedMatrix = try PlaintextMatrix<Scheme, Coeff>(
-                context: context,
-                dimensions: dimensions,
-                packing: packing,
-                signedValues: largerSignedValues,
-                reduce: true)
-            XCTAssertEqual(largerSignedMatrix, signedMatrix)
         }
+
+        let largerPlaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
+            context: context,
+            dimensions: dimensions,
+            packing: packing,
+            values: largerValues,
+            reduce: true)
+        XCTAssertEqual(largerPlaintextMatrix, plaintextMatrix)
+
+        let largerSignedMatrix = try PlaintextMatrix<Scheme, Coeff>(
+            context: context,
+            dimensions: dimensions,
+            packing: packing,
+            signedValues: largerSignedValues,
+            reduce: true)
+        XCTAssertEqual(largerSignedMatrix, signedMatrix)
     }
 
     func testPlaintextMatrixDenseColumn() throws {

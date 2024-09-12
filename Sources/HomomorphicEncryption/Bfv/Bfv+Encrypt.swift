@@ -80,29 +80,64 @@ extension Bfv {
         }
         try validateEquality(of: ciphertext.context, and: plaintext.context)
         let rnsTool = ciphertext.context.getRnsTool(moduliCount: ciphertext.moduli.count)
-        let tThreshold = Scalar.DoubleWidth(rnsTool.tThreshold)
 
-        // Will store floor(([Q]_t * plain[i] + floor((t+1)/2)) / t)
+        let plaintextIndices = plaintext.poly.polyIndices(rnsIndex: 0)
         var adjust = plaintext
-        for idx in plaintext.poly.polyIndices(rnsIndex: 0) {
-            var adjustCoeff = Scalar.DoubleWidth(rnsTool.qModT.multipliedFullWidth(by: plaintext[idx]))
-            adjustCoeff &+= tThreshold
-            adjust[idx] = rnsTool.t.dividingFloor(by: adjustCoeff).low
-        }
-        var c0 = ciphertext.polys[0]
-        for (rnsIndex, rnsDelta) in rnsTool.qDivT.enumerated() {
-            for (plainIndex, cipherIndex) in c0.polyIndices(rnsIndex: rnsIndex).enumerated() {
-                let plainTimesDelta = rnsDelta.multiplyMod(plaintext[plainIndex])
-                let roundQTimesMt = plainTimesDelta.addMod(adjust[plainIndex], modulus: rnsDelta.modulus)
-                switch op {
-                case PlaintextTranslateOp.Add:
-                    c0[cipherIndex] = c0[cipherIndex].addMod(roundQTimesMt, modulus: rnsDelta.modulus)
-                case PlaintextTranslateOp.Subtract:
-                    c0[cipherIndex] = c0[cipherIndex].subtractMod(roundQTimesMt, modulus: rnsDelta.modulus)
+        // swiftlint:disable:next closure_body_length
+        plaintext.poly.data.data.withUnsafeBufferPointer { plaintextData in
+            adjust.poly.data.data.withUnsafeMutableBufferPointer { adjustPtr in
+                let t = rnsTool.t.modulus
+                if T.DoubleWidth(t.multipliedFullWidth(by: t)) <= T.max {
+                    // Prefer single-word division, since it's faster
+                    for index in plaintextIndices {
+                        var adjustCoeff = rnsTool.qModT &* plaintextData[index]
+                        adjustCoeff &+= rnsTool.tThreshold
+                        adjustPtr[index] = adjustCoeff.dividingFloor(by: rnsTool.t)
+                    }
+                } else {
+                    let tThreshold = Scalar.DoubleWidth(rnsTool.tThreshold)
+                    for index in plaintextIndices {
+                        var adjustCoeff = Scalar
+                            .DoubleWidth(rnsTool.qModT.multipliedFullWidth(by: plaintextData[index]))
+                        adjustCoeff &+= tThreshold
+                        adjustPtr[index] = adjustCoeff.dividingFloor(by: rnsTool.t).low
+                    }
                 }
             }
+
+            var c0 = ciphertext.polys[0]
+            let c1 = ciphertext.polys[1] // used for polynomial index computation only
+
+            switch op {
+            case PlaintextTranslateOp.Add:
+                c0.data.data.withUnsafeMutableBufferPointer { c0Ptr in
+                    for (rnsIndex, rnsDelta) in rnsTool.qDivT.enumerated() {
+                        for (plainIndex, cipherIndex) in c1.polyIndices(rnsIndex: rnsIndex).enumerated() {
+                            let plainTimesDelta = rnsDelta.multiplyMod(plaintextData[plainIndex])
+                            let roundQTimesMt = plainTimesDelta.addMod(
+                                adjust[plainIndex],
+                                modulus: rnsDelta.modulus)
+                            c0Ptr[cipherIndex] = c0Ptr[cipherIndex].addMod(roundQTimesMt, modulus: rnsDelta.modulus)
+                        }
+                    }
+                }
+            case PlaintextTranslateOp.Subtract:
+                c0.data.data.withUnsafeMutableBufferPointer { c0Ptr in
+                    for (rnsIndex, rnsDelta) in rnsTool.qDivT.enumerated() {
+                        for (plainIndex, cipherIndex) in c1.polyIndices(rnsIndex: rnsIndex).enumerated() {
+                            let plainTimesDelta = rnsDelta.multiplyMod(plaintextData[plainIndex])
+                            let roundQTimesMt = plainTimesDelta.addMod(
+                                adjust[plainIndex],
+                                modulus: rnsDelta.modulus)
+                            c0Ptr[cipherIndex] = c0Ptr[cipherIndex].subtractMod(
+                                roundQTimesMt,
+                                modulus: rnsDelta.modulus)
+                        }
+                    }
+                }
+            }
+            ciphertext.polys[0] = c0
         }
-        ciphertext.polys[0] = c0
     }
 
     @inlinable

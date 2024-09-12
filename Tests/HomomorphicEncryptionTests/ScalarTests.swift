@@ -239,20 +239,36 @@ class ScalarTests: XCTestCase {
     }
 
     func testDividingFloor() {
-        func runDividingFloorTest<T: ScalarType>(_: T.Type) {
+        func runDividingFloorSingleWidthTest<T: ScalarType>(_: T.Type) {
             for shift in 2..<T.bitWidth - 3 {
                 for _ in 0..<100 {
                     let p = T.random(in: 2..<(1 << shift))
-                    let modulus = DivisionModulus<T>(modulus: p)
-                    let x = T.DoubleWidth((
-                        high: T.random(in: 0...T.max),
-                        low: T.Magnitude.random(in: 0...T.Magnitude.max)))
-                    XCTAssertEqual(modulus.dividingFloor(by: x), x / T.DoubleWidth(p))
+                    let modulus = Modulus<T>(modulus: p, variableTime: true)
+                    let x = T.random(in: 0...T.max)
+                    XCTAssertEqual(modulus.dividingFloor(dividend: x), x / p)
+                    XCTAssertEqual(x.dividingFloor(by: modulus), x / p)
                 }
             }
         }
-        runDividingFloorTest(UInt32.self)
-        runDividingFloorTest(UInt64.self)
+
+        func runDividingFloorDoubleWidthTest<T: ScalarType>(_: T.Type) {
+            for shift in 2..<T.bitWidth - 3 {
+                for _ in 0..<100 {
+                    let p = T.random(in: 2..<(1 << shift))
+                    let modulus = Modulus<T>(modulus: p, variableTime: true)
+                    let x = T.DoubleWidth((
+                        high: T.random(in: 0...T.max),
+                        low: T.Magnitude.random(in: 0...T.Magnitude.max)))
+                    XCTAssertEqual(modulus.dividingFloor(dividend: x), x / T.DoubleWidth(p))
+                    XCTAssertEqual(x.dividingFloor(by: modulus), x / T.DoubleWidth(p))
+                }
+            }
+        }
+
+        runDividingFloorSingleWidthTest(UInt32.self)
+        runDividingFloorSingleWidthTest(UInt64.self)
+        runDividingFloorDoubleWidthTest(UInt32.self)
+        runDividingFloorDoubleWidthTest(UInt64.self)
     }
 
     func testReduceSingleWord() {

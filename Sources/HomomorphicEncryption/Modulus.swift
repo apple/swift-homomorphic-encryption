@@ -106,8 +106,16 @@ public struct Modulus<T: ScalarType>: Equatable, Sendable {
     /// - Parameter dividend: Number to divide.
     /// - Returns: `dividend / modulus`, rounded down to the next integer.
     @inlinable
-    public func dividingFloor(by dividend: T.DoubleWidth) -> T.DoubleWidth {
-        divisionModulus.dividingFloor(by: dividend)
+    func dividingFloor(dividend: T.DoubleWidth) -> T.DoubleWidth {
+        divisionModulus.dividingFloor(dividend: dividend)
+    }
+
+    /// Computes a division by the modulus and flooring.
+    /// - Parameter dividend: Number to divide.
+    /// - Returns: `dividend / modulus`, rounded down to the next integer.
+    @inlinable
+    func dividingFloor(dividend: T) -> T {
+        divisionModulus.dividingFloor(dividend: dividend)
     }
 }
 
@@ -117,9 +125,14 @@ struct DivisionModulus<T: ScalarType>: Equatable, Sendable {
     // See <https://en.wikipedia.org/wiki/Division_algorithm#Division_by_a_constant>
 
     @usableFromInline let modulus: T
+
+    /// `ceil(2^k / modulus) - 2^(T.bitWidth)` for
+    /// `k = T.bitWidth + ceil(log2(modulus)`.
+    @usableFromInline let singleFactor: T
+
     /// `ceil(2^k / modulus) - 2^(2 * T.bitWidth)` for
     /// `k = 2 * T.bitWidth + ceil(log2(modulus)`.
-    @usableFromInline let factor: T.DoubleWidth
+    @usableFromInline let doubleFactor: T.DoubleWidth
 
     /// Initializes a ``DivisionModulus``.
     /// - Parameter modulus: Modulus.
@@ -127,28 +140,59 @@ struct DivisionModulus<T: ScalarType>: Equatable, Sendable {
     @inlinable
     init(modulus: T) {
         self.modulus = modulus
-        let k = T.bitWidth * 2 + modulus.ceilLog2
-        // ceil(2^k / p) = floor(2^k / p) + (2^k % p) != 0
-        let twoPowK = QuadWidth<T>(1) << k
-        let twoPowKDivP = twoPowK.quotientAndRemainder(dividingBy: QuadWidth<T>(modulus))
-        let increment = twoPowKDivP.remainder == 0 ? 0 : 1
-        let ceil2PowKDivP = twoPowKDivP.quotient &+ QuadWidth<T>(increment)
-        let twoPow2T = QuadWidth<T>(1) &<< (2 &* T.bitWidth)
-        let diff = ceil2PowKDivP &- twoPow2T
-        self.factor = T.DoubleWidth(diff.low)
+        // compute doubleFactor
+        do {
+            let k = 2 * T.bitWidth + modulus.ceilLog2
+            // ceil(2^k / p) = floor(2^k / p) + (2^k % p) != 0
+            let twoPowK = QuadWidth<T>(1) << k
+            let twoPowKDivP = twoPowK.quotientAndRemainder(dividingBy: QuadWidth<T>(modulus))
+            let increment = twoPowKDivP.remainder == 0 ? 0 : 1
+            let ceil2PowKDivP = twoPowKDivP.quotient &+ QuadWidth<T>(increment)
+            let twoPow2T = QuadWidth<T>(1) &<< (2 &* T.bitWidth)
+            let diff = ceil2PowKDivP &- twoPow2T
+            self.doubleFactor = T.DoubleWidth(diff.low)
+        }
+        // compute singleFactor
+        do {
+            let k = T.bitWidth + modulus.ceilLog2
+            // ceil(2^k / p) = floor(2^k / p) + (2^k % p) != 0
+            let twoPowK = T.DoubleWidth(1) &<< k
+            let twoPowKDivP = twoPowK.quotientAndRemainder(dividingBy: T.DoubleWidth(modulus))
+            let increment = twoPowKDivP.remainder == 0 ? 0 : 1
+            let ceil2PowKDivP = T.DoubleWidth(twoPowKDivP.quotient) + T.DoubleWidth(increment)
+            let twoPowT = T.DoubleWidth(1) &<< T.bitWidth
+            let diff = ceil2PowKDivP &- twoPowT
+            self.singleFactor = diff.low
+        }
     }
 
     /// Computes a division by the modulus and flooring.
     /// - Parameter dividend: Number to divide.
     /// - Returns: `dividend / modulus`, rounded down to the next integer.
     @inlinable
-    func dividingFloor(by dividend: T.DoubleWidth) -> T.DoubleWidth {
+    func dividingFloor(dividend: T.DoubleWidth) -> T.DoubleWidth {
         // For `T.BitWidth = 64`, we have pre-computed
         // `factor = ceil(2^k / p) - 2^128`, for `k = 128 + ceil(log2(p))`.
         // Now, we compute
         // `floor(x / p) = (((x - b) >> 1) + b) >> (ceil(log2(p)) - 1)`
         // where `b = (x * factor) >> 128`
-        let b = factor.multipliedFullWidth(by: dividend).high
+        let b = doubleFactor.multipliedFullWidth(by: dividend).high
+        let numerator = ((dividend &- b) &>> 1) &+ b
+        let shift = modulus.ceilLog2 &- 1
+        return numerator &>> shift
+    }
+
+    /// Computes a division by the modulus and flooring.
+    /// - Parameter dividend: Number to divide.
+    /// - Returns: `dividend / modulus`, rounded down to the next integer.
+    @inlinable
+    func dividingFloor(dividend: T) -> T {
+        // For `T.BitWidth = 64`, we have pre-computed
+        // `factor = ceil(2^k / p) - 2^64`, for `k = 64 + ceil(log2(p))`.
+        // Now, we compute
+        // `floor(x / p) = (((x - b) >> 1) + b) >> (ceil(log2(p)) - 1)`
+        // where `b = (x * factor) >> 64`
+        let b = singleFactor.multipliedFullWidth(by: dividend).high
         let numerator = ((dividend &- b) &>> 1) &+ b
         let shift = modulus.ceilLog2 &- 1
         return numerator &>> shift
@@ -387,7 +431,7 @@ struct MultiplyConstantModulus<T: ScalarType>: Sendable {
         self.init(
             multiplicand: multiplicand,
             modulus: divisionModulus.modulus,
-            factor: divisionModulus.dividingFloor(by: dividend).low)
+            factor: divisionModulus.dividingFloor(dividend: dividend).low)
     }
 
     @inlinable

@@ -108,7 +108,7 @@ extension UInt32: ScalarType {
 }
 
 extension UInt64: ScalarType {
-    public typealias DoubleWidth = DoubleWidthUInt<UInt64>
+    public typealias DoubleWidth = UInt128
     public typealias SignedScalar = Int64
 
     public static var rnsCorrectionFactor: UInt64 {
@@ -161,7 +161,7 @@ extension UInt64: DoubleWidthType {
     public typealias Scalar = UInt32
 }
 
-extension DWUInt128: DoubleWidthType {
+extension UInt128: DoubleWidthType {
     /// Single-width scalar, with bit-width half that of the ``DoubleWidthType``.
     public typealias Scalar = UInt64
 }

@@ -33,7 +33,7 @@ class Array2dTests: XCTestCase {
         runTest(Int32.self)
         runTest(Int64.self)
         runTest(UInt64.self)
-        runTest(DWUInt128.self)
+        runTest(UInt128.self)
     }
 
     func testZeroAndZeroize() {
@@ -54,7 +54,7 @@ class Array2dTests: XCTestCase {
         runTest(Int32.self)
         runTest(Int64.self)
         runTest(UInt64.self)
-        runTest(DWUInt128.self)
+        runTest(UInt128.self)
     }
 
     func testShape() {

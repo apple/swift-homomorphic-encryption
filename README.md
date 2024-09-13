@@ -80,7 +80,7 @@ The PNNS implementation in Swift Homomorphic Encryption uses homomorphic encrypt
 Swift Homomorphic Encryption requires:
 * 64-bit processor with little-endian memory representation
 * macOS or Linux operating system
-* [Swift](https://www.swift.org/) version 5.10 or later
+* [Swift](https://www.swift.org/) version 6.0 or later
 
 > [!NOTE]
 > Swift Homomorphic Encryption relies on [SystemRandomNumberGenerator](https://developer.apple.com/documentation/swift/systemrandomnumbergenerator) as a cryptographically secure random number generator, which may have platform-dependent behavior.
@@ -135,7 +135,7 @@ swift run -c release EncryptionParametersSnippet
 ## Developing Swift Homomorphic Encryption
 ### Dependencies
 Building Swift Homomorphic Encryption requires:
-* [Swift](https://www.swift.org/) version 5.10 or later
+* [Swift](https://www.swift.org/) version 6.0 or later
 
 Additionally, developing Swift Homomorphic Encryption requires:
 * [Nick Lockwood SwiftFormat](https://github.com/nicklockwood/SwiftFormat), v0.54.0

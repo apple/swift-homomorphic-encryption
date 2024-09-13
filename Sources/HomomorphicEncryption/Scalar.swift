@@ -654,4 +654,22 @@ extension ScalarType {
         let elseValue = Self.SignedScalar(bitPattern: self)
         return Self.SignedScalar.constantTimeSelect(if: condition, then: thenValue, else: elseValue)
     }
+
+    /// Returns `floor(self / modulus)`.
+    /// - Parameter modulus: Divisor.
+    /// - Returns: `floor(self / modulus)`.
+    @inlinable
+    func dividingFloor(by modulus: Modulus<Self>) -> Self {
+        modulus.dividingFloor(dividend: self)
+    }
+}
+
+extension DoubleWidthType where Self.Scalar.DoubleWidth == Self {
+    /// Returns `floor(self / modulus)`.
+    /// - Parameter modulus: Divisor.
+    /// - Returns: `floor(self / modulus)`.
+    @inlinable
+    func dividingFloor(by modulus: Modulus<Self.Scalar>) -> Self {
+        modulus.dividingFloor(dividend: self)
+    }
 }

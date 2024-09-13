@@ -42,8 +42,8 @@ Swift Homomorphic Encryption implements the Brakerski-Fan-Vercauteren (BFV) HE s
 This scheme can be configured to support post-quantum 128-bit security.
 
 > [!WARNING]
-> BFV does not provide IND-CCA security, and should be used accordingly.
-> In particular, as little information as possible about each decrypted ciphertext should be sent back to the server. To protect against a malicious server, the client should also validate the decrypted content is in the expected format.
+> BFV does not provide IND-CCA security, nor does it provide IND-CPA<sup>D</sup> security when there is a non-negligible decryption error probability. BFV should be used accordingly.
+> In particular, no information about each decrypted ciphertext should be sent back to the server. To protect against a malicious server, the client should also validate the decrypted content is in the expected format.
 >
 > Consult a cryptography expert when developing and deploying homomorphic encryption applications.
 

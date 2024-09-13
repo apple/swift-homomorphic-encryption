@@ -5,7 +5,7 @@ Private Nearest Neighbors Search database generation
 ## Overview
 
 `PNNSGenerateDatabase` is an executable which generates a sample database for testing.
-The resulting database can be processed with the `PNNSProcessDatabase` executable.
+The resulting database can be processed with the [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsprocessdatabase) executable.
 
 ### Requirements
 First ensure sure that the `~/.swiftpm/bin` directory is on your `$PATH`.

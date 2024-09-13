@@ -37,7 +37,7 @@ e.g., `n_8192_logq_3x55_logt_30`.
 2. `inputDatabase` is the path to the unprocessed input database. It must be a
 serialized `Apple_SwiftHomomorphicEncryption_Pnns_V1_Database`.
 
-> Note: The `PNNSGenerateDatabase` binary can be used to generate a sample database.
+> Note: The [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsgeneratedatabase) binary can be used to generate a sample database.
 
 3. `outputDatabase` is the path to where the processed database will be
 written. This string should have extension either `.txtpb` or `.binpb`.
@@ -54,8 +54,8 @@ The only required parameter variable which affects performance is
 `rlweParameters`. These parameters are picked from a set of [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/predefinedrlweparameters).
 See the [EncryptionParameters snippet]( https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/usingswifthomomorphicencryption#Encryption-Parameters) for more information on encryption parameters.
 
-For vector dimensions, e.g. 128 or below, `n_4096_logq_27_28_28_logt_16` may be a good choice.
-For larger vector dimensions, `n_8192_logq_3x55_logt_30` may be a good choice.
+For `batchSize: 1`, `n_4096_logq_27_28_28_logt_16` may be a good choice.
+For larger batch sizes, `n_8192_logq_3x55_logt_30` may be a good choice.
 
 ### Optional Configuration Parameters
 
@@ -80,12 +80,12 @@ For each trial, a query is checked for correctness.
 
 ### Example
 
-Our example relies in the `PNNSGenerateDatabase` executable.
-To install it, run `PNNSProcessDatabase`, executable, run
+Our example relies on the [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsgeneratedatabase) executable.
+To install it, run
 ```sh
-swift package experimental-install -c release --product PNNSProcessDatabase
+swift package experimental-install -c release --product PNNSGenerateDatabase
 ```
-
+Then, generate a sample database by running
 ```sh
 PNNSGenerateDatabase \
     --output-database database.txtpb \

@@ -27,3 +27,4 @@ builder:
       - PrivateInformationRetrievalProtobuf
       - PrivateNearestNeighborsSearch
       - PrivateNearestNeighborsSearchProtobuf
+      swift_version: 6.0

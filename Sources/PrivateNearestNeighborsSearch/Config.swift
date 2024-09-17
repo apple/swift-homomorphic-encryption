@@ -60,7 +60,7 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     public let distanceMetric: DistanceMetric
     /// For plaintext CRT, the list of extra plaintext moduli.
     ///
-    /// The first plaintext modulus will be the one in ``ClientConfig/encryptionParams``.
+    /// The first plaintext modulus will be the one in ``ClientConfig/encryptionParameters``.
     public let extraPlaintextModuli: [Scheme.Scalar]
 
     /// The plaintext CRT moduli.
@@ -68,17 +68,17 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
 
     /// Creates a new ``ClientConfig``.
     /// - Parameters:
-    ///   - encryptionParams: Encryption parameters.
+    ///   - encryptionParameters: Encryption parameters.
     ///   - scalingFactor: Factor by which to scale floating-point entries before rounding to integers.
     ///   - queryPacking: Packing for the query.
     ///   - vectorDimension: Number of entries in each vector.
     ///   - evaluationKeyConfig: Evaluation key configuration for nearest neighbors computation.
     ///   - distanceMetric: Metric for nearest neighbors computation
     ///   - extraPlaintextModuli: For plaintext CRT, the list of extra plaintext moduli. The first plaintext modulus
-    /// will be the one in ``ClientConfig/encryptionParams``.
+    /// will be the one in ``ClientConfig/encryptionParameters``.
     /// - Throws: Error upon failure to create a new client config.
     public init(
-        encryptionParams: EncryptionParameters<Scheme>,
+        encryptionParameters: EncryptionParameters<Scheme>,
         scalingFactor: Int,
         queryPacking: MatrixPacking,
         vectorDimension: Int,
@@ -88,13 +88,13 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     {
         let extraEncryptionParams = try extraPlaintextModuli.map { plaintextModulus in
             try EncryptionParameters<Scheme>(
-                polyDegree: encryptionParams.polyDegree,
+                polyDegree: encryptionParameters.polyDegree,
                 plaintextModulus: plaintextModulus,
-                coefficientModuli: encryptionParams.coefficientModuli,
-                errorStdDev: encryptionParams.errorStdDev,
-                securityLevel: encryptionParams.securityLevel)
+                coefficientModuli: encryptionParameters.coefficientModuli,
+                errorStdDev: encryptionParameters.errorStdDev,
+                securityLevel: encryptionParameters.securityLevel)
         }
-        self.encryptionParameters = [encryptionParams] + extraEncryptionParams
+        self.encryptionParameters = [encryptionParameters] + extraEncryptionParams
         self.scalingFactor = scalingFactor
         self.queryPacking = queryPacking
         self.vectorDimension = vectorDimension
@@ -145,7 +145,7 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
 
     /// For plaintext CRT, the list of extra plaintext moduli.
     ///
-    /// The first plaintext modulus will be the one in ``ClientConfig/encryptionParams``.
+    /// The first plaintext modulus will be the one in ``ClientConfig/encryptionParameters``.
     public var extraPlaintextModuli: [Scheme.Scalar] {
         clientConfig.extraPlaintextModuli
     }

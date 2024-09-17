@@ -23,7 +23,7 @@ class PirUtilTests: XCTestCase {
         _ keyCompression: PirKeyCompressionStrategy) throws
     {
         let degree = 32
-        let encryptionParams = try EncryptionParameters<Scheme>(
+        let encryptionParameters = try EncryptionParameters<Scheme>(
             polyDegree: degree,
             plaintextModulus: Scheme.Scalar(17),
             coefficientModuli: Scheme.Scalar
@@ -36,7 +36,7 @@ class PirUtilTests: XCTestCase {
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
 
-        let context: Context<Scheme> = try Context(encryptionParameters: encryptionParams)
+        let context: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
         let plaintextModulus = context.plaintextModulus
         let logDegree = degree.log2
         for logStep in 1...logDegree {

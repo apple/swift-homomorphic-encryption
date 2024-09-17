@@ -28,17 +28,17 @@ final class PlaintextMatrixTests: XCTestCase {
 
     func testPlaintextMatrixError() throws {
         func runTest<Scheme: HeScheme>(rlweParams: PredefinedRlweParameters, _: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
             // Parameters with large polyDegree are slow in debug mode
-            guard encryptionParams.supportsSimdEncoding, encryptionParams.polyDegree <= 16 else {
+            guard encryptionParameters.supportsSimdEncoding, encryptionParameters.polyDegree <= 16 else {
                 return
             }
-            let dims = try MatrixDimensions(rowCount: encryptionParams.polyDegree, columnCount: 2)
+            let dims = try MatrixDimensions(rowCount: encryptionParameters.polyDegree, columnCount: 2)
             let packing = MatrixPacking.denseRow
-            let context = try Context(encryptionParameters: encryptionParams)
+            let context = try Context(encryptionParameters: encryptionParameters)
             let values = TestUtils.getRandomPlaintextData(
-                count: encryptionParams.polyDegree,
-                in: 0..<encryptionParams.plaintextModulus)
+                count: encryptionParameters.polyDegree,
+                in: 0..<encryptionParameters.plaintextModulus)
             let plaintext: Plaintext<Scheme, Coeff> = try context.encode(
                 values: values,
                 format: EncodeFormat.coefficient)
@@ -80,12 +80,12 @@ final class PlaintextMatrixTests: XCTestCase {
     func testPlaintextMatrixDenseRowError() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
-            let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
-            let context = try Context(encryptionParameters: encryptionParams)
-            let rowCount = encryptionParams.polyDegree
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
+            let context = try Context(encryptionParameters: encryptionParameters)
+            let rowCount = encryptionParameters.polyDegree
             let columnCount = 2
             let values = TestUtils.getRandomPlaintextData(
-                count: encryptionParams.polyDegree,
+                count: encryptionParameters.polyDegree,
                 in: 0..<Scheme.Scalar(rowCount * columnCount))
             let packing = MatrixPacking.denseRow
 
@@ -268,7 +268,7 @@ final class PlaintextMatrixTests: XCTestCase {
         ]
 
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme>(
                 polyDegree: 8,
                 plaintextModulus: 1153,
                 coefficientModuli: Scheme.Scalar
@@ -278,7 +278,7 @@ final class PlaintextMatrixTests: XCTestCase {
                         nttDegree: 8),
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
-            let context = try Context(encryptionParameters: encryptionParams)
+            let context = try Context(encryptionParameters: encryptionParameters)
             for ((rowCount, columnCount), expected) in kats {
                 let dimensions = try MatrixDimensions((rowCount, columnCount))
                 try runPlaintextMatrixInitTest(
@@ -359,8 +359,8 @@ final class PlaintextMatrixTests: XCTestCase {
 
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
-            let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
-            let context = try Context(encryptionParameters: encryptionParams)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
+            let context = try Context(encryptionParameters: encryptionParameters)
             for ((rowCount, columnCount), expected) in kats {
                 let dimensions = try MatrixDimensions((rowCount, columnCount))
                 try runPlaintextMatrixInitTest(
@@ -452,7 +452,7 @@ final class PlaintextMatrixTests: XCTestCase {
         ]
 
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme>(
                 polyDegree: 8,
                 plaintextModulus: 1153,
                 coefficientModuli: Scheme.Scalar
@@ -462,7 +462,7 @@ final class PlaintextMatrixTests: XCTestCase {
                         nttDegree: 8),
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
-            let context = try Context(encryptionParameters: encryptionParams)
+            let context = try Context(encryptionParameters: encryptionParameters)
             for ((rowCount, columnCount), expected) in kats {
                 let dimensions = try MatrixDimensions((rowCount, columnCount))
                 let bsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount.nextPowerOfTwo)
@@ -480,7 +480,7 @@ final class PlaintextMatrixTests: XCTestCase {
 
     func testDiagonalRotation() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme>(
                 polyDegree: 16,
                 plaintextModulus: 1153,
                 coefficientModuli: Scheme.Scalar
@@ -490,14 +490,14 @@ final class PlaintextMatrixTests: XCTestCase {
                         nttDegree: 16),
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
-            let context = try Context(encryptionParameters: encryptionParams)
+            let context = try Context(encryptionParameters: encryptionParameters)
 
             let dimensions = try MatrixDimensions(rowCount: 4, columnCount: 5)
             let bsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
 
             let values: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
-                modulus: encryptionParams.plaintextModulus)
+                modulus: encryptionParameters.plaintextModulus)
             let rotatedDiagonalPrefixes: [[Scheme.Scalar]] = [[1, 7, 13, 19],
                                                               [2, 8, 14, 20],
                                                               [3, 9, 15, 0],
@@ -508,7 +508,7 @@ final class PlaintextMatrixTests: XCTestCase {
                                                               [12, 18, 0, 0, 0, 0, 0, 6]]
 
             let expected: [[Scheme.Scalar]] = rotatedDiagonalPrefixes.map { diagonal in
-                diagonal + Array(repeating: 0, count: encryptionParams.polyDegree - diagonal.count)
+                diagonal + Array(repeating: 0, count: encryptionParameters.polyDegree - diagonal.count)
             }
 
             let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
@@ -529,9 +529,9 @@ final class PlaintextMatrixTests: XCTestCase {
     func testPlaintextMatrixConversion() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
-            let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
-            XCTAssert(encryptionParams.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
+            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,

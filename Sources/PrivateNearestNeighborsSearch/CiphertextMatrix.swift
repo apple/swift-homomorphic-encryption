@@ -62,12 +62,12 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
         guard let context = ciphertexts.first?.context else {
             throw PnnsError.emptyCiphertextArray
         }
-        let encryptionParams = context.encryptionParameters
-        guard let simdDimensions = encryptionParams.simdDimensions else {
-            throw PnnsError.simdEncodingNotSupported(for: encryptionParams)
+        let encryptionParameters = context.encryptionParameters
+        guard let simdDimensions = encryptionParameters.simdDimensions else {
+            throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let expectedCiphertextCount = try PlaintextMatrix<Scheme, Format>.plaintextCount(
-            encryptionParameters: encryptionParams,
+            encryptionParameters: encryptionParameters,
             dimensions: dimensions,
             packing: packing)
         guard ciphertexts.count == expectedCiphertextCount else {
@@ -158,22 +158,22 @@ extension CiphertextMatrix {
 extension CiphertextMatrix {
     /// Computes the evaluation key configuration for calling `extractDenseRow`.
     /// - Parameters:
-    ///   - encryptionParams: Encryption parameters; must support `.simd` encoding.
+    ///   - encryptionParameters: Encryption parameters; must support `.simd` encoding.
     ///   - dimensions: Dimensions of the matrix to call `extractDenseRow` on.
     /// - Returns: The evaluation key configuration.
     /// - Throws: Error upon failure to generate the evaluation key configuration.
     @inlinable
-    static func extractDenseRowConfig(for encryptionParams: EncryptionParameters<Scheme>,
+    static func extractDenseRowConfig(for encryptionParameters: EncryptionParameters<Scheme>,
                                       dimensions: MatrixDimensions) throws -> EvaluationKeyConfig
     {
         if dimensions.rowCount == 1 {
             // extractDenseRow is a No-op, so no evaluation key required
             return EvaluationKeyConfig()
         }
-        guard let simdDimensions = encryptionParams.simdDimensions else {
-            throw PnnsError.simdEncodingNotSupported(for: encryptionParams)
+        guard let simdDimensions = encryptionParameters.simdDimensions else {
+            throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
-        let degree = encryptionParams.polyDegree
+        let degree = encryptionParameters.polyDegree
         var galoisElements = [GaloisElement.swappingRows(degree: degree)]
         let columnCountPowerOfTwo = dimensions.columnCount.nextPowerOfTwo
         if columnCountPowerOfTwo != simdDimensions.columnCount {

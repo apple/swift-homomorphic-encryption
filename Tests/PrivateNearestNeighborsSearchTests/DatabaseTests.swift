@@ -20,7 +20,7 @@ import XCTest
 final class DatabaseTests: XCTestCase {
     func testSerializedProcessedDatabase() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
             let vectorDimension = 4
 
             let rows = (0...10).map { rowIndex in
@@ -32,7 +32,7 @@ final class DatabaseTests: XCTestCase {
             let database = Database(rows: rows)
 
             let clientConfig = try ClientConfig<Scheme>(
-                encryptionParams: encryptionParams,
+                encryptionParameters: encryptionParameters,
                 scalingFactor: 123,
                 queryPacking: .denseRow,
                 vectorDimension: vectorDimension,
@@ -42,7 +42,7 @@ final class DatabaseTests: XCTestCase {
                     .generatePrimes(
                         significantBitCounts: [7],
                         preferringSmall: true,
-                        nttDegree: encryptionParams.polyDegree))
+                        nttDegree: encryptionParameters.polyDegree))
             let serverConfig = ServerConfig<Scheme>(
                 clientConfig: clientConfig,
                 databasePacking: MatrixPacking

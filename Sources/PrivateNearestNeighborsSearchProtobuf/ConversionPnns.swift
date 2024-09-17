@@ -121,7 +121,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig {
             throw ConversionError.unsetField(\Self.encryptionParameters, in: Self.self)
         }
         return try ClientConfig<Scheme>(
-            encryptionParams: encryptionParameters.native(),
+            encryptionParameters: encryptionParameters.native(),
             scalingFactor: Int(scalingFactor),
             queryPacking: queryPacking.native(),
             vectorDimension: Int(vectorDimension),

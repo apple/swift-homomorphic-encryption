@@ -1061,7 +1061,7 @@ extension HeScheme {
         guard lhs.count == rhs.count else {
             throw HeError.incompatibleCiphertextCount(lhs.count, expected: rhs.count)
         }
-        return try (zip(lhs, rhs).map { try $0.0 * $0.1 }).sum<Scheme.CanonicalCiphertextFormat>()
+        return try (zip(lhs, rhs).map { try $0.0 * $0.1 }).sum()
     }
 
     @inlinable

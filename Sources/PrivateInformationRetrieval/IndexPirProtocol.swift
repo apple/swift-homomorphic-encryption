@@ -245,7 +245,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
         for plaintext in plaintexts {
             if let plaintext {
                 buffer.append(Self.serializedPlaintextTag)
-                buffer += plaintext.poly.serialize()
+                buffer += plaintext.serialize().poly
             } else {
                 buffer.append(Self.serializedZeroPlaintextTag)
             }

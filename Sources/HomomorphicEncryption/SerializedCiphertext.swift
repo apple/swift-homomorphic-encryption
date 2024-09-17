@@ -38,7 +38,7 @@ extension Ciphertext {
     ///   - serialized: Serialized ciphertext.
     ///   - context: Context to associate with the ciphertext.
     ///   - moduliCount: Number of moduli in the serialized ciphertext. If not set, deserialization will use the
-    /// top-level ciphertext with all the moduli.
+    /// top-level ciphertext context with all the moduli.
     /// - Throws: Error upon failure to deserialize the ciphertext.
     @inlinable
     public init(

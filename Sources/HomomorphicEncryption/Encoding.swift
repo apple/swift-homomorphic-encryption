@@ -65,8 +65,7 @@ extension Context {
     ///   - values: Values to encode.
     ///   - format: Encoding format.
     ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext context with
-    /// all the
-    /// moduli.
+    /// all the moduli.
     /// - Returns: The plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
     @inlinable
@@ -83,8 +82,7 @@ extension Context {
     ///   - signedValues: Signed values to encode.
     ///   - format: Encoding format.
     ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext context with
-    /// all the
-    /// moduli.
+    /// all the moduli.
     /// - Returns: The plaintext encoding `signedValues`.
     /// - Throws: Error upon failure to encode.
     @inlinable

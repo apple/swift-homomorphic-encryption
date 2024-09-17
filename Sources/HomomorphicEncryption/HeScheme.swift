@@ -196,8 +196,7 @@ public protocol HeScheme {
     ///   - values: Values to encode.
     ///   - format: Encoding format.
     ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext context with
-    /// all the
-    /// moduli.
+    /// all the moduli.
     /// - Returns: A plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(values:format:moduliCount:)`` for an alternative API.
@@ -213,8 +212,7 @@ public protocol HeScheme {
     ///   - signedValues: Signed values to encode.
     ///   - format: Encoding format.
     ///   - moduliCount: Optional number of moduli. If not set, encoding will use the top-level ciphertext context with
-    /// all the
-    /// moduli.
+    /// all the moduli.
     /// - Returns: A plaintext encoding `signedValues`.
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(signedValues:format:moduliCount:)`` for an alternative API.

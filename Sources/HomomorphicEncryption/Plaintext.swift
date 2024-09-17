@@ -18,7 +18,7 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
     /// Context for HE computation.
     public let context: Context<Scheme>
 
-    @usableFromInline package var poly: PolyRq<Scalar, Format>
+    @usableFromInline var poly: PolyRq<Scalar, Format>
 
     @inlinable
     package init(context: Context<Scheme>, poly: PolyRq<Scalar, Format>) {

@@ -117,12 +117,12 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
             throw PnnsError.emptyPlaintextArray
         }
         let context = plaintexts[0].context
-        let encryptionParams = context.encryptionParameters
-        guard let simdDimensions = encryptionParams.simdDimensions else {
-            throw PnnsError.simdEncodingNotSupported(for: encryptionParams)
+        let encryptionParameters = context.encryptionParameters
+        guard let simdDimensions = encryptionParameters.simdDimensions else {
+            throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let expectedPlaintextCount = try PlaintextMatrix.plaintextCount(
-            encryptionParameters: encryptionParams,
+            encryptionParameters: encryptionParameters,
             dimensions: dimensions,
             packing: packing)
         guard plaintexts.count == expectedPlaintextCount else {
@@ -278,9 +278,9 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
             throw PnnsError.simdEncodingNotSupported(for: context.encryptionParameters)
         }
 
-        let encryptionParams = context.encryptionParameters
+        let encryptionParameters = context.encryptionParameters
         let expectedPlaintextCount = try PlaintextMatrix.plaintextCount(
-            encryptionParameters: encryptionParams,
+            encryptionParameters: encryptionParameters,
             dimensions: dimensions,
             packing: .denseColumn)
         var plaintexts: [Scheme.CoeffPlaintext] = []

@@ -118,7 +118,7 @@ struct ProcessBenchmarkContext<Scheme: HeScheme> {
             preferringSmall: false,
             nttDegree: parameterConfig.polyDegree)
 
-        let encryptionParams = try EncryptionParameters<Scheme>(
+        let encryptionParameters = try EncryptionParameters<Scheme>(
             polyDegree: parameterConfig.polyDegree,
             plaintextModulus: plaintextModuli[0],
             coefficientModuli: coefficientModuli,
@@ -130,7 +130,7 @@ struct ProcessBenchmarkContext<Scheme: HeScheme> {
             plaintextMatrixDimensions: MatrixDimensions(
                 rowCount: databaseConfig.rowCount,
                 columnCount: databaseConfig.vectorDimension),
-            encryptionParameters: encryptionParams,
+            encryptionParameters: encryptionParameters,
             maxQueryCount: batchSize)
         let scalingFactor = ClientConfig<Scheme>
             .maxScalingFactor(
@@ -138,7 +138,7 @@ struct ProcessBenchmarkContext<Scheme: HeScheme> {
                 vectorDimension: databaseConfig.vectorDimension,
                 plaintextModuli: Array(plaintextModuli[1...]))
         let clientConfig = try ClientConfig(
-            encryptionParams: encryptionParams,
+            encryptionParameters: encryptionParameters,
             scalingFactor: scalingFactor,
             queryPacking: .denseRow,
             vectorDimension: databaseConfig.vectorDimension,
@@ -151,8 +151,8 @@ struct ProcessBenchmarkContext<Scheme: HeScheme> {
         self.serverConfig = serverConfig
 
         self.database = getDatabaseForTesting(config: databaseConfig)
-        self.contexts = try serverConfig.encryptionParameters.map { encryptionParams in
-            try Context(encryptionParameters: encryptionParams)
+        self.contexts = try serverConfig.encryptionParameters.map { encryptionParameters in
+            try Context(encryptionParameters: encryptionParameters)
         }
     }
 }
@@ -224,7 +224,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
             significantBitCounts: parameterConfig.coefficientModulusBits,
             preferringSmall: false,
             nttDegree: parameterConfig.polyDegree)
-        let encryptionParams = try EncryptionParameters<Scheme>(
+        let encryptionParameters = try EncryptionParameters<Scheme>(
             polyDegree: parameterConfig.polyDegree,
             plaintextModulus: plaintextModuli[0],
             coefficientModuli: coefficientModuli,
@@ -235,7 +235,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
             plaintextMatrixDimensions: MatrixDimensions(
                 rowCount: databaseConfig.rowCount,
                 columnCount: databaseConfig.vectorDimension),
-            encryptionParameters: encryptionParams,
+            encryptionParameters: encryptionParameters,
             maxQueryCount: queryCount)
         let scalingFactor = ClientConfig<Scheme>
             .maxScalingFactor(
@@ -243,7 +243,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
                 vectorDimension: databaseConfig.vectorDimension,
                 plaintextModuli: plaintextModuli)
         let clientConfig = try ClientConfig(
-            encryptionParams: encryptionParams,
+            encryptionParameters: encryptionParameters,
             scalingFactor: scalingFactor,
             queryPacking: .denseRow,
             vectorDimension: databaseConfig.vectorDimension,
@@ -258,7 +258,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
 
         let database = getDatabaseForTesting(config: databaseConfig)
         let contexts = try clientConfig.encryptionParameters
-            .map { encryptionParams in try Context(encryptionParameters: encryptionParams) }
+            .map { encryptionParameters in try Context(encryptionParameters: encryptionParameters) }
         self.processedDatabase = try database.process(config: serverConfig, contexts: contexts)
         self.client = try Client(config: clientConfig, contexts: contexts)
         self.server = try Server(database: processedDatabase)

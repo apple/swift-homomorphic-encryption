@@ -39,7 +39,8 @@ final class ClientTests: XCTestCase {
 
             XCTAssertNoThrow(
                 try ClientConfig<Scheme>(
-                    encryptionParams: EncryptionParameters(from: PredefinedRlweParameters.n_4096_logq_27_28_28_logt_17),
+                    encryptionParameters: EncryptionParameters(from: PredefinedRlweParameters
+                        .n_4096_logq_27_28_28_logt_17),
                     scalingFactor: maxScalingFactor2,
                     queryPacking: .denseRow,
                     vectorDimension: 128,
@@ -105,7 +106,7 @@ final class ClientTests: XCTestCase {
     func testQueryAsResponse() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let degree = 512
-            let encryptionParams = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme>(
                 polyDegree: degree,
                 plaintextModulus: Scheme.Scalar.generatePrimes(
                     significantBitCounts: [16],
@@ -117,8 +118,8 @@ final class ClientTests: XCTestCase {
                     nttDegree: degree),
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
-            XCTAssert(encryptionParams.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let vectorDimension = 32
             let queryDimensions = try MatrixDimensions(rowCount: 1, columnCount: vectorDimension)
 
@@ -134,7 +135,7 @@ final class ClientTests: XCTestCase {
                 preferringSmall: true, nttDegree: degree)]
             {
                 let config = try ClientConfig(
-                    encryptionParams: encryptionParams,
+                    encryptionParameters: encryptionParameters,
                     scalingFactor: scalingFactor,
                     queryPacking: .denseRow,
                     vectorDimension: vectorDimension,
@@ -170,7 +171,7 @@ final class ClientTests: XCTestCase {
 
     func testClientServer() throws {
         func runSingleTest<Scheme: HeScheme>(
-            encryptionParams: EncryptionParameters<Scheme>,
+            encryptionParameters: EncryptionParameters<Scheme>,
             dimensions: MatrixDimensions,
             plaintextModuli: [Scheme.Scalar],
             queryCount: Int) throws
@@ -182,10 +183,10 @@ final class ClientTests: XCTestCase {
                 plaintextModuli: plaintextModuli)
             let evaluatonKeyConfig = try MatrixMultiplication.evaluationKeyConfig(
                 plaintextMatrixDimensions: dimensions,
-                encryptionParameters: encryptionParams,
+                encryptionParameters: encryptionParameters,
                 maxQueryCount: queryCount)
             let clientConfig = try ClientConfig<Scheme>(
-                encryptionParams: encryptionParams,
+                encryptionParameters: encryptionParameters,
                 scalingFactor: scalingFactor,
                 queryPacking: .denseRow,
                 vectorDimension: vectorDimension,
@@ -240,20 +241,20 @@ final class ClientTests: XCTestCase {
                     count: 3),
                 preferringSmall: false,
                 nttDegree: degree)
-            let encryptionParams = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme>(
                 polyDegree: degree,
                 plaintextModulus: plaintextModuli[0],
                 coefficientModuli: coefficientModuli,
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
-            XCTAssert(encryptionParams.supportsSimdEncoding)
+            XCTAssert(encryptionParameters.supportsSimdEncoding)
 
             let queryCount = 1
             for rowCount in [degree / 2, degree, degree + 1, 3 * degree] {
                 for dimensions in try [MatrixDimensions(rowCount: rowCount, columnCount: 16)] {
                     for plaintextModuliCount in 1...maxPlaintextModuliCount {
                         try runSingleTest(
-                            encryptionParams: encryptionParams,
+                            encryptionParameters: encryptionParameters,
                             dimensions: dimensions,
                             plaintextModuli: Array(plaintextModuli.prefix(plaintextModuliCount)),
                             queryCount: queryCount)

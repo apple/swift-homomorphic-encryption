@@ -36,9 +36,9 @@ final class CiphertextMatrixTests: XCTestCase {
     func testEncryptDecryptRoundTrip() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
-            let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
-            XCTAssert(encryptionParams.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
+            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
@@ -68,9 +68,9 @@ final class CiphertextMatrixTests: XCTestCase {
     func testConvertRoundTrip() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
-            let encryptionParams = try EncryptionParameters<Scheme>(from: rlweParams)
-            XCTAssert(encryptionParams.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
+            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
@@ -105,14 +105,14 @@ final class CiphertextMatrixTests: XCTestCase {
                     count: 2),
                 preferringSmall: false,
                 nttDegree: degree)
-            let encryptionParams = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme>(
                 polyDegree: degree,
                 plaintextModulus: plaintextModulus,
                 coefficientModuli: coefficientModuli,
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
-            XCTAssert(encryptionParams.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
 
             for rowCount in 1..<(2 * degree) {
                 for columnCount in 1..<degree / 2 {
@@ -130,7 +130,7 @@ final class CiphertextMatrixTests: XCTestCase {
                     let ciphertextMatrix: CiphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
 
                     let evaluationKeyConfig = try CiphertextMatrix<Scheme, Coeff>.extractDenseRowConfig(
-                        for: encryptionParams,
+                        for: encryptionParameters,
                         dimensions: dimensions)
                     let evaluationKey = try context.generateEvaluationKey(
                         config: evaluationKeyConfig,

@@ -48,8 +48,8 @@ public struct Client<Scheme: HeScheme> {
 
         var contexts = contexts
         if contexts.isEmpty {
-            contexts = try config.encryptionParameters.map { encryptionParams in
-                try Context(encryptionParameters: encryptionParams)
+            contexts = try config.encryptionParameters.map { encryptionParameters in
+                try Context(encryptionParameters: encryptionParameters)
             }
         }
         try config.validateContexts(contexts: contexts)

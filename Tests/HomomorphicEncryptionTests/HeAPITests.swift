@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 @testable import HomomorphicEncryption
 import TestUtilities
 import XCTest
@@ -1074,8 +1075,8 @@ class HeAPITests: XCTestCase {
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
 
-        for encryptionParams in predefined + [custom] {
-            let context = try Context<Bfv<T>>(encryptionParameters: encryptionParams)
+        for encryptionParameters in predefined + [custom] {
+            let context = try Context<Bfv<T>>(encryptionParameters: encryptionParameters)
             try schemeEncodeDecodeTest(context: context)
             try schemeEncryptDecryptTest(context: context)
             try schemeEncryptZeroDecryptTest(context: context)

@@ -55,8 +55,8 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Context<Scheme>] = []) throws {
         var contexts = contexts
         if contexts.isEmpty {
-            contexts = try serialized.serverConfig.encryptionParameters.map { encryptionParams in
-                try Context(encryptionParameters: encryptionParams)
+            contexts = try serialized.serverConfig.encryptionParameters.map { encryptionParameters in
+                try Context(encryptionParameters: encryptionParameters)
             }
         }
         try serialized.serverConfig.validateContexts(contexts: contexts)
@@ -195,8 +195,8 @@ extension Database {
         }
         var contexts = contexts
         if contexts.isEmpty {
-            contexts = try config.encryptionParameters.map { encryptionParams in
-                try Context(encryptionParameters: encryptionParams)
+            contexts = try config.encryptionParameters.map { encryptionParameters in
+                try Context(encryptionParameters: encryptionParameters)
             }
         }
         try config.validateContexts(contexts: contexts)

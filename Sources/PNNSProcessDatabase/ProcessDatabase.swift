@@ -231,7 +231,7 @@ struct ProcessDatabase: ParsableCommand {
 
         let encryptionParameters = try EncryptionParameters<Scheme>(from: config.rlweParameters)
         let clientConfig = try ClientConfig<Scheme>(
-            encryptionParams: encryptionParameters,
+            encryptionParameters: encryptionParameters,
             scalingFactor: config.scalingFactor,
             queryPacking: config.queryPacking,
             vectorDimension: vectorDimension,

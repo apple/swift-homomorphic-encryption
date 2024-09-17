@@ -414,18 +414,18 @@ final class MatrixMultiplicationTests: XCTestCase {
     }
 
     func testEvaluationKeyContainment() throws {
-        let encryptionParams = try EncryptionParameters<Bfv<UInt64>>(from: .insecure_n_512_logq_4x60_logt_20)
+        let encryptionParameters = try EncryptionParameters<Bfv<UInt64>>(from: .insecure_n_512_logq_4x60_logt_20)
         let columnCount = 20
         let plaintextDims = try MatrixDimensions(rowCount: 100, columnCount: columnCount)
         for maxQueryCount in 1..<(columnCount + 1) {
             let maxQueryCountConfig = try MatrixMultiplication.evaluationKeyConfig(
                 plaintextMatrixDimensions: plaintextDims,
-                encryptionParameters: encryptionParams,
+                encryptionParameters: encryptionParameters,
                 maxQueryCount: maxQueryCount)
             for queryCount in 1..<maxQueryCount {
                 let config = try MatrixMultiplication.evaluationKeyConfig(
                     plaintextMatrixDimensions: plaintextDims,
-                    encryptionParameters: encryptionParams,
+                    encryptionParameters: encryptionParameters,
                     maxQueryCount: queryCount)
                 XCTAssertTrue(maxQueryCountConfig.contains(config))
             }

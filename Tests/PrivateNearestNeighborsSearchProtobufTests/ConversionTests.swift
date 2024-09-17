@@ -56,7 +56,7 @@ class ConversionTests: XCTestCase {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let vectorDimension = 4
             let clientConfig = try ClientConfig<Scheme>(
-                encryptionParams: EncryptionParameters(
+                encryptionParameters: EncryptionParameters(
                     from: .insecure_n_8_logq_5x18_logt_5),
                 scalingFactor: 123,
                 queryPacking: .denseRow,
@@ -97,13 +97,13 @@ class ConversionTests: XCTestCase {
 
     func testSerializedPlaintextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
-                modulus: encryptionParams.plaintextModulus)
+                modulus: encryptionParameters.plaintextModulus)
             let plaintextMatrix = try PlaintextMatrix(
                 context: context,
                 dimensions: dimensions,
@@ -114,7 +114,7 @@ class ConversionTests: XCTestCase {
             let deserialized = try PlaintextMatrix(deserialize: serialized, context: context)
             XCTAssertEqual(deserialized, plaintextMatrix)
 
-            for moduliCount in 1..<encryptionParams.coefficientModuli.count {
+            for moduliCount in 1..<encryptionParameters.coefficientModuli.count {
                 let evalPlaintextMatrix = try plaintextMatrix.convertToEvalFormat(moduliCount: moduliCount)
                 let serialized = try evalPlaintextMatrix.serialize()
                 XCTAssertEqual(try serialized.proto().native(), serialized)
@@ -132,14 +132,14 @@ class ConversionTests: XCTestCase {
 
     func testSerializedCiphertextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let secretKey = try context.generateSecretKey()
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
-                modulus: encryptionParams.plaintextModulus)
+                modulus: encryptionParameters.plaintextModulus)
             let plaintextMatrix = try PlaintextMatrix(
                 context: context,
                 dimensions: dimensions,
@@ -189,14 +189,14 @@ class ConversionTests: XCTestCase {
 
     func testQuery() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParams)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let secretKey = try context.generateSecretKey()
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
-                modulus: encryptionParams.plaintextModulus)
+                modulus: encryptionParameters.plaintextModulus)
             let plaintextMatrix = try PlaintextMatrix(
                 context: context,
                 dimensions: dimensions,
@@ -216,7 +216,7 @@ class ConversionTests: XCTestCase {
 
     func testSerializedProcessedDatabase() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParams = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
             let vectorDimension = 4
 
             let rows = (0...10).map { rowIndex in
@@ -231,7 +231,7 @@ class ConversionTests: XCTestCase {
             let database = Database(rows: rows)
 
             let clientConfig = try ClientConfig<Scheme>(
-                encryptionParams: encryptionParams,
+                encryptionParameters: encryptionParameters,
                 scalingFactor: 123,
                 queryPacking: .denseRow,
                 vectorDimension: vectorDimension,
@@ -241,7 +241,7 @@ class ConversionTests: XCTestCase {
                     .generatePrimes(
                         significantBitCounts: [7],
                         preferringSmall: true,
-                        nttDegree: encryptionParams.polyDegree))
+                        nttDegree: encryptionParameters.polyDegree))
             let serverConfig = ServerConfig<Scheme>(
                 clientConfig: clientConfig,
                 databasePacking: MatrixPacking

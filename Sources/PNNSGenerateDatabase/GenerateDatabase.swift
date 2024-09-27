@@ -15,8 +15,8 @@
 import ArgumentParser
 import Foundation
 import HomomorphicEncryption
-import PrivateNearestNeighborsSearch
-import PrivateNearestNeighborsSearchProtobuf
+import PrivateNearestNeighborSearch
+import PrivateNearestNeighborSearchProtobuf
 
 enum VectorTypeArguments: String, CaseIterable, ExpressibleByArgument {
     /// Each vector's entry is uniform random from `[-1.0, 1.0]`

@@ -68,7 +68,7 @@ jobs:
         SKIP=no-commit-to-branch,lockwood-swiftformat,swiftlint,check-doc-comments
         pre-commit run --all-files
   lint:
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

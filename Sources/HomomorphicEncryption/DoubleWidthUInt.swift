@@ -417,7 +417,7 @@ extension DoubleWidthUInt: FixedWidthInteger {
         if rhs._storage.high != (0 as High) ||
             rhs._storage.low >= DoubleWidthUInt.bitWidth
         {
-            lhs = lhs < (0 as DoubleWidthUInt) ? ~0 : 0
+            lhs = 0
             return
         }
 

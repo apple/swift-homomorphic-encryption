@@ -1,6 +1,6 @@
 # ``PNNSProcessDatabase``
 
-Private Nearest Neighbors Search database processing
+Private Nearest Neighbor Search database processing
 
 ## Overview
 PNNS database processing will transform a database in preparation for hosting PNNS queries.

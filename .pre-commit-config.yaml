@@ -45,7 +45,7 @@ repos:
            - //
            - --allow-past-years
            - --use-current-year
-           - --detect-license-in-X-top-lines=10
+           - --detect-license-in-X-top-lines=11
     -   id: insert-license
         name: insert-license-yaml
         'types_or': [yaml]

@@ -1,6 +1,6 @@
 # ``PNNSGenerateDatabase``
 
-Private Nearest Neighbors Search database generation
+Private Nearest Neighbor Search database generation
 
 ## Overview
 

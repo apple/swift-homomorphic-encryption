@@ -1,5 +1,5 @@
 {
-  "originHash" : "924e29f4ba35b567344548cae01b03bc8f2c3a884de7a16bcd7dc8475e890dfb",
+  "originHash" : "35058120a76c9add338a72688983f31eb5403042763150a08ca6e53652580567",
   "pins" : [
     {
       "identity" : "hdrhistogram-swift",
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-protobuf",
       "state" : {
-        "revision" : "d57a5aecf24a25b32ec4a74be2f5d0a995a47c4b",
-        "version" : "1.27.0"
+        "revision" : "edb6ed4919f7756157fe02f2552b7e3850a538e5",
+        "version" : "1.28.1"
       }
     },
     {

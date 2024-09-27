@@ -42,11 +42,11 @@ let package = Package(
             name: "PrivateInformationRetrievalProtobuf",
             targets: ["PrivateInformationRetrievalProtobuf"]),
         .library(
-            name: "PrivateNearestNeighborsSearch",
-            targets: ["PrivateNearestNeighborsSearch"]),
+            name: "PrivateNearestNeighborSearch",
+            targets: ["PrivateNearestNeighborSearch"]),
         .library(
-            name: "PrivateNearestNeighborsSearchProtobuf",
-            targets: ["PrivateNearestNeighborsSearchProtobuf"]),
+            name: "PrivateNearestNeighborSearchProtobuf",
+            targets: ["PrivateNearestNeighborSearchProtobuf"]),
         .executable(name: "PIRGenerateDatabase", targets: ["PIRGenerateDatabase"]),
         .executable(name: "PIRProcessDatabase", targets: ["PIRProcessDatabase"]),
         .executable(name: "PIRShardDatabase", targets: ["PIRShardDatabase"]),
@@ -59,7 +59,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.4.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-protobuf", from: "1.27.0"), // Keep version in sync with README
+        .package(url: "https://github.com/apple/swift-protobuf", from: "1.28.1"), // Keep version in sync with README
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.1.0"),
     ],
     targets: [
@@ -99,15 +99,15 @@ let package = Package(
             exclude: ["generated/README.md", "protobuf_module_mappings.txtpb"],
             swiftSettings: librarySettings),
         .target(
-            name: "PrivateNearestNeighborsSearch",
+            name: "PrivateNearestNeighborSearch",
             dependencies: [
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 "HomomorphicEncryption",
             ],
             swiftSettings: librarySettings),
         .target(
-            name: "PrivateNearestNeighborsSearchProtobuf",
-            dependencies: ["PrivateNearestNeighborsSearch",
+            name: "PrivateNearestNeighborSearchProtobuf",
+            dependencies: ["PrivateNearestNeighborSearch",
                            "HomomorphicEncryption",
                            "HomomorphicEncryptionProtobuf",
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
@@ -151,7 +151,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "HomomorphicEncryption",
-                "PrivateNearestNeighborsSearchProtobuf",
+                "PrivateNearestNeighborSearchProtobuf",
             ],
             swiftSettings: executableSettings),
         .executableTarget(
@@ -159,7 +159,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "HomomorphicEncryptionProtobuf",
-                "PrivateNearestNeighborsSearchProtobuf",
+                "PrivateNearestNeighborSearchProtobuf",
                 "HomomorphicEncryption",
                 .product(name: "Logging", package: "swift-log"),
             ],
@@ -201,15 +201,15 @@ let package = Package(
                 "TestUtilities",
             ], swiftSettings: executableSettings),
         .testTarget(
-            name: "PrivateNearestNeighborsSearchTests",
+            name: "PrivateNearestNeighborSearchTests",
             dependencies: [
-                "PrivateNearestNeighborsSearch", "HomomorphicEncryption", "TestUtilities",
+                "PrivateNearestNeighborSearch", "HomomorphicEncryption", "TestUtilities",
             ], swiftSettings: executableSettings),
         .testTarget(
-            name: "PrivateNearestNeighborsSearchProtobufTests",
+            name: "PrivateNearestNeighborSearchProtobufTests",
             dependencies: [
-                "PrivateNearestNeighborsSearch",
-                "PrivateNearestNeighborsSearchProtobuf",
+                "PrivateNearestNeighborSearch",
+                "PrivateNearestNeighborSearchProtobuf",
             ], swiftSettings: executableSettings),
     ])
 
@@ -261,10 +261,10 @@ package.targets += [
             .product(name: "Benchmark", package: "package-benchmark"),
             "HomomorphicEncryption",
             "HomomorphicEncryptionProtobuf",
-            "PrivateNearestNeighborsSearch",
-            "PrivateNearestNeighborsSearchProtobuf",
+            "PrivateNearestNeighborSearch",
+            "PrivateNearestNeighborSearchProtobuf",
         ],
-        path: "Benchmarks/PrivateNearestNeighborsSearchBenchmark",
+        path: "Benchmarks/PrivateNearestNeighborSearchBenchmark",
         swiftSettings: benchmarkSettings,
         plugins: [
             .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),

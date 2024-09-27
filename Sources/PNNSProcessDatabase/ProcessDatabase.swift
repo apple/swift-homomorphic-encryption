@@ -30,8 +30,8 @@ import ArgumentParser
 import Foundation
 import HomomorphicEncryption
 import Logging
-import PrivateNearestNeighborsSearch
-import PrivateNearestNeighborsSearchProtobuf
+import PrivateNearestNeighborSearch
+import PrivateNearestNeighborSearchProtobuf
 
 /// Creates a new `Database` from a given path.
 /// - Parameter path: The path to the `Database` file.

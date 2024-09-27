@@ -24,17 +24,17 @@ find apple/swift_homomorphic_encryption/pir/ \
     --swift_opt=FileNaming=PathToUnderscores \
     --swift_out ../Sources/PrivateInformationRetrievalProtobuf/generated  {} \;
 
-echo "Removing PrivateNearestNeighborsSearchProtobuf swift protobuf files"
-rm ../Sources/PrivateNearestNeighborsSearchProtobuf/generated/*.pb.swift
-echo "Regenerating PrivateNearestNeighborsSearchProtobuf swift protobuf files"
+echo "Removing PrivateNearestNeighborSearchProtobuf swift protobuf files"
+rm ../Sources/PrivateNearestNeighborSearchProtobuf/generated/*.pb.swift
+echo "Regenerating PrivateNearestNeighborSearchProtobuf swift protobuf files"
 find apple/swift_homomorphic_encryption/pnns/ \
     apple/swift_homomorphic_encryption/api/shared/v1/ \
     apple/swift_homomorphic_encryption/api/pnns/v1/ \
     -name "*.proto" -exec protoc \
-    --swift_opt=ProtoPathModuleMappings=../Sources/PrivateNearestNeighborsSearchProtobuf/protobuf_module_mappings.txtpb \
+    --swift_opt=ProtoPathModuleMappings=../Sources/PrivateNearestNeighborSearchProtobuf/protobuf_module_mappings.txtpb \
     --swift_opt=Visibility=Public \
     --swift_opt=FileNaming=PathToUnderscores \
-    --swift_out ../Sources/PrivateNearestNeighborsSearchProtobuf/generated  {} \;
+    --swift_out ../Sources/PrivateNearestNeighborSearchProtobuf/generated  {} \;
 
 cd -
 echo "Done updating protobuf files"

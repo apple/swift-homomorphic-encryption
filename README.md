@@ -12,8 +12,8 @@ For more information, refer to documentation for the libraries:
 * [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption)
 * [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf)
 * [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval)
-* [PrivateNearestNeighborsSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborssearchprotobuf)
-* [PrivateNearestNeighborsSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborssearch)
+* [PrivateNearestNeighborSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborsearchprotobuf)
+* [PrivateNearestNeighborSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborsearch)
 
 and executables:
 * [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase)
@@ -63,11 +63,11 @@ The PIR implementation in Swift Homomorphic Encryption uses HE to improve upon t
 > PIR is asymmetric, meaning the client may learn keyword-value pairs not requested, as happens in trivial PIR for instance.
 > A variant of PIR, known as *symmetric PIR*, would be required to ensure the client does not learn anything about values it did not request.
 
-### Private Nearest Neighbors Search (PNNS)
-Private nearest neighbors search (PNNS) enables a client with a private vector to search for the nearest vectors in a database hosted by a server, *without the server learning the client's vector.*.
+### Private Nearest Neighbor Search (PNNS)
+Private nearest neighbor search (PNNS) enables a client with a private vector to search for the nearest vectors in a database hosted by a server, *without the server learning the client's vector.*.
 Each row in the database is a *vector* with an associated *entry identifier* and *entry metadata*.
-During the PNNS protocol, the client issues a query using its private vector, and learns the nearest neighbors according to a ``DistanceMetric``.
-Specifically, the client learns the distances between the client's query vector to the nearest neighbors, as well as the entry identifier and entry metadata of the nearest neighbors.
+During the PNNS protocol, the client issues a query using its private vector, and learns the nearest neighbor according to a ``DistanceMetric``.
+Specifically, the client learns the distances between the client's query vector to the nearest neighbor, as well as the entry identifier and entry metadata of the nearest neighbor.
 
 A trivial implementation of PNNS is to have the client issue a generic "fetch database" request, independent of its private vector.
 Then the server sends the entire database to the client, who computes the distances locally.
@@ -141,7 +141,7 @@ Additionally, developing Swift Homomorphic Encryption requires:
 * [Nick Lockwood SwiftFormat](https://github.com/nicklockwood/SwiftFormat), v0.54.0
 * [pre-commit](https://pre-commit.com)
 * [swift-format](https://github.com/apple/swift-format), v510.1.0
-* [swift-protobuf](https://github.com/apple/swift-protobuf), v1.27.0
+* [swift-protobuf](https://github.com/apple/swift-protobuf), v1.28.1
 * [SwiftLint](https://github.com/realm/SwiftLint), v0.55.1
 
 ### Building

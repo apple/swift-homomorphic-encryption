@@ -9,8 +9,8 @@ For more information, refer to documentation for the libraries:
 * [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption)
 * [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf)
 * [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval)
-* [PrivateNearestNeighborsSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborssearchprotobuf)
-* [PrivateNearestNeighborsSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborssearch)
+* [PrivateNearestNeighborSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborsearchprotobuf)
+* [PrivateNearestNeighborSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborsearch)
 
 and executables:
 * [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase)

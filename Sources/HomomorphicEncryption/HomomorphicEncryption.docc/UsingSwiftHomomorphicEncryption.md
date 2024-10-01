@@ -18,7 +18,7 @@ Then, add the following dependency in your `Package.swift`
     url: "https://github.com/apple/swift-homomorphic-encryption",
     from: "tag"),
 ```
-replacing `tag` with your chosen tag, e.g. `1.0.0-alpha.3`.
+replacing `tag` with your chosen tag, e.g. `1.0.0`.
 
 To use the `HomomorphicEncryption` library, add
 ```swift

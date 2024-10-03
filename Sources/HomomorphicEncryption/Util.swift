@@ -25,6 +25,21 @@ extension Sequence where Element: Hashable {
     }
 }
 
+// https://github.com/swiftlang/swift-evolution/blob/main/proposals/0220-count-where.md
+// introduced in swift 6
+#if swift(<6.0)
+extension Sequence {
+    @inlinable
+    package func count(where predicate: (Element) throws -> Bool) rethrows -> Int {
+        var count = 0
+        for element in self where try predicate(element) {
+            count += 1
+        }
+        return count
+    }
+}
+#endif
+
 extension FixedWidthInteger {
     // not a constant time operation
     @inlinable

@@ -53,7 +53,7 @@ extension PolyRq {
     @inlinable
     public mutating func randomizeUniform(using rng: inout some PseudoRandomNumberGenerator) {
         let chunkCount = min(degree, 1024)
-        let uint128ByteCount = MemoryLayout<UInt128>.size
+        let uint128ByteCount = MemoryLayout<DWUInt128>.size
         var randomBytes: [UInt8] = .init(repeating: 0, count: chunkCount * uint128ByteCount)
         // We can sample directly in Coeff or Eval domain
         for (rnsIndex, reduceModulus) in context.reduceModuliUInt64.enumerated() {
@@ -63,7 +63,7 @@ extension PolyRq {
                 for index in 0..<chunkCount {
                     // NOTE: for interoperability always ask rng for a UInt128 and reduces it
                     let u128 =
-                        UInt128(littleEndianBytes: randomBytes[index * uint128ByteCount..<(index + 1) *
+                        DWUInt128(littleEndianBytes: randomBytes[index * uint128ByteCount..<(index + 1) *
                                 uint128ByteCount])
                     let u64 = reduceModulus.reduce(u128)
                     self[offset + index] = T(u64)
@@ -92,7 +92,7 @@ extension PolyRq {
             // consumed for each coefficient.
             let u64: UInt64 = rng.next()
             let u32: UInt32 = rng.next()
-            let u128 = UInt128(u64) &<< 32 | UInt128(u32)
+            let u128 = DWUInt128(u64) &<< 32 | DWUInt128(u32)
 
             let val = T(reductionModulus.reduce(u128))
             for (index, modulus) in zip(rnsIndices(coeffIndex: coeffIndex), moduli) {

@@ -24,7 +24,7 @@ extension Message {
     /// - Throws: Error upon failure to initialize message.
     public init(from path: String) throws {
         if path.hasSuffix(".txtpb") {
-            try self.init(textFormatString: String(contentsOfFile: path, encoding: .utf8))
+            try self.init(textFormatString: String(contentsOfFile: path))
         } else {
             let serializedData = try Data(contentsOf: URL(fileURLWithPath: path))
             try self.init(serializedBytes: serializedData)

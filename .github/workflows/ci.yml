@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        swift: ["6.0"]
+        swift: ["5.10", "6.0"]
     name: swift ${{ matrix.swift }} tests
     steps:
     - uses: slashmo/install-swift@v0.4.0

@@ -24,23 +24,17 @@ import Foundation
 @usableFromInline
 package struct NistCtrDrbg {
     @usableFromInline static let ReseedInterval: Int64 = 1 << 48
-
     @usableFromInline static let MaxByteCountPerRequest: Int = 1 << 16
-
     /// Size of AES block.
     @usableFromInline static let BlockCount: Int = 16
-
     /// Size of AES key.
     @usableFromInline static let KeyCount: Int = 16
-
     /// Size of the seed.
     @usableFromInline static let SeedCount: Int = KeyCount + BlockCount
 
     @usableFromInline var key: SymmetricKey
-
     /// This is called `V` in the NIST specification.
-    @usableFromInline var nonce: UInt128
-
+    @usableFromInline var nonce: DWUInt128
     @usableFromInline var reseedCounter: Int64
 
     @usableFromInline var nonceBytes: [UInt8] {
@@ -76,7 +70,7 @@ package struct NistCtrDrbg {
 
         let zeroes = [UInt8](repeating: 0, count: requestedByteCount)
         let output = try AES._CTR.encrypt(zeroes, using: key, nonce: .init(nonceBytes: nonceBytes))
-        nonce &+= UInt128(requestedByteCount.dividingCeil(Self.BlockCount, variableTime: true))
+        nonce &+= DWUInt128(requestedByteCount.dividingCeil(Self.BlockCount, variableTime: true))
 
         let additionalInput = [UInt8](repeating: 0, count: Self.SeedCount)
         try ctrDrbgUpdate(providedData: additionalInput)

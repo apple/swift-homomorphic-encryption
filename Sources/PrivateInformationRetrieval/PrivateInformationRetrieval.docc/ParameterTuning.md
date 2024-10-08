@@ -18,6 +18,8 @@ PIRProcessDatabase ~/config.json
 
 ### Basic Parameters
 
+#### Sharding
+
 Sharding parameters determine the number of shards and the number of entries
 per shard. Sharding sets a hard upper bound on how much privacy the keyword PIR application
 has since the server sees the client's desired shard. However, more shards
@@ -35,9 +37,19 @@ PIRs automatically. For thin databases, smaller RLWE plaintexts in
 fits many buckets. Large plaintexts are more efficient for
 wide databases.
 
-Otherwise, the observed [noise budget](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/ciphertext/noisebudget(using:variabletime:)) is an important parameter to track. If it is low,
-then it is best to increase the ciphertext-to-plaintext modulus ratio.
-This can be done by either decreasing the plaintext modulus with the same ring dimension
+##### Configuration size
+Generally, increasing the `shardCount` will yield faster server runtime.
+However, since the client needs to know information about each shard, increasing `shardCount` also increases the size of the [PIR configuration](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_api_pir_v1_pirconfig).
+One way to reduce the PIR configuration size is to process each shard with the same configuration (see <doc:ReusingPirParameters>).
+Then, the PIR configuration will be highly compressible, yielding a smaller configuration size when transmitting over a network (that supports compression).
+
+#### Rlwe Parameters
+Different database sizes may have different optimal [RLWE parameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/predefinedrlweparameters).
+To choose the best RLWE parameters, it is import to track the observed [noise budget](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/ciphertext/noisebudget(using:variabletime:)) is an important parameter to track (e.g. by viewing logs when running [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase))
+
+If the noise budget is too low, decryption may be incorrect, yielding incorrect PIR lookups.
+To increase the noise budge, increase the ciphertext-to-plaintext modulus ratio
+by either decreasing the plaintext modulus with the same ring dimension
 or increasing the ring dimension and ciphertext modulus while keeping the
 plaintext somewhat similar. For example, if `n_4096_logq_27_28_28_logt_16`
 exhausts the noise budget, consider trying `n_4096_logq_27_28_28_logt_4`.
@@ -64,6 +76,7 @@ and
 executables.
 
 #### Thin Database
+We generate a database of 100,000 rows, each with 2 bytes.
 ```sh
 PIRGenerateDatabase \
     --output-database thinDatabase.txtpb \
@@ -100,12 +113,12 @@ runtime by 50% since each database entry now holds twice as many
 keyword-value pairs, making the database smaller for keyword PIR.
 
 #### Wide Database
-
+We generate a database of 1000 rows, each with 60,000 bytes.
 ```json
 PIRGenerateDatabase \
     --output-database wideDatabase.txtpb \
     --row-count 1000 \
-    --value-size '60000' \
+    --value-size 60000 \
     --value-type random
 ```
 

@@ -16,7 +16,7 @@ import Foundation
 import HomomorphicEncryption
 
 /// Configuration for a ``KeywordDatabase``.
-public struct KeywordPirConfig: Hashable, Codable {
+public struct KeywordPirConfig: Hashable, Codable, Sendable {
     /// Number of dimensions in the database.
     @usableFromInline let dimensionCount: Int
 

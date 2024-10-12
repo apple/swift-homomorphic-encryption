@@ -148,7 +148,7 @@ extension Sharding {
 }
 
 /// A shard of a ``KeywordDatabase``.
-public struct KeywordDatabaseShard: Hashable, Codable {
+public struct KeywordDatabaseShard: Hashable, Codable, Sendable {
     /// Identifier for the shard.
     public let shardID: String
     /// Rows in the database.
@@ -204,7 +204,7 @@ extension KeywordDatabaseShard: Collection {
 }
 
 /// Configuration for a ``KeywordDatabase``.
-public struct KeywordDatabaseConfig: Hashable, Codable {
+public struct KeywordDatabaseConfig: Hashable, Codable, Sendable {
     public let sharding: Sharding
     public let keywordPirConfig: KeywordPirConfig
 
@@ -264,7 +264,7 @@ public struct KeywordDatabase {
 /// Utilities for processing a ``KeywordDatabase``.
 public enum ProcessKeywordDatabase {
     /// Arguments for processing a keyword database.
-    public struct Arguments<Scheme: HeScheme>: Codable {
+    public struct Arguments<Scheme: HeScheme>: Codable, Sendable {
         /// Database configuration.
         public let databaseConfig: KeywordDatabaseConfig
         /// Encryption parameters.

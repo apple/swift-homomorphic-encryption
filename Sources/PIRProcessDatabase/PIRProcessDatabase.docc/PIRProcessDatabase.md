@@ -111,6 +111,45 @@ leaked to the server. Leakage is determined by the universe size divided by the
 number of shards. For example, a universe size of 1 million keywords with two
 shards means 500k keywords map to each shard.
 
+#### Sharding function
+By default we use a sharding function that look like `truncate(SHA256(keyword)) % shardCount`. However, there are cases,
+when you have two or more datasets that all use the same keyword. As an example, consider a database like:
+
+ID | Name | Portrait
+-- | ---- | --------
+1  | Abe  | <3KB blob>
+2  | Eva  | <5kb blob>
+...| ...  | ...
+
+Depending on the situation, one might want to query only specific columns. So, you transform this into two PIR datasets:
+- ID -> Name
+- ID -> Portrait
+
+When both `Name` and `Portrait` columns are required, two PIR requests with the same `ID` are made. A curious server
+could associate the requests based on timing and see two shardIndexes calculated from the same `ID`. When the shard
+sizes differ, this leaks more information about the `ID` than individual shard sizes suggest.
+
+Let’s assume the universe size for `ID` is 100K. The mapping from `ID` to `Name` is sharded into 10 shards, and the
+mapping from `ID` to `Portrait` is sharded into 57 shards. When 100K IDs are divided into 10 shards, knowing which shard
+an ID belongs to narrows the possible candidates to 10K. Similarly, for 57 shards, identifying the specific shard
+narrows the potential candidates to about 1,755. If shards for both mappings are known, the number of remaining
+candidates is reduced to about 176.
+
+Knowing the shard for both mappings significantly narrows down the possible IDs.
+
+To avoid this leakage, we use sharding based on the number of shards in other use case. We call this sharding function
+`doubleMod` and it is defined as: `(truncate(SHA256(keyword)) % otherShardCount) % shardCount`. For example, in the `ID
+-> Name` mapping, we’d use `doubleMod`: `shard_name = (truncate(SHA256(keyword)) % 57) % 10 = shard_portrait % 10`.
+Knowing both `shard_name` and `shard_portrait` doesn’t provide extra information to the server anymore.
+
+To use the `doubleMod` sharding function, add the following to the configuration file. (This example assumes that the
+other usecase has 57 shards).
+```json
+"shardingFunction" : {
+    "doubleMod" : 57
+}
+```
+
 #### Symmetric PIR
 Some PIR algorithms, such as MulPir, include an optimization which returns multiple keyword-value pairs in the PIR
 response, beyond the keyword-value pair requested by the client. However, this may be undesirable, e.g., if the database

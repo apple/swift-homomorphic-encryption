@@ -95,4 +95,15 @@ rows {
     ```
     This will generate `floor(100/15) = 6` shards, saved to `database-entry-count-0.txtpb` through `database-entry-count-5.txtpb`.
 
+4. To configure the sharding function one can use the `sharding-function` option. If using the `doubleMod` sharding function, one also has to specify `other-shard-count`. An example for using `doubleMod` follows:
+```sh
+PIRShardDatabase \
+    --input-database database.txtpb \
+    --output-database database-shard-SHARD_ID.txtpb \
+    --sharding shardCount \
+    --sharding-count 5 \
+    --sharding-function doubleMod \
+    --other-shard-count 10
+```
+
 > Note: For a more compact format, use the `.binpb` extension to load the input database, and save the sharded databases in protocol buffer binary format.

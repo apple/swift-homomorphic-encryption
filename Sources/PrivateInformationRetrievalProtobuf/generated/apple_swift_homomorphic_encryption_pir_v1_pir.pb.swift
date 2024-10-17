@@ -172,6 +172,88 @@ public struct Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: Send
   /// The number of hash functions used.
   public var numHashFunctions: UInt64 = 0
 
+  /// The sharding function to use.
+  public var shardingFunction: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction {
+    get {return _shardingFunction ?? Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction()}
+    set {_shardingFunction = newValue}
+  }
+  /// Returns true if `shardingFunction` has been explicitly set.
+  public var hasShardingFunction: Bool {return self._shardingFunction != nil}
+  /// Clears the value of `shardingFunction`. Subsequent reads from it will return its default value.
+  public mutating func clearShardingFunction() {self._shardingFunction = nil}
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _shardingFunction: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction? = nil
+}
+
+/// Configuration for the sharding function.
+public struct Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Sharding function to use.
+  public var function: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction.OneOf_Function? = nil
+
+  /// Sharding based on SHA256 hash of the keyword.
+  public var sha256: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256 {
+    get {
+      if case .sha256(let v)? = function {return v}
+      return Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256()
+    }
+    set {function = .sha256(newValue)}
+  }
+
+  /// Sharding depends on a different usecase.
+  public var doubleMod: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod {
+    get {
+      if case .doubleMod(let v)? = function {return v}
+      return Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod()
+    }
+    set {function = .doubleMod(newValue)}
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Sharding function to use.
+  public enum OneOf_Function: Equatable, Sendable {
+    /// Sharding based on SHA256 hash of the keyword.
+    case sha256(Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256)
+    /// Sharding depends on a different usecase.
+    case doubleMod(Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod)
+
+  }
+
+  public init() {}
+}
+
+/// SHA256 sharding function.
+///
+/// shard_id = (truncate(SHA256(keyword)) % shard_count).
+public struct Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+/// Double mod sharding function.
+///
+/// shard_id = (truncate(SHA256(keyword)) % other_shard_count) % shard_count.
+public struct Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Number of shards in the other usecase.
+  public var otherShardCount: UInt32 = 0
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -350,6 +432,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: SwiftPro
   public static let protoMessageName: String = _protobuf_package + ".KeywordPirParameters"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "num_hash_functions"),
+    4: .standard(proto: "sharding_function"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -359,20 +442,150 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: SwiftPro
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularUInt64Field(value: &self.numHashFunctions) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._shardingFunction) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.numHashFunctions != 0 {
       try visitor.visitSingularUInt64Field(value: self.numHashFunctions, fieldNumber: 1)
     }
+    try { if let v = self._shardingFunction {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters, rhs: Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters) -> Bool {
     if lhs.numHashFunctions != rhs.numHashFunctions {return false}
+    if lhs._shardingFunction != rhs._shardingFunction {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".PIRShardingFunction"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "sha256"),
+    2: .standard(proto: "double_mod"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256?
+        var hadOneofValue = false
+        if let current = self.function {
+          hadOneofValue = true
+          if case .sha256(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.function = .sha256(v)
+        }
+      }()
+      case 2: try {
+        var v: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod?
+        var hadOneofValue = false
+        if let current = self.function {
+          hadOneofValue = true
+          if case .doubleMod(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.function = .doubleMod(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    switch self.function {
+    case .sha256?: try {
+      guard case .sha256(let v)? = self.function else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .doubleMod?: try {
+      guard case .doubleMod(let v)? = self.function else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction, rhs: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction) -> Bool {
+    if lhs.function != rhs.function {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".PIRShardingFunctionSHA256"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    // Load everything into unknown fields
+    while try decoder.nextFieldNumber() != nil {}
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256, rhs: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".PIRShardingFunctionDoubleMod"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "other_shard_count"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.otherShardCount) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.otherShardCount != 0 {
+      try visitor.visitSingularUInt32Field(value: self.otherShardCount, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod, rhs: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod) -> Bool {
+    if lhs.otherShardCount != rhs.otherShardCount {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

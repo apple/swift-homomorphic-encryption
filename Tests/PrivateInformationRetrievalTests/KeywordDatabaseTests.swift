@@ -41,13 +41,29 @@ class KeywordDatabaseTests: XCTestCase {
     }
 
     func testShardingKnownAnswerTest() throws {
+        var shardingFunction = ShardingFunction.sha256
         func checkKeywordShard(_ keyword: KeywordValuePair.Keyword, shardCount: Int, expectedShard: Int) {
-            XCTAssertEqual(keyword.shardIndex(shardCount: shardCount), expectedShard)
+            XCTAssertEqual(shardingFunction.shardIndex(keyword: keyword, shardCount: shardCount), expectedShard)
         }
 
         checkKeywordShard([0, 0, 0, 0], shardCount: 41, expectedShard: 2)
         checkKeywordShard([0, 0, 0, 0], shardCount: 1001, expectedShard: 635)
         checkKeywordShard([1, 2, 3], shardCount: 1001, expectedShard: 903)
         checkKeywordShard([3, 2, 1], shardCount: 1001, expectedShard: 842)
+
+        shardingFunction = .doubleMod(otherShardCount: 2000)
+
+        checkKeywordShard([0, 0, 0, 0], shardCount: 41, expectedShard: 32)
+        checkKeywordShard([0, 0, 0, 0], shardCount: 1001, expectedShard: 319)
+        checkKeywordShard([1, 2, 3], shardCount: 1001, expectedShard: 922)
+        checkKeywordShard([3, 2, 1], shardCount: 1001, expectedShard: 328)
+    }
+
+    func testShardingFunctionCodable() throws {
+        for shardingFunction in [ShardingFunction.sha256, ShardingFunction.doubleMod(otherShardCount: 42)] {
+            let encoded = try JSONEncoder().encode(shardingFunction)
+            let decoded = try JSONDecoder().decode(ShardingFunction.self, from: encoded)
+            XCTAssertEqual(decoded, shardingFunction)
+        }
     }
 }

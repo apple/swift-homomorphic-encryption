@@ -20,17 +20,6 @@ import Logging
 import PrivateInformationRetrieval
 import PrivateInformationRetrievalProtobuf
 
-/// Creates a new `KeywordDatabase` from a given path.
-/// - Parameters:
-///   - path: The path to the `KeywordDatabase` file.
-///   - sharding: The sharding strategy to use.
-extension KeywordDatabase {
-    init(from path: String, sharding: Sharding) throws {
-        let database = try Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase(from: path)
-        try self.init(rows: database.native(), sharding: sharding)
-    }
-}
-
 /// The different table sizes that can be used for the PIR database.
 enum TableSizeOption: Codable, Equatable, Hashable {
     /// An `allowExpansion` option allows the database to grow as needed.
@@ -134,6 +123,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
     let rlweParameters: PredefinedRlweParameters
     let outputEvaluationKeyConfig: String?
     var sharding: Sharding?
+    var shardingFunction: ShardingFunction?
     var cuckooTableArguments: CuckooTableArguments?
     var algorithm: PirAlgorithm?
     var keyCompression: PirKeyCompressionStrategy?
@@ -168,6 +158,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
             rlweParameters: resolved.rlweParameters,
             outputEvaluationKeyConfig: resolved.outputEvaluationKeyConfig,
             sharding: resolved.sharding,
+            shardingFunction: resolved.shardingFunction,
             cuckooTableArguments: cuckooTableArguments,
             algorithm: resolved.algorithm,
             keyCompression: PirKeyCompressionStrategy.noCompression,
@@ -212,6 +203,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
             outputPirParameters: outputPirParameters,
             outputEvaluationKeyConfig: outputEvaluationKeyConfig,
             sharding: sharding ?? Sharding.shardCount(1),
+            shardingFunction: shardingFunction ?? .sha256,
             cuckooTableConfig: cuckooTableConfig,
             rlweParameters: rlweParameters,
             algorithm: algorithm ?? .mulPir,
@@ -228,6 +220,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     let outputPirParameters: String
     let outputEvaluationKeyConfig: String?
     let sharding: Sharding
+    let shardingFunction: ShardingFunction
     let cuckooTableConfig: CuckooTableConfig
     let rlweParameters: PredefinedRlweParameters
     let algorithm: PirAlgorithm
@@ -260,6 +253,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         outputPirParameters: String,
         outputEvaluationKeyConfig: String?,
         sharding: Sharding,
+        shardingFunction: ShardingFunction,
         cuckooTableConfig: CuckooTableConfig,
         rlweParameters: PredefinedRlweParameters,
         algorithm: PirAlgorithm,
@@ -272,6 +266,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         self.outputPirParameters = outputPirParameters
         self.outputEvaluationKeyConfig = outputEvaluationKeyConfig
         self.sharding = sharding
+        self.shardingFunction = shardingFunction
         self.cuckooTableConfig = cuckooTableConfig
         self.rlweParameters = rlweParameters
         self.algorithm = algorithm
@@ -332,7 +327,8 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                  cuckooTableConfig: config.cuckooTableConfig,
                                                  unevenDimensions: true,
                                                  keyCompression: config.keyCompression,
-                                                 useMaxSerializedBucketSize: config.useMaxSerializedBucketSize)
+                                                 useMaxSerializedBucketSize: config.useMaxSerializedBucketSize,
+                                                 shardingFunction: config.shardingFunction)
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
@@ -345,7 +341,10 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                                        trialsPerShard: config.trialsPerShard)
 
         let context = try Context(encryptionParameters: processArgs.encryptionParameters)
-        let keywordDatabase = try KeywordDatabase(rows: database, sharding: processArgs.databaseConfig.sharding)
+        let keywordDatabase = try KeywordDatabase(
+            rows: database,
+            sharding: processArgs.databaseConfig.sharding,
+            shardingFunction: config.shardingFunction)
         ProcessDatabase.logger.info("Sharded database into \(keywordDatabase.shards.count) shards")
 
         let shards = keywordDatabase.shards.sorted { $0.0.localizedStandardCompare($1.0) == .orderedAscending }

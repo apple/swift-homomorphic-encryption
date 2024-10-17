@@ -61,6 +61,92 @@ extension KeywordValuePair.Keyword {
     }
 }
 
+/// Sharding function that determines the shard a keyword should be in.
+public struct ShardingFunction: Hashable, Sendable {
+    /// Internal enumeration with supported cases.
+    @usableFromInline
+    package enum Internal: Hashable, Sendable {
+        case sha256
+        case doubleMod(otherShardCount: Int)
+    }
+
+    /// SHA256 based sharding.
+    ///
+    /// The shard is determined by `truncate(SHA256(keyword)) % shardCount`.
+    public static let sha256: Self = .init(.sha256)
+
+    /// Internal representation.
+    @usableFromInline package var function: Internal
+
+    init(_ function: Internal) {
+        self.function = function
+    }
+
+    /// Sharding is dependent on another usecase.
+    ///
+    /// The shard is determined by `(truncate(SHA256(keyword)) % otherShardCount) % shardCount`.
+    /// - Parameter otherShardCount: Number of shards in the other usecase.
+    /// - Returns: Sharding function that depends also on another usecase.
+    public static func doubleMod(otherShardCount: Int) -> Self {
+        .init(.doubleMod(otherShardCount: otherShardCount))
+    }
+}
+
+extension ShardingFunction {
+    /// Compute the shard index for keyword.
+    /// - Parameters:
+    ///   - keyword: The keyword.
+    ///   - shardCount: Number of shards.
+    /// - Returns: An index in the range `0..<shardCount`.
+    @inlinable
+    public func shardIndex(keyword: KeywordValuePair.Keyword, shardCount: Int) -> Int {
+        switch function {
+        case .sha256:
+            return keyword.shardIndex(shardCount: shardCount)
+        case let .doubleMod(otherShardCount):
+            let otherShardIndex = keyword.shardIndex(shardCount: otherShardCount)
+            return otherShardIndex % shardCount
+        }
+    }
+}
+
+// custom implementation
+extension ShardingFunction: Codable {
+    enum CodingKeys: String, CodingKey {
+        case sha256
+        case doubleMod
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        var allKeys = ArraySlice(container.allKeys)
+        guard let onlyKey = allKeys.popFirst(), allKeys.isEmpty else {
+            throw DecodingError.typeMismatch(
+                Self.self,
+                DecodingError.Context(
+                    codingPath: container.codingPath,
+                    debugDescription: "Invalid number of keys found, expected one."))
+        }
+        switch onlyKey {
+        case .sha256:
+            self = .sha256
+        case .doubleMod:
+            let otherShardCount = try container.decode(Int.self, forKey: .doubleMod)
+            self = .doubleMod(otherShardCount: otherShardCount)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch function {
+        case .sha256:
+            try container.encodeNil(forKey: .sha256)
+        case let .doubleMod(otherShardCount):
+            try container.encode(otherShardCount, forKey: .doubleMod)
+        }
+    }
+}
+
 /// Different ways to divide a database into disjoint shards.
 public enum Sharding: Hashable, Codable, Sendable {
     /// Divide database into as many shards as needed to average at least `entryCountPerShard` entries per shard.
@@ -232,8 +318,13 @@ public struct KeywordDatabase {
     /// - Parameters:
     ///   - rows: Rows in the database.
     ///   - sharding: How to shard the database.
+    ///   - shardingFunction: What function to use for sharding.
     /// - Throws: Error upon failure to initialize the database.
-    public init(rows: some Collection<KeywordValuePair>, sharding: Sharding) throws {
+    public init(
+        rows: some Collection<KeywordValuePair>,
+        sharding: Sharding,
+        shardingFunction: ShardingFunction = .sha256) throws
+    {
         let shardCount = switch sharding {
         case let .shardCount(shardCount): shardCount
         case let .entryCountPerShard(entryCountPerShard):
@@ -243,7 +334,7 @@ public struct KeywordDatabase {
 
         var shards: [String: KeywordDatabaseShard] = [:]
         for row in rows {
-            let shardID = String(row.keyword.shardIndex(shardCount: shardCount))
+            let shardID = String(shardingFunction.shardIndex(keyword: row.keyword, shardCount: shardCount))
             if let previousValue = shards[shardID, default: KeywordDatabaseShard(shardID: shardID, rows: [])].rows
                 .updateValue(
                     row.value,
@@ -490,7 +581,10 @@ public enum ProcessKeywordDatabase {
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
 
         let context = try Context(encryptionParameters: arguments.encryptionParameters)
-        let keywordDatabase = try KeywordDatabase(rows: rows, sharding: arguments.databaseConfig.sharding)
+        let keywordDatabase = try KeywordDatabase(
+            rows: rows,
+            sharding: arguments.databaseConfig.sharding,
+            shardingFunction: keywordConfig.shardingFunction)
 
         var processedShards = [String: ProcessedDatabaseWithParameters<Scheme>]()
         for (shardID, shardedDatabase) in keywordDatabase.shards where !shardedDatabase.isEmpty {

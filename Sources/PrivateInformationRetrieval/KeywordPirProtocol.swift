@@ -34,9 +34,12 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
     /// Otherwise the largest serialized bucket size is used instead.
     @usableFromInline let useMaxSerializedBucketSize: Bool
 
+    /// Sharding function configuration.
+    @usableFromInline let shardingFunction: ShardingFunction
+
     /// Keyword PIR parameters.
     public var parameter: KeywordPirParameter {
-        KeywordPirParameter(hashFunctionCount: cuckooTableConfig.hashFunctionCount)
+        KeywordPirParameter(hashFunctionCount: cuckooTableConfig.hashFunctionCount, shardingFunction: shardingFunction)
     }
 
     /// Initializes a ``KeywordPirConfig``.
@@ -48,13 +51,15 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
     ///   - useMaxSerializedBucketSize: Enable this to set the entry size in index PIR layer to
     /// ``CuckooTableConfig/maxSerializedBucketSize``. When not enabled, the largest serialized bucket size is used
     /// instead.
+    ///   - shardingFunction: The sharding function to use.
     /// - Throws: Error upon invalid arguments.
     public init(
         dimensionCount: Int,
         cuckooTableConfig: CuckooTableConfig,
         unevenDimensions: Bool,
         keyCompression: PirKeyCompressionStrategy,
-        useMaxSerializedBucketSize: Bool = false) throws
+        useMaxSerializedBucketSize: Bool = false,
+        shardingFunction: ShardingFunction = .sha256) throws
     {
         let validDimensionsCount = [1, 2]
         guard validDimensionsCount.contains(dimensionCount) else {
@@ -68,6 +73,7 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
         self.unevenDimensions = unevenDimensions
         self.keyCompression = keyCompression
         self.useMaxSerializedBucketSize = useMaxSerializedBucketSize
+        self.shardingFunction = shardingFunction
     }
 }
 
@@ -78,10 +84,16 @@ public struct KeywordPirParameter: Hashable, Codable, Sendable {
     /// Number of hash functions in the ``CuckooTableConfig``.
     public let hashFunctionCount: Int
 
+    /// Sharding function used.
+    public let shardingFunction: ShardingFunction
+
     /// Initializes a ``KeywordPirParameter``.
-    /// - Parameter hashFunctionCount: Number of hash functions in the ``CuckooTableConfig``.
-    public init(hashFunctionCount: Int) {
+    /// - Parameters:
+    ///   - hashFunctionCount: Number of hash functions in the ``CuckooTableConfig``.
+    ///   - shardingFunction: Sharding function that was used for sharding.
+    public init(hashFunctionCount: Int, shardingFunction: ShardingFunction = .sha256) {
         self.hashFunctionCount = hashFunctionCount
+        self.shardingFunction = shardingFunction
     }
 }
 

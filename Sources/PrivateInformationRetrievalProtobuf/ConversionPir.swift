@@ -74,7 +74,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     public func native() -> KeywordPirParameter {
-        KeywordPirParameter(hashFunctionCount: Int(numHashFunctions))
+        KeywordPirParameter(hashFunctionCount: Int(numHashFunctions), shardingFunction: shardingFunction.native())
     }
 }
 
@@ -84,6 +84,39 @@ extension KeywordPirParameter {
     public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters {
         Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters.with { params in
             params.numHashFunctions = UInt64(hashFunctionCount)
+            params.shardingFunction = shardingFunction.proto()
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    public func native() -> ShardingFunction {
+        switch function {
+        case .sha256:
+            .sha256
+        case let .doubleMod(doubleMod):
+            .doubleMod(otherShardCount: Int(doubleMod.otherShardCount))
+        case .none:
+            .sha256
+        }
+    }
+}
+
+extension ShardingFunction {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction {
+        Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction.with { shardingFunction in
+            shardingFunction.function = switch self.function {
+            case .sha256:
+                .sha256(Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256())
+            case let .doubleMod(otherShardCount: otherShardCount):
+                .doubleMod(Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod.with { doubleMod in
+                    doubleMod.otherShardCount = UInt32(otherShardCount)
+                })
+            }
         }
     }
 }

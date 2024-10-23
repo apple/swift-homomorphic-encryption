@@ -7,11 +7,18 @@ Keyword PIR database processing will transform a database in preparation for hos
 The `PIRProcessDatabase` binary performs the processing.
 
 ### Requirements
-Build the `PIRProcessDatabase` executable by running:
+To install the `PIRProcessDatabase` executable, first make sure that the `~/.swiftpm/bin` directory is on your `$PATH`. To do
+so, add the following line to your `~/.zshrc` or appropriate shell configuration file.
 ```sh
-swift build -c release --target PIRProcessDatabase
+export PATH="$HOME/.swiftpm/bin:$PATH"
 ```
-The binary will be generated in `.build/release/PIRProcessDatabase`.
+Make sure to reload it (`source ~/.zshrc`) or by restarting your terminal emulator. Then we are going to use the
+`experimental-install` feature of Swift Package Manager.
+
+Change directory to a checkout of this repository and run the following command.
+```sh
+swift package experimental-install -c release --product PIRProcessDatabase
+```
 
 ### Processing
 Keyword PIR's database processing is determined by its parameters.
@@ -31,7 +38,7 @@ e.g., `n_4096_logq_27_28_28_logt_5`.
 2. `inputDatabase` is the path to the unprocessed input database. It must be a
 serialized [Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_pir_v1_keyworddatabase).
 
-> Note: The `PIRGenerateDatabase` binary can be used to generate a sample database.
+> Note: The [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase) binary can be used to generate a sample database.
 
 3. `outputDatabase` is the path to where the processed database’s shards will be
 written. This string must contain `SHARD_ID`, unless `sharding` is

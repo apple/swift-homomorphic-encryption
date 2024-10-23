@@ -29,6 +29,9 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
     /// Strategy for ``EvaluationKey`` compression.
     @usableFromInline let keyCompression: PirKeyCompressionStrategy
 
+    /// When set to true, entry size will be equal to ``CuckooTableConfig/maxSerializedBucketSize``.
+    ///
+    /// Otherwise the largest serialized bucket size is used instead.
     @usableFromInline let useMaxSerializedBucketSize: Bool
 
     /// Keyword PIR parameters.

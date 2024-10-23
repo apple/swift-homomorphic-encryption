@@ -7,8 +7,7 @@ Database updates may lead to different PIR configurations, which need to be sync
 We can configure the database processing to yield the same PIR configuration on small database updates.
 
 ### Requirements
-This example assumes that you have the following binaries available on your `$PATH`.
-The binaries are:
+This example assumes that you have the following binaries available on your `$PATH`:
  - `PIRGenerateDatabase`
  - `PIRProcessDatabase`
 
@@ -22,8 +21,7 @@ Make sure to reload it (`source ~/.zshrc`) or by restarting your terminal emulat
 
 Change directory to a checkout of this repository and run the following command.
 ```sh
-swift package experimental-install -c release --product PIRGenerateDatabase
-swift package experimental-install -c release --product PIRProcessDatabase
+swift package experimental-install -c release --product PIRGenerateDatabase  --product PIRProcessDatabase
 ```
 
 ### Example

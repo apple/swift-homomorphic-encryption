@@ -12,16 +12,23 @@ Each resulting shard is suitable for processing with the [PIRProcessDatabase](ht
 * `entryCountPerShard` shards the database using enough shards such that the average shard contains the specified number of entries.
 
 ### Requirements
-Build the [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase) executable by running:
-```sh
-swift build -c release --target PIRProcessDatabase
-```
-The binary will be generated in `.build/release/PIRProcessDatabase`.
+This example assumes that you have the following binaries available on your `$PATH`:
+ - `PIRGenerateDatabase`
+ - `PIRShardDatabase`
+ - `PIRProcessDatabase`
 
-For the example below, you'll also need to install the
-[PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabse)
-executable in a similar manner as
-[PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase).
+The way to add these to your path is by first making sure that the `~/.swiftpm/bin` directory is on your `$PATH`. To do
+so, add the following line to your `~/.zshrc` or appropriate shell configuration file.
+```sh
+export PATH="$HOME/.swiftpm/bin:$PATH"
+```
+Make sure to reload it (`source ~/.zshrc`) or by restarting your terminal emulator. Then we are going to use the
+`experimental-install` feature of Swift Package Manager.
+
+Change directory to a checkout of this repository and run the following command.
+```sh
+swift package experimental-install -c release --product PIRGenerateDatabase --product PIRShardDatabase --product PIRProcessDatabase
+```
 
 ### Example
 

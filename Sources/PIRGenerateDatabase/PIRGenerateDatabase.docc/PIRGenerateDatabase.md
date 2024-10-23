@@ -5,16 +5,21 @@ Keyword PIR database generation
 ## Overview
 
 `PIRGenerateDatabase` is an executable which generates a sample database for testing.
-The resulting database can be processed with the `PIRProcessDatabase` executable or sharded with the `PIRShardDatabase` executable.
+The resulting database can be sharded with the [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase) executable and processed with the [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase) executable.
 
 ### Requirements
-*  Build the `PIRGenerateDatabase` executable by running:
+To install the `PIRGenerateDatabase` executable, first make sure that the `~/.swiftpm/bin` directory is on your `$PATH`. To do
+so, add the following line to your `~/.zshrc` or appropriate shell configuration file.
 ```sh
-swift build -c release --target PIRGenerateDatabase
+export PATH="$HOME/.swiftpm/bin:$PATH"
 ```
-The binary will be generated in `.build/release/PIRGenerateDatabase`.
+Make sure to reload it (`source ~/.zshrc`) or by restarting your terminal emulator. Then we are going to use the
+`experimental-install` feature of Swift Package Manager.
 
-* Install the binary, e.g., by adding it to your path.
+Change directory to a checkout of this repository and run the following command.
+```sh
+swift package experimental-install -c release --product PIRGenerateDatabase
+```
 
 ### Example
 

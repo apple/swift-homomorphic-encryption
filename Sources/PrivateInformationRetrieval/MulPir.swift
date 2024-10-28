@@ -14,6 +14,7 @@
 
 import Foundation
 import HomomorphicEncryption
+import ModularArithmetic
 import Numerics
 
 /// PIR using ciphertext-ciphertext multiplication.

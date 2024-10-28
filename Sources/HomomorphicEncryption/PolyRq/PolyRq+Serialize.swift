@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import ModularArithmetic
 
 extension PolyRq {
     @inlinable

@@ -14,6 +14,7 @@
 
 import Foundation
 import HomomorphicEncryption // This import is needed for dividingCeil
+import ModularArithmetic
 
 /// Configuration for a `CuckooTable`.
 public struct CuckooTableConfig: Hashable, Codable, Sendable {

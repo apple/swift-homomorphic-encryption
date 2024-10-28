@@ -15,6 +15,7 @@
 import Algorithms
 import Foundation
 import HomomorphicEncryption
+import ModularArithmetic
 
 extension Array2d where T == Float {
     /// A mapping from vectors to non-negative real numbers.

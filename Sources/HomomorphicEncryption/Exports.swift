@@ -12,25 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ModularArithmetic
-
-/// Protocol for a collection of ``PolyRq`` polynomials.
-public protocol PolyCollection {
-    /// Coefficient type.
-    associatedtype Scalar: ScalarType
-
-    /// Returns the polynomial's context.
-    @inlinable
-    func polyContext() -> PolyContext<Scalar>
-}
-
-extension PolyCollection {
-    /// The polynomial's degree.
-    @inlinable public var degree: Int { polyContext().degree }
-
-    /// The polynomial's scalar moduli.
-    @inlinable public var moduli: [Scalar] { polyContext().moduli }
-
-    /// The polynomial's moduli.
-    @inlinable var reduceModuli: [Modulus<Scalar>] { polyContext().reduceModuli }
-}
+@_exported import ModularArithmetic

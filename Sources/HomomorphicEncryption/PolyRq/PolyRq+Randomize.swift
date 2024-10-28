@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import ModularArithmetic
+
 extension PolyRq {
     /// Generate a polynomial with uniform random coefficients.
     /// - Parameter context: Context for the generated polynomial.

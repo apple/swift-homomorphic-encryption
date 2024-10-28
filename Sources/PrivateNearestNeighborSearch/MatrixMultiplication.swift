@@ -15,6 +15,7 @@
 import Algorithms
 import Foundation
 import HomomorphicEncryption
+import ModularArithmetic
 
 /// Pre-computed values for matrix-vector multiplication using baby-step, giant-step algorithm.
 ///

@@ -12,25 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ModularArithmetic
+import HomomorphicEncryption
 
-/// Protocol for a collection of ``PolyRq`` polynomials.
-public protocol PolyCollection {
-    /// Coefficient type.
-    associatedtype Scalar: ScalarType
-
-    /// Returns the polynomial's context.
-    @inlinable
-    func polyContext() -> PolyContext<Scalar>
-}
-
-extension PolyCollection {
-    /// The polynomial's degree.
-    @inlinable public var degree: Int { polyContext().degree }
-
-    /// The polynomial's scalar moduli.
-    @inlinable public var moduli: [Scalar] { polyContext().moduli }
-
-    /// The polynomial's moduli.
-    @inlinable var reduceModuli: [Modulus<Scalar>] { polyContext().reduceModuli }
-}
+let m = Modulus(modulus: UInt64(13), variableTime: true)
+/// merely ensuring `Modulus`  type is available when importing
+/// `HomomorphicEncryption`
+print("m", m)
+precondition(m.multiplyMod(5, 10) == 11)
+precondition(UInt64(5).addMod(10, modulus: m.modulus) == 2)
+precondition(m.dividingFloor(dividend: UInt64(100)) == 7)

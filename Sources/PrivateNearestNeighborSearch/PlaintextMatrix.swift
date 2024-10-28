@@ -14,6 +14,7 @@
 
 import Algorithms
 import HomomorphicEncryption
+import ModularArithmetic
 
 /// Different algorithms for packing a matrix of scalar values into plaintexts / ciphertexts.
 public enum MatrixPacking: Codable, Equatable, Hashable, Sendable {

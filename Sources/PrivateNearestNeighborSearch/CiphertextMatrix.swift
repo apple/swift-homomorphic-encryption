@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import HomomorphicEncryption
+import ModularArithmetic
 
 /// Stores a matrix of scalars as ciphertexts.
 public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {

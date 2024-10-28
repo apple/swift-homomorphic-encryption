@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import ModularArithmetic
 
 /// Standard deviation for error polynomial in RLWE samples.
 public enum ErrorStdDev: Hashable, Codable, Sendable {

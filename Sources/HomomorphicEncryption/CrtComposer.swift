@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import ModularArithmetic
+
 /// Performs Chinese remainder theorem (CRT) composition of coefficients.
 @usableFromInline
 package struct CrtComposer<T: ScalarType>: Sendable {

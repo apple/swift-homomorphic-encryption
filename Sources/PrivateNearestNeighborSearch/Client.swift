@@ -14,6 +14,7 @@
 
 import Foundation
 import HomomorphicEncryption
+import ModularArithmetic
 
 /// Private nearest neighbor search client.
 public struct Client<Scheme: HeScheme> {

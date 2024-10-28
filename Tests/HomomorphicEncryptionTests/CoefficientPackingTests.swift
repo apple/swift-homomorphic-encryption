@@ -13,6 +13,7 @@
 // limitations under the License.
 
 @testable import HomomorphicEncryption
+import ModularArithmetic
 import XCTest
 
 class CoefficientPackingTests: XCTestCase {

@@ -32,6 +32,9 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
+            name: "ModularArithmetic",
+            targets: ["ModularArithmetic"]),
+        .library(
             name: "HomomorphicEncryption",
             targets: ["HomomorphicEncryption"]),
         .library(
@@ -68,6 +71,10 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
+            name: "ModularArithmetic",
+            dependencies: [],
+            swiftSettings: librarySettings),
+        .target(
             name: "CUtil",
             dependencies: [],
             path: "Sources/CUtil",
@@ -79,6 +86,7 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 "CUtil",
+                "ModularArithmetic",
             ],
             swiftSettings: librarySettings),
         .target(

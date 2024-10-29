@@ -13,7 +13,8 @@
 // limitations under the License.
 
 // Benchmarks for PolyRq functions.
-// These benchmarks can be triggered with `swift package benchmark --target PolyBenchmark`
+// These benchmarks can be triggered with
+// swift package benchmark --target PolyBenchmark
 
 import Benchmark
 import HomomorphicEncryption

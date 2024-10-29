@@ -22,31 +22,8 @@ public protocol SignedScalarType: ModularArithmetic.CoreSignedScalarType, Codabl
 extension UInt32: ScalarType {}
 extension Int32: SignedScalarType {}
 
-extension Int64: CoreSignedScalarType {}
-extension Int64: SignedScalarType {
-    public typealias UnsignedScalar = UInt64
-}
-
-extension UInt64: CoreScalarType {}
-extension UInt64: ScalarType {
-    public typealias DoubleWidth = DoubleWidthUInt<UInt64>
-    public typealias SignedScalar = Int64
-
-    public static var rnsCorrectionFactor: UInt64 {
-        // ~1000'th largest prime less than 2**62,
-        // but also NTT-unfriendly for all N
-        (Self(1) << 62) - 40797
-    }
-
-    public static var mTilde: UInt64 {
-        Self(1) << 32
-    }
-}
-
-extension DWUInt128: DoubleWidthType {
-    /// Single-width scalar, with bit-width half that of the ``DoubleWidthType``.
-    public typealias Scalar = UInt64
-}
+extension Int64: SignedScalarType {}
+extension UInt64: ScalarType {}
 
 extension FixedWidthInteger {
     /// Big endian byte representation of this value.

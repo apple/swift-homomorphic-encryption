@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// Scalar type for ``PolyRq`` polynomial coefficients.
+/// Scalar type.
 public protocol CoreScalarType: FixedWidthInteger, UnsignedInteger, Sendable
     where Self.Magnitude: Sendable
 {
@@ -93,31 +93,7 @@ extension CoreSignedScalarType {
     }
 }
 
-extension Int32: CoreSignedScalarType {
-    public typealias UnsignedScalar = UInt32
-}
-
-extension UInt64: DoubleWidthType {
-    /// Single-width scalar, with bit-width half that of the ``DoubleWidthType``.
-    public typealias Scalar = UInt32
-}
-
-extension UInt32: CoreScalarType {
-    public typealias DoubleWidth = UInt64
-    public typealias SignedScalar = Int32
-
-    public static var rnsCorrectionFactor: UInt32 {
-        // ~1000'th largest prime less than 2**30,
-        // but also NTT-unfriendly for N > 8
-        (Self(1) << 30) - 20405
-    }
-
-    public static var mTilde: UInt32 {
-        Self(1) << 16
-    }
-}
-
-/// Double-width scalar type which can hold a product of two ``ScalarType`` multiplicands.
+/// Double-width scalar type which can hold a product of two ``CoreScalarType`` multiplicands.
 public protocol DoubleWidthType: FixedWidthInteger, UnsignedInteger {
     /// Single-width scalar, with bit-width half that of the ``DoubleWidthType``.
     associatedtype Scalar: CoreScalarType
@@ -497,5 +473,53 @@ extension FixedWidthInteger {
             result += mod
         }
         return result
+    }
+}
+
+// MARK: Conformances
+
+extension Int32: CoreSignedScalarType {
+    public typealias UnsignedScalar = UInt32
+}
+
+extension Int64: CoreSignedScalarType {
+    public typealias UnsignedScalar = UInt64
+}
+
+extension UInt64: DoubleWidthType {
+    public typealias Scalar = UInt32
+}
+
+extension UInt128: DoubleWidthType {
+    public typealias Scalar = UInt64
+}
+
+extension UInt32: CoreScalarType {
+    public typealias DoubleWidth = UInt64
+    public typealias SignedScalar = Int32
+
+    public static var rnsCorrectionFactor: UInt32 {
+        // ~1000'th largest prime less than 2**30,
+        // but also NTT-unfriendly for N > 8
+        (Self(1) << 30) - 20405
+    }
+
+    public static var mTilde: UInt32 {
+        Self(1) << 16
+    }
+}
+
+extension UInt64: CoreScalarType {
+    public typealias DoubleWidth = UInt128
+    public typealias SignedScalar = Int64
+
+    public static var rnsCorrectionFactor: UInt64 {
+        // ~1000'th largest prime less than 2**62,
+        // but also NTT-unfriendly for all N
+        (Self(1) << 62) - 40797
+    }
+
+    public static var mTilde: UInt64 {
+        Self(1) << 32
     }
 }

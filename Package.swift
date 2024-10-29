@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 // Remember to update CI if changing
 
@@ -17,9 +17,7 @@
 // limitations under the License.
 import PackageDescription
 
-let librarySettings: [SwiftSetting] = [
-    .enableExperimentalFeature("StrictConcurrency"),
-]
+let librarySettings: [SwiftSetting] = []
 
 let executableSettings: [SwiftSetting] =
     librarySettings +
@@ -282,6 +280,8 @@ package.targets += [
 ]
 
 // Set the minimum macOS version for the package
+#if canImport(Darwin)
 package.platforms = [
-    .macOS(.v14), // Constrained by Swift 5.10 support for Xcode (https://developer.apple.com/support/xcode/)
+    .macOS(.v15), // Constrained by UInt128 support
 ]
+#endif

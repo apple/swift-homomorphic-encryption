@@ -717,6 +717,5 @@ extension DoubleWidthUInt: UnsignedInteger where Base: FixedWidthInteger & Unsig
     }
 }
 
-@usableFromInline typealias DWUInt128 = DoubleWidthUInt<UInt64>
 @usableFromInline typealias QuadWidth<T: FixedWidthInteger & UnsignedInteger> = DoubleWidthUInt<DoubleWidthUInt<T>>
 @usableFromInline typealias OctoWidth<T: FixedWidthInteger & UnsignedInteger> = DoubleWidthUInt<QuadWidth<T>>

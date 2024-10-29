@@ -13,7 +13,8 @@
 // limitations under the License.
 
 // Benchmarks for Pir functions.
-// These benchmarks can be triggered with `swift package benchmark --target PIRBenchmark`
+// These benchmarks can be triggered with
+// swift package benchmark --target PIRBenchmark
 
 import Benchmark
 import Foundation

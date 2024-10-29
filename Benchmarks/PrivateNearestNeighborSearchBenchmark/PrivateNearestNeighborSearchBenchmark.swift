@@ -13,7 +13,8 @@
 // limitations under the License.
 
 // Benchmarks for Pnns functions.
-// These benchmarks can be triggered with `swift package benchmark --target PNNSBenchmark`
+// These benchmarks can be triggered with
+// swift package benchmark --target PNNSBenchmark
 
 import Benchmark
 import Foundation

@@ -76,14 +76,6 @@ While this *trivial PNNS* protocol satisfies the privacy and correctness require
 The PNNS implementation in Swift Homomorphic Encryption uses homomorphic encryption to improve upon the trivial PNNS protocol.
 
 ## Using Swift Homomorphic Encryption
-Swift Homomorphic Encryption requires:
-* 64-bit processor with little-endian memory representation
-* macOS or Linux operating system
-* [Swift](https://www.swift.org/) version 6.0 or later
-
-> [!NOTE]
-> Swift Homomorphic Encryption relies on [SystemRandomNumberGenerator](https://developer.apple.com/documentation/swift/systemrandomnumbergenerator) as a cryptographically secure random number generator, which may have platform-dependent behavior.
-
 Swift Homomorphic Encryption is available as a Swift Package Manager package.
 To use Swift Homomorphic Encryption, choose a [tag](https://github.com/apple/swift-homomorphic-encryption/tags).
 Then, add the following dependency in your `Package.swift`
@@ -121,22 +113,43 @@ You can then add
  ```
 to your Swift code to access the functionality in the `HomomorphicEncryption` library.
 
-See the example [Snippets](https://github.com/apple/swift-homomorphic-encryption/tree/main/Snippets) for examples of using `HomomorphicEncryption`.
-To run the `EncryptionParametersSnippet` example, run
-```
-swift run -c release EncryptionParametersSnippet
-```
-
 > [!NOTE]
 > If you are using Swift Homomorphic Encryption for research, please cite using the
 > [CITATION.cff](CITATION.cff) file.
 
+#### Examples
+See the [Snippets](https://github.com/apple/swift-homomorphic-encryption/tree/main/Snippets) for examples using `HomomorphicEncryption`.
+To run the `EncryptionParametersSnippet`, run
+```
+swift run -c release EncryptionParametersSnippet
+```
+
+### Supported Platforms
+Swift Homomorphic Encryption aims to support all of the platforms where Swift is supported.
+
+> [!NOTE]
+> Swift Homomorphic Encryption relies on [SystemRandomNumberGenerator](https://developer.apple.com/documentation/swift/systemrandomnumbergenerator) as a cryptographically secure random number generator, which may have platform-dependent behavior.
+
+### Swift / Xcode versions
+The following table maps Swift Homomorphic Encryption packgae versions to required Swift and Xcode versions:
+
+Package version | Swift version | Xcode version
+----------------|---------------|-----------------------------------------
+1.0.x           | >= Swift 5.10 | >= Xcode 15.3
+main            | >= Swift 6.0  | >= Xcode 16.1
+
+### Source Stability
+Swift Homomorphic Encryption follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). Source breaking changes to the public API can only land in a new major version, with the following exception:
+
+* Adding a new `case` to a public `enum` type will require only a minor version bump. For instance, we may add a new `enum` to an [HeError](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/documentation/homomorphicencryption/heerror). To avoid breaking source code, add a  `default` case when adding a `switch` on the enum values.
+
+Future minor versions of the package may introduce changes to these rules as needed.
+
+We'd like this package to quickly embrace Swift language and toolchain improvements that are relevant to its mandate. Accordingly, from time to time, we expect that new versions of this package will require clients to upgrade to a more recent Swift toolchain release. Requiring a new Swift release will only require a minor version bump.
+
 ## Developing Swift Homomorphic Encryption
 ### Dependencies
-Building Swift Homomorphic Encryption requires:
-* [Swift](https://www.swift.org/) version 5.10 or later
-
-Additionally, developing Swift Homomorphic Encryption requires:
+Developing Swift Homomorphic Encryption requires:
 * [Nick Lockwood SwiftFormat](https://github.com/nicklockwood/SwiftFormat), v0.54.0
 * [pre-commit](https://pre-commit.com)
 * [swift-format](https://github.com/apple/swift-format), v510.1.0

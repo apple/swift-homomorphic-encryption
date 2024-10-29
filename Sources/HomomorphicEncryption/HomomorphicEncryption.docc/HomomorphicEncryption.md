@@ -44,4 +44,5 @@ This scheme can be configured to support post-quantum 128-bit security.
 <!-- Snippets are defined in a different "virtual module", requiring manually linking articles here. -->
 ### Articles
 - <doc:DataFormats>
+- <doc:Examples>
 - <doc:UsingSwiftHomomorphicEncryption>

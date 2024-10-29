@@ -75,8 +75,8 @@ extension PirError: LocalizedError {
             """
         case let .invalidDatabaseDuplicateKeyword(keyword, oldValue, newValue):
             """
-            Invalid database: Duplicate values \(oldValue), \(newValue) \
-            for keyword \(keyword)
+            Invalid database: Duplicate values '\(oldValue.utf8OrBase64())', '\(newValue.utf8OrBase64())' \
+            for keyword '\(keyword.utf8OrBase64())'
             """
         case let .invalidDatabasePlaintextCount(plaintextCount, expected):
             "Invalid database: Database has \(plaintextCount) plaintexts, expected \(expected)"

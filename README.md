@@ -131,7 +131,7 @@ Swift Homomorphic Encryption aims to support all of the platforms where Swift is
 > Swift Homomorphic Encryption relies on [SystemRandomNumberGenerator](https://developer.apple.com/documentation/swift/systemrandomnumbergenerator) as a cryptographically secure random number generator, which may have platform-dependent behavior.
 
 ### Swift / Xcode versions
-The following table maps Swift Homomorphic Encryption packgae versions to required Swift and Xcode versions:
+The following table maps Swift Homomorphic Encryption package versions to required Swift and Xcode versions:
 
 Package version | Swift version | Xcode version
 ----------------|---------------|-----------------------------------------
@@ -187,7 +187,7 @@ The build products will be in the `.build/debug/` folder.
 ### Installing
 To install Swift Homomorphic Encryption targets,  use the `experimental-install` feature of Swift Package Manager.
 
-First ensure sure that the `~/.swiftpm/bin` directory is on your `$PATH`.
+First ensure that the `~/.swiftpm/bin` directory is on your `$PATH`.
 For example, if using the `zsh` shell, add the following line to your `~/.zshrc`
 ```sh
 export PATH="$HOME/.swiftpm/bin:$PATH"

@@ -481,7 +481,8 @@ extension ProcessKeywordDatabase.ShardValidationResult {
             label: "keys"
         )
         descriptionDict["response size"] = try sizeString(byteCount: response.size(),
-                                                          count: response.ciphertexts.count, label: "ciphertexts")
+                                                          count: response.ciphertexts.flatMap { $0 }.count,
+                                                          label: "ciphertexts")
         descriptionDict["noise budget"] = String(format: "%.01f", noiseBudget)
 
         let runtimeString = computeTimes.sorted().map { runtime in

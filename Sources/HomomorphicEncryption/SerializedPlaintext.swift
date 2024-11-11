@@ -37,6 +37,7 @@ extension Plaintext where Format == Coeff {
     ///   - serialized: Serialized plaintext.
     ///   - context: Context to associate with the plaintext.
     /// - Throws: Error upon failure to deserialize.
+    @inlinable
     public init(deserialize serialized: SerializedPlaintext, context: Context<Scheme>) throws {
         self.context = context
         self.poly = try PolyRq(deserialize: serialized.poly, context: context.plaintextContext)
@@ -51,6 +52,7 @@ extension Plaintext where Format == Eval {
     ///   - moduliCount: Optional number of moduli to associate with the plaintext. If not set, the plaintext will have
     /// the top-level ciphertext context with all the moduli.
     /// - Throws: Error upon failure to deserialize.
+    @inlinable
     public init(deserialize serialized: SerializedPlaintext, context: Context<Scheme>, moduliCount: Int? = nil) throws {
         self.context = context
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count

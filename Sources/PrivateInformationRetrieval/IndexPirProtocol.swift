@@ -166,6 +166,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - path: Filepath storing serialized plaintexts.
     ///   - context: Context for HE computation.
     /// - Throws: Error upon failure to load the database.
+    @inlinable
     public init(from path: String, context: Context<Scheme>) throws {
         let loadedFile = try [UInt8](Data(contentsOf: URL(fileURLWithPath: path)))
         try self.init(from: loadedFile, context: context)
@@ -176,6 +177,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - buffer: Serialized plaintexts.
     ///   - context: Context for HE computation.
     /// - Throws: Error upon failure to deserialize.
+    @inlinable
     public init(from buffer: [UInt8], context: Context<Scheme>) throws {
         var offset = buffer.startIndex
         let versionNumber = buffer[offset]

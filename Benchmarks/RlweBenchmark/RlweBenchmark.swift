@@ -412,6 +412,66 @@ func ciphertextSwapRowsBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void
     }
 }
 
+// MARK: Serialization
+
+func coeffPlaintextSerializeBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    {
+        benchmark("CoeffPlaintextSerialize", Scheme.self) { benchmark in
+            let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
+            let plaintext = benchmarkContext.coeffPlaintext
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                blackHole(plaintext.serialize())
+            }
+        }
+    }
+}
+
+func evalPlaintextSerializeBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    {
+        benchmark("EvalPlaintextSerialize", Scheme.self) { benchmark in
+            let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
+            let plaintext = benchmarkContext.evalPlaintext
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                blackHole(plaintext.serialize())
+            }
+        }
+    }
+}
+
+func coeffPlaintextDeserializeBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    {
+        benchmark("CoeffPlaintextDeserialize", Scheme.self) { benchmark in
+            let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
+            let plaintext = benchmarkContext.coeffPlaintext
+            let serialized = plaintext.serialize()
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = Scheme.CoeffPlaintext(
+                    deserialize: serialized,
+                    context: benchmarkContext.context))
+            }
+        }
+    }
+}
+
+func evalPlaintextDeserializeBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    {
+        benchmark("EvalPlaintextDeserialize", Scheme.self) { benchmark in
+            let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
+            let plaintext = benchmarkContext.evalPlaintext
+            let serialized = plaintext.serialize()
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = Scheme.EvalPlaintext(
+                    deserialize: serialized,
+                    context: benchmarkContext.context))
+            }
+        }
+    }
+}
+
 func ciphertextSerializeFullBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
     {
         benchmark("CiphertextSerializeFull", Scheme.self) { benchmark in
@@ -554,6 +614,16 @@ nonisolated(unsafe) let benchmarks: () -> Void = {
     ciphertextSwapRowsBenchmark(Bfv<UInt64>.self)()
 
     // Serialization
+    coeffPlaintextSerializeBenchmark(Bfv<UInt32>.self)()
+    coeffPlaintextSerializeBenchmark(Bfv<UInt64>.self)()
+    evalPlaintextSerializeBenchmark(Bfv<UInt32>.self)()
+    evalPlaintextSerializeBenchmark(Bfv<UInt64>.self)()
+
+    coeffPlaintextDeserializeBenchmark(Bfv<UInt32>.self)()
+    coeffPlaintextDeserializeBenchmark(Bfv<UInt64>.self)()
+    evalPlaintextDeserializeBenchmark(Bfv<UInt32>.self)()
+    evalPlaintextDeserializeBenchmark(Bfv<UInt64>.self)()
+
     ciphertextSerializeFullBenchmark(Bfv<UInt32>.self)()
     ciphertextSerializeFullBenchmark(Bfv<UInt64>.self)()
     ciphertextSerializeSeedBenchmark(Bfv<UInt32>.self)()

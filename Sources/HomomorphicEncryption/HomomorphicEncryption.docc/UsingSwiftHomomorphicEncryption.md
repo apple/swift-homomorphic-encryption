@@ -48,7 +48,7 @@ to your Swift code to access the functionality in the `HomomorphicEncryption` li
 
 > Note:
 > If you are using Swift Homomorphic Encryption for research, please cite using the
-> [CITATION.cff](https://github.com/apple/swift-homomorphic-encryption/blob/main/CITATION.cff) file.
+> [CITATION.cff](https://github.com/apple/swift-homomorphic-encryption/blob/release/1.0/CITATION.cff) file.
 
 ### Examples
 We give a few examples for how to use ``HomomorphicEncryption``.

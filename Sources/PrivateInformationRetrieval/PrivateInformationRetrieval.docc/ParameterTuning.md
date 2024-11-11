@@ -10,7 +10,7 @@ Notably, Keyword PIR's server runtime is linear in the shard size,
 independent of the keyword size, and dependent on the value size.
 Large values, such as images, should be compressed when possible.
 Parameters are read in by a JSON file as described in-detail in
-[PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase) documentation.
+[PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pirprocessdatabase) documentation.
 
 ```sh
 PIRProcessDatabase ~/config.json
@@ -35,7 +35,7 @@ PIRs automatically. For thin databases, smaller RLWE plaintexts in
 fits many buckets. Large plaintexts are more efficient for
 wide databases.
 
-Otherwise, the observed [noise budget](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/ciphertext/noisebudget(using:variabletime:)) is an important parameter to track. If it is low,
+Otherwise, the observed [noise budget](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/homomorphicencryption/ciphertext/noisebudget(using:variabletime:)) is an important parameter to track. If it is low,
 then it is best to increase the ciphertext-to-plaintext modulus ratio.
 This can be done by either decreasing the plaintext modulus with the same ring dimension
 or increasing the ring dimension and ciphertext modulus while keeping the
@@ -58,9 +58,9 @@ larger computation times.
 ### Examples
 
 The examples rely on the
-[PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase)
+[PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pirgeneratedatabase)
 and
-[PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase)
+[PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pirprocessdatabase)
 executables.
 
 #### Thin Database

@@ -84,7 +84,7 @@ There are a few ways to find a good `bucketCount`:
   If the processing throws a `PirError.failedToConstructCuckooTable` or logs `Failed to construct Cuckoo table`, this is an indication the chosen bucket count was too small.
   Choose larger `bucketCounts` until the processing works.
 
-* Add a callback to [ProcessKeywordDatabase.processShard](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval/processkeyworddatabase/processshard(shard:with:)).
+* Add a callback to [ProcessKeywordDatabase.processShard](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/privateinformationretrieval/processkeyworddatabase/processshard(shard:with:)).
   This callback can be used to report the bucketCount after the cuckoo table was created.
 A sample callback is
 ```swift

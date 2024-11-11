@@ -8,21 +8,21 @@ Applications of Swift Homomorphic Encryption include:
 ## Overview
 Swift Homomorphic Encryption is a collection of libraries and executables.
 For more information, refer to documentation for the libraries:
-* [HomomorphicEncryptionProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryptionprotobuf)
-* [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption)
-* [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf)
-* [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval)
-* [PrivateNearestNeighborSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborsearchprotobuf)
-* [PrivateNearestNeighborSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborsearch)
+* [HomomorphicEncryptionProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/homomorphicencryptionprotobuf)
+* [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/homomorphicencryption)
+* [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/privateinformationretrievalprotobuf)
+* [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/privateinformationretrieval)
+* [PrivateNearestNeighborSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/privatenearestneighborsearchprotobuf)
+* [PrivateNearestNeighborSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/privatenearestneighborsearch)
 
 and executables:
-* [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirgeneratedatabase)
-* [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirprocessdatabase)
-* [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase)
-* [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsgeneratedatabase)
-* [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsprocessdatabase)
+* [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pirgeneratedatabase)
+* [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pirprocessdatabase)
+* [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pirsharddatabase)
+* [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pnnsgeneratedatabase)
+* [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pnnsprocessdatabase)
 
-The documentation is hosted on the [Swift Package Index](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/documentation/homomorphicencryption).
+The documentation is hosted on the [Swift Package Index](https://swiftpackageindex.com/apple/swift-homomorphic-encryption).
 
 ## Background
 ### Homomorphic Encryption (HE)
@@ -121,7 +121,7 @@ You can then add
  ```
 to your Swift code to access the functionality in the `HomomorphicEncryption` library.
 
-See the example [Snippets](https://github.com/apple/swift-homomorphic-encryption/tree/main/Snippets) for examples of using `HomomorphicEncryption`.
+See the example [Snippets](https://github.com/apple/swift-homomorphic-encryption/tree/release/1.0/Snippets) for examples of using `HomomorphicEncryption`.
 To run the `EncryptionParametersSnippet` example, run
 ```
 swift run -c release EncryptionParametersSnippet

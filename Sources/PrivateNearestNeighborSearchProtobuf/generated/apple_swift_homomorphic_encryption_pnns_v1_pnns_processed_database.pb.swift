@@ -35,13 +35,13 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-/// Serialized pre-processed nearest neighbors database.
+/// Serialized pre-processed nearest neighbor database.
 public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Pre-computed values for the nearest neighbors computation, one per plaintext CRT modulus.
+  /// Pre-computed values for the nearest neighbor search, one per plaintext CRT modulus.
   public var plaintextMatrices: [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedPlaintextMatrix] = []
 
   /// Unique identifier for each entry in the database.

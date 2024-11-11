@@ -99,42 +99,119 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: @unchecked 
 
   /// Encryption parameters.
   public var encryptionParameters: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
-    get {return _encryptionParameters ?? HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters()}
-    set {_encryptionParameters = newValue}
+    get {return _storage._encryptionParameters ?? HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters()}
+    set {_uniqueStorage()._encryptionParameters = newValue}
   }
   /// Returns true if `encryptionParameters` has been explicitly set.
-  public var hasEncryptionParameters: Bool {return self._encryptionParameters != nil}
+  public var hasEncryptionParameters: Bool {return _storage._encryptionParameters != nil}
   /// Clears the value of `encryptionParameters`. Subsequent reads from it will return its default value.
-  public mutating func clearEncryptionParameters() {self._encryptionParameters = nil}
+  public mutating func clearEncryptionParameters() {_uniqueStorage()._encryptionParameters = nil}
 
-  /// Configuration for each shard.
-  public var shardConfigs: [Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig] = []
+  /// Configuration for each shard; can be overridden by `pir_shard_configs` (field 10).
+  public var shardConfigs: [Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig] {
+    get {return _storage._shardConfigs}
+    set {_uniqueStorage()._shardConfigs = newValue}
+  }
 
   /// Parameters specific to KeywordPIR.
   public var keywordPirParams: Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters {
-    get {return _keywordPirParams ?? Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters()}
-    set {_keywordPirParams = newValue}
+    get {return _storage._keywordPirParams ?? Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters()}
+    set {_uniqueStorage()._keywordPirParams = newValue}
   }
   /// Returns true if `keywordPirParams` has been explicitly set.
-  public var hasKeywordPirParams: Bool {return self._keywordPirParams != nil}
+  public var hasKeywordPirParams: Bool {return _storage._keywordPirParams != nil}
   /// Clears the value of `keywordPirParams`. Subsequent reads from it will return its default value.
-  public mutating func clearKeywordPirParams() {self._keywordPirParams = nil}
+  public mutating func clearKeywordPirParams() {_uniqueStorage()._keywordPirParams = nil}
 
   /// Server-side PIR algorithm.
-  public var algorithm: Apple_SwiftHomomorphicEncryption_Pir_V1_PirAlgorithm = .aclsPir
+  public var algorithm: Apple_SwiftHomomorphicEncryption_Pir_V1_PirAlgorithm {
+    get {return _storage._algorithm}
+    set {_uniqueStorage()._algorithm = newValue}
+  }
 
   /// Maximum number of queries allowed in a single request.
-  public var batchSize: UInt64 = 0
+  public var batchSize: UInt64 {
+    get {return _storage._batchSize}
+    set {_uniqueStorage()._batchSize = newValue}
+  }
 
   /// Hash of EvaluationKeyConfig.
-  public var evaluationKeyConfigHash: Data = Data()
+  public var evaluationKeyConfigHash: Data {
+    get {return _storage._evaluationKeyConfigHash}
+    set {_uniqueStorage()._evaluationKeyConfigHash = newValue}
+  }
+
+  /// Configuration for each shard; overrides `shard_configs` (field 2).
+  public var pirShardConfigs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs {
+    get {return _storage._pirShardConfigs ?? Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs()}
+    set {_uniqueStorage()._pirShardConfigs = newValue}
+  }
+  /// Returns true if `pirShardConfigs` has been explicitly set.
+  public var hasPirShardConfigs: Bool {return _storage._pirShardConfigs != nil}
+  /// Clears the value of `pirShardConfigs`. Subsequent reads from it will return its default value.
+  public mutating func clearPirShardConfigs() {_uniqueStorage()._pirShardConfigs = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
 
-  fileprivate var _encryptionParameters: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters? = nil
-  fileprivate var _keywordPirParams: Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters? = nil
+  fileprivate var _storage = _StorageClass.defaultInstance
+}
+
+/// Configuration for PIR shards.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Different shard configuration formats.
+  public var shardConfigs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs.OneOf_ShardConfigs? = nil
+
+  /// Repeated shard configuration.
+  public var repeatedShardConfig: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig {
+    get {
+      if case .repeatedShardConfig(let v)? = shardConfigs {return v}
+      return Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig()
+    }
+    set {shardConfigs = .repeatedShardConfig(newValue)}
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Different shard configuration formats.
+  public enum OneOf_ShardConfigs: Equatable, Sendable {
+    /// Repeated shard configuration.
+    case repeatedShardConfig(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig)
+
+  }
+
+  public init() {}
+}
+
+/// Every shard configuration is the same.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Shard configuration for all the shards.
+  public var shardConfig: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig {
+    get {return _shardConfig ?? Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig()}
+    set {_shardConfig = newValue}
+  }
+  /// Returns true if `shardConfig` has been explicitly set.
+  public var hasShardConfig: Bool {return self._shardConfig != nil}
+  /// Clears the value of `shardConfig`. Subsequent reads from it will return its default value.
+  public mutating func clearShardConfig() {self._shardConfig = nil}
+
+  /// Number of shards.
+  public var shardCount: UInt32 = 0
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _shardConfig: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig? = nil
 }
 
 /// PIR Request.
@@ -292,6 +369,125 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
     4: .same(proto: "algorithm"),
     5: .standard(proto: "batch_size"),
     6: .standard(proto: "evaluation_key_config_hash"),
+    10: .standard(proto: "pir_shard_configs"),
+  ]
+
+  fileprivate class _StorageClass {
+    var _encryptionParameters: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters? = nil
+    var _shardConfigs: [Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig] = []
+    var _keywordPirParams: Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters? = nil
+    var _algorithm: Apple_SwiftHomomorphicEncryption_Pir_V1_PirAlgorithm = .aclsPir
+    var _batchSize: UInt64 = 0
+    var _evaluationKeyConfigHash: Data = Data()
+    var _pirShardConfigs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs? = nil
+
+    #if swift(>=5.10)
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
+    #else
+      static let defaultInstance = _StorageClass()
+    #endif
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _encryptionParameters = source._encryptionParameters
+      _shardConfigs = source._shardConfigs
+      _keywordPirParams = source._keywordPirParams
+      _algorithm = source._algorithm
+      _batchSize = source._batchSize
+      _evaluationKeyConfigHash = source._evaluationKeyConfigHash
+      _pirShardConfigs = source._pirShardConfigs
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._encryptionParameters) }()
+        case 2: try { try decoder.decodeRepeatedMessageField(value: &_storage._shardConfigs) }()
+        case 3: try { try decoder.decodeSingularMessageField(value: &_storage._keywordPirParams) }()
+        case 4: try { try decoder.decodeSingularEnumField(value: &_storage._algorithm) }()
+        case 5: try { try decoder.decodeSingularUInt64Field(value: &_storage._batchSize) }()
+        case 6: try { try decoder.decodeSingularBytesField(value: &_storage._evaluationKeyConfigHash) }()
+        case 10: try { try decoder.decodeSingularMessageField(value: &_storage._pirShardConfigs) }()
+        default: break
+        }
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._encryptionParameters {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+      } }()
+      if !_storage._shardConfigs.isEmpty {
+        try visitor.visitRepeatedMessageField(value: _storage._shardConfigs, fieldNumber: 2)
+      }
+      try { if let v = _storage._keywordPirParams {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+      } }()
+      if _storage._algorithm != .aclsPir {
+        try visitor.visitSingularEnumField(value: _storage._algorithm, fieldNumber: 4)
+      }
+      if _storage._batchSize != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._batchSize, fieldNumber: 5)
+      }
+      if !_storage._evaluationKeyConfigHash.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._evaluationKeyConfigHash, fieldNumber: 6)
+      }
+      try { if let v = _storage._pirShardConfigs {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+      } }()
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig) -> Bool {
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._encryptionParameters != rhs_storage._encryptionParameters {return false}
+        if _storage._shardConfigs != rhs_storage._shardConfigs {return false}
+        if _storage._keywordPirParams != rhs_storage._keywordPirParams {return false}
+        if _storage._algorithm != rhs_storage._algorithm {return false}
+        if _storage._batchSize != rhs_storage._batchSize {return false}
+        if _storage._evaluationKeyConfigHash != rhs_storage._evaluationKeyConfigHash {return false}
+        if _storage._pirShardConfigs != rhs_storage._pirShardConfigs {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".PIRShardConfigs"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "repeated_shard_config"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -300,12 +496,19 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._encryptionParameters) }()
-      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.shardConfigs) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._keywordPirParams) }()
-      case 4: try { try decoder.decodeSingularEnumField(value: &self.algorithm) }()
-      case 5: try { try decoder.decodeSingularUInt64Field(value: &self.batchSize) }()
-      case 6: try { try decoder.decodeSingularBytesField(value: &self.evaluationKeyConfigHash) }()
+      case 1: try {
+        var v: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig?
+        var hadOneofValue = false
+        if let current = self.shardConfigs {
+          hadOneofValue = true
+          if case .repeatedShardConfig(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.shardConfigs = .repeatedShardConfig(v)
+        }
+      }()
       default: break
       }
     }
@@ -316,34 +519,56 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._encryptionParameters {
+    try { if case .repeatedShardConfig(let v)? = self.shardConfigs {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     } }()
-    if !self.shardConfigs.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.shardConfigs, fieldNumber: 2)
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs) -> Bool {
+    if lhs.shardConfigs != rhs.shardConfigs {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".PIRFixedShardConfig"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "shard_config"),
+    2: .standard(proto: "shard_count"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._shardConfig) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.shardCount) }()
+      default: break
+      }
     }
-    try { if let v = self._keywordPirParams {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._shardConfig {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     } }()
-    if self.algorithm != .aclsPir {
-      try visitor.visitSingularEnumField(value: self.algorithm, fieldNumber: 4)
-    }
-    if self.batchSize != 0 {
-      try visitor.visitSingularUInt64Field(value: self.batchSize, fieldNumber: 5)
-    }
-    if !self.evaluationKeyConfigHash.isEmpty {
-      try visitor.visitSingularBytesField(value: self.evaluationKeyConfigHash, fieldNumber: 6)
+    if self.shardCount != 0 {
+      try visitor.visitSingularUInt32Field(value: self.shardCount, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig) -> Bool {
-    if lhs._encryptionParameters != rhs._encryptionParameters {return false}
-    if lhs.shardConfigs != rhs.shardConfigs {return false}
-    if lhs._keywordPirParams != rhs._keywordPirParams {return false}
-    if lhs.algorithm != rhs.algorithm {return false}
-    if lhs.batchSize != rhs.batchSize {return false}
-    if lhs.evaluationKeyConfigHash != rhs.evaluationKeyConfigHash {return false}
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig) -> Bool {
+    if lhs._shardConfig != rhs._shardConfig {return false}
+    if lhs.shardCount != rhs.shardCount {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

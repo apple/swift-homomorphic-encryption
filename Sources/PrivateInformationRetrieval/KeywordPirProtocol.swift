@@ -162,9 +162,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
         throws -> ProcessedDatabaseWithParameters<Scheme>
     {
         func onCuckooEvent(event: CuckooTable.Event) throws {
-            try onEvent(
-                ProcessKeywordDatabase.ProcessShardEvent
-                    .cuckooTableEvent(event))
+            try onEvent(ProcessKeywordDatabase.ProcessShardEvent.cuckooTableEvent(event))
         }
 
         let cuckooTableConfig = config.cuckooTableConfig

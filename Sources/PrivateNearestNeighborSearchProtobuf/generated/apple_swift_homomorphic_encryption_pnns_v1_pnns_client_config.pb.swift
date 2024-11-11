@@ -68,7 +68,7 @@ public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig: Sendable {
   /// Number of entries in each vector.
   public var vectorDimension: UInt32 = 0
 
-  /// Galois elements required for nearest neighbors computation.
+  /// Galois elements required for nearest neighbor search.
   public var galoisElements: [UInt32] = []
 
   /// Metric for distances between vectors.

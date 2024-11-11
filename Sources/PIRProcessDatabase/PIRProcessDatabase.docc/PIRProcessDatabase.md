@@ -130,7 +130,7 @@ Three arguments enable this best-effort approach towards symmetric PIR:
 * `maxSerializedBucketSize`. We can set size equal to the number of bytes in a plaintexts. This roughly says that each
   bucket can hold as many bytes as a single plaintext.
 * `useMaxSerializedBucketSize`. When enabled, the IndexPIR layer will assume that each entry is as large as
-  `maxSerializedBucketSize`. This avoids packing multiple hash buckets into a single plaintexts.
+  `maxSerializedBucketSize`. This avoids packing multiple hash buckets into a single plaintext.
 
 Together these options can be used to control the number of entries in a response.
 

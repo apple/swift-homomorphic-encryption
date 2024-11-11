@@ -36,7 +36,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Request for server side configurations.
-public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -44,6 +44,9 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: Sendab
   /// List of usecases to fetch configs for.
   /// When set to empty array, all configs will be returned.
   public var usecases: [String] = []
+
+  /// For each usecase, the existing config id, if one exists.
+  public var existingConfigIds: [Data] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -70,6 +73,9 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config: @unchecked Se
 
   /// Unique identifier for the configuration.
   public var configID: Data = Data()
+
+  /// Indicator that the config is the same config as in the ConfigRequest. If set, all other fields can be unset.
+  public var reuseExistingConfig: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -199,6 +205,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: SwiftProto
   public static let protoMessageName: String = _protobuf_package + ".ConfigRequest"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "usecases"),
+    2: .standard(proto: "existing_config_ids"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -208,6 +215,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: SwiftProto
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeRepeatedStringField(value: &self.usecases) }()
+      case 2: try { try decoder.decodeRepeatedBytesField(value: &self.existingConfigIds) }()
       default: break
       }
     }
@@ -217,11 +225,15 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: SwiftProto
     if !self.usecases.isEmpty {
       try visitor.visitRepeatedStringField(value: self.usecases, fieldNumber: 1)
     }
+    if !self.existingConfigIds.isEmpty {
+      try visitor.visitRepeatedBytesField(value: self.existingConfigIds, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest, rhs: Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest) -> Bool {
     if lhs.usecases != rhs.usecases {return false}
+    if lhs.existingConfigIds != rhs.existingConfigIds {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -232,6 +244,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config: SwiftProtobuf.Mes
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     2: .standard(proto: "pnns_config"),
     3: .standard(proto: "config_id"),
+    4: .standard(proto: "reuse_existing_config"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -254,6 +267,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config: SwiftProtobuf.Mes
         }
       }()
       case 3: try { try decoder.decodeSingularBytesField(value: &self.configID) }()
+      case 4: try { try decoder.decodeSingularBoolField(value: &self.reuseExistingConfig) }()
       default: break
       }
     }
@@ -270,12 +284,16 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config: SwiftProtobuf.Mes
     if !self.configID.isEmpty {
       try visitor.visitSingularBytesField(value: self.configID, fieldNumber: 3)
     }
+    if self.reuseExistingConfig != false {
+      try visitor.visitSingularBoolField(value: self.reuseExistingConfig, fieldNumber: 4)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config, rhs: Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config) -> Bool {
     if lhs.config != rhs.config {return false}
     if lhs.configID != rhs.configID {return false}
+    if lhs.reuseExistingConfig != rhs.reuseExistingConfig {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

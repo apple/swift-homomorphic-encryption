@@ -69,7 +69,7 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: @unchecke
   /// Number of entries in each vector.
   public var vectorDimension: UInt32 = 0
 
-  /// Metric for similarity computation.
+  /// Metric for computing distances.
   public var distanceMetric: Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric = .cosineSimilarity
 
   /// hash of EvaluationKeyConfig.

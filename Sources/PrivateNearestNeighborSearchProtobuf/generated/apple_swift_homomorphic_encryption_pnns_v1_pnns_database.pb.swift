@@ -35,7 +35,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-/// Row in a private nearest neighbors search database.
+/// Row in a private nearest neighbor search database.
 public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -47,7 +47,7 @@ public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow: @unchecked S
   /// Metadata associated with the entry.
   public var entryMetadata: Data = Data()
 
-  /// Vector for use in nearest neighbors computation.
+  /// Vector for use in nearest neighbor search.
   public var vector: [Float] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -55,7 +55,7 @@ public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow: @unchecked S
   public init() {}
 }
 
-/// A private nearest neighbors search database.
+/// A private nearest neighbor search database.
 public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_Database: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for

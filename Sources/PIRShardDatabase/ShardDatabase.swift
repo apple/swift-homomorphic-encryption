@@ -27,10 +27,20 @@ enum ShardingOption: String, CaseIterable, ExpressibleByArgument {
     case shardCount
 }
 
+enum ShardingFunctionOption: String, CaseIterable, ExpressibleByArgument {
+    case doubleMod
+    case sha256
+}
+
 struct ShardingArguments: ParsableArguments {
     @Option var sharding: ShardingOption
     @Option(help: "A positive integer")
     var shardingCount: Int
+
+    @Option var shardingFunction: ShardingFunctionOption = .sha256
+
+    @Option(help: "Shards in the other usecase")
+    var otherShardCount: Int?
 }
 
 extension Sharding {
@@ -40,6 +50,20 @@ extension Sharding {
             self.init(entryCountPerShard: arguments.shardingCount)
         case .shardCount:
             self.init(shardCount: arguments.shardingCount)
+        }
+    }
+}
+
+extension ShardingFunction {
+    init(from arguments: ShardingArguments) throws {
+        switch arguments.shardingFunction {
+        case .doubleMod:
+            guard let otherShardCount = arguments.otherShardCount else {
+                throw ValidationError("Must specify 'otherShardCount' when using 'doubleMod' sharding function.")
+            }
+            self = .doubleMod(otherShardCount: otherShardCount)
+        case .sha256:
+            self = .sha256
         }
     }
 }
@@ -86,9 +110,10 @@ struct ProcessCommand: ParsableCommand {
         guard let sharding = Sharding(from: sharding) else {
             throw ValidationError("Invalid sharding \(sharding)")
         }
+        let shardingFunction = try ShardingFunction(from: self.sharding)
         let database: [KeywordValuePair] =
             try Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase(from: inputDatabase).native()
-        let sharded = try KeywordDatabase(rows: database, sharding: sharding)
+        let sharded = try KeywordDatabase(rows: database, sharding: sharding, shardingFunction: shardingFunction)
         for (shardID, shard) in sharded.shards {
             let outputDatabaseFilename = outputDatabase.replacingOccurrences(
                 of: "SHARD_ID",

@@ -37,6 +37,14 @@ PIRs automatically. For thin databases, smaller RLWE plaintexts in
 fits many buckets. Large plaintexts are more efficient for
 wide databases.
 
+#### Sharding function
+Sharding function can be configured by setting the `shardingFunction` variable.
+Supported values are:
+- ``ShardingFunction/sha256``, The shard index is calculated as `truncate(SHA256(keyword) % shardCount`. If
+  `shardingFunction` is omitted this will be the default.
+- ``ShardingFunction/doubleMod(otherShardCount:)``, The shard index is calculated as `(truncate(SHA256(keyword) %
+  otherShardCount) % shardCount`.
+
 ##### Configuration size
 Generally, increasing the `shardCount` will yield faster server runtime.
 However, since the client needs to know information about each shard, increasing `shardCount` also increases the size of the [PIR configuration](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_api_pir_v1_pirconfig).

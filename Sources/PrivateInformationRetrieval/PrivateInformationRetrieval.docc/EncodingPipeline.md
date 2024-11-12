@@ -21,7 +21,7 @@ protobuf message that contains a shared evaluation key configuration and configu
 
 ## Sharding function
 
-While we do offer sharding as a convenience feature in ``KeywordDatabase/init(rows:sharding:)`` and even as a binary
+While we do offer sharding as a convenience feature in ``KeywordDatabase/init(rows:sharding:shardingFunction:)`` and even as a binary
 ([PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase)),
 it might be beneficial to understand how the sharding actually works and to incorporate that directly into your encoding
 pipeline. In Swift you can use ``Swift/Array/shardIndex(shardCount:)``, implemented as follows:

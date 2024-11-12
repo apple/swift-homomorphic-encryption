@@ -178,7 +178,7 @@ extension Sequence<EvaluationKeyConfig> {
     ///
     ///  > Note: The union can be used to generate an `EvaluationKey` which supports the HE operations of any of the
     /// evaluation key configurations.
-    /// - Returns: The joint evaluation configuration
+    /// - Returns: The joint evaluation configuration.
     public func union() -> EvaluationKeyConfig {
         var galoisElements: Set<Int> = []
         var hasRelinearizationKey = false

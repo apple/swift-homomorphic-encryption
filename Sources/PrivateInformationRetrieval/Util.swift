@@ -16,6 +16,8 @@ import Foundation
 
 extension [UInt8] {
     func utf8OrBase64() -> String {
+        // swiftlint doesn't recognize the API
+        // swiftlint:disable:next optional_data_string_conversion
         if let utf8 = String(validating: self, as: UTF8.self) {
             "\(utf8) (utf8)"
         } else {

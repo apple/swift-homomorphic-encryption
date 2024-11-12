@@ -28,8 +28,8 @@ concurrency:
   cancel-in-progress: true
 # Keep versions in sync with README
 env:
-  SWIFTLINT_VERSION: 0.55.1
-  SWIFTFORMAT_VERSION: 0.54.0
+  SWIFTLINT_VERSION: 0.57.0
+  SWIFTFORMAT_VERSION: 0.54.6
 jobs:
   swift-tests:
     timeout-minutes: 15

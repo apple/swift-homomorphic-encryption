@@ -169,7 +169,7 @@ public struct EvaluationKeyConfig: Codable, Equatable, Hashable, Sendable {
 }
 
 extension Sequence<EvaluationKeyConfig> {
-    /// Computes the union of ``EvaluationKeyConfig``s.
+    /// Computes the union of evaluation key configurations.
     ///
     /// The union of ``EvaluationKeyConfig``s is a configuration whose:
     ///  * Galois elements is a union of each configuration's Galois elements

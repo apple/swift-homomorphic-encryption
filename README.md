@@ -150,11 +150,11 @@ We'd like this package to quickly embrace Swift language and toolchain improveme
 ## Developing Swift Homomorphic Encryption
 ### Dependencies
 Developing Swift Homomorphic Encryption requires:
-* [Nick Lockwood SwiftFormat](https://github.com/nicklockwood/SwiftFormat), v0.54.0
+* [Nick Lockwood SwiftFormat](https://github.com/nicklockwood/SwiftFormat), 0.54.6
 * [pre-commit](https://pre-commit.com)
-* [swift-format](https://github.com/apple/swift-format), v510.1.0
-* [swift-protobuf](https://github.com/apple/swift-protobuf), v1.28.1
-* [SwiftLint](https://github.com/realm/SwiftLint), v0.55.1
+* [swift-format](https://github.com/swiftlang/swift-format), 600.0.0
+* [swift-protobuf](https://github.com/apple/swift-protobuf), 1.28.1
+* [SwiftLint](https://github.com/realm/SwiftLint), 0.57.0
 
 ### Building
 You can build Swift Homomorphic Encryption either via Xcode or via command line in a terminal.

@@ -38,13 +38,13 @@ package struct RnsTool<T: ScalarType>: Sendable {
     @usableFromInline let mTildeModQ: [T]
     /// `-(Q^{-1}) mod {t, gamma}`.
     @usableFromInline let negInverseQModTGamma: [T]
-    /// `|gamma * t|_qi``.
+    /// `|gamma * t|_qi`.
     @usableFromInline let prodGammaTModQ: [T]
     /// Multiplication by `m_tilde^{-1} mod B_sk`, mod `B_sk`.
     @usableFromInline let inverseMTildeModBSk: [MultiplyConstantModulus<T>]
     /// Multiplication by `Q^{-1} mod B_sk`, mod `B_sk`.
     @usableFromInline let inverseQModBSk: [MultiplyConstantModulus<T>]
-    /// i'th entry stores modulus for multiplcaiton by `floor(Q / t_0) % q_i`, mod `q_i`
+    /// i'th entry stores modulus for multiplication by `floor(Q / t_0) % q_i`, mod `q_i`
     /// Also called `delta` in the literature.
     @usableFromInline let qDivT: [MultiplyConstantModulus<T>]
     /// Multiplication by `Q mod B_sk`, mod `B_sk`.
@@ -302,7 +302,7 @@ package struct RnsTool<T: ScalarType>: Sendable {
     ///
     /// The output will be `(floor(x/q) + a_x) % B_sk`, where `a_x \in [-(L-1), L-1]`
     /// - Parameter poly: Polynomial with base `[q, Bsk]`.
-    /// - Returns: Polynomial in base `[Bsk]``.
+    /// - Returns: Polynomial in base `[Bsk]`.
     /// - Throws: Error upon failure to compute the approximate floor.
     /// - seealso: Section 4.3 of <https://eprint.iacr.org/2016/510.pdf>.
     @inlinable

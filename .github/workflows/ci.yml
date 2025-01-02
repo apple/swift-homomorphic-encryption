@@ -1,4 +1,4 @@
-# Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+# Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,10 +63,23 @@ jobs:
       run: pip install pre-commit
     - name: Pre-commit checks
       # CI will commit to `main`
-      # swiftformat & swiftlint tested separately
+      # swiftformat, swiftlint and license checks tested separately
       run: >
-        SKIP=no-commit-to-branch,lockwood-swiftformat,swiftlint,check-doc-comments
+        SKIP=no-commit-to-branch,lockwood-swiftformat,swiftlint,check-doc-comments,insert-license
         pre-commit run --all-files
+  insert-license:
+    timeout-minutes: 1
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+    - name: Install pre-commit
+      run: pip install pre-commit
+    - name: List changed files
+      run: git diff --name-only HEAD~1
+    - name: Run license check
+      run: pre-commit run insert-license --files $(git diff --name-only HEAD~1)
   lint:
     timeout-minutes: 15
     runs-on: ubuntu-latest

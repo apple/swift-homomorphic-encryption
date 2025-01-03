@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -296,7 +296,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
 @main
 struct ProcessDatabase: AsyncParsableCommand {
     static let configuration: CommandConfiguration = .init(
-        commandName: "PIRProcessDatabase")
+        commandName: "PIRProcessDatabase", version: Version.current.description)
 
     static let logger = Logger(label: "PIRProcessDatabase")
 

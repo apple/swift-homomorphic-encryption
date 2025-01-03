@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import ArgumentParser
+import HomomorphicEncryption
 import PrivateInformationRetrieval
 import PrivateInformationRetrievalProtobuf
 
@@ -85,7 +86,7 @@ let discussion =
 @main
 struct ProcessCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
-        commandName: "PIRShardDatabase", discussion: discussion)
+        commandName: "PIRShardDatabase", discussion: discussion, version: Version.current.description)
 
     @Option(help: "path to input PIR database file. Must have extension '.txtpb' or '.binpb'")
     var inputDatabase: String

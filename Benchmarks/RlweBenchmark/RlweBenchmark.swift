@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -329,6 +329,18 @@ func ciphertextPlaintextSubtractBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> (
     }
 }
 
+func plaintextCiphertextSubtractBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    {
+        benchmark("PlaintextCiphertextSubtract", Scheme.self) { benchmark in
+            let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(benchmarkContext.coeffPlaintext - benchmarkContext.ciphertext)
+            }
+        }
+    }
+}
+
 func ciphertextPlaintextMultiplyBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
     {
         benchmark("CiphertextPlaintextMultiply", Scheme.self) { benchmark in
@@ -594,6 +606,9 @@ nonisolated(unsafe) let benchmarks: () -> Void = {
 
     ciphertextPlaintextSubtractBenchmark(Bfv<UInt32>.self)()
     ciphertextPlaintextSubtractBenchmark(Bfv<UInt64>.self)()
+
+    plaintextCiphertextSubtractBenchmark(Bfv<UInt32>.self)()
+    plaintextCiphertextSubtractBenchmark(Bfv<UInt64>.self)()
 
     ciphertextPlaintextMultiplyBenchmark(Bfv<UInt32>.self)()
     ciphertextPlaintextMultiplyBenchmark(Bfv<UInt64>.self)()

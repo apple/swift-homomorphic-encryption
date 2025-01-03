@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -472,6 +472,24 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to subtract.
     static func subAssignEval(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws
 
+    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to subtract from.
+    ///   - ciphertext: Ciphertext to subtract.
+    /// - Returns: A ciphertext encrypting the difference.
+    /// - Throws: Error upon failure to subtract.
+    static func subCoeff(_ plaintext: CoeffPlaintext, _ ciphertext: CoeffCiphertext) throws -> CoeffCiphertext
+
+    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to subtract from.
+    ///   - ciphertext: Ciphertext to subtract.
+    /// - Returns: A ciphertext encrypting the difference.
+    /// - Throws: Error upon failure to subtract.
+    static func subEval(_ plaintext: EvalPlaintext, _ ciphertext: EvalCiphertext) throws -> EvalCiphertext
+
     /// In-place ciphertext-plaintext multiplication: `ciphertext *= plaintext`.
     ///
     /// - Parameters:
@@ -572,6 +590,24 @@ public protocol HeScheme {
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
     static func subAssign(_ ciphertext: inout CanonicalCiphertext, _ plaintext: EvalPlaintext) throws
+
+    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to subtract from.
+    ///   - ciphertext: Ciphertext to subtract.
+    /// - Returns: A ciphertext encrypting the difference.
+    /// - Throws: Error upon failure to subtract.
+    static func sub(_ plaintext: CoeffPlaintext, _ ciphertext: CanonicalCiphertext) throws -> CanonicalCiphertext
+
+    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to subtract from.
+    ///   - ciphertext: Ciphertext to subtract.
+    /// - Returns: A ciphertext encrypting the difference.
+    /// - Throws: Error upon failure to subtract.
+    static func sub(_ plaintext: EvalPlaintext, _ ciphertext: CanonicalCiphertext) throws -> CanonicalCiphertext
 
     /// Performs modulus switching on the ciphertext.
     ///
@@ -785,6 +821,36 @@ extension HeScheme {
                 and plaintext in \(PlaintextFormat.description).
                 """)
         }
+        // swiftlint:enable force_cast
+    }
+
+    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to subtract from.
+    ///   - ciphertext: Ciphertext to subtract.
+    /// - Returns: A ciphertext encrypting the difference.
+    /// - Throws: Error upon failure to subtract.
+    @inlinable
+    public static func sub<CiphertextFormat: PolyFormat, PlaintextFormat: PolyFormat>(
+        _ plaintext: Plaintext<Self, PlaintextFormat>,
+        _ ciphertext: Ciphertext<Self, CiphertextFormat>) throws -> Ciphertext<Self, CiphertextFormat>
+    {
+        // swiftlint:disable force_cast
+        if CiphertextFormat.self == Coeff.self, PlaintextFormat.self == Coeff.self {
+            let coeffCiphertext = ciphertext as! CoeffCiphertext
+            let coeffPlaintext = plaintext as! CoeffPlaintext
+            return try subCoeff(coeffPlaintext, coeffCiphertext) as! Ciphertext<Self, CiphertextFormat>
+        }
+        if CiphertextFormat.self == Eval.self, PlaintextFormat.self == Eval.self {
+            let evalCiphertext = ciphertext as! EvalCiphertext
+            let evalPlaintext = plaintext as! EvalPlaintext
+            return try subEval(evalPlaintext, evalCiphertext) as! Ciphertext<Self, CiphertextFormat>
+        }
+        throw HeError.unsupportedHeOperation("""
+            Subtraction between plaintext in \(PlaintextFormat.description) and \
+            ciphertext in \(CiphertextFormat.description).
+            """)
         // swiftlint:enable force_cast
     }
 
@@ -1092,6 +1158,20 @@ extension HeScheme {
         }
         // the precondition in sum will fail if self or plaintexts is empty
         return try (zip(ciphertexts, plaintexts).map { try $0.0 * $0.1 }).sum()
+    }
+}
+
+extension HeScheme {
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func subCoeff(_ plaintext: CoeffPlaintext, _ ciphertext: CoeffCiphertext) throws -> CoeffCiphertext {
+        try plaintext + -ciphertext
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func subEval(_ plaintext: EvalPlaintext, _ ciphertext: EvalCiphertext) throws -> EvalCiphertext {
+        try plaintext + -ciphertext
     }
 }
 

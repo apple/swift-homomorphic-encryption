@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ enum VectorTypeArguments: String, CaseIterable, ExpressibleByArgument {
 @main
 struct GenerateDatabaseCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
-        commandName: "PNNSGenerateDatabase")
+        commandName: "PNNSGenerateDatabase", version: Version.current.description)
 
     @Option(help: "Path to output database. Must end in '.txtpb' or '.binpb'.")
     var outputDatabase: String

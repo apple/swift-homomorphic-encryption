@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -766,7 +766,8 @@ class HeAPITests: XCTestCase {
         let testEnv = try TestEnv(context: context, format: .simd)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
-        let diffData = zip(data1, data2).map { x, y in x.subtractMod(y, modulus: context.plaintextModulus) }
+        let diff1Minus2Data = zip(data1, data2).map { x, y in x.subtractMod(y, modulus: context.plaintextModulus) }
+        let diff2Minus1Data = zip(data2, data1).map { x, y in x.subtractMod(y, modulus: context.plaintextModulus) }
         let canonicalCiphertext = testEnv.ciphertext1
         let evalCiphertext: Ciphertext<Scheme, Eval> = try canonicalCiphertext.convertToEvalFormat()
         let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
@@ -779,13 +780,13 @@ class HeAPITests: XCTestCase {
             try testEnv.checkDecryptsDecodes(
                 ciphertext: canonicalCiphertext - coeffPlaintext,
                 format: .simd,
-                expected: diffData)
+                expected: diff1Minus2Data)
 
             // canonicalCiphertext -= coeffPlaintext
             do {
                 var diff = canonicalCiphertext
                 try diff -= coeffPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diffData)
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
             }
 
             // canonicalCiphertext - evalPlaintext
@@ -793,14 +794,28 @@ class HeAPITests: XCTestCase {
                 try testEnv.checkDecryptsDecodes(
                     ciphertext: canonicalCiphertext - evalPlaintext,
                     format: .simd,
-                    expected: diffData)
+                    expected: diff1Minus2Data)
             } catch HeError.unsupportedHeOperation(_) {}
 
             // canonicalCiphertext -= evalPlaintext
             do {
                 var diff = canonicalCiphertext
                 try diff -= evalPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diffData)
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
+            } catch HeError.unsupportedHeOperation(_) {}
+
+            // coeffPlaintext - canonicalCiphertext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: coeffPlaintext - canonicalCiphertext,
+                format: .simd,
+                expected: diff2Minus1Data)
+
+            // evalPlaintext - canonicalCiphertext
+            do {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: evalPlaintext - canonicalCiphertext,
+                    format: .simd,
+                    expected: diff2Minus1Data)
             } catch HeError.unsupportedHeOperation(_) {}
         }
 
@@ -810,14 +825,19 @@ class HeAPITests: XCTestCase {
             try testEnv.checkDecryptsDecodes(
                 ciphertext: coeffCiphertext - coeffPlaintext,
                 format: .simd,
-                expected: diffData)
+                expected: diff1Minus2Data)
 
             // coeffCiphertext -= coeffPlaintext
             do {
                 var diff = coeffCiphertext
                 try diff -= coeffPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diffData)
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
             }
+            // coeffPlaintext - coeffCiphertext
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: coeffPlaintext - coeffCiphertext,
+                format: .simd,
+                expected: diff2Minus1Data)
         }
 
         // evalCiphertext
@@ -827,14 +847,22 @@ class HeAPITests: XCTestCase {
                 try testEnv.checkDecryptsDecodes(
                     ciphertext: evalCiphertext - evalPlaintext,
                     format: .simd,
-                    expected: diffData)
+                    expected: diff1Minus2Data)
             } catch HeError.unsupportedHeOperation(_) {}
 
             // evalCiphertext -= evalPlaintext
             do {
                 var diff = evalCiphertext
                 try diff -= evalPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diffData)
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
+            } catch HeError.unsupportedHeOperation(_) {}
+
+            // evalPlaintext - evalCiphertext
+            do {
+                try testEnv.checkDecryptsDecodes(
+                    ciphertext: evalPlaintext - evalCiphertext,
+                    format: .simd,
+                    expected: diff2Minus1Data)
             } catch HeError.unsupportedHeOperation(_) {}
         }
     }

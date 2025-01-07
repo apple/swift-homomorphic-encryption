@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,6 +102,17 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     {
         try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
         try Scheme.subAssign(&ciphertext, plaintext)
+    }
+
+    // MARK: plaintext - ciphertext
+
+    @inlinable
+    public static func - (
+        plaintext: Plaintext<Scheme, some PolyFormat>,
+        ciphertext: Ciphertext<Scheme, Format>) throws -> Ciphertext<Scheme, Format>
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        return try Scheme.sub(plaintext, ciphertext)
     }
 
     // MARK: ciphertext *= plaintext

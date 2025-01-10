@@ -16,7 +16,7 @@
 public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
     /// Context for HE computation.
     public let context: Context<Scheme>
-    @usableFromInline var polys: [PolyRq<Scheme.Scalar, Format>]
+    @usableFromInline package var polys: [PolyRq<Scheme.Scalar, Format>]
     @usableFromInline var correctionFactor: Scheme.Scalar
     @usableFromInline var seed: [UInt8] = []
 
@@ -161,13 +161,13 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     }
 
     @inlinable
-    func forwardNtt() throws -> Ciphertext<Scheme, Eval> where Format == Coeff {
+    package func forwardNtt() throws -> Ciphertext<Scheme, Eval> where Format == Coeff {
         let polys = try polys.map { try $0.forwardNtt() }
         return Ciphertext<Scheme, Eval>(context: context, polys: polys, correctionFactor: correctionFactor, seed: seed)
     }
 
     @inlinable
-    func inverseNtt() throws -> Ciphertext<Scheme, Coeff> where Format == Eval {
+    package func inverseNtt() throws -> Ciphertext<Scheme, Coeff> where Format == Eval {
         let polys = try polys.map { try $0.inverseNtt() }
         return Ciphertext<Scheme, Coeff>(context: context, polys: polys, correctionFactor: correctionFactor, seed: seed)
     }

@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@testable import HomomorphicEncryption
-import TestUtilities
+import HomomorphicEncryption
 import XCTest
 
 /// A collection of helpers for HeScheme level API tests.
@@ -872,11 +871,6 @@ public enum HeAPITestHelpers {
                 try diff -= coeffPlaintext
                 try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
             }
-            // coeffPlaintext - coeffCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: coeffPlaintext - coeffCiphertext,
-                format: .simd,
-                expected: diff2Minus1Data)
         }
 
         // evalCiphertext

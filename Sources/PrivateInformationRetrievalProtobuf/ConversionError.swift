@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ import SwiftProtobuf
 
 enum ConversionError: Error {
     case unrecognizedEnumValue(enum: any Enum.Type, value: Int)
+    case unspecifiedEnumValue(enum: any Enum.Type)
 }
 
 extension ConversionError: LocalizedError {
@@ -24,6 +25,8 @@ extension ConversionError: LocalizedError {
         switch self {
         case let .unrecognizedEnumValue(enum: enume, value: value):
             "Unrecognized value \(value) in enum \(enume)"
+        case let .unspecifiedEnumValue(enum: enume):
+            "Unspecified value for enum \(enume)"
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ class ProcessDatabaseTests: XCTestCase {
                   "outputEvaluationKeyConfig": "output-evaluation-key-config.txtpb",
                   "outputPirParameters": "output-pir-params.txtpb",
                   "rlweParameters": "insecure_n_8_logq_5x18_logt_5",
+                  "databaseEncryptionKeyPath": "teststring",
                   "trialsPerShard": 1,
                   "sharding": {
                     "shardCount": 10

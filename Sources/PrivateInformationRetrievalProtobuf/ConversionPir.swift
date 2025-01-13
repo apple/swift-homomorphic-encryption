@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _CryptoExtras
+import Crypto
 import Foundation
 import HomomorphicEncryption
 import PrivateInformationRetrieval
+import SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices {
     /// Converts the protobuf object to a native type.
@@ -73,8 +76,25 @@ extension ProcessedDatabaseWithParameters {
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
+    @available(*, deprecated, message: "Will be replaced by 'native() throws' in future version.")
+    public func nativeWithSymmetricPirClientConfig() throws -> KeywordPirParameter {
+        let symmetricPirClientConfig = hasSymmetricPirClientConfig ? try symmetricPirClientConfig.native() : nil
+        return KeywordPirParameter(
+            hashFunctionCount: Int(numHashFunctions),
+            shardingFunction: shardingFunction.native(),
+            symmetricPirClientConfig: symmetricPirClientConfig)
+    }
+
+    /// Converts the protobuf object to a native type.
+    ///
+    /// To be used only for protobuf objects not containing `SymmetricPirClientConfig`.
+    /// - Returns: The converted native type.
+    @available(*, deprecated, message: "Will be replaced by 'native() throws' in future version.")
     public func native() -> KeywordPirParameter {
-        KeywordPirParameter(hashFunctionCount: Int(numHashFunctions), shardingFunction: shardingFunction.native())
+        precondition(!hasSymmetricPirClientConfig)
+        return KeywordPirParameter(
+            hashFunctionCount: Int(numHashFunctions),
+            shardingFunction: shardingFunction.native())
     }
 }
 
@@ -85,6 +105,9 @@ extension KeywordPirParameter {
         Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters.with { params in
             params.numHashFunctions = UInt64(hashFunctionCount)
             params.shardingFunction = shardingFunction.proto()
+            if let symmetricPirClientConfig {
+                params.symmetricPirClientConfig = symmetricPirClientConfig.proto()
+            }
         }
     }
 }
@@ -121,6 +144,40 @@ extension ShardingFunction {
     }
 }
 
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    public func native() throws -> SymmetricPirClientConfig {
+        switch configType {
+        case .unspecified:
+            throw ConversionError
+                .unspecifiedEnumValue(enum: Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType.self)
+        case .oprfP384AesGcm192Nonce96Tag128:
+            return SymmetricPirClientConfig(
+                serverPublicKey: [UInt8](serverPublicKey),
+                configType: .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128)
+        case let .UNRECOGNIZED(value):
+            throw ConversionError.unrecognizedEnumValue(
+                enum: Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType.self,
+                value: value)
+        }
+    }
+}
+
+extension SymmetricPirClientConfig {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig {
+        Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig.with { config in
+            config.serverPublicKey = Data(serverPublicKey)
+            switch configType {
+            case .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128:
+                config.configType = .oprfP384AesGcm192Nonce96Tag128
+            }
+        }
+    }
+}
+
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
@@ -145,7 +202,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
             algorithm: algorithm.native(),
             evaluationKeyConfig: evaluationKeyConfig.native(),
             pirParameter: native(),
-            keywordPirParameter: hasKeywordPirParams ? keywordPirParams.native() : nil)
+            keywordPirParameter: hasKeywordPirParams ? keywordPirParams.nativeWithSymmetricPirClientConfig() : nil)
     }
 }
 
@@ -261,5 +318,44 @@ extension Response {
 extension EvaluationKey {
     package func size() throws -> Int {
         try serialize().proto().serializedData().count
+    }
+}
+
+extension OprfQuery {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest {
+        Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest.with { request in
+            request.queryElement = oprfRepresentation
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    /// - Throws: Error when the protobuf object cannot be represented.
+    public func native() throws -> OprfQuery {
+        try OprfQuery(oprfRepresentation: queryElement)
+    }
+}
+
+extension OprfResponse {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse {
+        Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse.with { response in
+            response.evaluatedElement = evaluatedElement.oprfRepresentation
+            response.proof = proof.rawRepresentation
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    /// - Throws: Error when the protobuf object cannot be represented.
+    public func native() throws -> OprfResponse {
+        try OprfResponse(rawRepresentation: evaluatedElement + proof)
     }
 }

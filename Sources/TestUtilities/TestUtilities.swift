@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -89,33 +89,6 @@ package struct TestRng: RandomNumberGenerator, PseudoRandomNumberGenerator {
 }
 
 extension [UInt8] {
-    /// Initializes a byte array from a hexadecimal string.
-    ///
-    /// Initializes to nil upon invalid hexadecimal string.
-    /// - Parameter hexString: A hexadecimal string, without leading "0x".
-    package init?(hexEncoded hexString: String) {
-        // Ensure the string has an even number of characters
-        guard hexString.count.isMultiple(of: 2) else {
-            return nil
-        }
-
-        var data = Array()
-        data.reserveCapacity(hexString.count / 2)
-        var index = hexString.startIndex
-
-        while index < hexString.endIndex {
-            let nextIndex = hexString.index(index, offsetBy: 2)
-            if let byte = UInt8(hexString[index..<nextIndex], radix: 16) {
-                data.append(byte)
-            } else {
-                return nil // Invalid hex string
-            }
-            index = nextIndex
-        }
-
-        self = data
-    }
-
     /// Initializes a byte array from a base64-encoded string.
     ///
     /// Initializes to nil upon invalid base64 string.

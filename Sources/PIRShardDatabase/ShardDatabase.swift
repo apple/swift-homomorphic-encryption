@@ -44,6 +44,21 @@ struct ShardingArguments: ParsableArguments {
     var otherShardCount: Int?
 }
 
+struct SymmetricPirArguments: ParsableArguments {
+    @Option(
+        help: """
+            path to file containing key for encrypting server database as a
+            hexadecimal key string, without leading '0x'.
+            """)
+    var databaseEncryptionKeyPath: String?
+    @Option(help: """
+        config type for symmetric pir; default is nil, unless `databaseEncryptionKeyPath`\
+        is specified, in which case the default is\
+        \(SymmetricPirConfigType.OPRF_P384_AES_GCM_192_NONCE_96_TAG_128.rawValue)
+        """)
+    var symmetricPirConfigType: SymmetricPirConfigType?
+}
+
 extension Sharding {
     init?(from arguments: ShardingArguments) {
         switch arguments.sharding {
@@ -77,6 +92,8 @@ extension String {
     }
 }
 
+extension SymmetricPirConfigType: ExpressibleByArgument {}
+
 let discussion =
     """
     This executable allows one to divide a database into disjoint shards. \
@@ -95,6 +112,7 @@ struct ProcessCommand: ParsableCommand {
     var outputDatabase: String
 
     @OptionGroup var sharding: ShardingArguments
+    @OptionGroup var symmetricPirArguments: SymmetricPirArguments
 
     func validate() throws {
         try inputDatabase.validateProtoFilename(descriptor: "inputDatabase")
@@ -105,6 +123,11 @@ struct ProcessCommand: ParsableCommand {
         guard Sharding(from: sharding) != nil else {
             throw ValidationError("Invalid sharding \(sharding)")
         }
+        if symmetricPirArguments.symmetricPirConfigType != nil {
+            guard symmetricPirArguments.databaseEncryptionKeyPath != nil else {
+                throw ValidationError("Missing databaseEncryptionKeyPath.")
+            }
+        }
     }
 
     mutating func run() throws {
@@ -114,7 +137,23 @@ struct ProcessCommand: ParsableCommand {
         let shardingFunction = try ShardingFunction(from: self.sharding)
         let database: [KeywordValuePair] =
             try Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase(from: inputDatabase).native()
-        let sharded = try KeywordDatabase(rows: database, sharding: sharding, shardingFunction: shardingFunction)
+        let symmetricPirConfig = try symmetricPirArguments.databaseEncryptionKeyPath.map { filePath in
+            let configType = symmetricPirArguments.symmetricPirConfigType ?? .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128
+            do {
+                let secretKeyString = try String(contentsOfFile: filePath, encoding: .utf8)
+                guard let secretKey = Array(hexEncoded: secretKeyString) else {
+                    throw PirError.invalidOPRFHexSecretKey
+                }
+                try configType.validateEncryptionKey(secretKey)
+                return try SymmetricPirConfig(oprfSecretKey: secretKey, configType: configType)
+            } catch {
+                throw PirError.failedToLoadOPRFKey(underlyingError: "\(error)", filePath: filePath)
+            }
+        }
+        let sharded = try KeywordDatabase(rows: database,
+                                          sharding: sharding,
+                                          shardingFunction: shardingFunction,
+                                          symmetricPirConfig: symmetricPirConfig)
         for (shardID, shard) in sharded.shards {
             let outputDatabaseFilename = outputDatabase.replacingOccurrences(
                 of: "SHARD_ID",

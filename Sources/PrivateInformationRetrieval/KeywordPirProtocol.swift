@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,8 +39,13 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
 
     /// Keyword PIR parameters.
     public var parameter: KeywordPirParameter {
-        KeywordPirParameter(hashFunctionCount: cuckooTableConfig.hashFunctionCount, shardingFunction: shardingFunction)
+        KeywordPirParameter(
+            hashFunctionCount: cuckooTableConfig.hashFunctionCount, shardingFunction: shardingFunction,
+            symmetricPirClientConfig: symmetricPirClientConfig)
     }
+
+    /// Optional configuration for Symmetric PIR client.
+    var symmetricPirClientConfig: SymmetricPirClientConfig?
 
     /// Initializes a ``KeywordPirConfig``.
     /// - Parameters:
@@ -52,6 +57,7 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
     /// ``CuckooTableConfig/maxSerializedBucketSize``. When not enabled, the largest serialized bucket size is used
     /// instead.
     ///   - shardingFunction: The sharding function to use.
+    ///   - symmetricPirClientConfig: Configuration for Symmetric PIR client.
     /// - Throws: Error upon invalid arguments.
     public init(
         dimensionCount: Int,
@@ -59,7 +65,8 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
         unevenDimensions: Bool,
         keyCompression: PirKeyCompressionStrategy,
         useMaxSerializedBucketSize: Bool = false,
-        shardingFunction: ShardingFunction = .sha256) throws
+        shardingFunction: ShardingFunction = .sha256,
+        symmetricPirClientConfig: SymmetricPirClientConfig? = nil) throws
     {
         let validDimensionsCount = [1, 2]
         guard validDimensionsCount.contains(dimensionCount) else {
@@ -74,6 +81,7 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
         self.keyCompression = keyCompression
         self.useMaxSerializedBucketSize = useMaxSerializedBucketSize
         self.shardingFunction = shardingFunction
+        self.symmetricPirClientConfig = symmetricPirClientConfig
     }
 }
 
@@ -87,13 +95,21 @@ public struct KeywordPirParameter: Hashable, Codable, Sendable {
     /// Sharding function used.
     public let shardingFunction: ShardingFunction
 
+    /// Configuration for Symmetric PIR client.
+    public let symmetricPirClientConfig: SymmetricPirClientConfig?
+
     /// Initializes a ``KeywordPirParameter``.
     /// - Parameters:
     ///   - hashFunctionCount: Number of hash functions in the ``CuckooTableConfig``.
     ///   - shardingFunction: Sharding function that was used for sharding.
-    public init(hashFunctionCount: Int, shardingFunction: ShardingFunction = .sha256) {
+    ///   - symmetricPirClientConfig: Client config for Symmetric PIR.
+    public init(hashFunctionCount: Int,
+                shardingFunction: ShardingFunction = .sha256,
+                symmetricPirClientConfig: SymmetricPirClientConfig? = nil)
+    {
         self.hashFunctionCount = hashFunctionCount
         self.shardingFunction = shardingFunction
+        self.symmetricPirClientConfig = symmetricPirClientConfig
     }
 }
 
@@ -164,13 +180,15 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     ///   - config: Keyword PIR configuration.
     ///   - context: Context for HE computation.
     ///   - onEvent: Function to call when a ``ProcessKeywordDatabase/ProcessShardEvent`` happens.
+    ///   - symmetricPirConfig: Config for Symmetric PIR.
     /// - Returns: A processed database.
     /// - Throws: Error upon failure to process the database.
     @inlinable
     public static func process(database: some Collection<KeywordValuePair>,
                                config: KeywordPirConfig,
                                with context: Context<Scheme>,
-                               onEvent: @escaping (ProcessKeywordDatabase.ProcessShardEvent) throws -> Void = { _ in })
+                               onEvent: @escaping (ProcessKeywordDatabase.ProcessShardEvent) throws -> Void = { _ in },
+                               symmetricPirConfig: SymmetricPirConfig? = nil)
         throws -> ProcessedDatabaseWithParameters<Scheme>
     {
         func onCuckooEvent(event: CuckooTable.Event) throws {
@@ -220,7 +238,8 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
             algorithm: PirServer.IndexPir.algorithm,
             evaluationKeyConfig: evaluationKeyConfig,
             pirParameter: indexPirParameter,
-            keywordPirParameter: config.parameter)
+            keywordPirParameter: config.parameter,
+            symmetricPirConfig: symmetricPirConfig)
     }
 
     /// Compute the encrypted response to a query lookup.

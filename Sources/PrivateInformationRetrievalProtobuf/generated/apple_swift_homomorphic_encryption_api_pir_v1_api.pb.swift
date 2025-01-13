@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -155,12 +155,23 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Request: Sendable {
     set {request = .pirRequest(newValue)}
   }
 
+  /// OPRF request.
+  public var oprfRequest: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest {
+    get {
+      if case .oprfRequest(let v)? = request {return v}
+      return Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest()
+    }
+    set {request = .oprfRequest(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Generic request.
   public enum OneOf_Request: Equatable, Sendable {
     /// PIR request.
     case pirRequest(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRRequest)
+    /// OPRF request.
+    case oprfRequest(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest)
 
   }
 
@@ -185,12 +196,23 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Response: Sendable {
     set {response = .pirResponse(newValue)}
   }
 
+  /// Response to `OPRFRequest`.
+  public var oprfResponse: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse {
+    get {
+      if case .oprfResponse(let v)? = response {return v}
+      return Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse()
+    }
+    set {response = .oprfResponse(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Generic response.
   public enum OneOf_Response: Equatable, Sendable {
     /// Response to a `PIRRequest`.
     case pirResponse(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse)
+    /// Response to `OPRFRequest`.
+    case oprfResponse(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse)
 
   }
 
@@ -406,6 +428,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Request: SwiftProtobuf.Mes
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "usecase"),
     2: .standard(proto: "pir_request"),
+    4: .standard(proto: "oprf_request"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -428,6 +451,19 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Request: SwiftProtobuf.Mes
           self.request = .pirRequest(v)
         }
       }()
+      case 4: try {
+        var v: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest?
+        var hadOneofValue = false
+        if let current = self.request {
+          hadOneofValue = true
+          if case .oprfRequest(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.request = .oprfRequest(v)
+        }
+      }()
       default: break
       }
     }
@@ -441,9 +477,17 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Request: SwiftProtobuf.Mes
     if !self.usecase.isEmpty {
       try visitor.visitSingularStringField(value: self.usecase, fieldNumber: 1)
     }
-    try { if case .pirRequest(let v)? = self.request {
+    switch self.request {
+    case .pirRequest?: try {
+      guard case .pirRequest(let v)? = self.request else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    } }()
+    }()
+    case .oprfRequest?: try {
+      guard case .oprfRequest(let v)? = self.request else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    }()
+    case nil: break
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -459,6 +503,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Response: SwiftProtobuf.Me
   public static let protoMessageName: String = _protobuf_package + ".Response"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "pir_response"),
+    3: .standard(proto: "oprf_response"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -480,6 +525,19 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Response: SwiftProtobuf.Me
           self.response = .pirResponse(v)
         }
       }()
+      case 3: try {
+        var v: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse?
+        var hadOneofValue = false
+        if let current = self.response {
+          hadOneofValue = true
+          if case .oprfResponse(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.response = .oprfResponse(v)
+        }
+      }()
       default: break
       }
     }
@@ -490,9 +548,17 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_Response: SwiftProtobuf.Me
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    try { if case .pirResponse(let v)? = self.response {
+    switch self.response {
+    case .pirResponse?: try {
+      guard case .pirResponse(let v)? = self.response else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
+    }()
+    case .oprfResponse?: try {
+      guard case .oprfResponse(let v)? = self.response else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }()
+    case nil: break
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 

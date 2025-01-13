@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ public enum PirError: Error, Hashable, Codable {
     case corruptedData(_ description: String)
     case emptyDatabase
     case failedToConstructCuckooTable(_ description: String)
+    case failedToLoadOPRFKey(underlyingError: String, filePath: String)
     case invalidBatchSize(queryCount: Int, databaseCount: Int)
     case invalidCuckooConfig(config: CuckooTableConfig)
     case invalidDatabaseDuplicateKeyword(keyword: KeywordValuePair.Keyword,
@@ -33,10 +34,15 @@ public enum PirError: Error, Hashable, Codable {
     case invalidHashBucketEntryValueSize(maxSize: Int)
     case invalidHashBucketSlotCount(maxCount: Int)
     case invalidIndex(index: Int, numberOfEntries: Int)
+    case invalidOPRFHexSecretKey
+    case invalidOPRFKeySize(_ keySize: Int, expectedSize: Int)
+    case invalidOPRFResponseLength(found: Int, expected: Int)
     case invalidPirAlgorithm(_ pirAlgorithm: PirAlgorithm)
     case invalidReply(ciphertextCount: Int, expected: Int)
     case invalidResponse(replyCount: Int, expected: Int)
     case invalidSharding(_ description: String)
+    case invalidSymmetricPirConfig(symmetricPirConfig: SymmetricPirConfig)
+    case missingOPRFEncryptionKey
     case validationError(_ description: String)
 }
 
@@ -59,6 +65,8 @@ extension PirError: LocalizedError {
             "Empty database"
         case let .failedToConstructCuckooTable(description):
             "Failed to construct Cuckoo table: \(description)"
+        case let .failedToLoadOPRFKey(underlyingError, filePath):
+            "Failed to load OPRF key from the file path \(filePath), with underlying error: \(underlyingError)"
         case let .invalidBatchSize(queryCount, databaseCount):
             """
             Mismatching batch size: getting \(queryCount) queries for \(databaseCount) tables. \
@@ -95,6 +103,10 @@ extension PirError: LocalizedError {
             "Invalid hash bucket slot count; maximum is \(maxCount)"
         case let .invalidIndex(index, numberOfEntries):
             "Index \(index) should between 0 and \(numberOfEntries)"
+        case let .invalidOPRFResponseLength(found, expected):
+            "Invalid OPRF Response length, found: \(found), expected: \(expected)"
+        case let .invalidOPRFKeySize(keySize, expectedSize):
+            "OPRF keysize should be \(expectedSize) but key of size \(keySize) is provided"
         case let .invalidPirAlgorithm(pirAlgorithm):
             "Invalid PIR algorithm: \(pirAlgorithm)"
         case let .invalidReply(ciphertextCount, expected):
@@ -103,6 +115,12 @@ extension PirError: LocalizedError {
             "Response has \(replyCount) replies, expected \(expected)"
         case let .invalidSharding(description):
             "Invalid sharding \(description)"
+        case .invalidOPRFHexSecretKey:
+            "Invalid OPRF hexadecimal secret key"
+        case let .invalidSymmetricPirConfig(config):
+            "Invalid Symmetric PIR config, found: \(config.configType)"
+        case .missingOPRFEncryptionKey:
+            "Missing OPRF encryption key."
         case let .validationError(description):
             "Validation error \(description)"
         }

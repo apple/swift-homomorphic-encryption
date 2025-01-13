@@ -33,7 +33,7 @@ env:
 jobs:
   swift-tests:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -56,7 +56,7 @@ jobs:
         done
   pre-commit:
     timeout-minutes: 1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Install pre-commit
@@ -69,7 +69,7 @@ jobs:
         pre-commit run --all-files
   insert-license:
     timeout-minutes: 1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -82,7 +82,7 @@ jobs:
       run: pre-commit run insert-license --files $(git diff --name-only HEAD~1)
   lint:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Cache SwiftLint
@@ -99,7 +99,7 @@ jobs:
       run: /tmp/swiftlint/SwiftLint/.build/release/swiftlint lint --strict .
   lockwood-swiftformat:
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Cache SwiftFormat
@@ -116,7 +116,7 @@ jobs:
       run: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat --strict .
   check-doc-comments:
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Check documentation comments

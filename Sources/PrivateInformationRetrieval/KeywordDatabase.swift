@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _CryptoExtras
 import Crypto
 import Foundation
 import HomomorphicEncryption
@@ -319,12 +320,20 @@ public struct KeywordDatabase {
     ///   - rows: Rows in the database.
     ///   - sharding: How to shard the database.
     ///   - shardingFunction: What function to use for sharding.
+    ///   - symmetricPirConfig: Configuration for Symmetric PIR.
     /// - Throws: Error upon failure to initialize the database.
     public init(
         rows: some Collection<KeywordValuePair>,
         sharding: Sharding,
-        shardingFunction: ShardingFunction = .sha256) throws
+        shardingFunction: ShardingFunction = .sha256,
+        symmetricPirConfig: SymmetricPirConfig? = nil) throws
     {
+        let database = if let symmetricPirConfig {
+            try KeywordDatabase.symmetricPIRProcess(database: rows, config: symmetricPirConfig)
+                as any Collection<KeywordValuePair>
+        } else {
+            rows
+        }
         let shardCount = switch sharding {
         case let .shardCount(shardCount): shardCount
         case let .entryCountPerShard(entryCountPerShard):
@@ -333,7 +342,7 @@ public struct KeywordDatabase {
         }
 
         var shards: [String: KeywordDatabaseShard] = [:]
-        for row in rows {
+        for row in database {
             let shardID = String(shardingFunction.shardIndex(keyword: row.keyword, shardCount: shardCount))
             if let previousValue = shards[shardID, default: KeywordDatabaseShard(shardID: shardID, rows: [])].rows
                 .updateValue(
@@ -366,6 +375,8 @@ public enum ProcessKeywordDatabase {
         public let keyCompression: PirKeyCompressionStrategy
         /// Number of test queries per shard.
         public let trialsPerShard: Int
+        /// Encryption key for Symmetric PIR.
+        public let symmetricPirConfig: SymmetricPirConfig?
 
         /// Initializes ``ProcessKeywordDatabase/Arguments`` for database processing.
         /// - Parameters:
@@ -374,13 +385,15 @@ public enum ProcessKeywordDatabase {
         ///   - algorithm: PIR algorithm to process with.
         ///   - keyCompression: Strategy for evaluation key compression.
         ///   - trialsPerShard: Number of test queries per shard.
+        ///   - symmetricPirConfig: Config for Symmetric PIR.
         ///  - Throws: Error upon invalid arguments
         public init(
             databaseConfig: KeywordDatabaseConfig,
             encryptionParameters: EncryptionParameters<Scheme>,
             algorithm: PirAlgorithm,
             keyCompression: PirKeyCompressionStrategy,
-            trialsPerShard: Int) throws
+            trialsPerShard: Int,
+            symmetricPirConfig: SymmetricPirConfig? = nil) throws
         {
             guard trialsPerShard >= 0 else {
                 throw PirError.validationError("trialsPerShard \(trialsPerShard) must be > 0")
@@ -393,6 +406,7 @@ public enum ProcessKeywordDatabase {
             self.algorithm = algorithm
             self.keyCompression = keyCompression
             self.trialsPerShard = trialsPerShard
+            self.symmetricPirConfig = symmetricPirConfig
         }
     }
 
@@ -483,7 +497,8 @@ public enum ProcessKeywordDatabase {
         }
         return try KeywordPirServer<MulPirServer<Scheme>>.process(database: shard,
                                                                   config: keywordConfig,
-                                                                  with: context, onEvent: onEvent)
+                                                                  with: context, onEvent: onEvent,
+                                                                  symmetricPirConfig: arguments.symmetricPirConfig)
     }
 
     /// Validates the correctness of processing on a shard.
@@ -574,8 +589,9 @@ public enum ProcessKeywordDatabase {
     /// - Returns: The processed database.
     /// - Throws: Error upon failure to process the database.
     @inlinable
-    public static func process<Scheme: HeScheme>(rows: some Collection<KeywordValuePair>,
-                                                 with arguments: Arguments<Scheme>) throws -> Processed<Scheme>
+    public static func process<Scheme: HeScheme>(
+        rows: some Collection<KeywordValuePair>,
+        with arguments: Arguments<Scheme>) throws -> Processed<Scheme>
     {
         var evaluationKeyConfig = EvaluationKeyConfig()
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
@@ -584,8 +600,8 @@ public enum ProcessKeywordDatabase {
         let keywordDatabase = try KeywordDatabase(
             rows: rows,
             sharding: arguments.databaseConfig.sharding,
-            shardingFunction: keywordConfig.shardingFunction)
-
+            shardingFunction: keywordConfig.shardingFunction,
+            symmetricPirConfig: arguments.symmetricPirConfig)
         var processedShards = [String: ProcessedDatabaseWithParameters<Scheme>]()
         for (shardID, shardedDatabase) in keywordDatabase.shards where !shardedDatabase.isEmpty {
             guard arguments.algorithm == .mulPir else {

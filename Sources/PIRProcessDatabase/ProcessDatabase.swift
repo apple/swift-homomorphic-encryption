@@ -33,6 +33,29 @@ enum TableSizeOption: Codable, Equatable, Hashable {
     static let defaultExpansionFactor = 1.1
 }
 
+/// The configuration for Symmetric PIR.
+struct SymmetricPirArguments: Codable, Hashable {
+    /// File path for key with which database will be encrypted.
+    let databaseEncryptionKeyFilePath: String
+    /// Config type for Symmetric PIR.
+    let configType: SymmetricPirConfigType
+
+    /// Returns a parsed `SymmetricPirConfig` for given parameters.
+    /// - Returns: Symmetric PIR config.
+    func resolve() throws -> SymmetricPirConfig {
+        do {
+            let secretKeyString = try String(contentsOfFile: databaseEncryptionKeyFilePath, encoding: .utf8)
+            guard let secretKey = Array(hexEncoded: secretKeyString) else {
+                throw PirError.invalidOPRFHexSecretKey
+            }
+            try configType.validateEncryptionKey(secretKey)
+            return try SymmetricPirConfig(oprfSecretKey: secretKey, configType: configType)
+        } catch {
+            throw PirError.failedToLoadOPRFKey(underlyingError: "\(error)", filePath: databaseEncryptionKeyFilePath)
+        }
+    }
+}
+
 /// A struct representing the arguments for the `cuckooTable` command.
 struct CuckooTableArguments: Codable, Equatable, Hashable {
     let hashFunctionCount: Int?
@@ -107,6 +130,18 @@ extension String {
     }
 }
 
+extension KeywordDatabase {
+    /// Creates a new `KeywordDatabase` from a given path.
+    /// - Parameters:
+    ///   - path: The path to the `KeywordDatabase` file.
+    ///   - sharding: The sharding strategy to use.
+    /// - Throws: Error upon failure to initialize the database.
+    init(from path: String, sharding: Sharding) throws {
+        let database = try Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase(from: path)
+        try self.init(rows: database.native(), sharding: sharding)
+    }
+}
+
 /// A struct that represents the database processing arguments.
 struct Arguments: Codable, Equatable, Hashable, Sendable {
     /// The default arguments.
@@ -129,6 +164,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
     var keyCompression: PirKeyCompressionStrategy?
     // swiftlint:disable:next discouraged_optional_boolean
     var useMaxSerializedBucketSize: Bool?
+    var symmetricPirArguments: SymmetricPirArguments?
     var trialsPerShard: Int?
 
     static func defaultJsonString() -> String {
@@ -210,6 +246,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
             algorithm: algorithm ?? .mulPir,
             keyCompression: keyCompression ?? .noCompression,
             useMaxSerializedBucketSize: useMaxSerializedBucketSize ?? false,
+            symmetricPirConfig: symmetricPirArguments?.resolve(),
             trialsPerShard: trialsPerShard ?? 1)
     }
 }
@@ -227,6 +264,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     let algorithm: PirAlgorithm
     let keyCompression: PirKeyCompressionStrategy
     let useMaxSerializedBucketSize: Bool
+    let symmetricPirConfig: SymmetricPirConfig?
     let trialsPerShard: Int
 
     var description: String {
@@ -248,6 +286,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     ///  - rlweParameters: RLWE parameters.
     ///  - algorithm: PIR algorithm.
     ///  - keyCompression: Evaluation key compression.
+    ///  - symmetricPirConfig: Config for symmetric PIR.
     ///  - trialsPerShard: Number of test queries per shard.
     init(
         inputDatabase: String,
@@ -261,6 +300,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         algorithm: PirAlgorithm,
         keyCompression: PirKeyCompressionStrategy,
         useMaxSerializedBucketSize: Bool,
+        symmetricPirConfig: SymmetricPirConfig?,
         trialsPerShard: Int) throws
     {
         self.inputDatabase = inputDatabase
@@ -274,6 +314,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         self.algorithm = algorithm
         self.keyCompression = keyCompression
         self.useMaxSerializedBucketSize = useMaxSerializedBucketSize
+        self.symmetricPirConfig = symmetricPirConfig
         self.trialsPerShard = trialsPerShard
 
         try validate()
@@ -330,7 +371,8 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                  unevenDimensions: true,
                                                  keyCompression: config.keyCompression,
                                                  useMaxSerializedBucketSize: config.useMaxSerializedBucketSize,
-                                                 shardingFunction: config.shardingFunction)
+                                                 shardingFunction: config.shardingFunction,
+                                                 symmetricPirClientConfig: config.symmetricPirConfig?.clientConfig())
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
@@ -340,18 +382,18 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                                        encryptionParameters: encryptionParameters,
                                                                        algorithm: config.algorithm,
                                                                        keyCompression: config.keyCompression,
-                                                                       trialsPerShard: config.trialsPerShard)
-
+                                                                       trialsPerShard: config.trialsPerShard,
+                                                                       symmetricPirConfig: config.symmetricPirConfig)
         let context = try Context(encryptionParameters: processArgs.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(
             rows: database,
             sharding: processArgs.databaseConfig.sharding,
-            shardingFunction: config.shardingFunction)
+            shardingFunction: config.shardingFunction,
+            symmetricPirConfig: processArgs.symmetricPirConfig)
         ProcessDatabase.logger.info("Sharded database into \(keywordDatabase.shards.count) shards")
-
         let shards = keywordDatabase.shards.sorted { $0.0.localizedStandardCompare($1.0) == .orderedAscending }
-
         var evaluationKeyConfig = EvaluationKeyConfig()
+
         if parallel {
             try await withThrowingTaskGroup(of: EvaluationKeyConfig.self) { group in
                 for (shardID, shard) in shards {

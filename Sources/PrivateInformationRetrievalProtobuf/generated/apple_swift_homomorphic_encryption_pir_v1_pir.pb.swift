@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Foundation
 import SwiftProtobuf
 
 import HomomorphicEncryptionProtobuf
@@ -79,6 +80,45 @@ public enum Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy: Swif
     .unspecified,
     .maximumCompression,
     .hybridCompression,
+  ]
+
+}
+
+/// Scheme used for encrypting database entries in Symmetric PIR.
+public enum Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public typealias RawValue = Int
+
+  /// Unspecified encryption scheme.
+  case unspecified // = 0
+
+  /// OPRF P384 AES-192-GCM, 96-bit nonce, 128-bit tag
+  case oprfP384AesGcm192Nonce96Tag128 // = 1
+  case UNRECOGNIZED(Int)
+
+  public init() {
+    self = .unspecified
+  }
+
+  public init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .unspecified
+    case 1: self = .oprfP384AesGcm192Nonce96Tag128
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  public var rawValue: Int {
+    switch self {
+    case .unspecified: return 0
+    case .oprfP384AesGcm192Nonce96Tag128: return 1
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  public static let allCases: [Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType] = [
+    .unspecified,
+    .oprfP384AesGcm192Nonce96Tag128,
   ]
 
 }
@@ -172,6 +212,16 @@ public struct Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: Send
   /// The number of hash functions used.
   public var numHashFunctions: UInt64 = 0
 
+  /// Symmetric PIR configuration
+  public var symmetricPirClientConfig: Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig {
+    get {return _symmetricPirClientConfig ?? Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig()}
+    set {_symmetricPirClientConfig = newValue}
+  }
+  /// Returns true if `symmetricPirClientConfig` has been explicitly set.
+  public var hasSymmetricPirClientConfig: Bool {return self._symmetricPirClientConfig != nil}
+  /// Clears the value of `symmetricPirClientConfig`. Subsequent reads from it will return its default value.
+  public mutating func clearSymmetricPirClientConfig() {self._symmetricPirClientConfig = nil}
+
   /// The sharding function to use.
   public var shardingFunction: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction {
     get {return _shardingFunction ?? Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction()}
@@ -186,6 +236,7 @@ public struct Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: Send
 
   public init() {}
 
+  fileprivate var _symmetricPirClientConfig: Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig? = nil
   fileprivate var _shardingFunction: Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction? = nil
 }
 
@@ -276,6 +327,23 @@ public struct Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices: Sendable
   public init() {}
 }
 
+/// Client specific PIR configuration for Symmetric PIR
+public struct Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Server public key
+  public var serverPublicKey: Data = Data()
+
+  /// Symmetric PIR config type
+  public var configType: Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType = .unspecified
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.pir.v1"
@@ -285,6 +353,13 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy: SwiftP
     0: .same(proto: "KEY_COMPRESSION_STRATEGY_UNSPECIFIED"),
     1: .same(proto: "KEY_COMPRESSION_STRATEGY_MAXIMUM_COMPRESSION"),
     2: .same(proto: "KEY_COMPRESSION_STRATEGY_HYBRID_COMPRESSION"),
+  ]
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "SYMMETRIC_PIR_CONFIG_TYPE_UNSPECIFIED"),
+    1: .same(proto: "SYMMETRIC_PIR_CONFIG_TYPE_OPRF_P384_AES_GCM_192_NONCE_96_TAG_128"),
   ]
 }
 
@@ -432,6 +507,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: SwiftPro
   public static let protoMessageName: String = _protobuf_package + ".KeywordPirParameters"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "num_hash_functions"),
+    3: .standard(proto: "symmetric_pir_client_config"),
     4: .standard(proto: "sharding_function"),
   ]
 
@@ -442,6 +518,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: SwiftPro
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularUInt64Field(value: &self.numHashFunctions) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._symmetricPirClientConfig) }()
       case 4: try { try decoder.decodeSingularMessageField(value: &self._shardingFunction) }()
       default: break
       }
@@ -456,6 +533,9 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: SwiftPro
     if self.numHashFunctions != 0 {
       try visitor.visitSingularUInt64Field(value: self.numHashFunctions, fieldNumber: 1)
     }
+    try { if let v = self._symmetricPirClientConfig {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
     try { if let v = self._shardingFunction {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     } }()
@@ -464,6 +544,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: SwiftPro
 
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters, rhs: Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters) -> Bool {
     if lhs.numHashFunctions != rhs.numHashFunctions {return false}
+    if lhs._symmetricPirClientConfig != rhs._symmetricPirClientConfig {return false}
     if lhs._shardingFunction != rhs._shardingFunction {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -624,6 +705,44 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices: SwiftProtobu
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices, rhs: Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices) -> Bool {
     if lhs.ciphertexts != rhs.ciphertexts {return false}
     if lhs.numPirCalls != rhs.numPirCalls {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".SymmetricPirClientConfig"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "server_public_key"),
+    2: .standard(proto: "config_type"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.serverPublicKey) }()
+      case 2: try { try decoder.decodeSingularEnumField(value: &self.configType) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.serverPublicKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.serverPublicKey, fieldNumber: 1)
+    }
+    if self.configType != .unspecified {
+      try visitor.visitSingularEnumField(value: self.configType, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig, rhs: Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig) -> Bool {
+    if lhs.serverPublicKey != rhs.serverPublicKey {return false}
+    if lhs.configType != rhs.configType {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

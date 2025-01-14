@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -284,6 +284,40 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse: Sendable 
 
   /// Encrypted replies, each of which is a ciphertext vector.
   public var replies: [HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertextVec] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+/// PIR OPRF Request.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Serialized query.
+  public var queryElement: Data = Data()
+
+  /// Identifier for PirConfig used to construct this request.
+  public var configID: Data = Data()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+/// PIR OPRF Response.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Serialized output of OPRF.
+  public var evaluatedElement: Data = Data()
+
+  /// Proof of OPRF evaluation.
+  public var proof: Data = Data()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -667,6 +701,82 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse: SwiftProtobuf
 
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse) -> Bool {
     if lhs.replies != rhs.replies {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OPRFRequest"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "query_element"),
+    2: .standard(proto: "config_id"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.queryElement) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.configID) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.queryElement.isEmpty {
+      try visitor.visitSingularBytesField(value: self.queryElement, fieldNumber: 1)
+    }
+    if !self.configID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.configID, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest) -> Bool {
+    if lhs.queryElement != rhs.queryElement {return false}
+    if lhs.configID != rhs.configID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".OPRFResponse"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "evaluated_element"),
+    2: .same(proto: "proof"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.evaluatedElement) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.proof) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.evaluatedElement.isEmpty {
+      try visitor.visitSingularBytesField(value: self.evaluatedElement, fieldNumber: 1)
+    }
+    if !self.proof.isEmpty {
+      try visitor.visitSingularBytesField(value: self.proof, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse) -> Bool {
+    if lhs.evaluatedElement != rhs.evaluatedElement {return false}
+    if lhs.proof != rhs.proof {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

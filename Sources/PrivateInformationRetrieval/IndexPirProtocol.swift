@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -268,6 +268,8 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
     public let pirParameter: IndexPirParameter
     /// Parameters for keyword-value PIR queries.
     public let keywordPirParameter: KeywordPirParameter?
+    /// Symmetric PIR config.
+    public let symmetricPirConfig: SymmetricPirConfig?
 
     /// Initializes a ``ProcessedDatabaseWithParameters``.
     /// - Parameters:
@@ -276,18 +278,21 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
     ///   - evaluationKeyConfig: Evaluation key configuration.
     ///   - pirParameter: Index PIR parameters.
     ///   - keywordPirParameter: Optional keyword PIR parameters.
+    ///   - symmetricPirConfig: Optional config for symmetric PIR.
     public init(
         database: ProcessedDatabase<Scheme>,
         algorithm: PirAlgorithm,
         evaluationKeyConfig: EvaluationKeyConfig,
         pirParameter: IndexPirParameter,
-        keywordPirParameter: KeywordPirParameter? = nil)
+        keywordPirParameter: KeywordPirParameter? = nil,
+        symmetricPirConfig: SymmetricPirConfig? = nil)
     {
         self.database = database
         self.algorithm = algorithm
         self.evaluationKeyConfig = evaluationKeyConfig
         self.pirParameter = pirParameter
         self.keywordPirParameter = keywordPirParameter
+        self.symmetricPirConfig = symmetricPirConfig
     }
 }
 

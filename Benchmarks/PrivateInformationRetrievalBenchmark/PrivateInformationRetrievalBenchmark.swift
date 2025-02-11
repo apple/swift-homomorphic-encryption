@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,8 +29,11 @@ import PrivateInformationRetrievalProtobuf
         .mallocCountTotal,
         .peakMemoryResident,
         .evaluationKeySize,
+        .evaluationKeyCount,
         .querySize,
+        .queryCiphertextCount,
         .responseSize,
+        .responseCiphertextCount,
         .noiseBudget,
     ],
     maxDuration: .seconds(5))
@@ -153,8 +156,11 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient> 
     let evaluationKey: Server.Scheme.EvaluationKey
     let query: Client.Query
     let evaluationKeySize: Int
+    let evaluationKeyCount: Int
     let querySize: Int
+    let queryCiphertextCount: Int
     let responseSize: Int
+    let responseCiphertextCount: Int
     let noiseBudget: Int
 
     init(
@@ -188,13 +194,17 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient> 
         }
 
         self.evaluationKeySize = try evaluationKey.size()
+        self.evaluationKeyCount = evaluationKey.config.keyCount
         self.querySize = try query.size()
+        self.queryCiphertextCount = query.ciphertexts.count
         self.responseSize = try response.size()
+        self.responseCiphertextCount = response.ciphertexts.count
         self.noiseBudget = try response.scaledNoiseBudget(using: secretKey)
     }
 }
 
 func indexPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    // swiftlint:disable:next closure_body_length
     {
         let entryCount = 1_000_000
         let entrySizeInBytes = 1
@@ -222,8 +232,11 @@ func indexPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
                                                                           .evaluationKey))
             }
             benchmark.measurement(.evaluationKeySize, benchmarkContext.evaluationKeySize)
+            benchmark.measurement(.evaluationKeyCount, benchmarkContext.evaluationKeyCount)
             benchmark.measurement(.querySize, benchmarkContext.querySize)
+            benchmark.measurement(.queryCiphertextCount, benchmarkContext.queryCiphertextCount)
             benchmark.measurement(.responseSize, benchmarkContext.responseSize)
+            benchmark.measurement(.responseCiphertextCount, benchmarkContext.responseCiphertextCount)
             benchmark.measurement(.noiseBudget, benchmarkContext.noiseBudget)
         } setup: {
             try IndexPirBenchmarkContext(
@@ -253,8 +266,11 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
     let evaluationKey: Server.Scheme.EvaluationKey
     let query: Client.Query
     let evaluationKeySize: Int
+    let evaluationKeyCount: Int
     let querySize: Int
+    let queryCiphertextCount: Int
     let responseSize: Int
+    let responseCiphertextCount: Int
     let noiseBudget: Int
 
     init(
@@ -329,8 +345,11 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
         }
 
         self.evaluationKeySize = try evaluationKey.size()
+        self.evaluationKeyCount = evaluationKey.config.keyCount
         self.querySize = try query.size()
+        self.queryCiphertextCount = query.ciphertexts.count
         self.responseSize = try response.size()
+        self.responseCiphertextCount = response.ciphertexts.count
         self.noiseBudget = try response.scaledNoiseBudget(using: secretKey)
     }
 }
@@ -359,8 +378,11 @@ func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
                                                                       using: benchmarkContext.evaluationKey))
             }
             benchmark.measurement(.evaluationKeySize, benchmarkContext.evaluationKeySize)
+            benchmark.measurement(.evaluationKeyCount, benchmarkContext.evaluationKeyCount)
             benchmark.measurement(.querySize, benchmarkContext.querySize)
+            benchmark.measurement(.queryCiphertextCount, benchmarkContext.queryCiphertextCount)
             benchmark.measurement(.responseSize, benchmarkContext.responseSize)
+            benchmark.measurement(.responseCiphertextCount, benchmarkContext.responseCiphertextCount)
             benchmark.measurement(.noiseBudget, benchmarkContext.noiseBudget)
         } setup: {
             try KeywordPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>(
@@ -375,8 +397,11 @@ func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
 
 extension BenchmarkMetric {
     static var querySize: Self { .custom("Query byte size") }
+    static var queryCiphertextCount: Self { .custom("Query ciphertext count") }
     static var evaluationKeySize: Self { .custom("Evaluation key byte size") }
+    static var evaluationKeyCount: Self { .custom("Evaluation key count") }
     static var responseSize: Self { .custom("Response byte size") }
+    static var responseCiphertextCount: Self { .custom("Response ciphertext count") }
     static var noiseBudget: Self { .custom("Noise budget x \(noiseBudgetScale)") }
 }
 

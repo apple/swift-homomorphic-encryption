@@ -296,7 +296,7 @@ public enum HeAPITestHelpers {
     }
 
     /// Testing ciphertext addition of the scheme.
-    public static func schemeCiphertextAdditionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    public static func schemeCiphertextAddTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         let testEnv = try TestEnv(context: context, format: .coefficient)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
@@ -388,7 +388,7 @@ public enum HeAPITestHelpers {
     }
 
     /// Testing ciphertext subtraction of the scheme.
-    public static func schemeCiphertextSubtractionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    public static func schemeCiphertextSubtractTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         let testEnv = try TestEnv(context: context, format: .coefficient)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
@@ -480,7 +480,7 @@ public enum HeAPITestHelpers {
     }
 
     /// testing ciphertext multiplication of the scheme.
-    public static func schemeCiphertextCiphertextMultiplicationTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    public static func schemeCiphertextCiphertextMultiplyTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         guard context.supportsSimdEncoding, context.supportsEvaluationKey else {
             return
         }
@@ -645,7 +645,7 @@ public enum HeAPITestHelpers {
     }
 
     /// Testing CT-CT multiplication followed by CT-CT subtraction of the scheme.
-    public static func schemeCiphertextMultiplySubTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    public static func schemeCiphertextMultiplySubtractTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         guard context.supportsSimdEncoding else {
             return
         }
@@ -660,6 +660,89 @@ public enum HeAPITestHelpers {
         let ciphertext1 = testEnv.ciphertext1
         let ciphertext2 = testEnv.ciphertext2
         let ciphertextResult = try ciphertext1 * ciphertext2 - ciphertext1
+
+        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+
+        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
+        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
+        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplySubtractData)
+    }
+
+    /// Testing CT-CT multiplication followed by CT-PT subtraction of the scheme.
+    public static func schemeCiphertextMultiplySubtractPlainTest<Scheme: HeScheme>(
+        context: Context<Scheme>) throws
+    {
+        guard context.supportsSimdEncoding else {
+            return
+        }
+        let testEnv = try TestEnv(context: context, format: .simd)
+        let data1 = testEnv.data1
+        let data2 = testEnv.data2
+        let multiplySubtractData = zip(data1, data2).map { data1, data2 in
+            let t = context.plaintextModulus
+            return data1.multiplyMod(data2, modulus: t, variableTime: true).subtractMod(data1, modulus: t)
+        }
+
+        let ciphertext1 = testEnv.ciphertext1
+        let ciphertext2 = testEnv.ciphertext2
+        let ciphertextResult = try ciphertext1 * ciphertext2 - testEnv.coeffPlaintext1
+
+        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+
+        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
+        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
+        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplySubtractData)
+    }
+
+    /// Testing CT-PT multiplication followed by CT-PT addition of the scheme.
+    public static func schemeCiphertextPlaintextMultiplyAddPlainTest<Scheme: HeScheme>(
+        context: Context<Scheme>) throws
+    {
+        guard context.supportsSimdEncoding else {
+            return
+        }
+        let testEnv = try TestEnv(context: context, format: .simd)
+        let data1 = testEnv.data1
+        let data2 = testEnv.data2
+        let multiplyAddData = zip(data1, data2).map { data1, data2 in
+            let t = context.plaintextModulus
+            return data1.multiplyMod(data2, modulus: t, variableTime: true).addMod(data1, modulus: t)
+        }
+
+        let ciphertext1 = testEnv.evalCiphertext1
+        let ciphertextEvalResult = try ciphertext1 * testEnv.evalPlaintext2
+        var ciphertextResult = try ciphertextEvalResult.inverseNtt()
+        try ciphertextResult += testEnv.coeffPlaintext1
+
+        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+
+        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplyAddData)
+        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplyAddData)
+        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplyAddData)
+    }
+
+    /// Testing CT-PT multiplication followed by CT-PT subtraction of the scheme.
+    public static func schemeCiphertextPlaintextMultiplySubtractPlainTest<Scheme: HeScheme>(
+        context: Context<Scheme>) throws
+    {
+        guard context.supportsSimdEncoding else {
+            return
+        }
+        let testEnv = try TestEnv(context: context, format: .simd)
+        let data1 = testEnv.data1
+        let data2 = testEnv.data2
+        let multiplySubtractData = zip(data1, data2).map { data1, data2 in
+            let t = context.plaintextModulus
+            return data1.multiplyMod(data2, modulus: t, variableTime: true).subtractMod(data1, modulus: t)
+        }
+
+        let ciphertext1 = testEnv.evalCiphertext1
+        let ciphertextEvalResult = try ciphertext1 * testEnv.evalPlaintext2
+        var ciphertextResult = try ciphertextEvalResult.inverseNtt()
+        try ciphertextResult -= testEnv.coeffPlaintext1
 
         let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
         let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
@@ -688,7 +771,7 @@ public enum HeAPITestHelpers {
     }
 
     /// Testing CT-PT addition of the scheme.
-    public static func schemeCiphertextPlaintextAdditionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    public static func schemeCiphertextPlaintextAddTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         guard context.supportsSimdEncoding else {
             return
         }
@@ -797,7 +880,7 @@ public enum HeAPITestHelpers {
     }
 
     /// Testing CT-PT subtraction of the scheme.
-    public static func schemeCiphertextPlaintextSubtractionTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    public static func schemeCiphertextPlaintextSubtractTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         guard context.supportsSimdEncoding else {
             return
         }
@@ -901,7 +984,7 @@ public enum HeAPITestHelpers {
     }
 
     /// Testing CT-PT multiplication of the scheme.
-    public static func schemeCiphertextPlaintextMultiplicationTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
+    public static func schemeCiphertextPlaintextMultiplyTest<Scheme: HeScheme>(context: Context<Scheme>) throws {
         guard context.supportsSimdEncoding else {
             return
         }

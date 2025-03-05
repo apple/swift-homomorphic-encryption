@@ -1,4 +1,4 @@
-# Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+# Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ on:
     branches: [ "main", "release/**" ]
   pull_request:
     branches: [ "main", "release/**" ]
-    types: [opened, reopened, synchronize, ready_for_review]
+    types: [opened, reopened, synchronize]
 # Pushing changes to PR stops currently-running CI
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,15 +37,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        swift: ["5.10", "6.0"]
-    name: swift ${{ matrix.swift }} tests
+        swift_version: ['5.10', '6.0']
+        os_version: ['jammy']
+    container:
+      image: swift:${{ matrix.swift_version }}-${{ matrix.os_version }}
+    name: swift ${{ matrix.swift_version }} tests
     steps:
-    - uses: slashmo/install-swift@v0.4.0
-      with:
-        version: ${{ matrix.swift }}
-    - uses: actions/checkout@v4
+    - name: Swift version
+      run: swift --version
+    - name: Checkout repository
+      uses: actions/checkout@v4
     - name: Install jemalloc
-      run: sudo apt-get install -y libjemalloc-dev
+      run: apt-get update && apt-get install -y libjemalloc-dev
     - name: Run tests
       run: swift test --configuration release --parallel
     - name: Run snippets
@@ -58,20 +61,36 @@ jobs:
     timeout-minutes: 1
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     - name: Install pre-commit
       run: pip install pre-commit
     - name: Pre-commit checks
       # CI will commit to `main`
-      # swiftformat & swiftlint tested separately
+      # swiftformat, swiftlint and license checks tested separately
       run: >
-        SKIP=no-commit-to-branch,lockwood-swiftformat,swiftlint,check-doc-comments
+        SKIP=no-commit-to-branch,lockwood-swiftformat,swiftlint,check-doc-comments,insert-license
         pre-commit run --all-files
+  insert-license:
+    timeout-minutes: 1
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+    - name: Install pre-commit
+      run: pip install pre-commit
+    - name: List changed files
+      run: git diff --name-only HEAD~1
+    - name: Run license check
+      run: pre-commit run insert-license --files $(git diff --name-only HEAD~1)
   lint:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     - name: Cache SwiftLint
       id: cache-swiftlint
       uses: actions/cache@v4
@@ -88,7 +107,8 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     - name: Cache SwiftFormat
       id: cache-swiftformat
       uses: actions/cache@v4
@@ -105,6 +125,7 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     - name: Check documentation comments
       run: ci/run-apple-swift-format.sh

@@ -4,6 +4,7 @@
 .benchmarkBaselines/
 .build/
 .docc-build/
+.index-build/
 .swiftpm
 .vscode/
 xcuserdata/

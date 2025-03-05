@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -169,7 +169,7 @@ public struct EvaluationKeyConfig: Codable, Equatable, Hashable, Sendable {
 }
 
 extension Sequence<EvaluationKeyConfig> {
-    /// Computes the union of ``EvaluationKeyConfig``s.
+    /// Computes the union of evaluation key configurations.
     ///
     /// The union of ``EvaluationKeyConfig``s is a configuration whose:
     ///  * Galois elements is a union of each configuration's Galois elements

@@ -8,7 +8,7 @@ Private Nearest Neighbor Search database generation
 The resulting database can be processed with the [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsprocessdatabase) executable.
 
 ### Requirements
-First ensure sure that the `~/.swiftpm/bin` directory is on your `$PATH`.
+First ensure that the `~/.swiftpm/bin` directory is on your `$PATH`.
 For example, if using the `zsh` shell, add the following line to your `~/.zshrc`
 ```sh
 export PATH="$HOME/.swiftpm/bin:$PATH"

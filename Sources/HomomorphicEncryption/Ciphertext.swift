@@ -162,14 +162,12 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
 
     @inlinable
     package func forwardNtt() throws -> Ciphertext<Scheme, Eval> where Format == Coeff {
-        let polys = try polys.map { try $0.forwardNtt() }
-        return Ciphertext<Scheme, Eval>(context: context, polys: polys, correctionFactor: correctionFactor, seed: seed)
+        try Scheme.forwardNtt(self)
     }
 
     @inlinable
     package func inverseNtt() throws -> Ciphertext<Scheme, Coeff> where Format == Eval {
-        let polys = try polys.map { try $0.inverseNtt() }
-        return Ciphertext<Scheme, Coeff>(context: context, polys: polys, correctionFactor: correctionFactor, seed: seed)
+        try Scheme.inverseNtt(self)
     }
 
     /// Converts the ciphertext to a ``HeScheme/CoeffCiphertext``.
@@ -296,9 +294,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - seealso: ``Ciphertext/modSwitchDown()`` for more information and an alternative API.
     @inlinable
     public mutating func modSwitchDownToSingle() throws where Format == Scheme.CanonicalCiphertextFormat {
-        while moduli.count > 1 {
-            try Scheme.modSwitchDown(&self)
-        }
+        try Scheme.modSwitchDownToSingle(&self)
     }
 
     /// Decryption of a ciphertext.
@@ -485,10 +481,7 @@ extension Ciphertext where Format == Coeff {
     /// - Throws: Error upon failure to compute the inverse.
     @inlinable
     public mutating func multiplyInversePowerOfX(power: Int) throws {
-        precondition(power >= 0)
-        for index in polys.indices {
-            try polys[index].multiplyInversePowerOfX(power)
-        }
+        try Scheme.multiplyInversePowerOfX(&self, power: power)
     }
 }
 

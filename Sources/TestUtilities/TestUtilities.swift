@@ -151,20 +151,31 @@ extension TestUtils {
         return perm(n: n, k: k) / mult(1...k)
     }
 
-    /// Returns the expected number of bins with "count" balls, assuming
-    /// a total of "num_balls" balls each assigned to a uniform random bin
-    /// among "num_bins" bins.
+    /// Count the expected number of bins with a target count, assuming balls each assigned to a uniform random bin.
+    /// - Parameters:
+    ///   - binCount: Number of bins.
+    ///   - ballCount: Number of balls.
+    ///   - count: Target number of balls in a bin.
+    /// - Returns: the expected number of bins with `count` balls.
     package static func expectedBallsInBinsCount(binCount: Int, ballCount: Int, count: Int) -> Double {
         // Pr(ballCount in first bin == count)
         let n = ballCount
         let k = count
         let p = 1 / Double(binCount)
-        let q = 1.0 - p
         let binomialCoefficient = binomialCoefficient(n: n, k: k)
+
+        func binomialPow(_ base: Double, _ exponent: Double) -> Double {
+            // 0^0 set to be 1
+            if base.isZero, exponent.isZero {
+                1.0
+            } else {
+                Double.pow(base, exponent)
+            }
+        }
+
         // Probability mass function of binomial distribution
-        let probabilityOfExactlyCountBallsInFirstBin = binomialCoefficient * Double.pow(p, Double(k)) * Double.pow(
-            q,
-            Double(n - k))
+        let scalingFactor = binomialPow(p, Double(k)) * binomialPow(1.0 - p, Double(n - k))
+        let probabilityOfExactlyCountBallsInFirstBin = binomialCoefficient * scalingFactor
         // Linearity of expectation
         return Double(binCount) * probabilityOfExactlyCountBallsInFirstBin
     }

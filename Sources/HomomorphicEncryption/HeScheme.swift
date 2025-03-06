@@ -378,6 +378,12 @@ public protocol HeScheme {
         by step: Int,
         using evaluationKey: EvaluationKey) throws
 
+    /// The async version of ``HeScheme/rotateColumns(of:by:using:)``
+    static func rotateColumnsAsync(
+        of ciphertext: inout CanonicalCiphertext,
+        by step: Int,
+        using evaluationKey: EvaluationKey) async throws
+
     /// Swaps the rows of a ciphertext.
     ///
     /// A plaintext in ``EncodeFormat/simd`` format can be viewed a `2 x (N / 2)` matrix of coefficients.
@@ -394,92 +400,135 @@ public protocol HeScheme {
     ///   - evaluationKey: Evaluation key to use in the HE computation. Must contain the Galois element returned from
     /// ``GaloisElement/swappingRows(degree:)``.
     /// - Throws: error upon failure to swap the ciphertext's rows.
-    /// - seealso: ``Ciphertext/swapRows(using:)`` for an alternate API.
+    /// - seealso: ``Ciphertext/swapRows(using:)`` for an alternate API. ``swapRowsAsync(of:using:)`` for an async
+    /// version of this API
     static func swapRows(of ciphertext: inout CanonicalCiphertext, using evaluationKey: EvaluationKey) throws
 
+    /// The async version of ``HeScheme/swapRows(of:using:)``
+    static func swapRowsAsync(of ciphertext: inout CanonicalCiphertext, using evaluationKey: EvaluationKey) async throws
+
     /// In-place plaintext addition: `lhs += rhs`.
     /// - Parameters:
     ///   - lhs: Plaintext to add; will store the sum.
     ///   - rhs: Plaintext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/addAssignAsync(_:_:)-x1tw>  for an async version
+    /// of this API
     static func addAssign(_ lhs: inout CoeffPlaintext, _ rhs: CoeffPlaintext) throws
 
+    /// The async version of ``HeScheme/addAssign(_:_:)-3bv7g``
+    static func addAssignAsync(_ lhs: inout CoeffPlaintext, _ rhs: CoeffPlaintext) async throws
+
     /// In-place plaintext addition: `lhs += rhs`.
     /// - Parameters:
     ///   - lhs: Plaintext to add; will store the sum.
     ///   - rhs: Plaintext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/addAssignAsync(_:_:)-2bgi6>  for an async version
+    /// of this API
     static func addAssign(_ lhs: inout EvalPlaintext, _ rhs: EvalPlaintext) throws
 
+    /// The async version of ``HeScheme/addAssign(_:_:)-1osb9``
+    static func addAssignAsync(_ lhs: inout EvalPlaintext, _ rhs: EvalPlaintext) async throws
+
     /// In-place ciphertext addition: `lhs += rhs`.
     /// - Parameters:
     ///   - lhs: Ciphertext to add; will store the sum.
     ///   - rhs: Ciphertext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/addAssignCoeffAsync(_:_:)-5gkj7>  for an async
+    /// version of this API
     static func addAssignCoeff(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws
 
+    /// The async version of ``HeScheme/addAssignCoeff(_:_:)-96q8a``.
+    static func addAssignCoeffAsync(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) async throws
+
     /// In-place ciphertext addition: `lhs += rhs`.
     /// - Parameters:
     ///   - lhs: Ciphertext to add; will store the sum.
     ///   - rhs: Ciphertext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/addAssignEvalAsync(_:_:)-1f99i>  for an async
+    /// version of this API
     static func addAssignEval(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws
 
+    /// The async version of ``HeScheme/addAssignEval(_:_:)-6rg4i``.
+    static func addAssignEvalAsync(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) async throws
+
     /// In-place ciphertext subtraction: `lhs -= rhs`.
     /// - Parameters:
     ///   - lhs: Ciphertext to subtract from; will store the difference.
     ///   - rhs: Ciphertext to subtract.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subAssignCoeffAsync(_:_:)  for an async version of this API
     static func subAssignCoeff(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) throws
 
+    /// The async version of ``HeScheme/subAssignCoeff(_:_:)-7ae21``.
+    static func subAssignCoeffAsync(_ lhs: inout CoeffCiphertext, _ rhs: CoeffCiphertext) async throws
+
     /// In-place ciphertext subtraction: `lhs -= rhs`.
     ///
     /// - Parameters:
     ///   - lhs: Ciphertext to subtract from; will store the difference.
     ///   - rhs: Ciphertext to subtract.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subAssignEval(_:_:)``  for an async version of this API
     static func subAssignEval(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) throws
 
+    /// The async version of ``HeScheme/subAssignEval(_:_:)-17q3d``.
+    static func subAssignEvalAsync(_ lhs: inout EvalCiphertext, _ rhs: EvalCiphertext) async throws
+
     /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
     ///
     /// - Parameters:
     ///   - ciphertext: Ciphertext to add; will store the sum.
     ///   - plaintext: Plaintext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/addAssignCoeffAsync(_:_:)-5gkj7>  for an async
+    /// version of this API
     static func addAssignCoeff(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws
 
+    /// The async version of ``HeScheme/addAssignCoeff(_:_:)-3zekp``.
+    static func addAssignCoeffAsync(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) async throws
+
     /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
     ///
     /// - Parameters:
     ///   - ciphertext: Ciphertext to add; will store the sum.
     ///   - plaintext: Plaintext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/addAssignEvalAsync(_:_:)-2asa9>  for an async
+    /// version of this API
     static func addAssignEval(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws
 
+    /// The async version of ``HeScheme/addAssignEval(_:_:)-5r98u``.
+    static func addAssignEvalAsync(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) async throws
+
     /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
     ///
     /// - Parameters:
     ///   - ciphertext: Ciphertext to subtract from; will store the difference.
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/subAssignCoeffAsync(_:_:)-6rmzq>  for an async
+    /// version of this API
     static func subAssignCoeff(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) throws
 
+    /// The async version of ``HeScheme/subAssignCoeff(_:_:)-168hp``.
+    static func subAssignCoeffAsync(_ ciphertext: inout CoeffCiphertext, _ plaintext: CoeffPlaintext) async throws
+
     /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
     ///
     /// - Parameters:
     ///   - ciphertext: Ciphertext to subtract from; will store the difference.
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/subAssignEvalAsync(_:_:)-6wqyo>  for an async
+    /// version of this API
     static func subAssignEval(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws
 
-    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
-    ///
-    /// - Parameters:
-    ///   - plaintext: Plaintext to subtract from.
-    ///   - ciphertext: Ciphertext to subtract.
-    /// - Returns: A ciphertext encrypting the difference.
-    /// - Throws: Error upon failure to subtract.
-    static func subCoeff(_ plaintext: CoeffPlaintext, _ ciphertext: CoeffCiphertext) throws -> CoeffCiphertext
+    /// The async version of ``HeScheme/subAssignEval(_:_:)-1x0fw``.
+    static func subAssignEvalAsync(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) async throws
 
     /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
     ///
@@ -488,7 +537,25 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext to subtract.
     /// - Returns: A ciphertext encrypting the difference.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subCoeffAsync(_:_:)``  for an async version of this API
+    static func subCoeff(_ plaintext: CoeffPlaintext, _ ciphertext: CoeffCiphertext) throws -> CoeffCiphertext
+
+    /// The async version of ``HeScheme/subCoeff(_:_:)``.
+    static func subCoeffAsync(_ plaintext: CoeffPlaintext, _ ciphertext: CoeffCiphertext) async throws
+        -> CoeffCiphertext
+
+    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to subtract from.
+    ///   - ciphertext: Ciphertext to subtract.
+    /// - Returns: A ciphertext encrypting the difference.
+    /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subEvalAsync(_:_:)``  for an async version of this API
     static func subEval(_ plaintext: EvalPlaintext, _ ciphertext: EvalCiphertext) throws -> EvalCiphertext
+
+    /// The async version of ``HeScheme/subEval(_:_:)``.
+    static func subEvalAsync(_ plaintext: EvalPlaintext, _ ciphertext: EvalCiphertext) async throws -> EvalCiphertext
 
     /// In-place ciphertext-plaintext multiplication: `ciphertext *= plaintext`.
     ///
@@ -496,17 +563,30 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext to multiply; will store the product.
     ///   - plaintext: Plaintext to multiply.
     /// - Throws: Error upon failure to multiply.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/mulAssignAsync(_:_:)-28oxb>  for an async version
+    /// of this API
     static func mulAssign(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) throws
 
-    /// In-place ciphertext negation: `ciphertext = -ciphertext`.
-    ///
-    /// - Parameter ciphertext: Ciphertext to negate.
-    static func negAssignCoeff(_ ciphertext: inout CoeffCiphertext)
+    /// The async version of ``HeScheme/mulAssign(_:_:)-erpv``.
+    static func mulAssignAsync(_ ciphertext: inout EvalCiphertext, _ plaintext: EvalPlaintext) async throws
 
     /// In-place ciphertext negation: `ciphertext = -ciphertext`.
     ///
     /// - Parameter ciphertext: Ciphertext to negate.
+    /// - seealso: ``negAssignCoeffAsync(_:)``  for an async version of this API
+    static func negAssignCoeff(_ ciphertext: inout CoeffCiphertext)
+
+    /// The async version of ``HeScheme/negAssignCoeff(_:)``.
+    static func negAssignCoeffAsync(_ ciphertext: inout CoeffCiphertext) async
+
+    /// In-place ciphertext negation: `ciphertext = -ciphertext`.
+    ///
+    /// - Parameter ciphertext: Ciphertext to negate.
+    /// - seealso: ``negAssignEvalAsync(_:)``  for an async version of this API
     static func negAssignEval(_ ciphertext: inout EvalCiphertext)
+
+    /// The async version of ``HeScheme/negAssignEval(_:)``.
+    static func negAssignEvalAsync(_ ciphertext: inout EvalCiphertext) async
 
     /// Computes an inner product between two collections of ciphertexts.
     ///
@@ -516,9 +596,16 @@ public protocol HeScheme {
     ///   - rhs: Ciphertexts. Must not be empty and have `count` matching `lhs.count`.
     /// - Returns: A ciphertext encrypting the inner product.
     /// - Throws: Error upon failure to compute inner product.
+    /// - seealso: ``innerProductAsync(_:_:)-872yt  for an async version of this API
     static func innerProduct(
         _ lhs: some Collection<CanonicalCiphertext>,
         _ rhs: some Collection<CanonicalCiphertext>) throws
+        -> CanonicalCiphertext
+
+    /// The async version of ``HeScheme/innerProduct(_:_:)-52rbh``.
+    static func innerProductAsync(
+        _ lhs: some Collection<CanonicalCiphertext>,
+        _ rhs: some Collection<CanonicalCiphertext>) async throws
         -> CanonicalCiphertext
 
     /// Computes an inner product between two collections.
@@ -530,8 +617,13 @@ public protocol HeScheme {
     /// `ciphertexts.count`.
     /// - Returns: A ciphertext encrypting the inner product.
     /// - Throws: Error upon failure to compute inner product.
+    /// - seealso: ``innerProductAsync(ciphertexts:plaintexts:)  for an async version of this API
     static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
                              plaintexts: some Collection<EvalPlaintext>) throws -> EvalCiphertext
+
+    /// The async version of ``HeScheme/innerProduct(ciphertexts:plaintexts:)-93qj9``.
+    static func innerProductAsync(ciphertexts: some Collection<EvalCiphertext>,
+                                  plaintexts: some Collection<EvalPlaintext>) async throws -> EvalCiphertext
 
     /// Computes an inner product between two collections.
     ///
@@ -543,8 +635,14 @@ public protocol HeScheme {
     /// `ciphertexts.count`. `nil` plaintexts indicate zero plaintexts which can be ignored in the computation.
     /// - Returns: A ciphertext encrypting the inner product.
     /// - Throws: Error upon failure to compute inner product.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/innerProductAsync(ciphertexts:plaintexts:)-8mpp1>
+    /// for an async version of this API
     static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
                              plaintexts: some Collection<EvalPlaintext?>) throws -> EvalCiphertext
+
+    /// The async version of ``HeScheme/innerProduct(ciphertexts:plaintexts:)-1x1ft``.
+    static func innerProductAsync(ciphertexts: some Collection<EvalCiphertext>,
+                                  plaintexts: some Collection<EvalPlaintext?>) async throws -> EvalCiphertext
 
     /// In-place ciphertext multiplication: `ciphertext *= ciphertext`.
     ///
@@ -557,7 +655,12 @@ public protocol HeScheme {
     ///
     /// > Important: The resulting ciphertext has 3 polynomials and can be relinearized. See
     /// ``HeScheme/relinearize(_:using:)``
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/mulAssignAsync(_:_:)-8mwma>  for an async version
+    /// of this API
     static func mulAssign(_ lhs: inout CanonicalCiphertext, _ rhs: CanonicalCiphertext) throws
+
+    /// The async version of ``HeScheme/mulAssign(_:_:)-4661e``.
+    static func mulAssignAsync(_ lhs: inout CanonicalCiphertext, _ rhs: CanonicalCiphertext) async throws
 
     /// In-place ciphertext addition: `lhs += rhs`.
     ///
@@ -565,7 +668,12 @@ public protocol HeScheme {
     ///   - lhs: Ciphertext to add; will store the sum.
     ///   - rhs: Ciphertext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: <doc:/documentation/HomomorphicEncryption/HeScheme/addAssignAsync(_:_:)-2n6t4>  for an async version
+    /// of this API
     static func addAssign(_ lhs: inout CanonicalCiphertext, _ rhs: CanonicalCiphertext) throws
+
+    /// The async version of ``HeScheme/addAssign(_:_:)-3z4tj``.
+    static func addAssignAsync(_ lhs: inout CanonicalCiphertext, _ rhs: CanonicalCiphertext) async throws
 
     /// In-place ciphertext subtraction: `lhs -= rhs`.
     ///
@@ -573,32 +681,35 @@ public protocol HeScheme {
     ///   - lhs: Ciphertext to subtract from; will store the difference.
     ///   - rhs: Ciphertext to subtract..
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subAssignAsync(_:_:)-22pfg``  for an async version of this API
     static func subAssign(_ lhs: inout CanonicalCiphertext, _ rhs: CanonicalCiphertext) throws
 
+    /// The async version of ``HeScheme/subAssign(_:_:)-8givj``.
+    static func subAssignAsync(_ lhs: inout CanonicalCiphertext, _ rhs: CanonicalCiphertext) async throws
+
     /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
     ///
     /// - Parameters:
     ///   - ciphertext: Ciphertext to subtract from; will store the difference.
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subAssignAsync(_:_:)-5w3rx``  for an async version of this API
     static func subAssign(_ ciphertext: inout CanonicalCiphertext, _ plaintext: CoeffPlaintext) throws
 
+    /// The async version of ``HeScheme/subAssign(_:_:)-1g8oj)
+    static func subAssignAsync(_ ciphertext: inout CanonicalCiphertext, _ plaintext: CoeffPlaintext) async throws
+
     /// In-place ciphertext-plaintext subtraction: `ciphertext -= plaintext`.
     ///
     /// - Parameters:
     ///   - ciphertext: Ciphertext to subtract from; will store the difference.
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subAssignAsync(_:_:)-3fg40``  for an async version of this API
     static func subAssign(_ ciphertext: inout CanonicalCiphertext, _ plaintext: EvalPlaintext) throws
 
-    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
-    ///
-    /// - Parameters:
-    ///   - plaintext: Plaintext to subtract from.
-    ///   - ciphertext: Ciphertext to subtract.
-    /// - Returns: A ciphertext encrypting the difference.
-    /// - Throws: Error upon failure to subtract.
-    static func sub(_ plaintext: CoeffPlaintext, _ ciphertext: CanonicalCiphertext) throws -> CanonicalCiphertext
+    /// The async version of ``HeScheme/subAssign(_:_:)-5wdxi``.
+    static func subAssignAsync(_ ciphertext: inout CanonicalCiphertext, _ plaintext: EvalPlaintext) async throws
 
     /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
     ///
@@ -607,7 +718,26 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext to subtract.
     /// - Returns: A ciphertext encrypting the difference.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subAsync(_:_:)-1t0uj``  for an async version of this API
+    static func sub(_ plaintext: CoeffPlaintext, _ ciphertext: CanonicalCiphertext) throws -> CanonicalCiphertext
+
+    /// The async version of ``HeScheme/sub(_:_:)-2hy5s``.
+    static func subAsync(_ plaintext: CoeffPlaintext, _ ciphertext: CanonicalCiphertext) async throws
+        -> CanonicalCiphertext
+
+    /// Plaintext-ciphertext subtraction: `plaintext - ciphertext`.
+    ///
+    /// - Parameters:
+    ///   - plaintext: Plaintext to subtract from.
+    ///   - ciphertext: Ciphertext to subtract.
+    /// - Returns: A ciphertext encrypting the difference.
+    /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``subAsync(_:_:)-1dv0q``  for an async version of this API
     static func sub(_ plaintext: EvalPlaintext, _ ciphertext: CanonicalCiphertext) throws -> CanonicalCiphertext
+
+    /// The async version of ``HeScheme/sub(_:_:)-4zldp``.
+    static func subAsync(_ plaintext: EvalPlaintext, _ ciphertext: CanonicalCiphertext) async throws
+        -> CanonicalCiphertext
 
     /// Performs modulus switching on the ciphertext.
     ///
@@ -620,7 +750,22 @@ public protocol HeScheme {
     /// - Parameter ciphertext: Ciphertext; must have > 1 ciphertext modulus.
     /// - Throws: Error upon failure to mod-switch.
     /// - seealso: ``Ciphertext/modSwitchDown()`` for an alternative API.
+    /// - seealso: ``modSwitchDownAsync(_:)``  for an async version of this API
     static func modSwitchDown(_ ciphertext: inout CanonicalCiphertext) throws
+
+    /// The async version of ``HeScheme/modSwitchDown(_:)``.
+    static func modSwitchDownAsync(_ ciphertext: inout CanonicalCiphertext) async throws
+
+    /// Performs modulus switching to a single modulus.
+    ///
+    /// If the ciphertext already has a single modulus, this is a no-op.
+    /// - Throws: Error upon failure to modulus switch.
+    /// - seealso: ``Ciphertext/modSwitchDownToSingle()`` for more information and an alternative API.
+    /// - seealso: ``modSwitchDownToSingleAsync(_:)``  for an async version of this API
+    static func modSwitchDownToSingle(_ ciphertext: inout CanonicalCiphertext) throws
+
+    /// The async version of ``HeScheme/modSwitchDownToSingle(_:)``.
+    static func modSwitchDownToSingleAsync(_ ciphertext: inout CanonicalCiphertext) async throws
 
     /// Applies a Galois transformation, also known as a Frobenius transformation.
     ///
@@ -640,10 +785,17 @@ public protocol HeScheme {
     /// dimension, given by ``EncryptionParameters/polyDegree``.
     ///   - key: Evaluation key. Must contain Galois element `element`.
     /// - Throws: Error upon failure to apply the Galois transformation.
+    /// - seealso: ``applyGaloisAsync(ciphertext:element:using:)``  for an async version of this API
     static func applyGalois(
         ciphertext: inout CanonicalCiphertext,
         element: Int,
         using key: EvaluationKey) throws
+
+    /// The async version of ``HeScheme/applyGalois(ciphertext:element:using:)``.
+    static func applyGaloisAsync(
+        ciphertext: inout CanonicalCiphertext,
+        element: Int,
+        using key: EvaluationKey) async throws
 
     /// Relinearizes a ciphertext.
     ///
@@ -659,7 +811,31 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext; must be the result of a ciphertext-ciphertext multiplication
     ///   - key: Evaluation key; must contain a `RelinearizationKey`.
     /// - Throws: Error upon failure to relinearize the ciphertext.
+    /// - seealso: ``relinearizeAsync(_:using:)``  for an async version of this API
     static func relinearize(_ ciphertext: inout CanonicalCiphertext, using key: EvaluationKey) throws
+
+    /// The async version of ``HeScheme/relinearize(_:using:)``.
+    static func relinearizeAsync(_ ciphertext: inout CanonicalCiphertext, using key: EvaluationKey) async throws
+
+    /// Run the forward NTT algorithm on a given ciphertext in Coeff format
+    /// - Parameter ciphertext: The ciphertext to run forward NTT on
+    /// - Returns: The corresponding ciphertext in Eval format
+    /// - Throws: Error upon failure to run forward NTT on  the ciphertext.
+    /// - seealso: ``forwardNttAsync(_:)``  for an async version of this API
+    static func forwardNtt(_ ciphertext: CoeffCiphertext) throws -> EvalCiphertext
+
+    /// The async version of ``HeScheme/forwardNtt(_:)``.
+    static func forwardNttAsync(_ ciphertext: CoeffCiphertext) async throws -> EvalCiphertext
+
+    /// Run the inverse NTT algorithm on a given ciphertext in Eval format
+    /// - Parameter ciphertext: The ciphertext to run inverse NTT on
+    /// - Returns: The corresponding ciphertext in Coeff format
+    /// - Throws: Error upon failure to run inverse NTT on  the ciphertext.
+    /// - seealso: ``inverseNttAsync(_:)``  for an async version of this API
+    static func inverseNtt(_ ciphertext: EvalCiphertext) throws -> CoeffCiphertext
+
+    /// The async version of ``HeScheme/inverseNtt(_:)``.
+    static func inverseNttAsync(_ ciphertext: EvalCiphertext) async throws -> CoeffCiphertext
 
     /// Validates the equality of two contexts.
     /// - Parameters:
@@ -703,6 +879,29 @@ public protocol HeScheme {
     /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)`` for an alternative API.
     static func noiseBudgetEval(of ciphertext: EvalCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
         -> Double
+
+    /// Computes `ciphertext * x^{-power}`.
+    ///
+    /// - Parameters:
+    ///  - ciphertext: ciphertext to be multiplied.
+    ///  - power: Power in the monomial; must be positive.
+    /// - Throws: Error upon failure to compute the inverse.
+    /// - seealso: ``multiplyInversePowerOfXAsync(_:)``  for an async version of this API
+    static func multiplyInversePowerOfX(_ ciphertext: inout CoeffCiphertext, power: Int) throws
+
+    /// The async version of ``HeScheme/multiplyInversePowerOfX(_:)``.
+    static func multiplyInversePowerOfXAsync(_ ciphertext: inout CoeffCiphertext, power: Int) async throws
+}
+
+extension HeScheme {
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func multiplyInversePowerOfX(_ ciphertext: inout CoeffCiphertext, power: Int) throws {
+        precondition(power >= 0)
+        for index in ciphertext.polys.indices {
+            try ciphertext.polys[index].multiplyInversePowerOfX(power)
+        }
+    }
 }
 
 extension HeScheme {
@@ -1114,6 +1313,56 @@ extension HeScheme {
         }
         for (step, count) in plan {
             try (0..<count).forEach { _ in try ciphertext.rotateColumns(by: step, using: evaluationKey) }
+        }
+    }
+
+    @inlinable
+    package static func rotateColumnsMultiStepAsync(
+        of ciphertext: inout CanonicalCiphertext,
+        by step: Int,
+        using evaluationKey: EvaluationKey) async throws
+    {
+        if step == 0 {
+            return
+        }
+
+        guard let galoisKey = evaluationKey.galoisKey else {
+            throw HeError.missingGaloisKey
+        }
+
+        // Short-circuit to single rotation if possible.
+        let degree = ciphertext.degree
+        let galoisElement = try GaloisElement.rotatingColumns(by: step, degree: degree)
+        if galoisKey.keys.keys.contains(galoisElement) {
+            try await rotateColumnsAsync(of: &ciphertext, by: step, using: evaluationKey)
+            return
+        }
+
+        let galoisElements = Array(galoisKey.keys.keys)
+        let steps = GaloisElement.stepsFor(elements: galoisElements, degree: degree).values.compactMap { $0 }
+
+        let positiveStep = if step < 0 {
+            step + degree / 2
+        } else {
+            step
+        }
+
+        let plan = try GaloisElement.planMultiStep(supportedSteps: steps, step: positiveStep, degree: degree)
+        guard let plan else {
+            throw HeError.invalidRotationStep(step: step, degree: degree)
+        }
+        for (step, count) in plan {
+            for _ in 0..<count {
+                try await rotateColumnsAsync(of: &ciphertext, by: step, using: evaluationKey)
+            }
+        }
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func modSwitchDownToSingle(_ ciphertext: inout CanonicalCiphertext) throws {
+        while ciphertext.moduli.count > 1 {
+            try modSwitchDown(&ciphertext)
         }
     }
 }

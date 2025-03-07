@@ -49,7 +49,7 @@ Swift Homomorphic Encryption aims to support all of the platforms where Swift is
 > Note: Swift Homomorphic Encryption relies on [SystemRandomNumberGenerator](https://developer.apple.com/documentation/swift/systemrandomnumbergenerator) as a cryptographically secure random number generator, which may have platform-dependent behavior.
 
 ### Swift / Xcode versions
-The following table maps Swift Homomorphic Encryption packgae versions to required Swift and Xcode versions:
+The following table maps Swift Homomorphic Encryption package versions to required Swift and Xcode versions:
 
 Package version | Swift version | Xcode version
 ----------------|---------------|-----------------------------------------

@@ -22,7 +22,7 @@ and executables:
 * [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsgeneratedatabase)
 * [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pnnsprocessdatabase)
 
-The documentation is hosted on the [Swift Package Index](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/documentation).
+The documentation is hosted on the [Swift Package Index](https://swiftpackageindex.com/apple/swift-homomorphic-encryption).
 
 ## Background
 ### Homomorphic Encryption (HE)

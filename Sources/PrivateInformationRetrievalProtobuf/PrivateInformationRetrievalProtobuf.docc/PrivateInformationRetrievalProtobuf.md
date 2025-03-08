@@ -1,6 +1,6 @@
 # ``PrivateInformationRetrievalProtobuf``
 
-Protocol buffer support for [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval)
+Protocol buffer support for ``PrivateInformationRetrieval``
 
 ## Overview
 `PrivateInformationRetrievalProtobuf` contains supports for using [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrieval) with [protocol buffers](https://protobuf.dev/), commonly referred to as `protobuf`.

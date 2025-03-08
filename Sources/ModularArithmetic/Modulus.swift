@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -299,7 +299,7 @@ public struct ReduceModulus<T: CoreScalarType>: Equatable, Sendable {
     /// Returns `x mod p`.
     ///
     /// Requires modulus `p < 2^{T.bitWidth - 1}`.
-    /// Useful when `x >= p^2`, otherwise use `` reduceProduct``.
+    /// Useful when `x >= p^2`, otherwise use ``ReduceModulus/reduceProduct(_:)``.
     /// Proof of correctness:
     ///   Let `t = T.bitWidth`
     ///     Let `b = floor(2^{2 * t} / p)`

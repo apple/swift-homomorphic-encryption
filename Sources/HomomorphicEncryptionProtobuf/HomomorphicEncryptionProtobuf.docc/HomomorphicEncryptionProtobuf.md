@@ -1,6 +1,6 @@
 # ``HomomorphicEncryptionProtobuf``
 
-Protocol buffer support for [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption)
+Protocol buffer support for ``HomomorphicEncryption``
 
 ## Overview
 `HomomorphicEncryptionProtobuf` contains supports for using [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption) with [protocol buffers](https://protobuf.dev/), commonly referred to as `protobuf`.

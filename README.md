@@ -239,7 +239,13 @@ For more information, refer to [the DocC documentation](https://www.swift.org/do
 The documentation can be built from Xcode via `Product -> Build Documentation`.
 
 ## Command line
-The documentation can be built from command line by running
+To build documentation from command line, we use the [swift-docc-plugin](https://github.com/swiftlang/swift-docc-plugin).
+Add the plugin by running
+```sh
+swift package add-dependency https://github.com/swiftlang/swift-docc-plugin --from 1.1.0
+```
+
+Then documentation can be built from command line by running
 ```sh
 swift package generate-documentation
 ```

@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -177,6 +177,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         // swiftlint:disable:next force_try
         let data = try! encoder.encode(defaultArguments)
+        // swiftlint:disable:next optional_data_string_conversion
         return String(decoding: data, as: UTF8.self)
     }
 
@@ -240,6 +241,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         // swiftlint:disable:next force_try
         let data = try! encoder.encode(self)
+        // swiftlint:disable:next optional_data_string_conversion
         return String(decoding: data, as: UTF8.self)
     }
 
@@ -453,6 +455,7 @@ extension ProcessKeywordDatabase.ShardValidationResult {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         // swiftlint:disable:next force_try
         let data = try! encoder.encode(descriptionDict)
+        // swiftlint:disable:next optional_data_string_conversion
         let description = String(decoding: data, as: UTF8.self)
         return description.replacingOccurrences(of: "\"", with: "")
     }

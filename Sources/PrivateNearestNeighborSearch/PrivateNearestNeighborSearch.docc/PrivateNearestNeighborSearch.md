@@ -15,4 +15,4 @@ While this *trivial PNNS* protocol satisfies the privacy and correctness require
 
 The PNNS implementation in Swift Homomorphic Encryption uses homomorphic encryption to improve upon the trivial PNNS protocol.
 
-See documentation for [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pnnsgeneratedatabase) and  [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/pnnsprocessdatabase) for more information.
+See documentation for [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pnnsgeneratedatabase) and  [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pnnsprocessdatabase) for more information.

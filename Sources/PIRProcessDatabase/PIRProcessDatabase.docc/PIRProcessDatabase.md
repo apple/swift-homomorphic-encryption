@@ -26,10 +26,10 @@ Run `PIRProcessDatabase --help` to get a sample JSON configuration.
 ### Required Configuration Parameters
 
 There are four required parameters:
-1. `rlweParameters` is one of the [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/homomorphicencryption/predefinedrlweparameters),
+1. `rlweParameters` is one of the [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/homomorphicencryption/predefinedrlweparameters),
 e.g., `n_4096_logq_27_28_28_logt_5`.
 2. `inputDatabase` is the path to the unprocessed input database. It must be a
-serialized [Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_pir_v1_keyworddatabase).
+serialized [Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_pir_v1_keyworddatabase).
 
 > Note: The `PIRGenerateDatabase` binary can be used to generate a sample database.
 
@@ -51,7 +51,7 @@ A minimal configuration sample is
 }
 ```
 The only required parameter variable which affects performance is
-`rlweParameters`. These parameters are picked from a set of [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.2/documentation/homomorphicencryption/predefinedrlweparameters).
+`rlweParameters`. These parameters are picked from a set of [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/homomorphicencryption/predefinedrlweparameters).
 RLWE parameters are defined by ring dimension `n`, a ciphertext modulus bit
 length `log q`, and plaintext modulus bit length, `log t`.
 

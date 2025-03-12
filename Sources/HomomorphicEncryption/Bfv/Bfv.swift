@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -338,5 +338,23 @@ public enum Bfv<T: ScalarType>: HeScheme {
 
         reduceToCiphertext(accumulator: accumulator, result: &result)
         return result
+    }
+
+    @inlinable
+    public static func forwardNtt(_ ciphertext: CoeffCiphertext) throws -> EvalCiphertext {
+        let polys = try ciphertext.polys.map { try $0.forwardNtt() }
+        return Ciphertext<Bfv<T>, Eval>(context: ciphertext.context,
+                                        polys: polys,
+                                        correctionFactor: ciphertext.correctionFactor,
+                                        seed: ciphertext.seed)
+    }
+
+    @inlinable
+    public static func inverseNtt(_ ciphertext: EvalCiphertext) throws -> CoeffCiphertext {
+        let polys = try ciphertext.polys.map { try $0.inverseNtt() }
+        return Ciphertext<Bfv<T>, Coeff>(context: ciphertext.context,
+                                         polys: polys,
+                                         correctionFactor: ciphertext.correctionFactor,
+                                         seed: ciphertext.seed)
     }
 }

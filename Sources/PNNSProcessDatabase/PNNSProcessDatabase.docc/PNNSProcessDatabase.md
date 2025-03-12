@@ -7,7 +7,7 @@ PNNS database processing will transform a database in preparation for hosting PN
 The `PNNSProcessDatabase` binary performs the processing.
 
 ### Requirements
-First ensure sure that the `~/.swiftpm/bin` directory is on your `$PATH`.
+First ensure that the `~/.swiftpm/bin` directory is on your `$PATH`.
 For example, if using the `zsh` shell, add the following line to your `~/.zshrc`
 ```sh
 export PATH="$HOME/.swiftpm/bin:$PATH"

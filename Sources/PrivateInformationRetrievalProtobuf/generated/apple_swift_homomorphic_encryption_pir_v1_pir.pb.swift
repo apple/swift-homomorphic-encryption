@@ -88,7 +88,7 @@ public enum Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy: Swif
 public enum Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
-  /// Unspecified encryption scheme.
+  /// Unspecified config type.
   case unspecified // = 0
 
   /// OPRF P384 AES-192-GCM, 96-bit nonce, 128-bit tag

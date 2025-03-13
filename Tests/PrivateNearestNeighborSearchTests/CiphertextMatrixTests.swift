@@ -32,7 +32,7 @@ func randomData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> [[T]
     }
 }
 
-@Suite("Ciphertext Matrix Tests")
+@Suite
 struct CiphertextMatrixTests {
     @Test("Encrypt/Decrypt Round Trip")
     func encryptDecryptRoundTrip() throws {

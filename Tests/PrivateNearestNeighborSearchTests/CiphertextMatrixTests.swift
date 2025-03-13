@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
+import Testing
 import TestUtilities
-import XCTest
 
 func increasingData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> [[T]] {
     (0..<dimensions.rowCount).map { rowIndex in
@@ -32,12 +32,14 @@ func randomData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> [[T]
     }
 }
 
-final class CiphertextMatrixTests: XCTestCase {
-    func testEncryptDecryptRoundTrip() throws {
+@Suite("Ciphertext Matrix Tests")
+struct CiphertextMatrixTests {
+    @Test("Encrypt/Decrypt Round Trip")
+    func encryptDecryptRoundTrip() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
-            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            #expect(encryptionParameters.supportsSimdEncoding)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
@@ -51,13 +53,13 @@ final class CiphertextMatrixTests: XCTestCase {
             let secretKey = try context.generateSecretKey()
             var ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
             let plaintextMatrixRoundTrip = try ciphertextMatrix.decrypt(using: secretKey)
-            XCTAssertEqual(plaintextMatrixRoundTrip, plaintextMatrix)
+            #expect(plaintextMatrixRoundTrip == plaintextMatrix)
 
             // modSwitchDownToSingle
             do {
                 try ciphertextMatrix.modSwitchDownToSingle()
                 let plaintextMatrixRoundTrip = try ciphertextMatrix.decrypt(using: secretKey)
-                XCTAssertEqual(plaintextMatrixRoundTrip, plaintextMatrix)
+                #expect(plaintextMatrixRoundTrip == plaintextMatrix)
             }
         }
         try runTest(for: NoOpScheme.self)
@@ -65,11 +67,12 @@ final class CiphertextMatrixTests: XCTestCase {
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    func testConvertRoundTrip() throws {
+    @Test("Convert Round Trip")
+    func convertRoundTrip() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
-            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            #expect(encryptionParameters.supportsSimdEncoding)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
@@ -85,14 +88,15 @@ final class CiphertextMatrixTests: XCTestCase {
             let ciphertextEvalMatrix = try ciphertextCoeffMatrix.convertToEvalFormat()
             let ciphertextMatrixRoundTrip = try ciphertextEvalMatrix.convertToCoeffFormat()
             let decoded = try ciphertextMatrixRoundTrip.decrypt(using: secretKey)
-            XCTAssertEqual(plaintextMatrix, decoded)
+            #expect(plaintextMatrix == decoded)
         }
         try runTest(for: NoOpScheme.self)
         try runTest(for: Bfv<UInt32>.self)
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    func testExtractDenseRow() throws {
+    @Test("Extract Dense Row")
+    func extractDenseRow() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let degree = 16
             let plaintextModulus = try Scheme.Scalar.generatePrimes(
@@ -111,7 +115,7 @@ final class CiphertextMatrixTests: XCTestCase {
                 coefficientModuli: coefficientModuli,
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
-            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            #expect(encryptionParameters.supportsSimdEncoding)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
 
             for rowCount in 1..<(2 * degree) {
@@ -144,19 +148,19 @@ final class CiphertextMatrixTests: XCTestCase {
                         let expectedDimensions = try MatrixDimensions(
                             rowCount: 1,
                             columnCount: columnCount)
-                        XCTAssertEqual(extractedRow.dimensions, expectedDimensions)
+                        #expect(extractedRow.dimensions == expectedDimensions)
 
                         // Check unpacking
                         let decrypted = try extractedRow.decrypt(using: secretKey)
                         let unpacked: [Scheme.Scalar] = try decrypted.unpack()
-                        XCTAssertEqual(unpacked, encodeValues[rowIndex])
+                        #expect(unpacked == encodeValues[rowIndex])
 
                         // Check encoded values
                         var row = encodeValues[rowIndex]
                         row += Array(repeating: 0, count: row.count.nextPowerOfTwo - row.count)
                         let expectedRow = Array(repeating: row, count: degree / row.count).flatMap { $0 }
                         let decoded: [Scheme.Scalar] = try decrypted.plaintexts[0].decode(format: .simd)
-                        XCTAssertEqual(decoded, expectedRow)
+                        #expect(decoded == expectedRow)
                     }
                 }
             }

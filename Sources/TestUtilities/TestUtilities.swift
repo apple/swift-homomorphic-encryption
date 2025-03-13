@@ -14,7 +14,28 @@
 
 import HomomorphicEncryption
 import RealModule
+import Testing
 import XCTest
+
+/// Computes whether `self` is close to another floating-point value.
+///
+/// Asserts `abs(self - b) <= abs_tol + rel_tol * abs(b))` where `b` is another floating-point value.
+/// - Parameters:
+///   - expression: An expression returning finite floating-point value `b.
+///   - relativeTolerance: An optional relative tolerance to enforce.
+///   - absoluteTolerance: An optional absolute tolerance to enforce.
+/// - Returns: true if the expressions are close to each other
+extension BinaryFloatingPoint {
+    package func isClose(to value: Self,
+                         relativeTolerance: Self = Self(1e-5),
+                         absoluteTolerance: Self = Self(1e-8)) -> Bool
+    {
+        guard isFinite, value.isFinite else {
+            return false
+        }
+        return abs(self - value) <= absoluteTolerance + relativeTolerance * abs(value)
+    }
+}
 
 /// Validates two expressions are close to each other.
 ///

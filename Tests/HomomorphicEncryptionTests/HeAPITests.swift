@@ -13,10 +13,11 @@
 // limitations under the License.
 
 @testable import HomomorphicEncryption
+import Testing
 import TestUtilities
-import XCTest
 
-class HeAPITests: XCTestCase {
+@Suite
+struct HeAPITests {
     private struct TestEnv<Scheme: HeScheme> {
         let context: Context<Scheme>
         let data1: [Scheme.Scalar]
@@ -64,23 +65,26 @@ class HeAPITests: XCTestCase {
             ciphertext: Ciphertext<Scheme, some PolyFormat>,
             format: EncodeFormat,
             expected: [Scheme.Scalar],
-            _ message: @autoclosure () -> String = "",
-            _ file: StaticString = #filePath,
-            _ line: UInt = #line) throws
+            _ comment: Comment? = nil,
+            sourceLocation: SourceLocation = #_sourceLocation) throws
         {
             if let coeffCiphertext = ciphertext as? Scheme.CoeffCiphertext {
                 let decryptedData: [Scheme.Scalar] = try coeffCiphertext.decrypt(using: secretKey)
                     .decode(format: format)
-                XCTAssertEqual(decryptedData, expected, message(), file: file, line: line)
+                #expect(decryptedData == expected, comment, sourceLocation: sourceLocation)
             } else if let evalCiphertext = ciphertext as? Scheme.EvalCiphertext {
                 let decryptedData: [Scheme.Scalar] = try evalCiphertext.decrypt(using: secretKey).decode(format: format)
-                XCTAssertEqual(decryptedData, expected, message(), file: file, line: line)
+                #expect(decryptedData == expected, comment, sourceLocation: sourceLocation)
             } else {
-                XCTFail("\(message()) Invalid ciphertext \(ciphertext.description)", file: file, line: line)
+                let commentString = comment.map { $0.rawValue + ". " } ?? ""
+                Issue.record(
+                    "\(commentString)Invalid ciphertext \(ciphertext.description)",
+                    sourceLocation: sourceLocation)
             }
         }
     }
 
+    @Test
     func testNoOpScheme() async throws {
         let context: Context<NoOpScheme> = try TestUtils.getTestContext()
         try HeAPITestHelpers.schemeEncodeDecodeTest(context: context)
@@ -126,7 +130,7 @@ class HeAPITests: XCTestCase {
         let plaintext = try switchedCiphertext.decrypt(using: newSecretKey)
         let decrypted: [T] = try plaintext.decode(format: .coefficient)
 
-        XCTAssertEqual(decrypted, testEnv.data1)
+        #expect(decrypted == testEnv.data1)
     }
 
     private func runBfvTests<T: ScalarType>(_: T.Type) async throws {
@@ -177,16 +181,18 @@ class HeAPITests: XCTestCase {
         }
     }
 
+    @Test
     func testBfvUInt32() async throws {
         try await runBfvTests(UInt32.self)
     }
 
+    @Test
     func testBfvUInt64() async throws {
         try await runBfvTests(UInt64.self)
     }
 }
 
-/// This will compile if Plaintext.decode is generic across PolyFormat.
+/// This will compile if `Plaintext/decode` is generic across PolyFormat.
 extension Plaintext {
     private func checkDecodeIsGeneric() throws {
         let _: [Scheme.Scalar] = try decode(format: .coefficient)

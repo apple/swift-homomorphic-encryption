@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import HomomorphicEncryption
-import XCTest
+import Testing
 
 /// A collection of helpers for HeScheme level API tests.
 public enum HeAPITestHelpers {
@@ -79,20 +79,21 @@ public enum HeAPITestHelpers {
             ciphertext: Ciphertext<Scheme, some PolyFormat>,
             format: EncodeFormat,
             expected: [Scheme.Scalar],
-            _ message: @autoclosure () -> String = "",
-            _ file: StaticString = #filePath,
-            _ line: UInt = #line) throws
+            _ comment: Comment? = nil,
+            sourceLocation: SourceLocation = #_sourceLocation) throws
         {
             if let coeffCiphertext = ciphertext as? Scheme.CoeffCiphertext {
                 let decryptedData: [Scheme.Scalar] = try coeffCiphertext.decrypt(using: secretKey)
                     .decode(format: format)
-                XCTAssertEqual(decryptedData, expected, message(), file: file, line: line)
+                #expect(decryptedData == expected, comment, sourceLocation: sourceLocation)
             } else if let evalCiphertext = ciphertext as? Scheme.EvalCiphertext {
                 let decryptedData: [Scheme.Scalar] = try evalCiphertext.decrypt(using: secretKey)
                     .decode(format: format)
-                XCTAssertEqual(decryptedData, expected, message(), file: file, line: line)
+                #expect(decryptedData == expected, comment, sourceLocation: sourceLocation)
             } else {
-                XCTFail("\(message()) Invalid ciphertext \(ciphertext.description)", file: file, line: line)
+                let commentString = comment.map { "\($0.rawValue). " } ?? ""
+                Issue.record("\(commentString)Invalid ciphertext \(ciphertext.description)",
+                             sourceLocation: sourceLocation)
             }
         }
     }
@@ -130,21 +131,21 @@ public enum HeAPITestHelpers {
     public static func schemeEvaluationKeyTest(context _: Context<some HeScheme>) throws {
         do {
             let config = EvaluationKeyConfig()
-            XCTAssertFalse(config.hasRelinearizationKey)
-            XCTAssertEqual(config.galoisElements, [])
-            XCTAssertEqual(config.keyCount, 0)
+            #expect(!config.hasRelinearizationKey)
+            #expect(config.galoisElements.isEmpty)
+            #expect(config.keyCount == 0)
         }
         do {
             let config = EvaluationKeyConfig(hasRelinearizationKey: true)
-            XCTAssertTrue(config.hasRelinearizationKey)
-            XCTAssertEqual(config.galoisElements, [])
-            XCTAssertEqual(config.keyCount, 1)
+            #expect(config.hasRelinearizationKey)
+            #expect(config.galoisElements.isEmpty)
+            #expect(config.keyCount == 1)
         }
         do {
             let config = EvaluationKeyConfig(galoisElements: [1, 3], hasRelinearizationKey: true)
-            XCTAssertTrue(config.hasRelinearizationKey)
-            XCTAssertEqual(config.galoisElements, [1, 3])
-            XCTAssertEqual(config.keyCount, 3)
+            #expect(config.hasRelinearizationKey)
+            #expect(config.galoisElements == [1, 3])
+            #expect(config.keyCount == 3)
         }
     }
 
@@ -170,37 +171,44 @@ public enum HeAPITestHelpers {
         case is Coeff.Type:
             let plaintextCoeff: Plaintext<Scheme, Coeff> = try context.encode(values: data, format: encodeFormat)
             let decoded = try plaintextCoeff.decode(format: encodeFormat) as [Scheme.Scalar]
-            XCTAssertEqual(decoded, paddedData)
+            #expect(decoded == paddedData)
 
             let decodedSigned: [Scheme.SignedScalar] = try plaintextCoeff.decode(format: encodeFormat)
-            XCTAssertEqual(decodedSigned, paddedSignedData)
+            #expect(decodedSigned == paddedSignedData)
 
             let plaintextCoeffSigned: Plaintext<Scheme, Coeff> = try context.encode(
                 signedValues: signedData,
                 format: encodeFormat)
             let roundTrip: [Scheme.SignedScalar] = try plaintextCoeffSigned.decode(
                 format: encodeFormat)
-            XCTAssertEqual(roundTrip, paddedSignedData)
+            #expect(roundTrip == paddedSignedData)
         case is Eval.Type:
             let plaintextEval: Plaintext<Scheme, Eval> = try context.encode(values: data, format: encodeFormat)
             let decoded = try plaintextEval.decode(format: encodeFormat) as [Scheme.Scalar]
-            XCTAssertEqual(decoded, paddedData)
+            #expect(decoded == paddedData)
 
             let decodedSigned: [Scheme.SignedScalar] = try plaintextEval.decode(format: encodeFormat)
-            XCTAssertEqual(decodedSigned, paddedSignedData)
+            #expect(decodedSigned == paddedSignedData)
 
             let plaintextEvalSigned: Plaintext<Scheme, Eval> = try context.encode(
                 signedValues: signedData,
                 format: encodeFormat)
             let roundTrip: [Scheme.SignedScalar] = try plaintextEvalSigned.decode(format: encodeFormat)
-            XCTAssertEqual(roundTrip, paddedSignedData)
+            #expect(roundTrip == paddedSignedData)
         default:
-            XCTFail("Invalid PolyFormat \(polyFormat)")
+            Issue.record("Invalid PolyFormat \(polyFormat)")
         }
+
+        let signedModulus = Int64(context.plaintextModulus)
+        let bounds = -(signedModulus >> 1)...((signedModulus - 1) >> 1)
         signedData[0] = (Scheme.SignedScalar(context.plaintextModulus) - 1) / 2 + 1
-        XCTAssertThrowsError(try context.encode(signedValues: signedData, format: encodeFormat))
+        #expect(throws: HeError.encodingDataOutOfBounds(bounds).self) {
+            try context.encode(signedValues: signedData, format: encodeFormat)
+        }
         signedData[0] = -Scheme.SignedScalar(context.plaintextModulus) / 2 - 1
-        XCTAssertThrowsError(try context.encode(signedValues: signedData, format: encodeFormat))
+        #expect(throws: HeError.encodingDataOutOfBounds(bounds).self) {
+            try context.encode(signedValues: signedData, format: encodeFormat)
+        }
     }
 
     /// Testing the encoding/decoding functions of the scheme.
@@ -245,14 +253,14 @@ public enum HeAPITestHelpers {
         var canonicalCiphertext = try coeffCiphertext.convertToCanonicalFormat()
         try canonicalCiphertext.modSwitchDownToSingle()
 
-        XCTAssert(coeffCiphertext.isTransparent())
-        XCTAssert(evalCiphertext.isTransparent())
-        XCTAssert(canonicalCiphertext.isTransparent())
+        #expect(coeffCiphertext.isTransparent())
+        #expect(evalCiphertext.isTransparent())
+        #expect(canonicalCiphertext.isTransparent())
 
         let zeroPlaintext: Scheme.CoeffPlaintext = try context.encode(values: zeros, format: .coefficient)
         let nonTransparentZero = try zeroPlaintext.encrypt(using: testEnv.secretKey)
         if Scheme.self != NoOpScheme.self {
-            XCTAssertFalse(nonTransparentZero.isTransparent())
+            #expect(!nonTransparentZero.isTransparent())
         }
 
         try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: zeros)
@@ -272,15 +280,15 @@ public enum HeAPITestHelpers {
         let sum2 = try zeroCiphertext + testEnv.ciphertext1
         let sum3 = try zeroCiphertext + testEnv.coeffPlaintext1
 
-        XCTAssert(sum1.isTransparent())
+        #expect(sum1.isTransparent())
         if Scheme.self != NoOpScheme.self {
-            XCTAssertFalse(sum2.isTransparent())
+            #expect(!sum2.isTransparent())
         }
-        XCTAssert(sum3.isTransparent())
+        #expect(sum3.isTransparent())
 
         try testEnv.checkDecryptsDecodes(ciphertext: sum1, format: .coefficient, expected: expected)
         try testEnv.checkDecryptsDecodes(ciphertext: sum2, format: .coefficient, expected: testEnv.data1)
-        XCTAssertEqual(try sum3.decrypt(using: testEnv.secretKey), testEnv.coeffPlaintext1)
+        #expect(try sum3.decrypt(using: testEnv.secretKey) == testEnv.coeffPlaintext1)
     }
 
     /// Testing multiplication with zero-ciphertext of the scheme.
@@ -290,7 +298,7 @@ public enum HeAPITestHelpers {
 
         let zeroCiphertext = try Ciphertext<Scheme, Eval>.zero(context: context)
         let product = try zeroCiphertext * testEnv.evalPlaintext1
-        XCTAssert(product.isTransparent())
+        #expect(product.isTransparent())
 
         try testEnv.checkDecryptsDecodes(ciphertext: product, format: .coefficient, expected: expected)
     }
@@ -521,11 +529,11 @@ public enum HeAPITestHelpers {
         var ciphertextProductAsync = ciphertext1
         try await Scheme.mulAssignAsync(&ciphertextProductAsync, ciphertext2)
         var relinearizedProd = ciphertextProduct
-        try relinearizedProd.relinearize(using: XCTUnwrap(testEnv.evaluationKey))
+        try relinearizedProd.relinearize(using: #require(testEnv.evaluationKey))
         var relinearizedProdAsync = ciphertextProductAsync
-        try await Scheme.relinearizeAsync(&relinearizedProdAsync, using: XCTUnwrap(testEnv.evaluationKey))
-        XCTAssertEqual(relinearizedProd.polys.count, Scheme.freshCiphertextPolyCount)
-        XCTAssertEqual(relinearizedProdAsync.polys.count, Scheme.freshCiphertextPolyCount)
+        try await Scheme.relinearizeAsync(&relinearizedProdAsync, using: #require(testEnv.evaluationKey))
+        #expect(relinearizedProd.polys.count == Scheme.freshCiphertextPolyCount)
+        #expect(relinearizedProdAsync.polys.count == Scheme.freshCiphertextPolyCount)
 
         let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextProduct.convertToEvalFormat()
         let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
@@ -577,7 +585,7 @@ public enum HeAPITestHelpers {
                 let plaintexts: [Scheme.EvalPlaintext?] = Array(
                     repeating: testEnv.evalPlaintext2,
                     count: count)
-                let innerProduct = try XCTUnwrap(ciphertexts.innerProduct(plaintexts: plaintexts))
+                let innerProduct = try ciphertexts.innerProduct(plaintexts: plaintexts)
                 try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: innerProductData)
 
                 let innerProductAsync = try await Scheme.innerProductAsync(
@@ -596,7 +604,7 @@ public enum HeAPITestHelpers {
                 let plaintexts: [Scheme.EvalPlaintext?] = Array(
                     repeating: testEnv.evalPlaintext2,
                     count: count) + [nil]
-                let innerProduct = try XCTUnwrap(ciphertexts.innerProduct(plaintexts: plaintexts))
+                let innerProduct = try ciphertexts.innerProduct(plaintexts: plaintexts)
                 try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: innerProductData)
 
                 let innerProductAsync = try await Scheme.innerProductAsync(
@@ -1146,7 +1154,7 @@ public enum HeAPITestHelpers {
         func runRotationTest(context: Context<Scheme>, galoisElements: [Int], multiStep: Bool) async throws {
             let degree = context.degree
             let testEnv = try TestEnv(context: context, format: .simd, galoisElements: galoisElements)
-            let evaluationKey = try XCTUnwrap(testEnv.evaluationKey)
+            let evaluationKey = try #require(testEnv.evaluationKey)
             for step in 1..<min(8, degree / 2) {
                 let expectedData = Array(testEnv.data1[degree / 2 - step..<degree / 2] + testEnv
                     .data1[0..<degree / 2 - step] + testEnv
@@ -1194,7 +1202,7 @@ public enum HeAPITestHelpers {
         let degree = context.degree
         let galoisElementsSwap = [GaloisElement.swappingRows(degree: degree)]
         let testEnv = try TestEnv(context: context, format: .simd, galoisElements: galoisElementsSwap)
-        let evaluationKey = try XCTUnwrap(testEnv.evaluationKey)
+        let evaluationKey = try #require(testEnv.evaluationKey)
         let expectedData = Array(testEnv.data1[degree / 2..<degree] + testEnv.data1[0..<degree / 2])
         var ciphertext = testEnv.ciphertext1
         var ciphertextAsync = ciphertext
@@ -1231,7 +1239,7 @@ public enum HeAPITestHelpers {
             try GaloisElement.rotatingColumns(by: -step, degree: context.degree)
         }
         let testEnv = try TestEnv(context: context, format: .simd, galoisElements: elements)
-        let evaluationKey = try XCTUnwrap(testEnv.evaluationKey)
+        let evaluationKey = try #require(testEnv.evaluationKey)
 
         let dataCount = testEnv.data1.count
         let halfDataCount = dataCount / 2
@@ -1266,13 +1274,9 @@ public enum HeAPITestHelpers {
         let testEnv = try TestEnv(context: context, format: .coefficient)
 
         let zeroCoeffCiphertext = try Scheme.CoeffCiphertext.zero(context: context, moduliCount: 1)
-        XCTAssertEqual(
-            try zeroCoeffCiphertext.noiseBudget(using: testEnv.secretKey, variableTime: true),
-            Double.infinity)
+        #expect(try zeroCoeffCiphertext.noiseBudget(using: testEnv.secretKey, variableTime: true) == Double.infinity)
         let zeroEvalCiphertext = try Scheme.EvalCiphertext.zero(context: context, moduliCount: 1)
-        XCTAssertEqual(
-            try zeroEvalCiphertext.noiseBudget(using: testEnv.secretKey, variableTime: true),
-            Double.infinity)
+        #expect(try zeroEvalCiphertext.noiseBudget(using: testEnv.secretKey, variableTime: true) == Double.infinity)
 
         var coeffCiphertext = testEnv.ciphertext1
         var expected = testEnv.coeffPlaintext1
@@ -1280,7 +1284,7 @@ public enum HeAPITestHelpers {
         var ciphertext = try coeffCiphertext.convertToEvalFormat()
 
         var noiseBudget = try ciphertext.noiseBudget(using: testEnv.secretKey, variableTime: true)
-        XCTAssert(noiseBudget > 0)
+        #expect(noiseBudget > 0)
 
         let coeffNoiseBudget = try ciphertext.convertToCoeffFormat().noiseBudget(
             using: testEnv.secretKey,
@@ -1288,18 +1292,18 @@ public enum HeAPITestHelpers {
         let canonicalNoiseBudget = try ciphertext.convertToCanonicalFormat().noiseBudget(
             using: testEnv.secretKey,
             variableTime: true)
-        XCTAssertEqual(coeffNoiseBudget, noiseBudget)
-        XCTAssertEqual(canonicalNoiseBudget, noiseBudget)
+        #expect(coeffNoiseBudget == noiseBudget)
+        #expect(canonicalNoiseBudget == noiseBudget)
 
         while noiseBudget > Scheme.minNoiseBudget + 1 {
             ciphertext = try ciphertext + ciphertext
             try expected += expected
             let newNoiseBudget = try ciphertext.noiseBudget(using: testEnv.secretKey, variableTime: true)
-            XCTAssertIsClose(newNoiseBudget, noiseBudget - 1)
+            #expect(newNoiseBudget.isClose(to: noiseBudget - 1))
             noiseBudget = newNoiseBudget
 
             let decrypted = try ciphertext.decrypt(using: testEnv.secretKey)
-            XCTAssertEqual(decrypted, expected)
+            #expect(decrypted == expected)
         }
         // Two more additions yields incorrect results
         ciphertext = try ciphertext + ciphertext
@@ -1307,7 +1311,7 @@ public enum HeAPITestHelpers {
         try expected += expected
         try expected += expected
         let decrypted = try ciphertext.decrypt(using: testEnv.secretKey)
-        XCTAssertNotEqual(decrypted, expected)
+        #expect(decrypted != expected)
     }
 
     /// testing repeated addition.

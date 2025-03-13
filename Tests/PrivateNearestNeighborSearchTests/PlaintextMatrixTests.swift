@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,22 @@
 
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
+import Testing
 import TestUtilities
-import XCTest
 
-final class PlaintextMatrixTests: XCTestCase {
-    func testMatrixDimensions() throws {
-        XCTAssertThrowsError(try MatrixDimensions(rowCount: -1, columnCount: 1))
+@Suite
+struct PlaintextMatrixTests {
+    @Test
+    func matrixDimensions() throws {
+        #expect(throws: (any Error).self) { try MatrixDimensions(rowCount: -1, columnCount: 1) }
         let dims = try MatrixDimensions(rowCount: 2, columnCount: 3)
-        XCTAssertEqual(dims.rowCount, 2)
-        XCTAssertEqual(dims.columnCount, 3)
-        XCTAssertEqual(dims.count, 6)
+        #expect(dims.rowCount == 2)
+        #expect(dims.columnCount == 3)
+        #expect(dims.count == 6)
     }
 
-    func testPlaintextMatrixError() throws {
+    @Test
+    func plaintextMatrixError() throws {
         func runTest<Scheme: HeScheme>(rlweParams: PredefinedRlweParameters, _: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
             // Parameters with large polyDegree are slow in debug mode
@@ -42,13 +45,16 @@ final class PlaintextMatrixTests: XCTestCase {
             let plaintext: Plaintext<Scheme, Coeff> = try context.encode(
                 values: values,
                 format: EncodeFormat.coefficient)
-            XCTAssertNoThrow(try PlaintextMatrix<Scheme, Coeff>(
+            #expect(throws: Never.self) { try PlaintextMatrix<Scheme, Coeff>(
                 dimensions: dims,
                 packing: packing,
-                plaintexts: [plaintext, plaintext]))
+                plaintexts: [plaintext, plaintext]) }
 
             // Not enough plaintexts
-            XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(dimensions: dims, packing: packing, plaintexts: []))
+            #expect(throws: (any Error).self) { try PlaintextMatrix<Scheme, Coeff>(
+                dimensions: dims,
+                packing: packing,
+                plaintexts: []) }
             // Plaintexts from different contexts
             do {
                 let diffRlweParams = rlweParams == PredefinedRlweParameters
@@ -62,10 +68,10 @@ final class PlaintextMatrixTests: XCTestCase {
                 let diffPlaintext: Scheme.CoeffPlaintext = try diffContext.encode(
                     values: diffValues,
                     format: EncodeFormat.coefficient)
-                XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(
+                #expect(throws: (any Error).self) { try PlaintextMatrix<Scheme, Coeff>(
                     dimensions: dims,
                     packing: packing,
-                    plaintexts: [plaintext, diffPlaintext]))
+                    plaintexts: [plaintext, diffPlaintext]) }
             }
         }
         for rlweParams in PredefinedRlweParameters.allCases {
@@ -77,7 +83,8 @@ final class PlaintextMatrixTests: XCTestCase {
         }
     }
 
-    func testPlaintextMatrixDenseRowError() throws {
+    @Test
+    func plaintextMatrixDenseRowError() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
@@ -92,20 +99,20 @@ final class PlaintextMatrixTests: XCTestCase {
             // Wrong number of values
             do {
                 let wrongDims = try MatrixDimensions((rowCount, columnCount + 1))
-                XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(
+                #expect(throws: (any Error).self) { try PlaintextMatrix<Scheme, Coeff>(
                     context: context,
                     dimensions: wrongDims,
                     packing: packing,
-                    values: values))
+                    values: values) }
             }
             // Too many columns
             do {
                 let dims = try MatrixDimensions((rowCount, columnCount + 1))
-                XCTAssertThrowsError(try PlaintextMatrix<Scheme, Coeff>(
+                #expect(throws: (any Error).self) { try PlaintextMatrix<Scheme, Coeff>(
                     context: context,
                     dimensions: dims,
                     packing: packing,
-                    values: values))
+                    values: values) }
             }
         }
         try runTest(NoOpScheme.self)
@@ -135,18 +142,18 @@ final class PlaintextMatrixTests: XCTestCase {
             dimensions: dimensions,
             packing: packing,
             values: encodeValues.flatMap { $0 })
-        XCTAssertEqual(plaintextMatrix.rowCount, dimensions.rowCount)
-        XCTAssertEqual(plaintextMatrix.columnCount, dimensions.columnCount)
-        XCTAssertEqual(plaintextMatrix.packing, packing)
-        XCTAssertEqual(plaintextMatrix.context, context)
+        #expect(plaintextMatrix.rowCount == dimensions.rowCount)
+        #expect(plaintextMatrix.columnCount == dimensions.columnCount)
+        #expect(plaintextMatrix.packing == packing)
+        #expect(plaintextMatrix.context == context)
         // Test round-trip
-        XCTAssertEqual(try plaintextMatrix.unpack(), encodeValues.flatMap { $0 })
+        #expect(try plaintextMatrix.unpack() == encodeValues.flatMap { $0 })
 
         // Test representation
-        XCTAssertEqual(plaintextMatrix.plaintexts.count, expected.count)
+        #expect(plaintextMatrix.plaintexts.count == expected.count)
         for (plaintext, expected) in zip(plaintextMatrix.plaintexts, expected) {
             let decoded: [Scheme.Scalar] = try plaintext.decode(format: .simd)
-            XCTAssertEqual(decoded, expected)
+            #expect(decoded == expected)
         }
 
         // Test signed encoding/decoding
@@ -157,7 +164,7 @@ final class PlaintextMatrixTests: XCTestCase {
             packing: packing,
             signedValues: signedValues)
         let signedRoundtrip: [Scheme.SignedScalar] = try signedMatrix.unpack()
-        XCTAssertEqual(signedRoundtrip, signedValues)
+        #expect(signedRoundtrip == signedValues)
 
         // Test modular reduction
         let largerValues = encodeValues.flatMap { $0 }.map { $0 + t }
@@ -175,7 +182,7 @@ final class PlaintextMatrixTests: XCTestCase {
             packing: packing,
             values: largerValues,
             reduce: true)
-        XCTAssertEqual(largerPlaintextMatrix, plaintextMatrix)
+        #expect(largerPlaintextMatrix == plaintextMatrix)
 
         let largerSignedMatrix = try PlaintextMatrix<Scheme, Coeff>(
             context: context,
@@ -183,10 +190,11 @@ final class PlaintextMatrixTests: XCTestCase {
             packing: packing,
             signedValues: largerSignedValues,
             reduce: true)
-        XCTAssertEqual(largerSignedMatrix, signedMatrix)
+        #expect(largerSignedMatrix == signedMatrix)
     }
 
-    func testPlaintextMatrixDenseColumn() throws {
+    @Test
+    func plaintextMatrixDenseColumn() throws {
         let kats: [((rowCount: Int, columnCount: Int), expected: [[Int]])] = [
             ((1, 1), [[1, 0, 0, 0, 0, 0, 0, 0]]),
             ((1, 2), [[1, 2, 0, 0, 0, 0, 0, 0]]),
@@ -292,7 +300,8 @@ final class PlaintextMatrixTests: XCTestCase {
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    func testPlaintextMatrixDenseRow() throws {
+    @Test
+    func plaintextMatrixDenseRow() throws {
         let kats: [((rowCount: Int, columnCount: Int), expected: [[Int]])] = [
             ((1, 1), [[1, 1, 1, 1, 1, 1, 1, 1]]),
             ((1, 2), [[1, 2, 1, 2, 1, 2, 1, 2]]),
@@ -375,7 +384,8 @@ final class PlaintextMatrixTests: XCTestCase {
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    func testPlaintextMatrixDiagonal() throws {
+    @Test
+    func plaintextMatrixDiagonal() throws {
         let kats: [((rowCount: Int, columnCount: Int), expected: [[Int]])] = [
             ((1, 3), [
                 [1, 0, 0, 0, 0, 0, 0, 0],
@@ -478,7 +488,8 @@ final class PlaintextMatrixTests: XCTestCase {
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    func testDiagonalRotation() throws {
+    @Test
+    func diagonalRotation() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(
                 polyDegree: 16,
@@ -519,18 +530,19 @@ final class PlaintextMatrixTests: XCTestCase {
 
             for (plaintext, expected) in zip(plaintextMatrix.plaintexts, expected) {
                 let decoded: [Scheme.Scalar] = try plaintext.decode(format: .simd)
-                XCTAssertEqual(decoded, expected)
+                #expect(decoded == expected)
             }
         }
         try runTest(for: Bfv<UInt32>.self)
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    func testPlaintextMatrixConversion() throws {
+    @Test
+    func plaintextMatrixConversion() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
-            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            #expect(encryptionParameters.supportsSimdEncoding)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
@@ -544,7 +556,7 @@ final class PlaintextMatrixTests: XCTestCase {
 
             let evalMatrix = try plaintextMatrix.convertToEvalFormat()
             let coeffMatrixRoundtrip = try evalMatrix.convertToCoeffFormat()
-            XCTAssertEqual(coeffMatrixRoundtrip, plaintextMatrix)
+            #expect(coeffMatrixRoundtrip == plaintextMatrix)
         }
         try runTest(for: NoOpScheme.self)
         try runTest(for: Bfv<UInt32>.self)

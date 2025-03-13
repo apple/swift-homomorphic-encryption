@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 @testable import PrivateNearestNeighborSearch
 import PrivateNearestNeighborSearchProtobuf
 
-import XCTest
+import Testing
 
 func increasingData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> [[T]] {
     (0..<dimensions.rowCount).map { rowIndex in
@@ -27,32 +27,36 @@ func increasingData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> 
     }
 }
 
-class ConversionTests: XCTestCase {
-    func testDistanceMetric() throws {
+@Suite
+struct ConversionTests {
+    @Test
+    func distanceMetric() throws {
         for metric in DistanceMetric.allCases {
-            XCTAssertEqual(try metric.proto().native(), metric)
+            #expect(try metric.proto().native() == metric)
         }
     }
 
-    func testPacking() throws {
-        XCTAssertEqual(
-            try MatrixPacking.denseColumn.proto().native(),
-            MatrixPacking.denseColumn)
-        XCTAssertEqual(
-            try MatrixPacking.denseRow.proto().native(),
-            MatrixPacking.denseRow)
+    @Test
+    func packing() throws {
+        #expect(
+            try MatrixPacking.denseColumn.proto().native() ==
+                MatrixPacking.denseColumn)
+        #expect(
+            try MatrixPacking.denseRow.proto().native() ==
+                MatrixPacking.denseRow)
         let bsgs = BabyStepGiantStep(vectorDimension: 128)
-        XCTAssertEqual(bsgs.proto().native(), bsgs)
+        #expect(bsgs.proto().native() == bsgs)
 
-        XCTAssertEqual(
+        #expect(
             try MatrixPacking
                 .diagonal(babyStepGiantStep: bsgs)
                 .proto()
-                .native(),
-            MatrixPacking.diagonal(babyStepGiantStep: bsgs))
+                .native() ==
+                MatrixPacking.diagonal(babyStepGiantStep: bsgs))
     }
 
-    func testClientAndServerConfig() throws {
+    @Test
+    func clientAndServerConfig() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let vectorDimension = 4
             let clientConfig = try ClientConfig<Scheme>(
@@ -67,21 +71,22 @@ class ConversionTests: XCTestCase {
                     significantBitCounts: [15],
                     preferringSmall: true,
                     nttDegree: 8))
-            XCTAssertEqual(try clientConfig.proto().native(), clientConfig)
+            #expect(try clientConfig.proto().native() == clientConfig)
 
             let serverConfig = ServerConfig<Scheme>(
                 clientConfig: clientConfig,
                 databasePacking: MatrixPacking
                     .diagonal(
                         babyStepGiantStep: BabyStepGiantStep(vectorDimension: vectorDimension)))
-            XCTAssertEqual(try serverConfig.proto().native(), serverConfig)
+            #expect(try serverConfig.proto().native() == serverConfig)
         }
 
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)
     }
 
-    func testDatabase() throws {
+    @Test
+    func database() throws {
         let rows = (0...10).map { rowIndex in
             DatabaseRow(
                 entryId: rowIndex,
@@ -89,13 +94,14 @@ class ConversionTests: XCTestCase {
                 vector: [Float(rowIndex)])
         }
         for row in rows {
-            XCTAssertEqual(row.proto().native(), row)
+            #expect(row.proto().native() == row)
         }
         let database = Database(rows: rows)
-        XCTAssertEqual(database.proto().native(), database)
+        #expect(database.proto().native() == database)
     }
 
-    func testSerializedPlaintextMatrix() throws {
+    @Test
+    func serializedPlaintextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
@@ -110,19 +116,19 @@ class ConversionTests: XCTestCase {
                 packing: .denseColumn,
                 values: scalars.flatMap { $0 })
             let serialized = try plaintextMatrix.serialize()
-            XCTAssertEqual(try serialized.proto().native(), serialized)
+            #expect(try serialized.proto().native() == serialized)
             let deserialized = try PlaintextMatrix(deserialize: serialized, context: context)
-            XCTAssertEqual(deserialized, plaintextMatrix)
+            #expect(deserialized == plaintextMatrix)
 
             for moduliCount in 1..<encryptionParameters.coefficientModuli.count {
                 let evalPlaintextMatrix = try plaintextMatrix.convertToEvalFormat(moduliCount: moduliCount)
                 let serialized = try evalPlaintextMatrix.serialize()
-                XCTAssertEqual(try serialized.proto().native(), serialized)
+                #expect(try serialized.proto().native() == serialized)
                 let deserialized = try PlaintextMatrix(
                     deserialize: serialized,
                     context: context,
                     moduliCount: moduliCount)
-                XCTAssertEqual(deserialized, evalPlaintextMatrix)
+                #expect(deserialized == evalPlaintextMatrix)
             }
         }
 
@@ -130,7 +136,8 @@ class ConversionTests: XCTestCase {
         try runTest(Bfv<UInt64>.self)
     }
 
-    func testSerializedCiphertextMatrix() throws {
+    @Test
+    func serializedCiphertextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
@@ -150,18 +157,18 @@ class ConversionTests: XCTestCase {
                 let ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
                 let serialized = try ciphertextMatrix.serialize()
                 let serializedProto = try serialized.proto()
-                XCTAssertEqual(try serializedProto.native(), serialized)
+                #expect(try serializedProto.native() == serialized)
             }
             // Check Evaluation format
             do {
                 let ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
                 let evalCiphertextMatrix = try ciphertextMatrix.convertToEvalFormat()
                 let serialized = try evalCiphertextMatrix.serialize()
-                XCTAssertEqual(try serialized.proto().native(), serialized)
+                #expect(try serialized.proto().native() == serialized)
                 let deserialized = try CiphertextMatrix<Scheme, Eval>(
                     deserialize: serialized,
                     context: context)
-                XCTAssertEqual(deserialized, evalCiphertextMatrix)
+                #expect(deserialized == evalCiphertextMatrix)
             }
             // Check serializeForDecryption
             do {
@@ -174,12 +181,12 @@ class ConversionTests: XCTestCase {
                 let serializedProto = try serialized.proto()
                 let serializedSize = try serializedProto.serializedData().count
 
-                XCTAssertLessThan(serializedForDecryptionSize, serializedSize)
+                #expect(serializedForDecryptionSize < serializedSize)
                 let deserialized = try CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>(
                     deserialize: serializedForDecryption,
                     context: context, moduliCount: 1)
                 let decrypted = try deserialized.decrypt(using: secretKey)
-                XCTAssertEqual(decrypted, plaintextMatrix)
+                #expect(decrypted == plaintextMatrix)
             }
         }
 
@@ -187,7 +194,8 @@ class ConversionTests: XCTestCase {
         try runTest(Bfv<UInt64>.self)
     }
 
-    func testQuery() throws {
+    @Test
+    func query() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
@@ -208,13 +216,14 @@ class ConversionTests: XCTestCase {
 
             let query = Query(ciphertextMatrices: ciphertextMatrices)
             let roundtrip = try query.proto().native(context: context)
-            XCTAssertEqual(roundtrip, query)
+            #expect(roundtrip == query)
         }
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)
     }
 
-    func testSerializedProcessedDatabase() throws {
+    @Test
+    func serializedProcessedDatabase() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
             let vectorDimension = 4
@@ -226,7 +235,7 @@ class ConversionTests: XCTestCase {
                     vector: Array(repeating: Float(rowIndex), count: vectorDimension))
             }
             for row in rows {
-                XCTAssertEqual(row.proto().native(), row)
+                #expect(row.proto().native() == row)
             }
             let database = Database(rows: rows)
 
@@ -250,7 +259,7 @@ class ConversionTests: XCTestCase {
 
             let processed = try database.process(config: serverConfig)
             let serialized = try processed.serialize()
-            XCTAssertEqual(try serialized.proto().native(), serialized)
+            #expect(try serialized.proto().native() == serialized)
         }
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)

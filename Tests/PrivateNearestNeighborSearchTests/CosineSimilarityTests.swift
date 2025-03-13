@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
 
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
+import Testing
 import TestUtilities
-import XCTest
 
-final class CosineSimilarityTests: XCTestCase {
-    func testNormalizeRowsAndScale() throws {
+@Suite
+struct CosineSimilarityTests {
+    @Test
+    func normalizeRowsAndScale() throws {
         struct TestCase<T: SignedScalarType> {
             let scalingFactor: Float
             let norm: Array2d<Float>.Norm
@@ -32,15 +34,15 @@ final class CosineSimilarityTests: XCTestCase {
             let floatMatrix = Array2d<Float>(data: testCase.input)
             let normalized = floatMatrix.normalizedRows(norm: testCase.norm)
             for (normalized, expected) in zip(normalized.data, testCase.normalized.flatMap { $0 }) {
-                XCTAssertIsClose(normalized, expected)
+                #expect(normalized.isClose(to: expected))
             }
 
             let scaled = normalized.scaled(by: testCase.scalingFactor)
             for (scaled, expected) in zip(scaled.data, testCase.scaled.flatMap { $0 }) {
-                XCTAssertIsClose(scaled, expected)
+                #expect(scaled.isClose(to: expected))
             }
             let rounded: Array2d<T> = scaled.rounded()
-            XCTAssertEqual(rounded.data, testCase.rounded.flatMap { $0 })
+            #expect(rounded.data == testCase.rounded.flatMap { $0 })
         }
 
         let testCases: [TestCase<Int32>] = [

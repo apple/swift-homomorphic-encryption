@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
 
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
+import Testing
 import TestUtilities
-import XCTest
 
-final class ClientTests: XCTestCase {
-    func testClientConfig() throws {
+@Suite
+struct ClientTests {
+    @Test
+    func clientConfig() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let plaintextModuli = try [
                 PredefinedRlweParameters.n_4096_logq_27_28_28_logt_16,
@@ -35,9 +37,9 @@ final class ClientTests: XCTestCase {
                 distanceMetric: .cosineSimilarity,
                 vectorDimension: 128,
                 plaintextModuli: plaintextModuli)
-            XCTAssertGreaterThan(maxScalingFactor2, maxScalingFactor1)
+            #expect(maxScalingFactor2 > maxScalingFactor1)
 
-            XCTAssertNoThrow(
+            #expect(throws: Never.self) {
                 try ClientConfig<Scheme>(
                     encryptionParameters: EncryptionParameters(from: PredefinedRlweParameters
                         .n_4096_logq_27_28_28_logt_17),
@@ -46,14 +48,16 @@ final class ClientTests: XCTestCase {
                     vectorDimension: 128,
                     evaluationKeyConfig: EvaluationKeyConfig(),
                     distanceMetric: .cosineSimilarity,
-                    extraPlaintextModuli: [plaintextModuli[1]]))
+                    extraPlaintextModuli: [plaintextModuli[1]])
+            }
         }
 
         try runTest(for: Bfv<UInt32>.self)
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    func testNormalizeRowsAndScale() throws {
+    @Test
+    func normalizeRowsAndScale() throws {
         struct TestCase<T: SignedScalarType> {
             let scalingFactor: Float
             let norm: Array2d<Float>.Norm
@@ -67,20 +71,20 @@ final class ClientTests: XCTestCase {
             let floatMatrix = Array2d<Float>(data: testCase.input)
             let normalized = floatMatrix.normalizedRows(norm: testCase.norm)
             for (normalized, expected) in zip(normalized.data, testCase.normalized.flatMap { $0 }) {
-                XCTAssertIsClose(normalized, expected)
+                #expect(normalized.isClose(to: expected))
             }
 
             let scaled = normalized.scaled(by: testCase.scalingFactor)
             for (scaled, expected) in zip(scaled.data, testCase.scaled.flatMap { $0 }) {
-                XCTAssertIsClose(scaled, expected)
+                #expect(scaled.isClose(to: expected))
             }
             let rounded: Array2d<T> = scaled.rounded()
-            XCTAssertEqual(rounded.data, testCase.rounded.flatMap { $0 })
+            #expect(rounded.data == testCase.rounded.flatMap { $0 })
 
             if testCase.norm == Array2d<Float>.Norm.Lp(p: 2.0) {
                 let normalizedScaledAndRounded: Array2d<T> = floatMatrix.normalizedScaledAndRounded(
                     scalingFactor: testCase.scalingFactor)
-                XCTAssertEqual(normalizedScaledAndRounded.data, testCase.rounded.flatMap { $0 })
+                #expect(normalizedScaledAndRounded.data == testCase.rounded.flatMap { $0 })
             }
         }
 
@@ -103,7 +107,8 @@ final class ClientTests: XCTestCase {
         }
     }
 
-    func testQueryAsResponse() throws {
+    @Test
+    func queryAsResponse() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let degree = 512
             let encryptionParameters = try EncryptionParameters<Scheme>(
@@ -118,7 +123,7 @@ final class ClientTests: XCTestCase {
                     nttDegree: degree),
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
-            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            #expect(encryptionParameters.supportsSimdEncoding)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let vectorDimension = 32
             let queryDimensions = try MatrixDimensions(rowCount: 1, columnCount: vectorDimension)
@@ -144,7 +149,7 @@ final class ClientTests: XCTestCase {
                     extraPlaintextModuli: extraPlaintextModuli)
                 let client = try Client(config: config)
                 let query = try client.generateQuery(for: queryValues, using: secretKey)
-                XCTAssertEqual(query.ciphertextMatrices.count, config.plaintextModuli.count)
+                #expect(query.ciphertextMatrices.count == config.plaintextModuli.count)
 
                 let entryIds = [UInt64(42)]
                 let entryMetadatas = [42.littleEndianBytes]
@@ -153,8 +158,8 @@ final class ClientTests: XCTestCase {
                     ciphertextMatrices: query.ciphertextMatrices,
                     entryIds: entryIds, entryMetadatas: entryMetadatas)
                 let databaseDistances = try client.decrypt(response: response, using: secretKey)
-                XCTAssertEqual(databaseDistances.entryIds, entryIds)
-                XCTAssertEqual(databaseDistances.entryMetadatas, entryMetadatas)
+                #expect(databaseDistances.entryIds == entryIds)
+                #expect(databaseDistances.entryMetadatas == entryMetadatas)
 
                 let scaledQuery: Array2d<Scheme.SignedScalar> = queryValues
                     .normalizedScaledAndRounded(scalingFactor: Float(config.scalingFactor))
@@ -162,14 +167,15 @@ final class ClientTests: XCTestCase {
                 let expectedDistances = scaledQuery.map { value in
                     Float(value) / Float(config.scalingFactor * config.scalingFactor)
                 }
-                XCTAssertEqual(databaseDistances.distances, expectedDistances)
+                #expect(databaseDistances.distances == expectedDistances)
             }
         }
         try runTest(for: Bfv<UInt32>.self)
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    func testClientServer() throws {
+    @Test
+    func clientServer() throws {
         func runSingleTest<Scheme: HeScheme>(
             encryptionParameters: EncryptionParameters<Scheme>,
             dimensions: MatrixDimensions,
@@ -213,11 +219,11 @@ final class ClientTests: XCTestCase {
 
             let response = try server.computeResponse(to: query, using: evaluationKey)
             let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
-            XCTAssertGreaterThan(noiseBudget, 0)
+            #expect(noiseBudget > 0)
             let decrypted = try client.decrypt(response: response, using: secretKey)
 
-            XCTAssertEqual(decrypted.entryIds, processed.entryIds)
-            XCTAssertEqual(decrypted.entryMetadatas, processed.entryMetadatas)
+            #expect(decrypted.entryIds == processed.entryIds)
+            #expect(decrypted.entryMetadatas == processed.entryMetadatas)
 
             let vectors = Array2d<Float>(data: database.rows.map { row in row.vector })
             let modulus: UInt64 = client.config.plaintextModuli.map { UInt64($0) }.reduce(1, *)
@@ -225,7 +231,7 @@ final class ClientTests: XCTestCase {
                 queryVectors.transposed(),
                 modulus: modulus,
                 scalingFactor: Float(scalingFactor))
-            XCTAssertEqual(decrypted.distances, expected)
+            #expect(decrypted.distances == expected)
         }
 
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
@@ -247,7 +253,7 @@ final class ClientTests: XCTestCase {
                 coefficientModuli: coefficientModuli,
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
-            XCTAssert(encryptionParameters.supportsSimdEncoding)
+            #expect(encryptionParameters.supportsSimdEncoding)
 
             let queryCount = 1
             for rowCount in [degree / 2, degree, degree + 1, 3 * degree] {

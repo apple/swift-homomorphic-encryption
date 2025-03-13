@@ -34,7 +34,7 @@ func randomData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> [[T]
 
 @Suite
 struct CiphertextMatrixTests {
-    @Test("Encrypt/Decrypt Round Trip")
+    @Test
     func encryptDecryptRoundTrip() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5

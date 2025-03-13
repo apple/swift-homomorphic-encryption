@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,28 +14,31 @@
 
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
+import Testing
 import TestUtilities
-import XCTest
 
-final class UtilsTests: XCTestCase {
-    func testdMatrixMultiplication() throws {
+@Suite
+struct UtilsTests {
+    @Test
+    func matrixMultiplication() throws {
         // Int64
         do {
             let x = Array2d<Int64>(data: Array(-3..<3), rowCount: 2, columnCount: 3)
             let y = Array2d<Int64>(data: Array(-6..<6), rowCount: 3, columnCount: 4)
-            XCTAssertEqual(x.mul(y, modulus: 100), Array2d(data: [[20, 14, 8, 2], [2, 5, 8, 11]]))
+            #expect(x.mul(y, modulus: 100) == Array2d(data: [[20, 14, 8, 2], [2, 5, 8, 11]]))
             // Values in [-floor(modulus/2), floor(modulus-1)/2]
-            XCTAssertEqual(x.mul(y, modulus: 10), Array2d(data: [[0, 4, -2, 2], [2, -5, -2, 1]]))
+            #expect(x.mul(y, modulus: 10) == Array2d(data: [[0, 4, -2, 2], [2, -5, -2, 1]]))
         }
         // Float
         do {
             let x = Array2d<Float>(data: Array(-3..<3).map { Float($0) }, rowCount: 2, columnCount: 3)
             let y = Array2d<Float>(data: Array(-6..<6).map { Float($0) }, rowCount: 3, columnCount: 4)
-            XCTAssertEqual(x.mul(y), Array2d<Float>(data: [[20.0, 14.0, 8.0, 2.0], [2.0, 5.0, 8.0, 11.0]]))
+            #expect(x.mul(y) == Array2d<Float>(data: [[20.0, 14.0, 8.0, 2.0], [2.0, 5.0, 8.0, 11.0]]))
         }
     }
 
-    func testFixedPointCosineSimilarity() throws {
+    @Test
+    func fixedPointCosineSimilarity() throws {
         let innerDimension = 3
         let x = Array2d<Float>(data: Array(-3..<3).map { Float($0) }, rowCount: 2, columnCount: innerDimension)
         let y = Array2d<Float>(data: Array(-6..<6).map { Float($0) }, rowCount: innerDimension, columnCount: 4)
@@ -49,12 +52,12 @@ final class UtilsTests: XCTestCase {
         let modulus = UInt32(scalingFactor * scalingFactor * innerDimension + 1)
         let z = try x.fixedPointCosineSimilarity(y, modulus: modulus, scalingFactor: Float(scalingFactor))
 
-        XCTAssertIsClose(fixedPointCosineSimilarityError(innerDimension: 3, scalingFactor: 100), 0.010025)
+        #expect(fixedPointCosineSimilarityError(innerDimension: 3, scalingFactor: 100).isClose(to: 0.010025))
         let absoluteError = fixedPointCosineSimilarityError(
             innerDimension: innerDimension,
             scalingFactor: scalingFactor)
         for (got, expected) in zip(z.data, expected.data) {
-            XCTAssertIsClose(got, expected, absoluteTolerance: absoluteError)
+            #expect(got.isClose(to: expected, absoluteTolerance: absoluteError))
         }
     }
 }

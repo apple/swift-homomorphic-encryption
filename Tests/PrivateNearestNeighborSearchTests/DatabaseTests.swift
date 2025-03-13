@@ -17,9 +17,9 @@ import HomomorphicEncryption
 import Testing
 import TestUtilities
 
-@Suite("Database Tests")
+@Suite
 struct DatabaseTests {
-    @Test("Serialized Processed Database")
+    @Test
     func serializedProcessedDatabase() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)

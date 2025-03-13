@@ -67,7 +67,7 @@ struct CiphertextMatrixTests {
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    @Test("Convert Round Trip")
+    @Test
     func convertRoundTrip() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
@@ -95,7 +95,7 @@ struct CiphertextMatrixTests {
         try runTest(for: Bfv<UInt64>.self)
     }
 
-    @Test("Extract Dense Row")
+    @Test
     func extractDenseRow() throws {
         func runTest<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let degree = 16

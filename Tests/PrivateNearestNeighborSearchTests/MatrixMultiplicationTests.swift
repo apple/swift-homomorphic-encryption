@@ -28,9 +28,9 @@ extension Array where Element: Collection, Element.Element: ScalarType, Element.
     }
 }
 
-@Suite("Matrix Multiplication Tests")
+@Suite
 struct MatrixMultiplicationTests {
-    @Test("Multiply Vector")
+    @Test
     func mulVector() throws {
         func checkProduct<Scheme: HeScheme>(
             _: Scheme.Type,
@@ -166,7 +166,7 @@ struct MatrixMultiplicationTests {
         #expect(decryptedValues == expected)
     }
 
-    @Test("Matrix Multiplication Large Parameters")
+    @Test
     func matrixMulLargeParameters() throws {
         func testOnRandomData<Scheme: HeScheme>(
             plaintextRows: Int,
@@ -335,7 +335,7 @@ struct MatrixMultiplicationTests {
         }
     }
 
-    @Test("Matrix Multiplication Small Parameters")
+    @Test
     func matrixMulSmallParameters() throws {
         func testOnIncreasingData<Scheme: HeScheme>(
             plaintextDimensions: MatrixDimensions,
@@ -417,7 +417,7 @@ struct MatrixMultiplicationTests {
         }
     }
 
-    @Test("Evaluation Key Containment")
+    @Test
     func evaluationKeyContainment() throws {
         let encryptionParameters = try EncryptionParameters<Bfv<UInt64>>(from: .insecure_n_512_logq_4x60_logt_20)
         let columnCount = 20

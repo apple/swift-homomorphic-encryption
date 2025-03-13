@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
 
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
+import Testing
 import TestUtilities
-import XCTest
 
-final class DatabaseTests: XCTestCase {
-    func testSerializedProcessedDatabase() throws {
+@Suite
+struct DatabaseTests {
+    @Test
+    func serializedProcessedDatabase() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
             let vectorDimension = 4
@@ -52,7 +54,7 @@ final class DatabaseTests: XCTestCase {
             let processed = try database.process(config: serverConfig)
             let serialized = try processed.serialize()
             let deserialized = try ProcessedDatabase(from: serialized, contexts: processed.contexts)
-            XCTAssertEqual(deserialized, processed)
+            #expect(deserialized == processed)
         }
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)

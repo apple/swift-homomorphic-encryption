@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
+import Testing
 import TestUtilities
-import XCTest
 
 extension Array where Element: Collection, Element.Element: ScalarType, Element.Index == Int {
     func mulTranspose(_ matrix: [[BaseElement]], modulus: BaseElement) throws -> [BaseElement] {
@@ -28,8 +28,10 @@ extension Array where Element: Collection, Element.Element: ScalarType, Element.
     }
 }
 
-final class MatrixMultiplicationTests: XCTestCase {
-    func testMulVector() throws {
+@Suite
+struct MatrixMultiplicationTests {
+    @Test
+    func mulVector() throws {
         func checkProduct<Scheme: HeScheme>(
             _: Scheme.Type,
             _ plaintextRows: [[Scheme.Scalar]],
@@ -81,14 +83,14 @@ final class MatrixMultiplicationTests: XCTestCase {
             let expectedCiphertextsCount = plaintextMatrixDimensions.rowCount.dividingCeil(
                 encryptionParameters.polyDegree,
                 variableTime: true)
-            XCTAssertEqual(dotProduct.count, expectedCiphertextsCount)
+            #expect(dotProduct.count == expectedCiphertextsCount)
             var resultValues: [Scheme.Scalar] = []
             for ciphertext in dotProduct {
                 let decrypted = try ciphertext.decrypt(using: secretKey)
                 let decoded: [Scheme.Scalar] = try decrypted.decode(format: .simd)
                 resultValues += decoded
             }
-            XCTAssertEqual(resultValues, expected)
+            #expect(resultValues == expected)
         }
 
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
@@ -161,10 +163,11 @@ final class MatrixMultiplicationTests: XCTestCase {
             using: evaluationKey)
             .decrypt(using: secretKey).unpack()
 
-        XCTAssertEqual(decryptedValues, expected)
+        #expect(decryptedValues == expected)
     }
 
-    func testMatrixMulLargeParameters() throws {
+    @Test
+    func matrixMulLargeParameters() throws {
         func testOnRandomData<Scheme: HeScheme>(
             plaintextRows: Int,
             plaintextCols: Int,
@@ -332,7 +335,8 @@ final class MatrixMultiplicationTests: XCTestCase {
         }
     }
 
-    func testMatrixMulSmallParameters() throws {
+    @Test
+    func matrixMulSmallParameters() throws {
         func testOnIncreasingData<Scheme: HeScheme>(
             plaintextDimensions: MatrixDimensions,
             queryDimensions: MatrixDimensions,
@@ -413,7 +417,8 @@ final class MatrixMultiplicationTests: XCTestCase {
         }
     }
 
-    func testEvaluationKeyContainment() throws {
+    @Test
+    func evaluationKeyContainment() throws {
         let encryptionParameters = try EncryptionParameters<Bfv<UInt64>>(from: .insecure_n_512_logq_4x60_logt_20)
         let columnCount = 20
         let plaintextDims = try MatrixDimensions(rowCount: 100, columnCount: columnCount)
@@ -427,14 +432,14 @@ final class MatrixMultiplicationTests: XCTestCase {
                     plaintextMatrixDimensions: plaintextDims,
                     encryptionParameters: encryptionParameters,
                     maxQueryCount: queryCount)
-                XCTAssertTrue(maxQueryCountConfig.contains(config))
+                #expect(maxQueryCountConfig.contains(config))
             }
         }
         let hasRelinKey = EvaluationKeyConfig(galoisElements: [], hasRelinearizationKey: true)
         let noRelinKey = EvaluationKeyConfig(galoisElements: [], hasRelinearizationKey: false)
-        XCTAssertTrue(hasRelinKey.contains(noRelinKey))
-        XCTAssertTrue(hasRelinKey.contains(hasRelinKey))
-        XCTAssertTrue(noRelinKey.contains(noRelinKey))
-        XCTAssertFalse(noRelinKey.contains(hasRelinKey))
+        #expect(hasRelinKey.contains(noRelinKey))
+        #expect(hasRelinKey.contains(hasRelinKey))
+        #expect(noRelinKey.contains(noRelinKey))
+        #expect(!noRelinKey.contains(hasRelinKey))
     }
 }

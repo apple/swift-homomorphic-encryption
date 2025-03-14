@@ -108,6 +108,7 @@ struct HeAPITests {
         try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
         try await HeAPITestHelpers.schemeRotationTest(context: context)
         try await HeAPITestHelpers.schemeApplyGaloisTest(context: context)
+        try await HeAPITestHelpers.repeatedAdditionTest(context: context)
     }
 
     private func bfvTestKeySwitching<T>(context: Context<Bfv<T>>) throws {
@@ -176,7 +177,7 @@ struct HeAPITests {
             try await HeAPITestHelpers.schemeApplyGaloisTest(context: context)
             try bfvTestKeySwitching(context: context)
             try HeAPITestHelpers.noiseBudgetTest(context: context)
-            try await HeAPITestHelpers.repeatAdditionTest(context: context)
+            try await HeAPITestHelpers.repeatedAdditionTest(context: context)
             try await HeAPITestHelpers.multiplyInverseTest(context: context)
         }
     }

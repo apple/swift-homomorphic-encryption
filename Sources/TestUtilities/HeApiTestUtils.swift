@@ -317,93 +317,66 @@ public enum HeAPITestHelpers {
         let coeffCipher1 = try canonicalCipher1.convertToCoeffFormat()
         let coeffCipher2 = try canonicalCipher2.convertToCoeffFormat()
 
-        // canonicalCiphertext
-        do {
-            // canonicalCiphertext + canonicalCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: canonicalCipher1 + canonicalCipher2,
-                format: .coefficient,
-                expected: sumData)
+        func syncTest() throws {
+            func runTest(lhs: Ciphertext<Scheme, some PolyFormat>, rhs: Ciphertext<Scheme, some PolyFormat>) throws {
+                let sum = try lhs + rhs
+                var lhs = lhs
+                try lhs += rhs
 
-            // canonicalCiphertext += canonicalCiphertext
-            do {
-                var sum = canonicalCipher1
-                try sum += canonicalCipher2
                 try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
-                var sumAsync = canonicalCipher1
-                try await Scheme.addAssignAsync(&sumAsync, canonicalCipher2)
-                try testEnv.checkDecryptsDecodes(ciphertext: sumAsync, format: .coefficient, expected: sumData)
+                try testEnv.checkDecryptsDecodes(ciphertext: lhs, format: .coefficient, expected: sumData)
             }
 
-            // canonicalCiphertext + coeffCiphertext
-            if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: canonicalCipher1 + coeffCipher2,
-                    format: .coefficient,
-                    expected: sumData)
-
-                // canonicalCiphertext += coeffCipherrtext
-                do {
-                    var sum = canonicalCipher1
-                    try sum += coeffCipher2
-                    try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
+            // canonicalCiphertext
+            do {
+                try runTest(lhs: canonicalCipher1, rhs: canonicalCipher2)
+                if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+                    try runTest(lhs: canonicalCipher1, rhs: coeffCipher2)
+                }
+                // canonicalCiphertext + evalCiphertext
+                if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+                    try runTest(lhs: canonicalCipher1, rhs: evalCipher2)
                 }
             }
-            // canonicalCiphertext + evalCiphertext
-            if Scheme.CanonicalCiphertextFormat.self == Eval.self {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: canonicalCipher1 + evalCipher2,
-                    format: .coefficient,
-                    expected: sumData)
 
-                // canonicalCiphertext += evalCiphertext
-                do {
-                    var sum = canonicalCipher1
-                    try sum += evalCipher2
-                    try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
+            // coeffCiphertext
+            try runTest(lhs: coeffCipher1, rhs: coeffCipher2)
+            // evalCiphertext
+            try runTest(lhs: evalCipher1, rhs: evalCipher2)
+        }
+        try syncTest()
+
+        func asyncTest() async throws {
+            func runTest(
+                lhs: Ciphertext<Scheme, some PolyFormat>,
+                rhs: Ciphertext<Scheme, some PolyFormat>) async throws
+            {
+                let sum = try await lhs + rhs
+                var lhs = lhs
+                try await lhs += rhs
+
+                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
+                try testEnv.checkDecryptsDecodes(ciphertext: lhs, format: .coefficient, expected: sumData)
+            }
+
+            // canonicalCiphertext
+            do {
+                try await runTest(lhs: canonicalCipher1, rhs: canonicalCipher2)
+                if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+                    try await runTest(lhs: canonicalCipher1, rhs: coeffCipher2)
+                }
+                // canonicalCiphertext + evalCiphertext
+                if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+                    try await runTest(lhs: canonicalCipher1, rhs: evalCipher2)
                 }
             }
+
+            // coeffCiphertext
+            try await runTest(lhs: coeffCipher1, rhs: coeffCipher2)
+            // evalCiphertext
+            try await runTest(lhs: evalCipher1, rhs: evalCipher2)
         }
-
-        // coeffCiphertext
-        do {
-            // coeffCiphertext + coeffCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: coeffCipher1 + coeffCipher2,
-                format: .coefficient,
-                expected: sumData)
-
-            // coeffCiphertext + coeffCiphertext
-            do {
-                var sum = coeffCipher1
-                try sum += coeffCipher2
-                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
-
-                var sumAsync = coeffCipher1
-                try await Scheme.addAssignCoeffAsync(&sumAsync, coeffCipher2)
-                try testEnv.checkDecryptsDecodes(ciphertext: sumAsync, format: .coefficient, expected: sumData)
-            }
-        }
-
-        // evalCiphertext
-        do {
-            // evalCiphertext + evalCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: evalCipher1 + evalCipher2,
-                format: .coefficient,
-                expected: sumData)
-
-            // evalCiphertext += evalCiphertext
-            do {
-                var sum = evalCipher1
-                try sum += evalCipher2
-                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .coefficient, expected: sumData)
-
-                var sumAsync = evalCipher1
-                try await Scheme.addAssignEvalAsync(&sumAsync, evalCipher2)
-                try testEnv.checkDecryptsDecodes(ciphertext: sumAsync, format: .coefficient, expected: sumData)
-            }
-        }
+        try await asyncTest()
     }
 
     /// Testing ciphertext subtraction of the scheme.
@@ -420,94 +393,66 @@ public enum HeAPITestHelpers {
         let coeffCipher1 = try canonicalCipher1.convertToCoeffFormat()
         let coeffCipher2 = try canonicalCipher2.convertToCoeffFormat()
 
-        // canonicalCiphertext
-        do {
-            // canonicalCiphertext - canonicalCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: canonicalCipher1 - canonicalCipher2,
-                format: .coefficient,
-                expected: diffData)
+        func syncTest() throws {
+            func runTest(lhs: Ciphertext<Scheme, some PolyFormat>, rhs: Ciphertext<Scheme, some PolyFormat>) throws {
+                let diff = try lhs - rhs
+                var lhs = lhs
+                try lhs -= rhs
 
-            // canonicalCiphertext -= canonicalCiphertext
-            do {
-                var diff = canonicalCipher1
-                try diff -= canonicalCipher2
                 try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
-
-                var diffAsync = canonicalCipher1
-                try await Scheme.subAssignAsync(&diffAsync, canonicalCipher2)
-                try testEnv.checkDecryptsDecodes(ciphertext: diffAsync, format: .coefficient, expected: diffData)
+                try testEnv.checkDecryptsDecodes(ciphertext: lhs, format: .coefficient, expected: diffData)
             }
 
-            // canonicalCiphertext - coeffCiphertext
-            if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: canonicalCipher1 - coeffCipher2,
-                    format: .coefficient,
-                    expected: diffData)
-
-                // canonicalCiphertext -= coeffCipherrtext
-                do {
-                    var diff = canonicalCipher1
-                    try diff -= coeffCipher2
-                    try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
+            // canonicalCiphertext
+            do {
+                try runTest(lhs: canonicalCipher1, rhs: canonicalCipher2)
+                if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+                    try runTest(lhs: canonicalCipher1, rhs: coeffCipher2)
+                }
+                // canonicalCiphertext + evalCiphertext
+                if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+                    try runTest(lhs: canonicalCipher1, rhs: evalCipher2)
                 }
             }
-            // canonicalCiphertext - evalCiphertext
-            if Scheme.CanonicalCiphertextFormat.self == Eval.self {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: canonicalCipher1 - evalCipher2,
-                    format: .coefficient,
-                    expected: diffData)
 
-                // canonicalCiphertext -= evalCiphertext
-                do {
-                    var diff = canonicalCipher1
-                    try diff -= evalCipher2
-                    try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
+            // coeffCiphertext
+            try runTest(lhs: coeffCipher1, rhs: coeffCipher2)
+            // evalCiphertext
+            try runTest(lhs: evalCipher1, rhs: evalCipher2)
+        }
+        try syncTest()
+
+        func asyncTest() async throws {
+            func runTest(
+                lhs: Ciphertext<Scheme, some PolyFormat>,
+                rhs: Ciphertext<Scheme, some PolyFormat>) async throws
+            {
+                let diff = try await lhs - rhs
+                var lhs = lhs
+                try await lhs -= rhs
+
+                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
+                try testEnv.checkDecryptsDecodes(ciphertext: lhs, format: .coefficient, expected: diffData)
+            }
+
+            // canonicalCiphertext
+            do {
+                try await runTest(lhs: canonicalCipher1, rhs: canonicalCipher2)
+                if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+                    try await runTest(lhs: canonicalCipher1, rhs: coeffCipher2)
+                }
+                // canonicalCiphertext + evalCiphertext
+                if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+                    try await runTest(lhs: canonicalCipher1, rhs: evalCipher2)
                 }
             }
+
+            // coeffCiphertext
+            try await runTest(lhs: coeffCipher1, rhs: coeffCipher2)
+            // evalCiphertext
+            try await runTest(lhs: evalCipher1, rhs: evalCipher2)
         }
-
-        // coeffCiphertext
-        do {
-            // coeffCiphertext - coeffCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: coeffCipher1 - coeffCipher2,
-                format: .coefficient,
-                expected: diffData)
-
-            // coeffCiphertext -= coeffCiphertext
-            do {
-                var diff = coeffCipher1
-                try diff -= coeffCipher2
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
-
-                var diffAsync = coeffCipher1
-                try await Scheme.subAssignCoeffAsync(&diffAsync, coeffCipher2)
-                try testEnv.checkDecryptsDecodes(ciphertext: diffAsync, format: .coefficient, expected: diffData)
-            }
-        }
-
-        // evalCiphertext
-        do {
-            // evalCiphertext - evalCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: evalCipher1 - evalCipher2,
-                format: .coefficient,
-                expected: diffData)
-
-            // evalCiphertext -= evalCiphertext
-            do {
-                var diff = evalCipher1
-                try diff -= evalCipher2
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .coefficient, expected: diffData)
-
-                var diffAsync = evalCipher1
-                try await Scheme.subAssignEvalAsync(&diffAsync, evalCipher2)
-                try testEnv.checkDecryptsDecodes(ciphertext: diffAsync, format: .coefficient, expected: diffData)
-            }
-        }
+        try await asyncTest()
     }
 
     /// testing ciphertext multiplication of the scheme.
@@ -656,19 +601,32 @@ public enum HeAPITestHelpers {
 
         let ciphertext1 = testEnv.ciphertext1
         let ciphertext2 = testEnv.ciphertext2
-        let ciphertextResult = try ciphertext1 * ciphertext2 + ciphertext1
 
-        var ciphertextResultAsync = ciphertext1
-        try await Scheme.mulAssignAsync(&ciphertextResultAsync, ciphertext2)
-        try await Scheme.addAssignAsync(&ciphertextResultAsync, ciphertext1)
+        func syncTest() throws {
+            let ciphertextResult = try ciphertext1 * ciphertext2 + ciphertext1
 
-        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
-        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplyAddData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplyAddData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplyAddData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResultAsync, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplyAddData)
+        }
+        try syncTest()
+
+        func asyncTest() async throws {
+            var ciphertextResult = ciphertext1
+            try await Scheme.mulAssignAsync(&ciphertextResult, ciphertext2)
+            try await ciphertextResult += ciphertext1
+
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplyAddData)
+        }
+        try await asyncTest()
     }
 
     /// Testing CT-CT multiplication followed by CT-PT addition of the scheme.
@@ -711,24 +669,41 @@ public enum HeAPITestHelpers {
             return data1.multiplyMod(data2, modulus: t, variableTime: true).subtractMod(data1, modulus: t)
         }
 
-        let ciphertext1 = testEnv.ciphertext1
-        let ciphertext2 = testEnv.ciphertext2
-        let ciphertextResult = try ciphertext1 * ciphertext2 - testEnv.coeffPlaintext1
+        func syncTest() throws {
+            let ciphertext1 = testEnv.ciphertext1
+            let ciphertext2 = testEnv.ciphertext2
+            let ciphertextResult = try ciphertext1 * ciphertext2 - testEnv.coeffPlaintext1
 
-        var ciphertextResultAsync = ciphertext1
-        try await Scheme.mulAssignAsync(&ciphertextResultAsync, ciphertext2)
-        try await Scheme.subAssignAsync(&ciphertextResultAsync, testEnv.coeffPlaintext1)
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
 
-        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
-        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: ciphertextResult,
+                format: .simd,
+                expected: multiplySubtractData)
+        }
+        try syncTest()
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(
-            ciphertext: ciphertextResultAsync,
-            format: .simd,
-            expected: multiplySubtractData)
+        func asyncTest() async throws {
+            let ciphertext1 = testEnv.ciphertext1
+            let ciphertext2 = testEnv.ciphertext2
+            var ciphertextResult = ciphertext1
+            try await Scheme.mulAssignAsync(&ciphertextResult, ciphertext2)
+            try await ciphertextResult -= testEnv.coeffPlaintext1
+
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: ciphertextResult,
+                format: .simd,
+                expected: multiplySubtractData)
+        }
+        try await asyncTest()
     }
 
     /// Testing CT-PT multiplication followed by CT-PT addition of the scheme.
@@ -747,22 +722,35 @@ public enum HeAPITestHelpers {
         }
 
         let ciphertext1 = testEnv.evalCiphertext1
-        let ciphertextEvalResult = try ciphertext1 * testEnv.evalPlaintext2
-        var ciphertextResult = try ciphertextEvalResult.inverseNtt()
-        try ciphertextResult += testEnv.coeffPlaintext1
 
-        var ciphertextEvalResultAsync = ciphertext1
-        try await Scheme.mulAssignAsync(&ciphertextEvalResultAsync, testEnv.evalPlaintext2)
-        var ciphertextResultAsync = try await Scheme.inverseNttAsync(ciphertextEvalResultAsync)
-        try await Scheme.addAssignCoeffAsync(&ciphertextResultAsync, testEnv.coeffPlaintext1)
+        func syncTest() throws {
+            let ciphertextEvalResult = try ciphertext1 * testEnv.evalPlaintext2
+            var ciphertextResult = try ciphertextEvalResult.inverseNtt()
+            try ciphertextResult += testEnv.coeffPlaintext1
 
-        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
-        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplyAddData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplyAddData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplyAddData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResultAsync, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplyAddData)
+        }
+        try syncTest()
+
+        func asyncTest() async throws {
+            var ciphertextEvalResult = ciphertext1
+            try await Scheme.mulAssignAsync(&ciphertextEvalResult, testEnv.evalPlaintext2)
+            var ciphertextResult = try await Scheme.inverseNttAsync(ciphertextEvalResult)
+            try await ciphertextResult += testEnv.coeffPlaintext1
+
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplyAddData)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplyAddData)
+        }
+        try await asyncTest()
     }
 
     /// Testing CT-PT multiplication followed by CT-PT subtraction of the scheme.
@@ -780,26 +768,40 @@ public enum HeAPITestHelpers {
             return data1.multiplyMod(data2, modulus: t, variableTime: true).subtractMod(data1, modulus: t)
         }
 
-        let ciphertext1 = testEnv.evalCiphertext1
-        let ciphertextEvalResult = try ciphertext1 * testEnv.evalPlaintext2
-        var ciphertextResult = try ciphertextEvalResult.inverseNtt()
-        try ciphertextResult -= testEnv.coeffPlaintext1
+        func syncTest() throws {
+            let ciphertextEvalResult = try testEnv.evalCiphertext1 * testEnv.evalPlaintext2
+            var ciphertextResult = try ciphertextEvalResult.inverseNtt()
+            try ciphertextResult -= testEnv.coeffPlaintext1
 
-        var ciphertextEvalResultAsync = ciphertext1
-        try await Scheme.mulAssignAsync(&ciphertextEvalResultAsync, testEnv.evalPlaintext2)
-        var ciphertextResultAsync = try await Scheme.inverseNttAsync(ciphertextEvalResultAsync)
-        try await Scheme.subAssignCoeffAsync(&ciphertextResultAsync, testEnv.coeffPlaintext1)
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
 
-        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
-        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: ciphertextResult,
+                format: .simd,
+                expected: multiplySubtractData)
+        }
+        try syncTest()
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(
-            ciphertext: ciphertextResultAsync,
-            format: .simd,
-            expected: multiplySubtractData)
+        func asyncTest() async throws {
+            var ciphertextEvalResult = testEnv.evalCiphertext1
+            try await Scheme.mulAssignAsync(&ciphertextEvalResult, testEnv.evalPlaintext2)
+            var ciphertextResult = try await Scheme.inverseNttAsync(ciphertextEvalResult)
+            try await Scheme.subAssignCoeffAsync(&ciphertextResult, testEnv.coeffPlaintext1)
+
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: ciphertextResult,
+                format: .simd,
+                expected: multiplySubtractData)
+        }
+        try await asyncTest()
     }
 
     /// Testing CT-CT multiplication followed by CT-CT subtraction of the scheme.
@@ -815,24 +817,41 @@ public enum HeAPITestHelpers {
             return data1.multiplyMod(data2, modulus: t, variableTime: true).subtractMod(data1, modulus: t)
         }
 
-        let ciphertext1 = testEnv.ciphertext1
-        let ciphertext2 = testEnv.ciphertext2
-        let ciphertextResult = try ciphertext1 * ciphertext2 - ciphertext1
+        func syncTest() throws {
+            let ciphertext1 = testEnv.ciphertext1
+            let ciphertext2 = testEnv.ciphertext2
+            let ciphertextResult = try ciphertext1 * ciphertext2 - ciphertext1
 
-        var ciphertextResultAsync = ciphertext1
-        try await Scheme.mulAssignAsync(&ciphertextResultAsync, ciphertext2)
-        try await Scheme.subAssignAsync(&ciphertextResultAsync, ciphertext1)
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
 
-        let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
-        let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: ciphertextResult,
+                format: .simd,
+                expected: multiplySubtractData)
+        }
+        try syncTest()
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .simd, expected: multiplySubtractData)
-        try testEnv.checkDecryptsDecodes(
-            ciphertext: ciphertextResultAsync,
-            format: .simd,
-            expected: multiplySubtractData)
+        func asyncTest() async throws {
+            let ciphertext1 = testEnv.ciphertext1
+            let ciphertext2 = testEnv.ciphertext2
+            var ciphertextResult = ciphertext1
+            try await Scheme.mulAssignAsync(&ciphertextResult, ciphertext2)
+            try await ciphertextResult -= ciphertext1
+
+            let evalCiphertext: Ciphertext<Scheme, Eval> = try ciphertextResult.convertToEvalFormat()
+            let coeffCiphertext: Ciphertext<Scheme, Coeff> = try evalCiphertext.inverseNtt()
+
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .simd, expected: multiplySubtractData)
+            try testEnv.checkDecryptsDecodes(
+                ciphertext: ciphertextResult,
+                format: .simd,
+                expected: multiplySubtractData)
+        }
+        try await asyncTest()
     }
 
     /// Testing ciphertext negation of the scheme.
@@ -842,26 +861,34 @@ public enum HeAPITestHelpers {
             data1.negateMod(modulus: context.plaintextModulus)
         }
 
-        let ciphertextResult = -testEnv.ciphertext1
-        let evalCiphertext = -testEnv.evalCiphertext1
-        var evalCiphertextAsync = testEnv.evalCiphertext1
-        await Scheme.negAssignEvalAsync(&evalCiphertextAsync)
+        func syncTest() throws {
+            let ciphertextResult = -testEnv.ciphertext1
+            let evalCiphertext = -testEnv.evalCiphertext1
 
-        var coeffCiphertext: Ciphertext<Scheme, Coeff> = try testEnv.evalCiphertext1.inverseNtt()
+            var coeffCiphertext: Ciphertext<Scheme, Coeff> = try testEnv.evalCiphertext1.inverseNtt()
+            coeffCiphertext = -coeffCiphertext
 
-        var coeffCiphertextAsync = coeffCiphertext
-        await Scheme.negAssignCoeffAsync(&coeffCiphertextAsync)
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: negatedData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .coefficient, expected: negatedData)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .coefficient, expected: negatedData)
+        }
+        try syncTest()
 
-        coeffCiphertext = -coeffCiphertext
+        func asyncTest() async throws {
+            let ciphertextResult = await -testEnv.ciphertext1
+            let evalCiphertext = await -testEnv.evalCiphertext1
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: negatedData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .coefficient, expected: negatedData)
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertextAsync, format: .coefficient, expected: negatedData)
-        try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertextAsync, format: .coefficient, expected: negatedData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .coefficient, expected: negatedData)
+            var coeffCiphertext: Ciphertext<Scheme, Coeff> = try testEnv.evalCiphertext1.inverseNtt()
+            coeffCiphertext = await -coeffCiphertext
+
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: negatedData)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalCiphertext, format: .coefficient, expected: negatedData)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertextResult, format: .coefficient, expected: negatedData)
+        }
+        try await asyncTest()
     }
 
-    /// Testing CT-PT addition of the scheme.
+    /// Testing cipherterxt-plaintext addition.
     public static func schemeCiphertextPlaintextAddTest<Scheme: HeScheme>(context: Context<Scheme>) async throws {
         guard context.supportsSimdEncoding else {
             return
@@ -876,106 +903,77 @@ public enum HeAPITestHelpers {
         let coeffPlaintext = testEnv.coeffPlaintext2
         let evalPlaintext = try coeffPlaintext.forwardNtt()
 
-        // canonicalCiphertext
-        do {
-            // coeffPlaintext + canonicalCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: coeffPlaintext + canonicalCiphertext,
-                format: .simd,
-                expected: sumData)
+        func syncTest() throws {
+            func runTest(
+                ciphertext: Ciphertext<Scheme, some PolyFormat>,
+                plaintext: Plaintext<Scheme, some PolyFormat>) throws
+            {
+                let sum1 = try ciphertext + plaintext
+                let sum2 = try plaintext + ciphertext
 
-            // canonicalCiphertext + coeffPlaintext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: canonicalCiphertext + coeffPlaintext,
-                format: .simd,
-                expected: sumData)
+                var sum3 = ciphertext
+                try sum3 += plaintext
 
-            // canonicalCiphertext += coeffPlaintext
-            do {
-                var sum = canonicalCiphertext
-                try sum += coeffPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .simd, expected: sumData)
+                try testEnv.checkDecryptsDecodes(ciphertext: sum1, format: .simd, expected: sumData)
+                try testEnv.checkDecryptsDecodes(ciphertext: sum2, format: .simd, expected: sumData)
+                try testEnv.checkDecryptsDecodes(ciphertext: sum3, format: .simd, expected: sumData)
             }
+            try runTest(ciphertext: canonicalCiphertext, plaintext: coeffPlaintext)
+            try runTest(ciphertext: coeffCiphertext, plaintext: coeffPlaintext)
 
-            // evalPlaintext + canonicalCiphertext
-            do {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: evalPlaintext + canonicalCiphertext,
-                    format: .simd,
-                    expected: sumData)
-            } catch HeError.unsupportedHeOperation(_) {}
+            func checkUnsupported(
+                ciphertext: Ciphertext<Scheme, some PolyFormat>,
+                plaintext: Plaintext<Scheme, some PolyFormat>) throws
+            {
+                do { _ = try ciphertext + plaintext } catch HeError.unsupportedHeOperation(_) {}
 
-            // canonicalCiphertext + evalPlaintext
-            do {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: canonicalCiphertext + evalPlaintext,
-                    format: .simd,
-                    expected: sumData)
-            } catch HeError.unsupportedHeOperation(_) {}
+                do { _ = try plaintext + ciphertext } catch HeError.unsupportedHeOperation(_) {}
 
-            // canonicalCiphertext += evalPlaintext
-            do {
-                var sum = canonicalCiphertext
-                try sum += evalPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .simd, expected: sumData)
-            } catch HeError.unsupportedHeOperation(_) {}
-        }
-
-        // coeffCiphertext
-        do {
-            // coeffPlaintext + coeffCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: coeffPlaintext + coeffCiphertext,
-                format: .simd,
-                expected: sumData)
-
-            // coeffCiphertext + coeffPlaintext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: coeffCiphertext + coeffPlaintext,
-                format: .simd,
-                expected: sumData)
-
-            // coeffCiphertext += coeffPlaintext
-            do {
-                var sum = coeffCiphertext
-                try sum += coeffPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .simd, expected: sumData)
-
-                var sumAsync = coeffCiphertext
-                try await Scheme.addAssignCoeffAsync(&sumAsync, coeffPlaintext)
-                try testEnv.checkDecryptsDecodes(ciphertext: sumAsync, format: .simd, expected: sumData)
+                do {
+                    var ciphertext = ciphertext
+                    try ciphertext += plaintext
+                } catch HeError.unsupportedHeOperation(_) {}
             }
+            try checkUnsupported(ciphertext: canonicalCiphertext, plaintext: evalPlaintext)
+            try checkUnsupported(ciphertext: evalCiphertext, plaintext: evalPlaintext)
         }
+        try syncTest()
 
-        // evalCiphertext
-        do {
-            // evalPlaintext + evalCiphertext
-            do {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: evalPlaintext + evalCiphertext,
-                    format: .simd,
-                    expected: sumData)
-            } catch HeError.unsupportedHeOperation(_) {}
+        func asyncTest() async throws {
+            func runTest(
+                ciphertext: Ciphertext<Scheme, some PolyFormat>,
+                plaintext: Plaintext<Scheme, some PolyFormat>) async throws
+            {
+                let sum1 = try await ciphertext + plaintext
+                let sum2 = try await plaintext + ciphertext
 
-            // evalCiphertext + evalPlaintext
-            do {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: evalCiphertext + evalPlaintext,
-                    format: .simd,
-                    expected: sumData)
-            } catch HeError.unsupportedHeOperation(_) {}
+                var sum3 = ciphertext
+                try await sum3 += plaintext
 
-            // evalCiphertext += evalPlaintext
-            do {
-                var sum = evalCiphertext
-                try sum += evalPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: sum, format: .simd, expected: sumData)
+                try testEnv.checkDecryptsDecodes(ciphertext: sum1, format: .simd, expected: sumData)
+                try testEnv.checkDecryptsDecodes(ciphertext: sum2, format: .simd, expected: sumData)
+                try testEnv.checkDecryptsDecodes(ciphertext: sum3, format: .simd, expected: sumData)
+            }
+            try await runTest(ciphertext: canonicalCiphertext, plaintext: coeffPlaintext)
+            try await runTest(ciphertext: coeffCiphertext, plaintext: coeffPlaintext)
 
-                var sumAsync = evalCiphertext
-                try await Scheme.addAssignEvalAsync(&sumAsync, evalPlaintext)
-                try testEnv.checkDecryptsDecodes(ciphertext: sumAsync, format: .simd, expected: sumData)
-            } catch HeError.unsupportedHeOperation(_) {}
+            func checkUnsupported(
+                ciphertext: Ciphertext<Scheme, some PolyFormat>,
+                plaintext: Plaintext<Scheme, some PolyFormat>) async throws
+            {
+                do { _ = try await ciphertext + plaintext } catch HeError.unsupportedHeOperation(_) {}
+
+                do { _ = try await plaintext + ciphertext } catch HeError.unsupportedHeOperation(_) {}
+
+                do {
+                    var ciphertext = ciphertext
+                    try await ciphertext += plaintext
+                } catch HeError.unsupportedHeOperation(_) {}
+            }
+            try await checkUnsupported(ciphertext: canonicalCiphertext, plaintext: evalPlaintext)
+            try await checkUnsupported(ciphertext: evalCiphertext, plaintext: evalPlaintext)
         }
+        try await asyncTest()
     }
 
     /// Testing CT-PT subtraction of the scheme.
@@ -996,100 +994,76 @@ public enum HeAPITestHelpers {
         let coeffPlaintext = testEnv.coeffPlaintext2
         let evalPlaintext = try coeffPlaintext.forwardNtt()
 
-        // canonicalCiphertext
-        do {
-            // canonicalCiphertext - coeffPlaintext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: canonicalCiphertext - coeffPlaintext,
-                format: .simd,
-                expected: diff1Minus2Data)
+        func syncTest() throws {
+            func runTest(
+                ciphertext: Ciphertext<Scheme, some PolyFormat>,
+                plaintext: Plaintext<Scheme, some PolyFormat>) throws
+            {
+                let diff1 = try ciphertext - plaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff1, format: .simd, expected: diff1Minus2Data)
 
-            // canonicalCiphertext -= coeffPlaintext
-            do {
-                var diff = canonicalCiphertext
-                try diff -= coeffPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
+                var diff2 = ciphertext
+                try diff2 -= plaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff2, format: .simd, expected: diff1Minus2Data)
+
+                let diff3 = try plaintext - ciphertext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff3, format: .simd, expected: diff2Minus1Data)
             }
+            try runTest(ciphertext: canonicalCiphertext, plaintext: coeffPlaintext)
+            try runTest(ciphertext: coeffCiphertext, plaintext: coeffPlaintext)
 
-            // canonicalCiphertext - evalPlaintext
-            do {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: canonicalCiphertext - evalPlaintext,
-                    format: .simd,
-                    expected: diff1Minus2Data)
-            } catch HeError.unsupportedHeOperation(_) {}
+            func checkUnsupported(
+                ciphertext: Ciphertext<Scheme, some PolyFormat>,
+                plaintext: Plaintext<Scheme, some PolyFormat>) throws
+            {
+                do { _ = try ciphertext - plaintext } catch HeError.unsupportedHeOperation(_) {}
+                do {
+                    var ciphertext = ciphertext
+                    try ciphertext -= plaintext
+                } catch HeError.unsupportedHeOperation(_) {}
 
-            // canonicalCiphertext -= evalPlaintext
-            do {
-                var diff = canonicalCiphertext
-                try diff -= evalPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
-            } catch HeError.unsupportedHeOperation(_) {}
-
-            // coeffPlaintext - canonicalCiphertext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: coeffPlaintext - canonicalCiphertext,
-                format: .simd,
-                expected: diff2Minus1Data)
-
-            // evalPlaintext - canonicalCiphertext
-            do {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: evalPlaintext - canonicalCiphertext,
-                    format: .simd,
-                    expected: diff2Minus1Data)
-            } catch HeError.unsupportedHeOperation(_) {}
-        }
-
-        // coeffCiphertext
-        do {
-            // coeffCiphertext - coeffPlaintext
-            try testEnv.checkDecryptsDecodes(
-                ciphertext: coeffCiphertext - coeffPlaintext,
-                format: .simd,
-                expected: diff1Minus2Data)
-
-            // coeffCiphertext -= coeffPlaintext
-            do {
-                var diff = coeffCiphertext
-                try diff -= coeffPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
-
-                var diffAsync = coeffCiphertext
-                try await Scheme.subAssignCoeffAsync(&diffAsync, coeffPlaintext)
-                try testEnv.checkDecryptsDecodes(ciphertext: diffAsync, format: .simd, expected: diff1Minus2Data)
+                do { _ = try plaintext - ciphertext } catch HeError.unsupportedHeOperation(_) {}
             }
+            try checkUnsupported(ciphertext: canonicalCiphertext, plaintext: evalPlaintext)
+            try checkUnsupported(ciphertext: evalCiphertext, plaintext: evalPlaintext)
         }
+        try syncTest()
 
-        // evalCiphertext
-        do {
-            // evalCiphertext - evalPlaintext
-            do {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: evalCiphertext - evalPlaintext,
-                    format: .simd,
-                    expected: diff1Minus2Data)
-            } catch HeError.unsupportedHeOperation(_) {}
+        func asyncTest() async throws {
+            func runTest(
+                ciphertext: Ciphertext<Scheme, some PolyFormat>,
+                plaintext: Plaintext<Scheme, some PolyFormat>) async throws
+            {
+                let diff1 = try await ciphertext - plaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff1, format: .simd, expected: diff1Minus2Data)
 
-            // evalCiphertext -= evalPlaintext
-            do {
-                var diff = evalCiphertext
-                try diff -= evalPlaintext
-                try testEnv.checkDecryptsDecodes(ciphertext: diff, format: .simd, expected: diff1Minus2Data)
+                var diff2 = ciphertext
+                try await diff2 -= plaintext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff2, format: .simd, expected: diff1Minus2Data)
 
-                var diffAsync = evalCiphertext
-                try await Scheme.subAssignEvalAsync(&diffAsync, evalPlaintext)
-                try testEnv.checkDecryptsDecodes(ciphertext: diffAsync, format: .simd, expected: diff1Minus2Data)
-            } catch HeError.unsupportedHeOperation(_) {}
+                let diff3 = try await plaintext - ciphertext
+                try testEnv.checkDecryptsDecodes(ciphertext: diff3, format: .simd, expected: diff2Minus1Data)
+            }
+            try await runTest(ciphertext: canonicalCiphertext, plaintext: coeffPlaintext)
+            try await runTest(ciphertext: coeffCiphertext, plaintext: coeffPlaintext)
 
-            // evalPlaintext - evalCiphertext
-            do {
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: evalPlaintext - evalCiphertext,
-                    format: .simd,
-                    expected: diff2Minus1Data)
-            } catch HeError.unsupportedHeOperation(_) {}
+            func checkUnsupported(
+                ciphertext: Ciphertext<Scheme, some PolyFormat>,
+                plaintext: Plaintext<Scheme, some PolyFormat>) async throws
+            {
+                do { _ = try await ciphertext - plaintext } catch HeError.unsupportedHeOperation(_) {}
+
+                do {
+                    var ciphertext = ciphertext
+                    try await ciphertext -= plaintext
+                } catch HeError.unsupportedHeOperation(_) {}
+
+                do { _ = try await plaintext - ciphertext } catch HeError.unsupportedHeOperation(_) {}
+            }
+            try await checkUnsupported(ciphertext: canonicalCiphertext, plaintext: evalPlaintext)
+            try await checkUnsupported(ciphertext: evalCiphertext, plaintext: evalPlaintext)
         }
+        try await asyncTest()
     }
 
     /// Testing CT-PT multiplication of the scheme.
@@ -1315,27 +1289,33 @@ public enum HeAPITestHelpers {
     }
 
     /// testing repeated addition.
-    public static func repeatAdditionTest<Scheme: HeScheme>(context: Context<Scheme>) async throws {
+    public static func repeatedAdditionTest<Scheme: HeScheme>(context: Context<Scheme>) async throws {
         let testEnv = try HeAPITestHelpers.TestEnv<Scheme>(context: context, format: .coefficient)
-
-        var coeffCiphertext = testEnv.ciphertext1
-        var coeffCiphertextAsync = try coeffCiphertext.convertToCoeffFormat()
-        let coeffCifertextToAdd = try coeffCiphertext.convertToCoeffFormat()
-        try coeffCiphertext += testEnv.coeffPlaintext1
-        try coeffCiphertext += testEnv.ciphertext1
-        try coeffCiphertext += testEnv.coeffPlaintext1
-        try coeffCiphertext += testEnv.ciphertext1
-
-        try await Scheme.addAssignCoeffAsync(&coeffCiphertextAsync, testEnv.coeffPlaintext1)
-        try await Scheme.addAssignCoeffAsync(&coeffCiphertextAsync, coeffCifertextToAdd)
-        try await Scheme.addAssignCoeffAsync(&coeffCiphertextAsync, testEnv.coeffPlaintext1)
-        try await Scheme.addAssignCoeffAsync(&coeffCiphertextAsync, coeffCifertextToAdd)
-
         let expected = testEnv.data1.map { num in
             num.multiplyMod(Scheme.Scalar(5), modulus: testEnv.context.plaintextModulus, variableTime: true)
         }
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: expected)
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertextAsync, format: .coefficient, expected: expected)
+
+        func syncTest() throws {
+            var coeffCiphertext = try testEnv.ciphertext1.convertToCoeffFormat()
+            try coeffCiphertext += testEnv.coeffPlaintext1
+            try coeffCiphertext += testEnv.ciphertext1
+            try coeffCiphertext += testEnv.coeffPlaintext1
+            try coeffCiphertext += testEnv.ciphertext1
+
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: expected)
+        }
+        try syncTest()
+
+        func asyncTest() async throws {
+            var coeffCiphertext = try testEnv.ciphertext1.convertToCoeffFormat()
+            try await coeffCiphertext += testEnv.coeffPlaintext1
+            try await coeffCiphertext += testEnv.ciphertext1
+            try await coeffCiphertext += testEnv.coeffPlaintext1
+            try await coeffCiphertext += testEnv.ciphertext1
+
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: expected)
+        }
+        try await asyncTest()
     }
 
     /// testing multiply inverse power of x.

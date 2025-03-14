@@ -904,6 +904,8 @@ extension HeScheme {
     }
 }
 
+// MARK: - Implementations generalized over PolyFormat
+
 extension HeScheme {
     /// Decryption of a ciphertext.
     /// - Parameters:
@@ -935,6 +937,7 @@ extension HeScheme {
     ///   - ciphertext: Ciphertext to add; will store the sum.
     ///   - plaintext: Plaintext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: ``HeScheme/addAssignAsync(_:_:)-5k6gj`` for an async version.
     @inlinable
     public static func addAssign<CiphertextFormat: PolyFormat, PlaintextFormat: PolyFormat>(
         _ ciphertext: inout Ciphertext<Self, CiphertextFormat>,
@@ -965,6 +968,7 @@ extension HeScheme {
     ///   - lhs: Ciphertext to add; will store the sum.
     ///   - rhs: Ciphertext to add.
     /// - Throws: Error upon failure to add.
+    /// - seealso: ``HeScheme/addAssignAsync(_:_:)-8di1e`` for an async version.
     @inlinable
     public static func addAssign<LhsFormat: PolyFormat, RhsFormat: PolyFormat>(
         _ lhs: inout Ciphertext<Self, LhsFormat>,
@@ -999,6 +1003,7 @@ extension HeScheme {
     ///   - ciphertext: Ciphertext to subtract from; will store the difference.
     ///   - plaintext: Plaintext to subtract.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``HeScheme/subAssignAsync(_:_:)`` for an async version.
     @inlinable
     public static func subAssign<CiphertextFormat: PolyFormat, PlaintextFormat: PolyFormat>(
         _ ciphertext: inout Ciphertext<Self, CiphertextFormat>,
@@ -1030,6 +1035,7 @@ extension HeScheme {
     ///   - ciphertext: Ciphertext to subtract.
     /// - Returns: A ciphertext encrypting the difference.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``HeScheme/subAsync(_:_:)`` for an async version.
     @inlinable
     public static func sub<CiphertextFormat: PolyFormat, PlaintextFormat: PolyFormat>(
         _ plaintext: Plaintext<Self, PlaintextFormat>,
@@ -1059,6 +1065,7 @@ extension HeScheme {
     ///   - lhs: Ciphertext to subtract from; will store the difference.
     ///   - rhs: Ciphertext to subtract.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``HeScheme/subAssignAsync(_:_:)-4j7yc`` for an async version.
     @inlinable
     public static func subAssign<LhsFormat: PolyFormat, RhsFormat: PolyFormat>(
         _ lhs: inout Ciphertext<Self, LhsFormat>,
@@ -1090,6 +1097,7 @@ extension HeScheme {
     /// In-place ciphertext negation: `ciphertext = -ciphertext`.
     ///
     /// - Parameter ciphertext: Ciphertext to negate.
+    /// - seealso: ``HeScheme/negAssignAsync(_:)`` for an async version.
     @inlinable
     public static func negAssign<Format: PolyFormat>(_ ciphertext: inout Ciphertext<Self, Format>) {
         // swiftlint:disable force_cast

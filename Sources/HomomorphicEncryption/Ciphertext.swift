@@ -77,6 +77,15 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
         try Scheme.addAssign(&ciphertext, plaintext)
     }
 
+    @inlinable
+    public static func += (
+        ciphertext: inout Ciphertext<Scheme, Format>,
+        plaintext: Plaintext<Scheme, some PolyFormat>) async throws
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        try await Scheme.addAssignAsync(&ciphertext, plaintext)
+    }
+
     // MARK: ciphertext += ciphertext
 
     @inlinable
@@ -85,12 +94,30 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
         try Scheme.addAssign(&lhs, rhs)
     }
 
+    @inlinable
+    public static func += (
+        lhs: inout Ciphertext<Scheme, Format>,
+        rhs: Ciphertext<Scheme, some PolyFormat>) async throws
+    {
+        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
+        try await Scheme.addAssignAsync(&lhs, rhs)
+    }
+
     // MARK: ciphertext -= ciphertext
 
     @inlinable
     public static func -= (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, some PolyFormat>) throws {
         try Scheme.validateEquality(of: lhs.context, and: rhs.context)
         try Scheme.subAssign(&lhs, rhs)
+    }
+
+    @inlinable
+    public static func -= (
+        lhs: inout Ciphertext<Scheme, Format>,
+        rhs: Ciphertext<Scheme, some PolyFormat>) async throws
+    {
+        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
+        try await Scheme.subAssignAsync(&lhs, rhs)
     }
 
     // MARK: ciphertext -= plaintext
@@ -104,6 +131,15 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
         try Scheme.subAssign(&ciphertext, plaintext)
     }
 
+    @inlinable
+    public static func -= (
+        ciphertext: inout Ciphertext<Scheme, Format>,
+        plaintext: Plaintext<Scheme, some PolyFormat>) async throws
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        try await Scheme.subAssignAsync(&ciphertext, plaintext)
+    }
+
     // MARK: plaintext - ciphertext
 
     @inlinable
@@ -113,6 +149,15 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     {
         try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
         return try Scheme.sub(plaintext, ciphertext)
+    }
+
+    @inlinable
+    public static func - (
+        plaintext: Plaintext<Scheme, some PolyFormat>,
+        ciphertext: Ciphertext<Scheme, Format>) async throws -> Ciphertext<Scheme, Format>
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        return try await Scheme.subAsync(plaintext, ciphertext)
     }
 
     // MARK: ciphertext *= plaintext
@@ -141,6 +186,13 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     public static prefix func - (_ ciphertext: Ciphertext<Scheme, Format>) -> Self {
         var result = ciphertext
         Scheme.negAssign(&result)
+        return result
+    }
+
+    @inlinable
+    public static prefix func - (_ ciphertext: Ciphertext<Scheme, Format>) async -> Self {
+        var result = ciphertext
+        await Scheme.negAssignAsync(&result)
         return result
     }
 
@@ -352,6 +404,7 @@ extension Ciphertext {
     ///   - plaintext: Plaintext to add.
     /// - Returns: A ciphertext encrypting the sum.
     /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-3mot4`` for an async version.
     @inlinable
     public static func + (ciphertext: Ciphertext<Scheme, Format>,
                           plaintext: Plaintext<Scheme, some PolyFormat>) throws -> Self
@@ -361,17 +414,48 @@ extension Ciphertext {
         return result
     }
 
+    /// Async ciphertext-plaintext addition.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to add.
+    ///   - plaintext: Plaintext to add.
+    /// - Returns: A ciphertext encrypting the sum.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-42x1k`` for a sync version.
+    @inlinable
+    public static func + (ciphertext: Ciphertext<Scheme, Format>,
+                          plaintext: Plaintext<Scheme, some PolyFormat>) async throws -> Self
+    {
+        var result = ciphertext
+        try await result += plaintext
+        return result
+    }
+
     /// Ciphertext-plaintext addition.
     /// - Parameters:
     ///   - plaintext: Plaintext to add.
     ///   - ciphertext: Ciphertext to add.
     /// - Returns: A ciphertext encrypting the sum.
     /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-3mot4`` for an async version.
     @inlinable
     public static func + (plaintext: Plaintext<Scheme, some PolyFormat>,
                           ciphertext: Ciphertext<Scheme, Format>) throws -> Self
     {
         try ciphertext + plaintext
+    }
+
+    /// Async ciphertext-plaintext addition.
+    /// - Parameters:
+    ///   - plaintext: Plaintext to add.
+    ///   - ciphertext: Ciphertext to add.
+    /// - Returns: A ciphertext encrypting the sum.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-2g1nj`` for a sync version.
+    @inlinable
+    public static func + (plaintext: Plaintext<Scheme, some PolyFormat>,
+                          ciphertext: Ciphertext<Scheme, Format>) async throws -> Self
+    {
+        try await ciphertext + plaintext
     }
 
     // MARK: ciphertext - plaintext
@@ -382,12 +466,28 @@ extension Ciphertext {
     ///   - plaintext: Plaintext to subtract.
     /// - Returns: A ciphertext encrypting the difference `ciphertext - plaintext`.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``Ciphertext/-(_:_:)-3x625`` for an async version.
     @inlinable
     public static func - (ciphertext: Ciphertext<Scheme, Format>,
                           plaintext: Plaintext<Scheme, some PolyFormat>) throws -> Self
     {
         var result = ciphertext
         try result -= plaintext
+        return result
+    }
+
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to subtract from.
+    ///   - plaintext: Plaintext to subtract.
+    /// - Returns: A ciphertext encrypting the difference `ciphertext - plaintext`.
+    /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``Ciphertext/-(_:_:)-octv`` for a sync version.
+    @inlinable
+    public static func - (ciphertext: Ciphertext<Scheme, Format>,
+                          plaintext: Plaintext<Scheme, some PolyFormat>) async throws -> Self
+    {
+        var result = ciphertext
+        try await result -= plaintext
         return result
     }
 
@@ -399,10 +499,27 @@ extension Ciphertext {
     ///   - rhs: Plaintext to add.
     /// - Returns: A ciphertext encrypting the sum `lhs + rhs'.
     /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-3mot4`` for an async version.
     @inlinable
     public static func + (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, some PolyFormat>) throws -> Self {
         var result = lhs
         try result += rhs
+        return result
+    }
+
+    /// Async ciphertext addition.
+    /// - Parameters:
+    ///   - lhs: Ciphertext to add.
+    ///   - rhs: Plaintext to add.
+    /// - Returns: A ciphertext encrypting the sum `lhs + rhs'.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-2jflc`` for a sync version.
+    @inlinable
+    public static func + (lhs: Ciphertext<Scheme, Format>,
+                          rhs: Ciphertext<Scheme, some PolyFormat>) async throws -> Self
+    {
+        var result = lhs
+        try await result += rhs
         return result
     }
 
@@ -414,10 +531,27 @@ extension Ciphertext {
     ///   - rhs: Plaintext to subtract.
     /// - Returns: A ciphertext encrypting the difference `lhs - rhs'.
     /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``Ciphertext/-(_:_:)-3lfu9`` for an async version
     @inlinable
     public static func - (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, some PolyFormat>) throws -> Self {
         var result = lhs
         try result -= rhs
+        return result
+    }
+
+    /// Ciphertext subtraction.
+    /// - Parameters:
+    ///   - lhs: Ciphertext to subtract from.
+    ///   - rhs: Plaintext to subtract.
+    /// - Returns: A ciphertext encrypting the difference `lhs - rhs'.
+    /// - Throws: Error upon failure to subtract.
+    /// - seealso: ``Ciphertext/-(_:_:)-octv`` for a sync version.
+    @inlinable
+    public static func - (lhs: Ciphertext<Scheme, Format>,
+                          rhs: Ciphertext<Scheme, some PolyFormat>) async throws -> Self
+    {
+        var result = lhs
+        try await result -= rhs
         return result
     }
 

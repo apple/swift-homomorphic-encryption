@@ -170,6 +170,16 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
         try Scheme.mulAssign(&ciphertext, plaintext)
     }
 
+    @inlinable
+    public static func *= (
+        ciphertext: inout Ciphertext<Scheme, Format>,
+        plaintext: Plaintext<Scheme, Eval>) async throws
+        where Format == Eval
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        try await Scheme.mulAssignAsync(&ciphertext, plaintext)
+    }
+
     // MARK: ciphertext *= ciphertext
 
     @inlinable
@@ -178,6 +188,14 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     {
         try Scheme.validateEquality(of: lhs.context, and: rhs.context)
         try Scheme.mulAssign(&lhs, rhs)
+    }
+
+    @inlinable
+    public static func *= (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) async throws
+        where Format == Scheme.CanonicalCiphertextFormat
+    {
+        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
+        try await Scheme.mulAssignAsync(&lhs, rhs)
     }
 
     // MARK: ciphertext = -ciphertext
@@ -563,6 +581,7 @@ extension Ciphertext {
     ///   - plaintext: Plaintext to multiply.
     /// - Returns: A ciphertext encrypting the product `ciphertext * plaintext`.
     /// - Throws: Error upon failure to multiply.
+    /// - seealso: ``Ciphertext/*(_:_:)-7amjk`` for an async version.
     @inlinable
     public static func * (ciphertext: Ciphertext<Scheme, Format>, plaintext: Plaintext<Scheme, Eval>) throws -> Self
         where Format == Eval
@@ -574,15 +593,48 @@ extension Ciphertext {
 
     /// Ciphertext-plaintext multiplication.
     /// - Parameters:
+    ///   - ciphertext: Ciphertext to multiply.
+    ///   - plaintext: Plaintext to multiply.
+    /// - Returns: A ciphertext encrypting the product `ciphertext * plaintext`.
+    /// - Throws: Error upon failure to multiply.
+    /// - seealso: ``Ciphertext/*(_:_:)-5pgym`` for a sync version.
+    @inlinable
+    public static func * (ciphertext: Ciphertext<Scheme, Format>,
+                          plaintext: Plaintext<Scheme, Eval>) async throws -> Self
+        where Format == Eval
+    {
+        var result = ciphertext
+        try await result *= plaintext
+        return result
+    }
+
+    /// Ciphertext-plaintext multiplication.
+    /// - Parameters:
     ///   - plaintext: Plaintext to multiply.
     ///   - ciphertext: Ciphertext to multiply.
     /// - Returns: A ciphertext encrypting the product `ciphertext * plaintext`.
     /// - Throws: Error upon failure to multiply.
+    /// - seealso: ``Ciphertext/*(_:_:)-8phy7`` for an async version.
     @inlinable
     public static func * (plaintext: Plaintext<Scheme, Eval>, ciphertext: Ciphertext<Scheme, Format>) throws -> Self
         where Format == Eval
     {
         try ciphertext * plaintext
+    }
+
+    /// Ciphertext-plaintext multiplication.
+    /// - Parameters:
+    ///   - plaintext: Plaintext to multiply.
+    ///   - ciphertext: Ciphertext to multiply.
+    /// - Returns: A ciphertext encrypting the product `ciphertext * plaintext`.
+    /// - Throws: Error upon failure to multiply.
+    /// - seealso: ``Ciphertext/*(_:_:)-86rjl`` for a sync version.
+    @inlinable
+    public static func * (plaintext: Plaintext<Scheme, Eval>,
+                          ciphertext: Ciphertext<Scheme, Format>) async throws -> Self
+        where Format == Eval
+    {
+        try await ciphertext * plaintext
     }
 
     // MARK: ciphertext * ciphertext
@@ -593,6 +645,7 @@ extension Ciphertext {
     ///   - rhs: Ciphertext to multiply.
     /// - Returns: A ciphertext encrypting the product `lhs * rhs`.
     /// - Throws: Error upon failure to multiply.
+    /// - seealso: ``Ciphertext/*(_:_:)-27h02`` for an async version.
     /// > Note: the values of the decrypted product depend on the ``EncodeFormat`` of the plaintexts encrypted by `lhs`
     /// and `rhs.`
     ///
@@ -604,6 +657,27 @@ extension Ciphertext {
     {
         var result = lhs
         try result *= rhs
+        return result
+    }
+
+    /// Ciphertext multiplication.
+    /// - Parameters:
+    ///   - lhs: Ciphertext to multiply.
+    ///   - rhs: Ciphertext to multiply.
+    /// - Returns: A ciphertext encrypting the product `lhs * rhs`.
+    /// - Throws: Error upon failure to multiply.
+    /// - seealso: ``Ciphertext/*(_:_:)-2bv6o`` for a sync version.
+    /// > Note: the values of the decrypted product depend on the ``EncodeFormat`` of the plaintexts encrypted by `lhs`
+    /// and `rhs.`
+    ///
+    /// > Important: The resulting ciphertext has 3 polynomials and can be relinearized. See
+    /// ``HeScheme/relinearize(_:using:)``
+    @inlinable
+    public static func * (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) async throws -> Self
+        where Format == Scheme.CanonicalCiphertextFormat
+    {
+        var result = lhs
+        try await result *= rhs
         return result
     }
 }

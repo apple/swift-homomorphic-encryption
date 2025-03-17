@@ -147,6 +147,9 @@ Future minor versions of the package may introduce changes to these rules as nee
 
 We'd like this package to quickly embrace Swift language and toolchain improvements that are relevant to its mandate. Accordingly, from time to time, we expect that new versions of this package will require clients to upgrade to a more recent Swift toolchain release. Requiring a new Swift release will only require a minor version bump.
 
+> [!WARNING]
+> Any symbol beginning with an underscore, and any product beginning with an underscore, is not subject to semantic versioning: these APIs may change without warning.
+
 ## Developing Swift Homomorphic Encryption
 ### Dependencies
 Developing Swift Homomorphic Encryption requires:

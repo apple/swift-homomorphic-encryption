@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import _CryptoExtras
+import _TestUtilities
 import Crypto
 import HomomorphicEncryption
 @testable import PrivateInformationRetrieval
-import TestUtilities
 import XCTest
 
 class SymmetricPIRTests: XCTestCase {

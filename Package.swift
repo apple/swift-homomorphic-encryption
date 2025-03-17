@@ -15,6 +15,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import PackageDescription
 
 let librarySettings: [SwiftSetting] = []
@@ -50,6 +51,7 @@ let package = Package(
         .library(
             name: "PrivateNearestNeighborSearchProtobuf",
             targets: ["PrivateNearestNeighborSearchProtobuf"]),
+        .library(name: "_TestUtilities", targets: ["_TestUtilities"]),
         .executable(name: "PIRGenerateDatabase", targets: ["PIRGenerateDatabase"]),
         .executable(name: "PIRProcessDatabase", targets: ["PIRProcessDatabase"]),
         .executable(name: "PIRShardDatabase", targets: ["PIRShardDatabase"]),
@@ -122,11 +124,12 @@ let package = Package(
             exclude: ["generated/README.md", "protobuf_module_mappings.txtpb"],
             swiftSettings: librarySettings),
         .target(
-            name: "TestUtilities",
+            name: "_TestUtilities",
             dependencies: [
                 "HomomorphicEncryption",
                 .product(name: "Numerics", package: "swift-numerics"),
             ],
+            path: "Sources/TestUtilities",
             swiftSettings: librarySettings),
         .executableTarget(
             name: "PIRGenerateDatabase",
@@ -175,7 +178,7 @@ let package = Package(
         .testTarget(
             name: "HomomorphicEncryptionTests",
             dependencies: [
-                "HomomorphicEncryption", "TestUtilities",
+                "HomomorphicEncryption", "_TestUtilities",
                 .product(name: "Numerics", package: "swift-numerics"),
             ], swiftSettings: executableSettings),
         .testTarget(
@@ -183,22 +186,22 @@ let package = Package(
             dependencies: [
                 "HomomorphicEncryption",
                 "HomomorphicEncryptionProtobuf",
-                "TestUtilities",
+                "_TestUtilities",
             ], swiftSettings: executableSettings),
         .testTarget(
             name: "PIRGenerateDatabaseTests",
             dependencies: ["PIRGenerateDatabase",
-                           "TestUtilities",
+                           "_TestUtilities",
                            .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
         .testTarget(
             name: "PIRProcessDatabaseTests",
             dependencies: ["PIRProcessDatabase",
-                           "TestUtilities",
+                           "_TestUtilities",
                            .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
         .testTarget(
             name: "PrivateInformationRetrievalTests",
             dependencies: [
-                "PrivateInformationRetrieval", "TestUtilities",
+                "PrivateInformationRetrieval", "_TestUtilities",
                 .product(name: "Numerics", package: "swift-numerics"),
             ], swiftSettings: executableSettings),
         .testTarget(
@@ -206,12 +209,12 @@ let package = Package(
             dependencies: [
                 "PrivateInformationRetrieval",
                 "PrivateInformationRetrievalProtobuf",
-                "TestUtilities",
+                "_TestUtilities",
             ], swiftSettings: executableSettings),
         .testTarget(
             name: "PrivateNearestNeighborSearchTests",
             dependencies: [
-                "PrivateNearestNeighborSearch", "HomomorphicEncryption", "TestUtilities",
+                "PrivateNearestNeighborSearch", "HomomorphicEncryption", "_TestUtilities",
             ], swiftSettings: executableSettings),
         .testTarget(
             name: "PrivateNearestNeighborSearchProtobufTests",

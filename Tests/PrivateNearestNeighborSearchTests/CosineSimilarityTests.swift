@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _TestUtilities
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
 import Testing
-import TestUtilities
 
 @Suite
 struct CosineSimilarityTests {

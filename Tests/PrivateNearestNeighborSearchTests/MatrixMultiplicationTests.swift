@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _TestUtilities
 import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
 import Testing
-import TestUtilities
 
 extension Array where Element: Collection, Element.Element: ScalarType, Element.Index == Int {
     func mulTranspose(_ matrix: [[BaseElement]], modulus: BaseElement) throws -> [BaseElement] {

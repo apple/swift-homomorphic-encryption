@@ -13,13 +13,13 @@
 // limitations under the License.
 
 import _CryptoExtras
+import _TestUtilities
 import Crypto
 import Foundation
 @testable import HomomorphicEncryption
 @testable import PrivateInformationRetrieval
 import PrivateInformationRetrievalProtobuf
 import Testing
-import TestUtilities
 
 @Suite
 struct ConversionTests {

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _TestUtilities
 @testable import HomomorphicEncryption
 import Testing
-import TestUtilities
 
 @Suite
 struct PseudoRandomNumberGeneratorTests {
     @Test
     func randomNumberGeneratorFill() {
-        var rng = TestUtilities.TestRng(counter: 0x8899_AABB_CCDD_EEFF)
+        var rng = TestRng(counter: 0x8899_AABB_CCDD_EEFF)
         var buffer = [UInt8](repeating: 0, count: 10)
         rng.fill(&buffer)
         #expect(buffer == [0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88, 0x00, 0xEF])

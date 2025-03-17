@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
 // limitations under the License.
 
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-final class BufferedRngTests: XCTestCase {
+@Suite
+struct BufferedRngTests {
     private struct TestRng: PseudoRandomNumberGenerator {
         var counter: UInt8 = 0
 
@@ -27,39 +28,42 @@ final class BufferedRngTests: XCTestCase {
         }
     }
 
-    func testFill() {
+    @Test
+    func fill() {
         var bufferedRng = BufferedRng(rng: TestRng(), bufferCount: 2)
 
         var data = [UInt8](repeating: 0, count: 7)
         bufferedRng.fill(&data[0..<3])
 
-        XCTAssertEqual(data, [0, 1, 2, 0, 0, 0, 0])
-        XCTAssertEqual(bufferedRng.offset, 1)
-        XCTAssertEqual(bufferedRng.remaining, 1)
-        XCTAssertEqual(bufferedRng.array, [2, 3])
+        #expect(data == [0, 1, 2, 0, 0, 0, 0])
+        #expect(bufferedRng.offset == 1)
+        #expect(bufferedRng.remaining == 1)
+        #expect(bufferedRng.array == [2, 3])
 
         bufferedRng.fill(&data[...])
-        XCTAssertEqual(data, [3, 4, 5, 6, 7, 8, 9])
-        XCTAssertEqual(bufferedRng.offset, 2)
-        XCTAssertEqual(bufferedRng.remaining, 0)
-        XCTAssertEqual(bufferedRng.array, [8, 9])
+        #expect(data == [3, 4, 5, 6, 7, 8, 9])
+        #expect(bufferedRng.offset == 2)
+        #expect(bufferedRng.remaining == 0)
+        #expect(bufferedRng.array == [8, 9])
     }
 
-    func testNextFixedWidthInteger() {
+    @Test
+    func nextFixedWidthInteger() {
         var bufferedRng = BufferedRng(rng: TestRng(), bufferCount: 32)
 
-        XCTAssertEqual(bufferedRng.next(), UInt8(0))
-        XCTAssertEqual(bufferedRng.next(), UInt16(2 << 8 | 1))
-        XCTAssertEqual(bufferedRng.next(), UInt32(6 << 24 | 5 << 16 | 4 << 8 | 3))
+        #expect(bufferedRng.next() == UInt8(0))
+        #expect(bufferedRng.next() == UInt16(2 << 8 | 1))
+        #expect(bufferedRng.next() == UInt32(6 << 24 | 5 << 16 | 4 << 8 | 3))
         let _: UInt64 = bufferedRng.next()
-        XCTAssertEqual(bufferedRng.next(), UInt8(15))
+        #expect(bufferedRng.next() == UInt8(15))
     }
 
-    func testFixedWidthFill() {
+    @Test
+    func fixedWidthFill() {
         var bufferedRng = BufferedRng(rng: TestRng(), bufferCount: 32)
         var buffer = [UInt16](repeating: 0, count: 3)
         bufferedRng.fill(&buffer[...])
-        XCTAssertEqual(buffer, [256, 770, 1284])
+        #expect(buffer == [256, 770, 1284])
     }
 }
 

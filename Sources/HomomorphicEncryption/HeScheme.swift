@@ -46,7 +46,7 @@ public final class Eval: PolyFormat {
 ///
 /// This differs from the ``PolyFormat``: while the ``PolyFormat`` specifies the representation of the polynomials, the
 /// encoding format specifies the computations performed on the underlying plaintext, during HE computation.
-public enum EncodeFormat: CaseIterable {
+public enum EncodeFormat: CaseIterable, Sendable {
     /// Element-wise encoding of coefficients.
     ///
     /// Plaintexts in ``coefficient`` format are encoded using ``Coeff`` format. Addition, subtraction, and negation to

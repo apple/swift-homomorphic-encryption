@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,16 +13,18 @@
 // limitations under the License.
 
 @testable import HomomorphicEncryption
+import Testing
 import TestUtilities
-import XCTest
 
-final class NistCtrDrbgTests: XCTestCase {
-    func testVector() throws {
+@Suite
+struct NistCtrDrbgTests {
+    @Test
+    func vector() throws {
         // Test vectors adapted from:
         // https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/random-number-generators
         let entropy =
-            try XCTUnwrap(Array(hexEncoded: "69a09f6bf5dda15cd4af29e14cf5e0cddd7d07ac39bba587f8bc331104f9c448"))
-        let expected = try XCTUnwrap(Array(hexEncoded:
+            try #require(Array(hexEncoded: "69a09f6bf5dda15cd4af29e14cf5e0cddd7d07ac39bba587f8bc331104f9c448"))
+        let expected = try #require(Array(hexEncoded:
             """
             f78a4919a6ec899f7b6c69381febbbe083315f3d289e70346db0e4ec4360473ae0b3\
             d916e9b6b964309f753ed66ae59de48da316cc1944bc8dfd0e2575d0ff6d
@@ -30,29 +32,30 @@ final class NistCtrDrbgTests: XCTestCase {
 
         var prng = try NistCtrDrbg(entropy: entropy)
 
-        func assertKey(_ hexString: String) {
+        func expectKey(_ hexString: String) {
             prng.key.withUnsafeBytes { keyBytes in
                 let data = Array(keyBytes)
-                XCTAssertEqual(data.hexEncodedString(), hexString)
+                #expect(data.hexEncodedString() == hexString)
             }
         }
 
-        func assertNonce(_ hexString: String) {
-            XCTAssertEqual(Array(prng.nonce.bigEndianBytes).hexEncodedString(), hexString)
+        func expectNonce(_ hexString: String) {
+            #expect(Array(prng.nonce.bigEndianBytes).hexEncodedString() == hexString)
         }
 
-        assertKey("314263a50fa3913de2d034b6e812a597")
-        assertNonce("def5dd62590d06150b94f1a8754b3a30")
+        expectKey("314263a50fa3913de2d034b6e812a597")
+        expectNonce("def5dd62590d06150b94f1a8754b3a30")
         _ = try prng.ctrDrbgGenerate(count: expected.count)
-        assertKey("4b0f2ae7d0b330fa709b0844c7eedb5c")
-        assertNonce("dae190eb55353de50e494cdef2a544d4")
+        expectKey("4b0f2ae7d0b330fa709b0844c7eedb5c")
+        expectNonce("dae190eb55353de50e494cdef2a544d4")
         let output = try prng.ctrDrbgGenerate(count: expected.count)
-        assertKey("b4d5d6de074612076e496f241ebcf017")
-        assertNonce("034eeae49adbdfccff79bfdc0d83ed70")
-        XCTAssertEqual(output, expected)
+        expectKey("b4d5d6de074612076e496f241ebcf017")
+        expectNonce("034eeae49adbdfccff79bfdc0d83ed70")
+        #expect(output == expected)
     }
 
-    func testVectors() throws {
+    @Test
+    func vectors() throws {
         // (entropy, returnedbits)
         let vectors = [
             (
@@ -148,13 +151,13 @@ final class NistCtrDrbgTests: XCTestCase {
         ]
 
         for (entropyString, outputString) in vectors {
-            let entropy = try XCTUnwrap(Array(hexEncoded: entropyString))
-            let expected = try XCTUnwrap(Array(hexEncoded: outputString))
+            let entropy = try #require(Array(hexEncoded: entropyString))
+            let expected = try #require(Array(hexEncoded: outputString))
 
             var prng = try NistCtrDrbg(entropy: entropy)
             _ = try prng.ctrDrbgGenerate(count: expected.count)
             let output = try prng.ctrDrbgGenerate(count: expected.count)
-            XCTAssertEqual(output, expected)
+            #expect(output == expected)
         }
     }
 }

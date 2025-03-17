@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _TestUtilities
 @testable import PrivateInformationRetrieval
-import TestUtilities
 import XCTest
 
 class CuckooTableTests: XCTestCase {
@@ -55,8 +55,8 @@ class CuckooTableTests: XCTestCase {
         let valueSize = 10
         let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: valueSize)
         let config = try PirTestUtils.testCuckooTableConfig(maxSerializedBucketSize: valueSize * 5)
-        let rng1 = TestUtilities.TestRng(counter: 0)
-        let rng2 = TestUtilities.TestRng(counter: 0)
+        let rng1 = TestRng(counter: 0)
+        let rng2 = TestRng(counter: 0)
 
         let cuckooTable1 = try CuckooTable(config: config, database: testDatabase, using: rng1)
         let cuckooTable2 = try CuckooTable(config: config, database: testDatabase, using: rng2)
@@ -64,7 +64,7 @@ class CuckooTableTests: XCTestCase {
     }
 
     func testSummarize() throws {
-        var rng = TestUtilities.TestRng(counter: 1)
+        var rng = TestRng(counter: 1)
         let valueSize = 10
         let testDatabase = PirTestUtils.getTestTable(rowCount: 100, valueSize: valueSize, using: &rng)
 
@@ -90,7 +90,7 @@ class CuckooTableTests: XCTestCase {
         let valueSize = 10
         let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: valueSize)
         let config = try PirTestUtils.testCuckooTableConfig(maxSerializedBucketSize: valueSize * 5)
-        let rng = TestUtilities.TestRng(counter: 0)
+        let rng = TestRng(counter: 0)
         let cuckooTable = try CuckooTable(config: config, database: testDatabase, using: rng)
 
         let maxSerializedBucketSize = try cuckooTable.maxSerializedBucketSize()
@@ -103,7 +103,7 @@ class CuckooTableTests: XCTestCase {
     }
 
     func testCuckooTableFixedSize() throws {
-        var rng = TestUtilities.TestRng(counter: 0)
+        var rng = TestRng(counter: 0)
         let testDatabase = PirTestUtils.getTestTable(rowCount: 100, valueSize: 10, using: &rng)
         let maxSerializedBucketSize = 50
         let cuckooConfig = try {
@@ -139,7 +139,7 @@ class CuckooTableTests: XCTestCase {
             maxSerializedBucketSize: 5000, // large value to limit based on number of slots
             bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.9),
             slotCount: slotCount)
-        let rng = TestUtilities.TestRng(counter: 0)
+        let rng = TestRng(counter: 0)
 
         let cuckooTable = try CuckooTable(config: config, database: testDatabase, using: rng)
         for bucket in cuckooTable.buckets {

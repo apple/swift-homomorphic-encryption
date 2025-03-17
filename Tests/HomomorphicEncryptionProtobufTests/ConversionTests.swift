@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _TestUtilities
 @testable import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import Testing
-import TestUtilities
 
 extension SerializedCiphertext {
     /// Returns the number of non-zero bytes in the serialized data.

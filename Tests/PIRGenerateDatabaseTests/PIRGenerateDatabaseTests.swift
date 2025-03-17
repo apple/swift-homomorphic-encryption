@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,12 +13,14 @@
 // limitations under the License.
 
 @testable import PIRGenerateDatabase
-import XCTest
+import Testing
 
-class PIRGenerateDatabaseTests: XCTestCase {
-    func testValueSizeArguments() throws {
-        XCTAssertEqual(try XCTUnwrap(ValueSizeArguments(argument: "1")?.range), 1..<2)
-        XCTAssertEqual(try XCTUnwrap(ValueSizeArguments(argument: "1..<10")?.range), 1..<10)
-        XCTAssertEqual(try XCTUnwrap(ValueSizeArguments(argument: "1...10")?.range), 1..<11)
+@Suite
+struct PIRGenerateDatabaseTests {
+    @Test
+    func valueSizeArguments() throws {
+        #expect(try #require(ValueSizeArguments(argument: "1")?.range) == 1..<2)
+        #expect(try #require(ValueSizeArguments(argument: "1..<10")?.range) == 1..<10)
+        #expect(try #require(ValueSizeArguments(argument: "1...10")?.range) == 1..<11)
     }
 }

@@ -1,7 +1,7 @@
 // Example showing the basics.
 
 // snippet.hide
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,10 +34,10 @@ let plaintext: Bfv<UInt64>.CoeffPlaintext = try context.encode(
 
 // We generate a secret key and use it to encrypt the plaintext.
 let secretKey = try context.generateSecretKey()
-let ciphertext = try plaintext.encrypt(using: secretKey)
+var ciphertext = try plaintext.encrypt(using: secretKey)
 
 // Decrypting the plaintext yields the original values.
-let decrypted = try ciphertext.decrypt(using: secretKey)
+var decrypted = try ciphertext.decrypt(using: secretKey)
 var decoded: [UInt64] = try decrypted.decode(format: .coefficient)
 precondition(decoded == values)
 

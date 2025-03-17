@@ -6,9 +6,6 @@ Examples for how to use ``HomomorphicEncryption``
 We start with the basics.
 @Snippet(path: "swift-homomorphic-encryption/Snippets/HomomorphicEncryption/BasicsSnippet", slice:"encryption")
 
-We also have async APIs.
-@Snippet(path: "swift-homomorphic-encryption/Snippets/HomomorphicEncryption/BasicsAsyncSnippet", slice:"encryption")
-
 ## HE Addition and Subtraction
 Continuing from the previous example, we can also compute on the encrypted data.
 We can add a ciphertext with a ciphertext or a plaintext.

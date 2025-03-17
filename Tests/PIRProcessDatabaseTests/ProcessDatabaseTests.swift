@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Foundation
 import HomomorphicEncryption
 @testable import PIRProcessDatabase
 import PrivateInformationRetrieval
-import XCTest
+import Testing
 
-class ProcessDatabaseTests: XCTestCase {
-    func testArgumentsJsonParsing() throws {
+@Suite
+struct ProcessDatabaseTests {
+    @Test
+    func argumentsJsonParsing() throws {
         do {
             let configString = """
                 {
@@ -34,8 +37,10 @@ class ProcessDatabaseTests: XCTestCase {
                   }
                 }
                 """
-            let configData = try XCTUnwrap(configString.data(using: .utf8))
-            let parsedConfig = try XCTUnwrap(JSONDecoder().decode(PIRProcessDatabase.Arguments.self, from: configData))
+            let configData = try #require(configString.data(using: .utf8))
+            let parsedConfig = try #require(try JSONDecoder().decode(
+                PIRProcessDatabase.Arguments.self,
+                from: configData))
 
             let config = PIRProcessDatabase.Arguments(
                 inputDatabase: "input-database.txtpb",
@@ -45,14 +50,16 @@ class ProcessDatabaseTests: XCTestCase {
                 outputEvaluationKeyConfig: "output-evaluation-key-config.txtpb",
                 sharding: Sharding.shardCount(10),
                 trialsPerShard: 1)
-            XCTAssertEqual(parsedConfig, config)
+            #expect(parsedConfig == config)
         }
 
         // Can parse default JSON string
         do {
             let configString = PIRProcessDatabase.Arguments.defaultJsonString()
-            let configData = try XCTUnwrap(configString.data(using: .utf8))
-            XCTAssertNoThrow(try JSONDecoder().decode(PIRProcessDatabase.Arguments.self, from: configData))
+            let configData = try #require(configString.data(using: .utf8))
+            #expect(throws: Never.self) {
+                try JSONDecoder().decode(PIRProcessDatabase.Arguments.self, from: configData)
+            }
         }
     }
 }

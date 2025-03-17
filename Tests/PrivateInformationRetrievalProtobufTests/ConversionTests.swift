@@ -14,14 +14,17 @@
 
 import _CryptoExtras
 import Crypto
+import Foundation
 @testable import HomomorphicEncryption
 @testable import PrivateInformationRetrieval
 import PrivateInformationRetrievalProtobuf
+import Testing
 import TestUtilities
-import XCTest
 
-class ConversionTests: XCTestCase {
-    func testKeywordDatabase() throws {
+@Suite
+struct ConversionTests {
+    @Test
+    func keywordDatabase() throws {
         let rowCount = 10
         let payloadSize = 5
         let databaseRows = (0..<rowCount).map { index in KeywordValuePair(
@@ -30,14 +33,15 @@ class ConversionTests: XCTestCase {
         }
 
         let proto = databaseRows.proto()
-        XCTAssertEqual(proto.rows.count, rowCount)
-        XCTAssert(proto.rows.map(\.value).allSatisfy { $0.count == payloadSize })
+        #expect(proto.rows.count == rowCount)
+        #expect(proto.rows.map(\.value).allSatisfy { $0.count == payloadSize })
         let native = proto.native()
 
-        XCTAssertEqual(native, databaseRows)
+        #expect(native == databaseRows)
     }
 
-    func testProcessedDatabaseWithParameters() throws {
+    @Test
+    func processedDatabaseWithParameters() throws {
         let rows = (0..<10).map { KeywordValuePair(keyword: Array(String($0).utf8), value: Array(String($0).utf8)) }
         let context: Context<Bfv<UInt32>> = try .init(encryptionParameters: .init(from: .n_4096_logq_27_28_28_logt_13))
         let config = try KeywordPirConfig(
@@ -54,33 +58,33 @@ class ConversionTests: XCTestCase {
 
         let pirParameters = try processedDatabaseWithParameters.proto(context: context)
         let loadedProcessedDatabaseWithParameters = try pirParameters.native(database: processedDatabase)
-        XCTAssertEqual(loadedProcessedDatabaseWithParameters, processedDatabaseWithParameters)
+        #expect(loadedProcessedDatabaseWithParameters == processedDatabaseWithParameters)
     }
 
-    func testPirAlgorithm() throws {
-        for algorithm in PirAlgorithm.allCases {
-            XCTAssertEqual(try algorithm.proto().native(), algorithm)
-        }
+    @Test(arguments: PirAlgorithm.allCases)
+    func pirAlgorithm(_ algorithm: PirAlgorithm) throws {
+        #expect(try algorithm.proto().native() == algorithm)
     }
 
-    func testPirKeyCompressionStrategy() throws {
-        for strategy in PirKeyCompressionStrategy.allCases {
-            XCTAssertEqual(try strategy.proto().native(), strategy)
-        }
+    @Test(arguments: PirKeyCompressionStrategy.allCases)
+    func pirKeyCompressionStrategy(_ strategy: PirKeyCompressionStrategy) throws {
+        #expect(try strategy.proto().native() == strategy)
     }
 
-    func testOprfQuery() throws {
+    @Test
+    func oprfQuery() throws {
         let element =
             "02a36bc90e6db34096346eaf8b7bc40ee1113582155ad3797003ce614c835a874343701d3f2debbd80d97cbe45de6e5f1f"
-        let query = try OprfQuery(oprfRepresentation: Data(XCTUnwrap(Array(hexEncoded: element))))
+        let query = try OprfQuery(oprfRepresentation: Data(#require(Array(hexEncoded: element))))
         let roundTrip = try query.proto().native()
-        XCTAssertEqual(roundTrip.oprfRepresentation, query.oprfRepresentation)
+        #expect(roundTrip.oprfRepresentation == query.oprfRepresentation)
     }
 
-    func testOprfResponse() throws {
+    @Test
+    func oprfResponse() throws {
         let evaluatedElement =
             try Data(
-                XCTUnwrap(Array(
+                #require(Array(
                     hexEncoded: """
                         02a7bba589b3e8672aa19e8fd258de2e6aae20101c8d761246de97a6b5ee9cf105febce4327a326\
                         255a3c604f63f600ef6
@@ -88,7 +92,7 @@ class ConversionTests: XCTestCase {
 
         let proof =
             try Data(
-                XCTUnwrap(Array(
+                #require(Array(
                     hexEncoded: """
                         bfc6cf3859127f5fe25548859856d6b7fa1c7459f0ba5712a806fc091a3000c42d8ba34ff45f32a52\
                         e40533efd2a03bc87f3bf4f9f58028297ccb9ccb18ae7182bcd1ef239df77e3be65ef147f3acf8bc9\
@@ -96,18 +100,19 @@ class ConversionTests: XCTestCase {
                         """)))
         let rawRepresentation = evaluatedElement + proof
         let blindEvaluation = try OprfResponse(rawRepresentation: rawRepresentation)
-        XCTAssertEqual(try blindEvaluation.proto().native().rawRepresentation, blindEvaluation.rawRepresentation)
+        #expect(try blindEvaluation.proto().native().rawRepresentation == blindEvaluation.rawRepresentation)
     }
 
-    func testKeywordPirParameter() throws {
+    @Test
+    func keywordPirParameter() throws {
         var keywordPirParameter = KeywordPirParameter(hashFunctionCount: 2)
         var roundTrip = keywordPirParameter.proto().native()
-        XCTAssertEqual(roundTrip, keywordPirParameter)
+        #expect(roundTrip == keywordPirParameter)
         let symmetricPirClientConfig = SymmetricPirClientConfig(serverPublicKey: [],
                                                                 configType: .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128)
         keywordPirParameter = KeywordPirParameter(hashFunctionCount: 2,
                                                   symmetricPirClientConfig: symmetricPirClientConfig)
         roundTrip = try keywordPirParameter.proto().nativeWithSymmetricPirClientConfig()
-        XCTAssertEqual(roundTrip, keywordPirParameter)
+        #expect(roundTrip == keywordPirParameter)
     }
 }

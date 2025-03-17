@@ -16,7 +16,7 @@
 import Testing
 
 @Suite
-class PIRGenerateDatabaseTests {
+struct PIRGenerateDatabaseTests {
     @Test
     func valueSizeArguments() throws {
         #expect(try #require(ValueSizeArguments(argument: "1")?.range) == 1..<2)

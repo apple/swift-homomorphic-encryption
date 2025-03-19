@@ -14,10 +14,12 @@
 
 import _TestUtilities
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-class PolyRqSerializeTests: XCTestCase {
-    func testSerializationErrOnWrongBuffer() throws {
+@Suite
+struct PolyRqSerializeTests {
+    @Test
+    func serializationErrOnWrongBuffer() throws {
         let primes = try UInt32.generatePrimes(significantBitCounts: [5, 5, 5], preferringSmall: false)
         let context = try PolyContext(degree: 32, moduli: primes)
         let poly: PolyRq<UInt32, Coeff> = PolyRq.random(context: context)
@@ -26,18 +28,23 @@ class PolyRqSerializeTests: XCTestCase {
         let wrongPrimes = try UInt32.generatePrimes(significantBitCounts: [5, 5, 16], preferringSmall: false)
         let wrongContext = try PolyContext(degree: 32, moduli: wrongPrimes)
 
-        XCTAssertThrowsError(
-            try PolyRq<UInt32, Coeff>(deserialize: bytes, context: wrongContext),
-            error: HeError.serializedBufferSizeMismatch(polyContext: wrongContext, actual: bytes.count, expected: 104))
+        #expect(throws: HeError.serializedBufferSizeMismatch(
+            polyContext: wrongContext,
+            actual: bytes.count,
+            expected: 104))
+        {
+            try PolyRq<UInt32, Coeff>(deserialize: bytes, context: wrongContext)
+        }
     }
 
-    func testRoundtrip() throws {
+    @Test
+    func roundtrip() throws {
         func runTest<T: ScalarType>(_: T.Type) throws {
             func runTestWithFormat<F: PolyFormat>(context: PolyContext<T>, _: F.Type) throws {
                 let poly: PolyRq<_, F> = PolyRq.random(context: context)
                 let bytes = poly.serialize()
                 let deserialized: PolyRq<_, F> = try PolyRq(deserialize: bytes, context: context)
-                XCTAssertEqual(deserialized, poly)
+                #expect(deserialized == poly)
             }
 
             let primes = try T.generatePrimes(significantBitCounts: [14, 16, 21, 22, 27], preferringSmall: false)
@@ -51,7 +58,8 @@ class PolyRqSerializeTests: XCTestCase {
         try runTest(UInt64.self)
     }
 
-    func testRoundtripKAT() throws {
+    @Test
+    func roundtripKAT() throws {
         struct SerializePolyKAT {
             let poly: [UInt64]
             let moduli: [UInt64]
@@ -92,28 +100,29 @@ class PolyRqSerializeTests: XCTestCase {
                 deserialize: bytes,
                 context: context,
                 skipLSBs: kat.skipLSBs)
-            XCTAssertEqual(deserialized, expectedPoly)
+            #expect(deserialized == expectedPoly)
         }
     }
 
-    func testRoundtripInplace() throws {
+    @Test
+    func roundtripInplace() throws {
         func runTest<T: ScalarType>(_: T.Type) throws {
             func runTestWithFormat<F: PolyFormat>(context: PolyContext<T>, _: F.Type) throws {
                 let poly1: PolyRq<_, F> = PolyRq.random(context: context)
                 let poly2: PolyRq<_, F> = PolyRq.random(context: context)
                 let byteCount = context.serializationByteCount()
                 let byteBuffer = poly2.serialize() + poly1.serialize()
-                XCTAssertEqual(byteBuffer.count, 2 * byteCount)
+                #expect(byteBuffer.count == 2 * byteCount)
                 let deserialized1: PolyRq<_, F> = try PolyRq(deserialize: byteBuffer[byteCount...], context: context)
                 let deserialized2: PolyRq<_, F> = try PolyRq(deserialize: byteBuffer, context: context)
-                XCTAssertEqual(deserialized1, poly1)
-                XCTAssertEqual(deserialized2, poly2)
+                #expect(deserialized1 == poly1)
+                #expect(deserialized2 == poly2)
                 var loadPoly1: PolyRq<_, F> = PolyRq.zero(context: context)
                 var loadPoly2: PolyRq<_, F> = PolyRq.zero(context: context)
                 try loadPoly1.load(from: byteBuffer[byteCount...])
                 try loadPoly2.load(from: byteBuffer)
-                XCTAssertEqual(loadPoly1, poly1)
-                XCTAssertEqual(loadPoly2, poly2)
+                #expect(loadPoly1 == poly1)
+                #expect(loadPoly2 == poly2)
             }
 
             let primes = try T.generatePrimes(significantBitCounts: [14, 16, 21, 22, 27], preferringSmall: false)

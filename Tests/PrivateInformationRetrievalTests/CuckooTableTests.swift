@@ -94,7 +94,11 @@ struct CuckooTableTests {
     func cuckooTableLargestSerializedBucketSize() throws {
         let valueSize = 10
         let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: valueSize)
-        let config = try PirTestUtils.testCuckooTableConfig(maxSerializedBucketSize: valueSize * 5)
+        let config = try CuckooTableConfig(
+            hashFunctionCount: 2,
+            maxEvictionCount: 20,
+            maxSerializedBucketSize: 5 * valueSize,
+            bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.9))
         let rng = TestRng(counter: 0)
         let cuckooTable = try CuckooTable(config: config, database: testDatabase, using: rng)
 

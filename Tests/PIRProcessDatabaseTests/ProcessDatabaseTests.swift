@@ -38,9 +38,7 @@ struct ProcessDatabaseTests {
                 }
                 """
             let configData = try #require(configString.data(using: .utf8))
-            let parsedConfig = try #require(try JSONDecoder().decode(
-                PIRProcessDatabase.Arguments.self,
-                from: configData))
+            let parsedConfig = try JSONDecoder().decode(PIRProcessDatabase.Arguments.self, from: configData)
 
             let config = PIRProcessDatabase.Arguments(
                 inputDatabase: "input-database.txtpb",

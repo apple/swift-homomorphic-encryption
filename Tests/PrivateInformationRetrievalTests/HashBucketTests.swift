@@ -14,9 +14,10 @@
 
 import _TestUtilities
 @testable import PrivateInformationRetrieval
-import XCTest
+import Testing
 
-class HashBucketTests: XCTestCase {
+@Suite
+struct HashBucketTests {
     private let rawBucket: [UInt8] = [3, 24, 95, 141, 179, 34, 113, 254, 37, 5,
                                       0, 87, 111, 114, 108, 100, 82, 117, 17, 222,
                                       175, 220, 211, 74, 6, 0, 77, 97, 97, 105, 108,
@@ -35,57 +36,54 @@ class HashBucketTests: XCTestCase {
         return HashBucket(slots: (0..<count).map { _ in getTestEntry() })
     }
 
-    func testSerialization() throws {
+    @Test
+    func serialization() throws {
         let testBucket = getTestBucket()
         let serialized = try testBucket.serialize()
         let deserialized = try HashBucket(deserialize: serialized)
-        XCTAssertEqual(testBucket, deserialized)
+        #expect(testBucket == deserialized)
     }
 
-    func testSerializationError() throws {
+    @Test
+    func serializationError() throws {
         let size = Int(UInt16.max) + 1
         let randomData = PirTestUtils.generateRandomData(size: size)
         let testBucket = HashBucket.HashBucketEntry(
             keywordHash: UInt64.random(in: UInt64.min...UInt64.max),
             value: randomData)
-        XCTAssertThrowsError(
-            try testBucket.serialize(),
-            error: PirError.invalidHashBucketEntryValueSize(
-                maxSize: Int(
-                    HashBucket.HashBucketEntry.maxValueSize)))
+        #expect(
+            throws: PirError.invalidHashBucketEntryValueSize(maxSize: Int(HashBucket.HashBucketEntry.maxValueSize)))
+        {
+            try testBucket.serialize()
+        }
     }
 
-    func testHashBucketEntrySerializationSize() throws {
+    @Test
+    func hashBucketEntrySerializationSize() throws {
         let testBucketEntry = getTestEntry()
         let serialized = try testBucketEntry.serialize()
-        XCTAssertEqual(
-            serialized.count,
-            HashBucket.HashBucketEntry
-                .serializedSize(value: testBucketEntry.value))
+        #expect(serialized.count == HashBucket.HashBucketEntry.serializedSize(value: testBucketEntry.value))
     }
 
-    func testHashBucketSerializationSize() throws {
+    @Test
+    func hashBucketSerializationSize() throws {
         let testBucket = getTestBucket()
         let serialized = try testBucket.serialize()
-        XCTAssertEqual(
-            serialized.count,
-            HashBucket.serializedSize(values: testBucket.slots.map { slot in slot.value }))
+        #expect(serialized.count == HashBucket.serializedSize(values: testBucket.slots.map { slot in slot.value }))
     }
 
-    func testHashIndices() {
-        XCTAssertEqual(
-            HashKeyword.hashIndices(keyword: [0, 1, 2, 3], bucketCount: 8, hashFunctionCount: 3),
-            [7, 3, 0])
+    @Test
+    func hashIndices() {
+        #expect(HashKeyword.hashIndices(keyword: [0, 1, 2, 3], bucketCount: 8, hashFunctionCount: 3) == [7, 3, 0])
         let indices = [1989, 1767, 1260, 242, 1122]
-        XCTAssertEqual(
-            HashKeyword.hashIndices(keyword: [3, 2, 1, 0], bucketCount: 2048, hashFunctionCount: 5),
-            indices)
+        #expect(HashKeyword.hashIndices(keyword: [3, 2, 1, 0], bucketCount: 2048, hashFunctionCount: 5) == indices)
     }
 
-    func testBucketDeserialization() throws {
+    @Test
+    func bucketDeserialization() throws {
         let bucket = try HashBucket(deserialize: rawBucket)
-        XCTAssertEqual(bucket.find(keyword: [UInt8]("Hello".utf8)), [UInt8]("World".utf8))
-        XCTAssertEqual(bucket.find(keyword: [UInt8]("Goodbye".utf8)), [UInt8]("Darkness".utf8))
-        XCTAssertEqual(bucket.slots.count, 3)
+        #expect(bucket.find(keyword: [UInt8]("Hello".utf8)) == [UInt8]("World".utf8))
+        #expect(bucket.find(keyword: [UInt8]("Goodbye".utf8)) == [UInt8]("Darkness".utf8))
+        #expect(bucket.slots.count == 3)
     }
 }

@@ -15,9 +15,10 @@
 import _TestUtilities
 import HomomorphicEncryption
 @testable import PrivateInformationRetrieval
-import XCTest
+import Testing
 
-class PirUtilTests: XCTestCase {
+@Suite
+struct PirUtilTests {
     private func expandCiphertextForOneStepTest<Scheme: HeScheme>(
         scheme _: Scheme.Type,
         _ keyCompression: PirKeyCompressionStrategy) throws
@@ -64,10 +65,9 @@ class PirUtilTests: XCTestCase {
             let p1: [Scheme.Scalar] = try expandedCiphertexts.1.decrypt(using: secretKey).decode(format: .coefficient)
 
             for index in stride(from: 0, to: degree, by: step) {
-                XCTAssertEqual(data[index].multiplyMod(2, modulus: plaintextModulus, variableTime: true), p0[index])
-                XCTAssertEqual(
-                    data[index + halfStep].multiplyMod(2, modulus: plaintextModulus, variableTime: true),
-                    p1[index])
+                #expect(data[index].multiplyMod(2, modulus: plaintextModulus, variableTime: true) == p0[index])
+                #expect(data[index + halfStep].multiplyMod(2, modulus: plaintextModulus, variableTime: true)
+                    == p1[index])
             }
         }
     }
@@ -93,13 +93,13 @@ class PirUtilTests: XCTestCase {
                 logStep: 1,
                 expectedHeight: inputCount.ceilLog2,
                 using: evaluationKey)
-            XCTAssertEqual(expandedCiphertexts.count, inputCount)
+            #expect(expandedCiphertexts.count == inputCount)
             for index in 0..<inputCount {
                 let decodedData: [Scheme.Scalar] = try expandedCiphertexts[index].decrypt(using: secretKey)
                     .decode(format: .coefficient)
-                XCTAssertEqual(decodedData[0], data[index])
+                #expect(decodedData[0] == data[index])
                 for coeff in decodedData.dropFirst() {
-                    XCTAssertEqual(coeff, 0)
+                    #expect(coeff == 0)
                 }
             }
         }
@@ -126,43 +126,48 @@ class PirUtilTests: XCTestCase {
                 ciphertexts,
                 outputCount: inputCount,
                 using: evaluationKey)
-            XCTAssertEqual(expandedCiphertexts.count, inputCount)
+            #expect(expandedCiphertexts.count == inputCount)
             for index in 0..<inputCount {
                 let decodedData: [Scheme.Scalar] = try expandedCiphertexts[index].decrypt(using: secretKey)
                     .decode(format: .coefficient)
-                XCTAssertEqual(Int(decodedData[0]), data[index])
+                #expect(Int(decodedData[0]) == data[index])
                 for coeff in decodedData.dropFirst() {
-                    XCTAssertEqual(coeff, 0)
+                    #expect(coeff == 0)
                 }
             }
         }
     }
 
-    func testExpandCiphertextForOneStepNoCompression() throws {
+    @Test
+    func expandCiphertextForOneStepNoCompression() throws {
         try expandCiphertextForOneStepTest(scheme: NoOpScheme.self, .noCompression)
         try expandCiphertextForOneStepTest(scheme: Bfv<UInt32>.self, .noCompression)
         try expandCiphertextForOneStepTest(scheme: Bfv<UInt64>.self, .noCompression)
     }
 
-    func testExpandCiphertextForOneStepHybridCompression() throws {
+    @Test
+    func expandCiphertextForOneStepHybridCompression() throws {
         try expandCiphertextForOneStepTest(scheme: NoOpScheme.self, .hybridCompression)
         try expandCiphertextForOneStepTest(scheme: Bfv<UInt32>.self, .hybridCompression)
         try expandCiphertextForOneStepTest(scheme: Bfv<UInt64>.self, .hybridCompression)
     }
 
-    func testExpandCiphertextForOneStepMaxCompression() throws {
+    @Test
+    func expandCiphertextForOneStepMaxCompression() throws {
         try expandCiphertextForOneStepTest(scheme: NoOpScheme.self, .maxCompression)
         try expandCiphertextForOneStepTest(scheme: Bfv<UInt32>.self, .maxCompression)
         try expandCiphertextForOneStepTest(scheme: Bfv<UInt64>.self, .maxCompression)
     }
 
-    func testExpandCiphertext() throws {
+    @Test
+    func expandCiphertext() throws {
         try expandCiphertextTest(scheme: NoOpScheme.self)
         try expandCiphertextTest(scheme: Bfv<UInt32>.self)
         try expandCiphertextTest(scheme: Bfv<UInt64>.self)
     }
 
-    func testExpandCiphertexts() throws {
+    @Test
+    func expandCiphertexts() throws {
         try expandCiphertextsTest(scheme: NoOpScheme.self)
         try expandCiphertextsTest(scheme: Bfv<UInt32>.self)
         try expandCiphertextsTest(scheme: Bfv<UInt64>.self)

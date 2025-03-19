@@ -14,9 +14,10 @@
 
 import _TestUtilities
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-final class GaloisTests: XCTestCase {
+@Suite
+struct GaloisTests {
     private func getTestPolyWithElement3Degree4Moduli1<T>() throws -> (PolyRq<T, Coeff>, PolyRq<T, Coeff>) {
         let degree = 4
         let moduli: [T] = [17]
@@ -61,35 +62,27 @@ final class GaloisTests: XCTestCase {
         PolyRq<T, Coeff>)) throws
     {
         let (poly, expectedPoly) = try getFunc()
-        XCTAssertEqual(poly.applyGalois(element: 3), expectedPoly)
-        XCTAssertEqual(try poly.forwardNtt().applyGalois(element: 3).inverseNtt(), expectedPoly)
+        #expect(poly.applyGalois(element: 3) == expectedPoly)
+        #expect(try poly.forwardNtt().applyGalois(element: 3).inverseNtt() == expectedPoly)
         for index in 1..<poly.degree {
             let element = index * 2 + 1
-            XCTAssertEqual(try poly.applyGalois(element: element).forwardNtt(),
-                           try poly.forwardNtt().applyGalois(element: element))
+            #expect(try poly.applyGalois(element: element).forwardNtt()
+                == poly.forwardNtt().applyGalois(element: element))
         }
 
         let forwardElement = GaloisElement.swappingRows(degree: poly.degree)
-        XCTAssertEqual(
-            poly.applyGalois(element: forwardElement).applyGalois(element: forwardElement),
-            poly)
-        XCTAssertEqual(
-            try poly.forwardNtt().applyGalois(element: forwardElement)
-                .applyGalois(element: forwardElement),
-            try poly.forwardNtt())
+        #expect(poly.applyGalois(element: forwardElement).applyGalois(element: forwardElement) == poly)
+        #expect(try poly.forwardNtt().applyGalois(element: forwardElement).applyGalois(element: forwardElement)
+            == poly.forwardNtt())
 
         for step in 1..<(poly.degree >> 1) {
             let inverseStep = (poly.degree >> 1) - step
             let forwardElement = try GaloisElement.rotatingColumns(by: step, degree: poly.degree)
             let backwardElement = try GaloisElement.rotatingColumns(by: inverseStep, degree: poly.degree)
-            XCTAssertEqual(
-                poly.applyGalois(element: forwardElement).applyGalois(element: backwardElement),
-                poly)
+            #expect(poly.applyGalois(element: forwardElement).applyGalois(element: backwardElement) == poly)
 
-            XCTAssertEqual(
-                try poly.forwardNtt().applyGalois(element: forwardElement)
-                    .applyGalois(element: backwardElement),
-                try poly.forwardNtt())
+            #expect(try poly.forwardNtt().applyGalois(element: forwardElement).applyGalois(element: backwardElement)
+                == poly.forwardNtt())
         }
     }
 
@@ -99,17 +92,19 @@ final class GaloisTests: XCTestCase {
         try applyGaloisTestHelper(type, getFunc: getTestPolyWithElement3Degree8Moduli2)
     }
 
-    func testApplyGalois() throws {
+    @Test
+    func applyGalois() throws {
         try testApplyGaloisForType(type: UInt32.self)
         try testApplyGaloisForType(type: UInt64.self)
     }
 
-    func testGaloisElementsToSteps() throws {
+    @Test
+    func galoisElementsToSteps() throws {
         let galoisElements = [2, 3, 9, 11]
         let degree = 8
         let result = GaloisElement.stepsFor(elements: galoisElements, degree: degree)
         let expected = [2: nil, 3: 3, 9: 2, 11: 1]
-        XCTAssertEqual(result, expected)
+        #expect(result == expected)
 
         // roundtrip
         for degree in [16, 32, 1024] {
@@ -120,11 +115,12 @@ final class GaloisTests: XCTestCase {
             }
 
             let result = GaloisElement.stepsFor(elements: Array(elementToStep.keys), degree: degree)
-            XCTAssertEqual(result, elementToStep)
+            #expect(result == elementToStep)
         }
     }
 
-    func testPlanMultiStepSmall() throws {
+    @Test
+    func planMultiStepSmall() throws {
         let degree = 32
 
         do {
@@ -132,7 +128,7 @@ final class GaloisTests: XCTestCase {
             let supportedSteps = [2, 4, 8]
             for step in [1, 3, 5, 7, 9, 11, 13, 15] {
                 let plan = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
-                XCTAssertNil(plan)
+                #expect(plan == nil)
             }
         }
 
@@ -167,7 +163,7 @@ final class GaloisTests: XCTestCase {
 
             for (step, counts) in knownAnswers {
                 var result = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
-                XCTAssertEqual(result, counts)
+                #expect(result == counts)
 
                 // Negative steps yields same plan, just with negative rotations.
                 let negativeStep = transformNegative(step)
@@ -179,7 +175,7 @@ final class GaloisTests: XCTestCase {
                     supportedSteps: negativeSteps,
                     step: negativeStep,
                     degree: degree)
-                XCTAssertEqual(result, negativeStepCounts)
+                #expect(result == negativeStepCounts)
             }
         }
 
@@ -193,12 +189,13 @@ final class GaloisTests: XCTestCase {
 
             for (step, counts) in knownAnswers {
                 let result = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
-                XCTAssertEqual(result, counts)
+                #expect(result == counts)
             }
         }
     }
 
-    func testMultiStepBig() throws {
+    @Test
+    func multiStepBig() throws {
         let degree = 8192
         let transformPositive: (Int) -> Int = { step in
             var step = step
@@ -216,7 +213,7 @@ final class GaloisTests: XCTestCase {
         ]
         for (step, counts) in knownAnswers {
             let result = try GaloisElement.planMultiStep(supportedSteps: steps, step: step, degree: degree)
-            XCTAssertEqual(result, counts)
+            #expect(result == counts)
         }
     }
 }

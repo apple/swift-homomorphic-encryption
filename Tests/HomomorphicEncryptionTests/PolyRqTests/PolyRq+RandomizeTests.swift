@@ -14,10 +14,12 @@
 
 import _TestUtilities
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-final class PolyRqRandomizeTests: XCTestCase {
-    func testRandomizeUniform() throws {
+@Suite
+struct PolyRqRandomizeTests {
+    @Test
+    func randomizeUniform() throws {
         func runRandomizeUniformTest<T: ScalarType>(_: T.Type) throws {
             let context = try PolyContext<T>(degree: 1024, moduli: [40961, 59393, 61441])
             var poly = PolyRq<T, Coeff>.zero(context: context)
@@ -29,7 +31,8 @@ final class PolyRqRandomizeTests: XCTestCase {
         try runRandomizeUniformTest(UInt64.self)
     }
 
-    func testCenteredBinomialDistribution() throws {
+    @Test
+    func centeredBinomialDistribution() throws {
         func runCenteredBinomialDistributionTest<T: ScalarType>(_: T.Type) throws {
             let n = 8192
             let moduli: [T] = [268_582_913, 268_664_833, 268_730_369, 268_779_521]
@@ -46,7 +49,8 @@ final class PolyRqRandomizeTests: XCTestCase {
         try runCenteredBinomialDistributionTest(UInt64.self)
     }
 
-    func testTernaryDistribution() throws {
+    @Test
+    func ternaryDistribution() throws {
         func runTernaryDistributionTest<T: ScalarType>(_: T.Type) throws {
             let n = 8192
             let moduli: [T] = [268_582_913, 268_664_833, 268_730_369, 268_779_521]
@@ -72,7 +76,7 @@ final class PolyRqRandomizeTests: XCTestCase {
         where T: ScalarType
     {
         let polyData = polyData.map { $0.map { T($0) } }
-        let seed = try XCTUnwrap(Array(hexEncoded: hexSeed))
+        let seed = try #require(Array(hexEncoded: hexSeed))
         var rng: any PseudoRandomNumberGenerator = try NistAes128Ctr(seed: seed)
         let polyContext: PolyContext<T> = try PolyContext(degree: 4, moduli: moduli)
         // test the first poly
@@ -80,7 +84,7 @@ final class PolyRqRandomizeTests: XCTestCase {
             let poly = createRandomPoly(polyContext, &rng)
             let data = Array2d<T>(data: polyData[0], rowCount: 2, columnCount: 4)
             let expected = PolyRq<T, Coeff>(context: polyContext, data: data)
-            XCTAssertEqual(poly, expected)
+            #expect(poly == expected)
         }
         // generate a bunch of polys
         for _ in 0..<1000 {
@@ -91,7 +95,7 @@ final class PolyRqRandomizeTests: XCTestCase {
             let poly = createRandomPoly(polyContext, &rng)
             let data = Array2d<T>(data: polyData[1], rowCount: 2, columnCount: 4)
             let expected = PolyRq<T, Coeff>(context: polyContext, data: data)
-            XCTAssertEqual(poly, expected)
+            #expect(poly == expected)
         }
         // generate a bunch of polys
         for _ in 0..<1000 {
@@ -102,11 +106,12 @@ final class PolyRqRandomizeTests: XCTestCase {
             let poly = createRandomPoly(polyContext, &rng)
             let data = Array2d<T>(data: polyData[2], rowCount: 2, columnCount: 4)
             let expected = PolyRq<T, Coeff>(context: polyContext, data: data)
-            XCTAssertEqual(poly, expected)
+            #expect(poly == expected)
         }
     }
 
-    func testRandomizeInteropUniform() throws {
+    @Test
+    func randomizeInteropUniform() throws {
         let uniformZeroSeedPolyData = [
             [4, 0, 2, 8, 10, 9, 3, 2],
             [5, 6, 0, 5, 1, 3, 6, 11],
@@ -144,7 +149,8 @@ final class PolyRqRandomizeTests: XCTestCase {
         try runUniform2(UInt64.self)
     }
 
-    func testRandomizeInteropTernary() throws {
+    @Test
+    func randomizeInteropTernary() throws {
         let ternaryPolyData = [
             [0, 10, 10, 1, 0, 12, 12, 1],
             [1, 10, 1, 0, 1, 12, 1, 0],
@@ -166,7 +172,8 @@ final class PolyRqRandomizeTests: XCTestCase {
         try runTernary(UInt64.self)
     }
 
-    func testRandomizeInteropCenteredBinomial() throws {
+    @Test
+    func randomizeInteropCenteredBinomial() throws {
         let centeredBinomialPolyData = [
             [22, 0, 0, 22, 28, 0, 0, 28],
             [2, 4, 22, 1, 2, 4, 28, 1],

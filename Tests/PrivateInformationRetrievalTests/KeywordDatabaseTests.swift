@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Foundation
 @testable import PrivateInformationRetrieval
-import XCTest
+import Testing
 
-class KeywordDatabaseTests: XCTestCase {
-    func testShardingCodable() throws {
+@Suite
+struct KeywordDatabaseTests {
+    @Test
+    func shardingCodable() throws {
         for sharding in [Sharding.shardCount(10), Sharding.entryCountPerShard(11)] {
             let encoded = try JSONEncoder().encode(sharding)
             let decoded = try JSONDecoder().decode(Sharding.self, from: encoded)
-            XCTAssertEqual(decoded, sharding)
+            #expect(decoded == sharding)
         }
     }
 
-    func testSharding() throws {
+    @Test
+    func sharding() throws {
         let shardCount = 10
         let rowCount = 10
         let valueSize = 3
@@ -33,17 +37,18 @@ class KeywordDatabaseTests: XCTestCase {
         let database = try KeywordDatabase(
             rows: testDatabase,
             sharding: .shardCount(shardCount))
-        XCTAssertLessThanOrEqual(database.shards.count, shardCount)
-        XCTAssertEqual(database.shards.map { shard in shard.value.rows.count }.sum(), rowCount)
+        #expect(database.shards.count <= shardCount)
+        #expect(database.shards.map { shard in shard.value.rows.count }.sum() == rowCount)
         for row in testDatabase {
-            XCTAssert(database.shards.contains { shard in shard.value[row.keyword] == row.value })
+            #expect(database.shards.contains { shard in shard.value[row.keyword] == row.value })
         }
     }
 
-    func testShardingKnownAnswerTest() throws {
+    @Test
+    func shardingKnownAnswerTest() throws {
         var shardingFunction = ShardingFunction.sha256
         func checkKeywordShard(_ keyword: KeywordValuePair.Keyword, shardCount: Int, expectedShard: Int) {
-            XCTAssertEqual(shardingFunction.shardIndex(keyword: keyword, shardCount: shardCount), expectedShard)
+            #expect(shardingFunction.shardIndex(keyword: keyword, shardCount: shardCount) == expectedShard)
         }
 
         checkKeywordShard([0, 0, 0, 0], shardCount: 41, expectedShard: 2)
@@ -59,11 +64,12 @@ class KeywordDatabaseTests: XCTestCase {
         checkKeywordShard([3, 2, 1], shardCount: 1001, expectedShard: 328)
     }
 
-    func testShardingFunctionCodable() throws {
+    @Test
+    func shardingFunctionCodable() throws {
         for shardingFunction in [ShardingFunction.sha256, ShardingFunction.doubleMod(otherShardCount: 42)] {
             let encoded = try JSONEncoder().encode(shardingFunction)
             let decoded = try JSONDecoder().decode(ShardingFunction.self, from: encoded)
-            XCTAssertEqual(decoded, shardingFunction)
+            #expect(decoded == shardingFunction)
         }
     }
 }

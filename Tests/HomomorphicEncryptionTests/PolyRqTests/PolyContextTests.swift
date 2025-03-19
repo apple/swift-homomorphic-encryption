@@ -15,63 +15,67 @@
 import _TestUtilities
 @testable import HomomorphicEncryption
 import ModularArithmetic
-import XCTest
+import Testing
 
-final class PolyContextTests: XCTestCase {
-    func testError() throws {
-        XCTAssertThrowsError(try PolyContext<UInt32>(degree: 2, moduli: []), error: HeError.emptyModulus)
-        XCTAssertThrowsError(try PolyContext<UInt32>(degree: 3, moduli: [2, 3, 5]), error: HeError.invalidDegree(3))
-        XCTAssertThrowsError(try PolyContext<UInt32>(degree: 4, moduli: [2, 5, 9]), error: HeError.invalidModulus(9))
-        XCTAssertThrowsError(
-            try PolyContext<UInt32>(degree: 4, moduli: [2, 2, 5]),
-            error: HeError.coprimeModuli(moduli: [2, 2]))
-        XCTAssertThrowsError(
-            try PolyContext<UInt32>(degree: 4, moduli: [2, 4, 5]),
-            error: HeError.coprimeModuli(moduli: [2, 4]))
+@Suite
+struct PolyContextTests {
+    @Test
+    func error() throws {
+        #expect(throws: HeError.emptyModulus) { try PolyContext<UInt32>(degree: 2, moduli: []) }
+        #expect(throws: HeError.invalidDegree(3)) { try PolyContext<UInt32>(degree: 3, moduli: [2, 3, 5]) }
+        #expect(throws: HeError.invalidModulus(9)) { try PolyContext<UInt32>(degree: 4, moduli: [2, 5, 9]) }
+        #expect(throws: HeError.coprimeModuli(moduli: [2, 2])) {
+            try PolyContext<UInt32>(degree: 4, moduli: [2, 2, 5])
+        }
+        #expect(throws: HeError.coprimeModuli(moduli: [2, 4])) {
+            try PolyContext<UInt32>(degree: 4, moduli: [2, 4, 5])
+        }
 
         let largeModulus = UInt32((1 << 31) - 1)
-        XCTAssertThrowsError(
-            try PolyContext<UInt32>(degree: 4, moduli: [largeModulus]),
-            error: HeError.invalidModulus(Int64(largeModulus)))
+        #expect(throws: HeError.invalidModulus(Int64(largeModulus))) {
+            try PolyContext<UInt32>(degree: 4, moduli: [largeModulus])
+        }
     }
 
-    func testEquatable() throws {
+    @Test
+    func equatable() throws {
         let context: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
         let context2: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
-        XCTAssertEqual(context, context2)
-        XCTAssertNotEqual(context, try PolyContext(degree: 8, moduli: [2, 3, 5]))
-        XCTAssertNotEqual(context, try PolyContext(degree: 4, moduli: [2, 3, 7]))
+        #expect(context == context2)
+        #expect(try context != PolyContext(degree: 8, moduli: [2, 3, 5]))
+        #expect(try context != PolyContext(degree: 4, moduli: [2, 3, 7]))
     }
 
+    @Test
     func testInit() throws {
         let context3 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3, 5])
         let context2 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3])
         let context1 = try PolyContext<UInt32>(degree: 4, moduli: [2])
 
-        XCTAssertEqual(context3.moduli, [2, 3, 5])
-        XCTAssertEqual(context3.degree, 4)
-        XCTAssertEqual(context3.next, context2)
+        #expect(context3.moduli == [2, 3, 5])
+        #expect(context3.degree == 4)
+        #expect(context3.next == context2)
         if let context3Next = context3.next {
-            XCTAssertEqual(context3Next.next, context1)
+            #expect(context3Next.next == context1)
             if let context3NextNext = context3Next.next {
-                XCTAssertNil(context3NextNext.next)
+                #expect(context3NextNext.next == nil)
             }
         }
     }
 
-    func testQRemainder() throws {
+    @Test
+    func qRemainder() throws {
         let contextSmall: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
-        XCTAssertEqual(contextSmall.qRemainder(dividingBy: Modulus(modulus: 11, variableTime: true)), 8)
+        #expect(contextSmall.qRemainder(dividingBy: Modulus(modulus: 11, variableTime: true)) == 8)
 
         let moduli: [UInt32] = [268_435_399, 268_435_367, 268_435_361]
         let contextLarge: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: moduli)
-        XCTAssertEqual(contextLarge.qRemainder(dividingBy: Modulus(modulus: 11, variableTime: true)), 3)
-        XCTAssertEqual(
-            contextLarge.qRemainder(dividingBy: Modulus(modulus: 268_435_461, variableTime: true)),
-            267_852_661)
+        #expect(contextLarge.qRemainder(dividingBy: Modulus(modulus: 11, variableTime: true)) == 3)
+        #expect(contextLarge.qRemainder(dividingBy: Modulus(modulus: 268_435_461, variableTime: true)) == 267_852_661)
     }
 
-    func testIsParent() throws {
+    @Test
+    func isParent() throws {
         let context3 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3, 5])
         let context3DifferentDegree = try PolyContext<UInt32>(degree: 8, moduli: [2, 3, 5])
         let context3DifferentModuli = try PolyContext<UInt32>(degree: 4, moduli: [2, 3, 7])
@@ -79,27 +83,28 @@ final class PolyContextTests: XCTestCase {
         let context2 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3])
         let context1 = try PolyContext<UInt32>(degree: 4, moduli: [2])
 
-        XCTAssertFalse(context3.isParent(of: context3))
-        XCTAssertFalse(context3.isParent(of: context3Same))
-        XCTAssertFalse(context3.isParent(of: context3DifferentDegree))
-        XCTAssertFalse(context3.isParent(of: context3DifferentModuli))
+        #expect(!context3.isParent(of: context3))
+        #expect(!context3.isParent(of: context3Same))
+        #expect(!context3.isParent(of: context3DifferentDegree))
+        #expect(!context3.isParent(of: context3DifferentModuli))
 
-        XCTAssertFalse(context3.isParent(of: context3))
-        XCTAssertTrue(try context3.isParent(of: XCTUnwrap(context3.next)))
-        XCTAssertTrue(context3.isParent(of: context2))
-        XCTAssertTrue(try context3.isParent(of: XCTUnwrap(context2.next)))
-        XCTAssertTrue(context3.isParent(of: context1))
+        #expect(!context3.isParent(of: context3))
+        #expect(try context3.isParent(of: #require(context3.next)))
+        #expect(context3.isParent(of: context2))
+        #expect(try context3.isParent(of: #require(context2.next)))
+        #expect(context3.isParent(of: context1))
 
-        XCTAssertFalse(context2.isParent(of: context3))
-        XCTAssertFalse(context2.isParent(of: context2))
-        XCTAssertTrue(context2.isParent(of: context1))
+        #expect(!context2.isParent(of: context3))
+        #expect(!context2.isParent(of: context2))
+        #expect(context2.isParent(of: context1))
 
-        XCTAssertFalse(context1.isParent(of: context3))
-        XCTAssertFalse(context1.isParent(of: context2))
-        XCTAssertFalse(context1.isParent(of: context1))
+        #expect(!context1.isParent(of: context3))
+        #expect(!context1.isParent(of: context2))
+        #expect(!context1.isParent(of: context1))
     }
 
-    func testIsParentOfOrEqual() throws {
+    @Test
+    func isParentOfOrEqual() throws {
         let context3 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3, 5])
         let context3DifferentDegree = try PolyContext<UInt32>(degree: 8, moduli: [2, 3, 5])
         let context3DifferentModuli = try PolyContext<UInt32>(degree: 4, moduli: [2, 3, 7])
@@ -107,40 +112,41 @@ final class PolyContextTests: XCTestCase {
         let context2 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3])
         let context1 = try PolyContext<UInt32>(degree: 4, moduli: [2])
 
-        XCTAssertTrue(context3.isParentOfOrEqual(to: context3))
-        XCTAssertTrue(context3.isParentOfOrEqual(to: context3Same))
-        XCTAssertFalse(context3.isParentOfOrEqual(to: context3DifferentDegree))
-        XCTAssertFalse(context3.isParentOfOrEqual(to: context3DifferentModuli))
+        #expect(context3.isParentOfOrEqual(to: context3))
+        #expect(context3.isParentOfOrEqual(to: context3Same))
+        #expect(!context3.isParentOfOrEqual(to: context3DifferentDegree))
+        #expect(!context3.isParentOfOrEqual(to: context3DifferentModuli))
 
-        XCTAssertTrue(context3.isParentOfOrEqual(to: context3))
-        XCTAssertTrue(try context3.isParentOfOrEqual(to: XCTUnwrap(context3.next)))
-        XCTAssertTrue(context3.isParentOfOrEqual(to: context2))
-        XCTAssertTrue(try context3.isParentOfOrEqual(to: XCTUnwrap(context2.next)))
-        XCTAssertTrue(context3.isParentOfOrEqual(to: context1))
+        #expect(context3.isParentOfOrEqual(to: context3))
+        #expect(try context3.isParentOfOrEqual(to: #require(context3.next)))
+        #expect(context3.isParentOfOrEqual(to: context2))
+        #expect(try context3.isParentOfOrEqual(to: #require(context2.next)))
+        #expect(context3.isParentOfOrEqual(to: context1))
 
-        XCTAssertFalse(context2.isParentOfOrEqual(to: context3))
-        XCTAssertTrue(context2.isParentOfOrEqual(to: context2))
-        XCTAssertTrue(context2.isParentOfOrEqual(to: context1))
+        #expect(!context2.isParentOfOrEqual(to: context3))
+        #expect(context2.isParentOfOrEqual(to: context2))
+        #expect(context2.isParentOfOrEqual(to: context1))
 
-        XCTAssertFalse(context1.isParentOfOrEqual(to: context3))
-        XCTAssertFalse(context1.isParentOfOrEqual(to: context2))
-        XCTAssertTrue(context1.isParentOfOrEqual(to: context1))
+        #expect(!context1.isParentOfOrEqual(to: context3))
+        #expect(!context1.isParentOfOrEqual(to: context2))
+        #expect(context1.isParentOfOrEqual(to: context1))
     }
 
-    func testMaxLazyProductAccumulationCount() throws {
+    @Test
+    func maxLazyProductAccumulationCount() throws {
         do {
             let context = try PolyContext<UInt32>(degree: 4, moduli: [(1 << 27) - 40959, // 134176769
                                                                       (1 << 28) - 65535, // 268369921
                                                                       (1 << 28) - 73727, // 268361729
                 ])
-            XCTAssertEqual(context.maxLazyProductAccumulationCount(), 256)
+            #expect(context.maxLazyProductAccumulationCount() == 256)
         }
 
         do {
             let context = try PolyContext<UInt64>(degree: 4, moduli: [(1 << 59) + 13313, // 576460752303436801
                                                                       (1 << 59) + 16385, // 576460752303439873
                 ])
-            XCTAssertEqual(context.maxLazyProductAccumulationCount(), 1023)
+            #expect(context.maxLazyProductAccumulationCount() == 1023)
         }
     }
 }

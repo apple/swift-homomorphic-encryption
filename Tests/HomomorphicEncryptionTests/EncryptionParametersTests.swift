@@ -14,10 +14,12 @@
 
 import _TestUtilities
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-class EncryptionParametersTests: XCTestCase {
-    func testInvalid() throws {
+@Suite
+struct EncryptionParametersTests {
+    @Test
+    func invalid() throws {
         let plaintextModulus: UInt32 = (1 << 17) + 177
         let coefficientModuli: [UInt32] = [(1 << 17) + 225, (1 << 17) + 369, (1 << 17) + 417]
         let parameters = try EncryptionParameters<Bfv<UInt32>>(
@@ -33,51 +35,58 @@ class EncryptionParametersTests: XCTestCase {
         }
 
         // degree not a power of two
-        XCTAssertThrowsError(try EncryptionParameters<Bfv<UInt32>>(
-            polyDegree: 7,
-            plaintextModulus: plaintextModulus,
-            coefficientModuli: coefficientModuli,
-            errorStdDev: ErrorStdDev.stdDev32,
-            securityLevel: SecurityLevel.unchecked),
-        error: expectedError(replacing: "degree=8", with: "degree=7"))
+        #expect(throws: expectedError(replacing: "degree=8", with: "degree=7")) {
+            try EncryptionParameters<Bfv<UInt32>>(
+                polyDegree: 7,
+                plaintextModulus: plaintextModulus,
+                coefficientModuli: coefficientModuli,
+                errorStdDev: ErrorStdDev.stdDev32,
+                securityLevel: SecurityLevel.unchecked)
+        }
 
         // plaintext modulus not prime
         // BFV allows a non-prime plaintext modulus, but our implementation doesn't.
-        XCTAssertThrowsError(try EncryptionParameters<Bfv<UInt32>>(
-            polyDegree: 8,
-            plaintextModulus: 131_248,
-            coefficientModuli: coefficientModuli,
-            errorStdDev: ErrorStdDev.stdDev32,
-            securityLevel: SecurityLevel.unchecked),
-        error: expectedError(
+        #expect(throws: expectedError(
             replacing: "plaintextModulus=\(plaintextModulus)",
             with: "plaintextModulus=131248"))
+        {
+            try EncryptionParameters<Bfv<UInt32>>(
+                polyDegree: 8,
+                plaintextModulus: 131_248,
+                coefficientModuli: coefficientModuli,
+                errorStdDev: ErrorStdDev.stdDev32,
+                securityLevel: SecurityLevel.unchecked)
+        }
 
         // plaintext modulus matches ciphertext modulus
-        XCTAssertThrowsError(try EncryptionParameters<Bfv<UInt32>>(
-            polyDegree: 8,
-            plaintextModulus: coefficientModuli[0],
-            coefficientModuli: coefficientModuli,
-            errorStdDev: ErrorStdDev.stdDev32,
-            securityLevel: SecurityLevel.unchecked),
-        error: expectedError(
+        #expect(throws: expectedError(
             replacing: "plaintextModulus=\(plaintextModulus)",
             with: "plaintextModulus=\(coefficientModuli[0])"))
+        {
+            try EncryptionParameters<Bfv<UInt32>>(
+                polyDegree: 8,
+                plaintextModulus: coefficientModuli[0],
+                coefficientModuli: coefficientModuli,
+                errorStdDev: ErrorStdDev.stdDev32,
+                securityLevel: SecurityLevel.unchecked)
+        }
 
         // plaintext modulus > ciphertext modulus
         do {
             let bigPrime = try UInt32.generatePrimes(
                 significantBitCounts: [27],
                 preferringSmall: true)[0]
-            XCTAssertThrowsError(try EncryptionParameters<Bfv<UInt32>>(
-                polyDegree: 8,
-                plaintextModulus: bigPrime,
-                coefficientModuli: coefficientModuli,
-                errorStdDev: ErrorStdDev.stdDev32,
-                securityLevel: SecurityLevel.unchecked),
-            error: expectedError(
+            #expect(throws: expectedError(
                 replacing: "plaintextModulus=\(plaintextModulus)",
                 with: "plaintextModulus=\(bigPrime)"))
+            {
+                try EncryptionParameters<Bfv<UInt32>>(
+                    polyDegree: 8,
+                    plaintextModulus: bigPrime,
+                    coefficientModuli: coefficientModuli,
+                    errorStdDev: ErrorStdDev.stdDev32,
+                    securityLevel: SecurityLevel.unchecked)
+            }
         }
 
         // moduli too large
@@ -85,59 +94,66 @@ class EncryptionParametersTests: XCTestCase {
             let bigPrime = try UInt32.generatePrimes(
                 significantBitCounts: [32],
                 preferringSmall: true)[0]
-            XCTAssertThrowsError(try EncryptionParameters<Bfv<UInt32>>(
-                polyDegree: 8,
-                plaintextModulus: bigPrime,
-                coefficientModuli: coefficientModuli,
-                errorStdDev: ErrorStdDev.stdDev32,
-                securityLevel: SecurityLevel.unchecked),
-            error: expectedError(
+            #expect(throws: expectedError(
                 replacing: "plaintextModulus=\(plaintextModulus)",
                 with: "plaintextModulus=\(bigPrime)"))
+            {
+                try EncryptionParameters<Bfv<UInt32>>(
+                    polyDegree: 8,
+                    plaintextModulus: bigPrime,
+                    coefficientModuli: coefficientModuli,
+                    errorStdDev: ErrorStdDev.stdDev32,
+                    securityLevel: SecurityLevel.unchecked)
+            }
         }
         // moduli too small
-        XCTAssertThrowsError(try EncryptionParameters<Bfv<UInt32>>(
-            polyDegree: 8,
-            plaintextModulus: 1,
-            coefficientModuli: coefficientModuli,
-            errorStdDev: ErrorStdDev.stdDev32,
-            securityLevel: SecurityLevel.unchecked),
-        error: expectedError(
+        #expect(throws: expectedError(
             replacing: "plaintextModulus=\(plaintextModulus)",
             with: "plaintextModulus=\(1)"))
+        {
+            try EncryptionParameters<Bfv<UInt32>>(
+                polyDegree: 8,
+                plaintextModulus: 1,
+                coefficientModuli: coefficientModuli,
+                errorStdDev: ErrorStdDev.stdDev32,
+                securityLevel: SecurityLevel.unchecked)
+        }
 
         // too many moduli
         do {
             let excessCoefficientModuli = try UInt32.generatePrimes(
                 significantBitCounts: Array(repeating: 25, count: 10),
                 preferringSmall: true)
-            XCTAssertThrowsError(
+            #expect(throws: expectedError(
+                replacing: "coefficientModuli=\(coefficientModuli)",
+                with: "coefficientModuli=\(excessCoefficientModuli)"))
+            {
                 try EncryptionParameters<Bfv<UInt32>>(
                     polyDegree: 8,
                     plaintextModulus: plaintextModulus,
                     coefficientModuli: excessCoefficientModuli,
                     errorStdDev: ErrorStdDev.stdDev32,
-                    securityLevel: SecurityLevel.unchecked),
-                error: expectedError(
-                    replacing: "coefficientModuli=\(coefficientModuli)",
-                    with: "coefficientModuli=\(excessCoefficientModuli)"))
+                    securityLevel: SecurityLevel.unchecked)
+            }
         }
     }
 
-    func testInsecure() throws {
+    @Test
+    func insecure() throws {
         do {
-            XCTAssertThrowsError(try EncryptionParameters<NoOpScheme>(
-                polyDegree: 1024,
-                plaintextModulus: 257,
-                coefficientModuli: [17_179_869_209], // 2**34 - 25
-                errorStdDev: ErrorStdDev.stdDev32,
-                securityLevel: SecurityLevel.quantum128),
-            error: HeError
-                .insecureEncryptionParameters(
-                    """
-                    EncryptionParameters<NoOpScheme>(degree=1024, plaintextModulus=257, \
-                    coefficientModuli=[17179869209], errorStdDev=stdDev32, securityLevel=quantum128
-                    """))
+            #expect(throws: HeError.insecureEncryptionParameters(
+                """
+                EncryptionParameters<NoOpScheme>(degree=1024, plaintextModulus=257, \
+                coefficientModuli=[17179869209], errorStdDev=stdDev32, securityLevel=quantum128
+                """))
+            {
+                try EncryptionParameters<NoOpScheme>(
+                    polyDegree: 1024,
+                    plaintextModulus: 257,
+                    coefficientModuli: [17_179_869_209], // 2**34 - 25
+                    errorStdDev: ErrorStdDev.stdDev32,
+                    securityLevel: SecurityLevel.quantum128)
+            }
         }
 
         struct TestParameters {
@@ -162,40 +178,45 @@ class EncryptionParametersTests: XCTestCase {
                 significantBitCounts: params.secureBitCounts,
                 preferringSmall: false,
                 nttDegree: params.degree)
-            XCTAssertNoThrow(
+            #expect(throws: Never.self) {
                 try EncryptionParameters<Bfv<UInt64>>(polyDegree: params.degree,
                                                       plaintextModulus: 1153,
                                                       coefficientModuli: secureCoefficientModuli,
                                                       errorStdDev: ErrorStdDev.stdDev32,
-                                                      securityLevel: SecurityLevel.quantum128))
-            XCTAssertNoThrow(
+                                                      securityLevel: SecurityLevel.quantum128)
+            }
+            #expect(throws: Never.self) {
                 try EncryptionParameters<Bfv<UInt64>>(polyDegree: params.degree,
                                                       plaintextModulus: 1153,
                                                       coefficientModuli: secureCoefficientModuli,
                                                       errorStdDev: ErrorStdDev.stdDev32,
-                                                      securityLevel: SecurityLevel.unchecked))
+                                                      securityLevel: SecurityLevel.unchecked)
+            }
 
             // insecure moduli
             let insecureCoefficientModuli = try UInt64.generatePrimes(
                 significantBitCounts: params.insecureBitCounts,
                 preferringSmall: false,
                 nttDegree: params.degree)
-            XCTAssertThrowsError(
+            #expect(throws: (any Error).self) {
                 try EncryptionParameters<Bfv<UInt64>>(polyDegree: params.degree,
                                                       plaintextModulus: 1153,
                                                       coefficientModuli: insecureCoefficientModuli,
                                                       errorStdDev: ErrorStdDev.stdDev32,
-                                                      securityLevel: SecurityLevel.quantum128))
-            XCTAssertNoThrow(
+                                                      securityLevel: SecurityLevel.quantum128)
+            }
+            #expect(throws: Never.self) {
                 try EncryptionParameters<Bfv<UInt64>>(polyDegree: params.degree,
                                                       plaintextModulus: 1153,
                                                       coefficientModuli: insecureCoefficientModuli,
                                                       errorStdDev: ErrorStdDev.stdDev32,
-                                                      securityLevel: SecurityLevel.unchecked))
+                                                      securityLevel: SecurityLevel.unchecked)
+            }
         }
     }
 
-    func testPredefined() throws {
+    @Test
+    func predefined() throws {
         struct ParametersKAT {
             let predefined: PredefinedRlweParameters
             let polyDegree: Int
@@ -209,27 +230,27 @@ class EncryptionParametersTests: XCTestCase {
         func checkParameters(
             _ kat: ParametersKAT) throws
         {
-            XCTAssertEqual(kat.predefined.polyDegree, kat.polyDegree)
-            XCTAssertEqual(kat.predefined.coefficientModuli.map { qi in qi.ceilLog2 }, kat.coefficientModuliBitCounts)
-            XCTAssertEqual(kat.predefined.plaintextModulus.ceilLog2, kat.plaintextModulusBitCount)
-            XCTAssertEqual(kat.predefined.supportsSimdEncoding, kat.supportsSimdEncoding)
-            XCTAssertEqual(kat.predefined.supportsEvaluationKey, kat.supportsEvaluationKey)
+            #expect(kat.predefined.polyDegree == kat.polyDegree)
+            #expect(kat.predefined.coefficientModuli.map { qi in qi.ceilLog2 } == kat.coefficientModuliBitCounts)
+            #expect(kat.predefined.plaintextModulus.ceilLog2 == kat.plaintextModulusBitCount)
+            #expect(kat.predefined.supportsSimdEncoding == kat.supportsSimdEncoding)
+            #expect(kat.predefined.supportsEvaluationKey == kat.supportsEvaluationKey)
 
             let params = try EncryptionParameters<Bfv<UInt64>>(from: kat.predefined)
-            XCTAssertEqual(params.polyDegree, kat.polyDegree)
-            XCTAssertEqual(params.coefficientModuli.map { qi in qi.ceilLog2 }, kat.coefficientModuliBitCounts)
-            XCTAssertEqual(params.plaintextModulus.ceilLog2, kat.plaintextModulusBitCount)
-            XCTAssertEqual(params.supportsSimdEncoding, kat.supportsSimdEncoding)
-            XCTAssertEqual(params.supportsEvaluationKey, kat.supportsEvaluationKey)
-            XCTAssertEqual(params.skipLSBsForDecryption(), kat.skipLSBs)
+            #expect(params.polyDegree == kat.polyDegree)
+            #expect(params.coefficientModuli.map { qi in qi.ceilLog2 } == kat.coefficientModuliBitCounts)
+            #expect(params.plaintextModulus.ceilLog2 == kat.plaintextModulusBitCount)
+            #expect(params.supportsSimdEncoding == kat.supportsSimdEncoding)
+            #expect(params.supportsEvaluationKey == kat.supportsEvaluationKey)
+            #expect(params.skipLSBsForDecryption() == kat.skipLSBs)
 
             if kat.predefined.supportsScalar(UInt32.self) {
                 let params = try EncryptionParameters<Bfv<UInt32>>(from: kat.predefined)
-                XCTAssertEqual(params.polyDegree, kat.polyDegree)
-                XCTAssertEqual(params.coefficientModuli.map { qi in qi.ceilLog2 }, kat.coefficientModuliBitCounts)
-                XCTAssertEqual(params.plaintextModulus.ceilLog2, kat.plaintextModulusBitCount)
-                XCTAssertEqual(params.supportsSimdEncoding, kat.supportsSimdEncoding)
-                XCTAssertEqual(params.supportsEvaluationKey, kat.supportsEvaluationKey)
+                #expect(params.polyDegree == kat.polyDegree)
+                #expect(params.coefficientModuli.map { qi in qi.ceilLog2 } == kat.coefficientModuliBitCounts)
+                #expect(params.plaintextModulus.ceilLog2 == kat.plaintextModulusBitCount)
+                #expect(params.supportsSimdEncoding == kat.supportsSimdEncoding)
+                #expect(params.supportsEvaluationKey == kat.supportsEvaluationKey)
             }
         }
 

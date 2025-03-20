@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,19 +13,21 @@
 // limitations under the License.
 
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-class Array2dTests: XCTestCase {
+@Suite
+struct Array2dTests {
+    @Test
     func testInit() {
         func runTest<T: FixedWidthInteger & Sendable>(_: T.Type) {
             let data = [T](1...6)
             let array = Array2d(data: data, rowCount: 3, columnCount: 2)
 
             let data2d: [[T]] = [[1, 2], [3, 4], [5, 6]]
-            XCTAssertEqual(array, Array2d(data: data2d))
+            #expect(array == Array2d(data: data2d))
 
-            XCTAssert(Array2d<T>(data: []).shape == (rowCount: 0, columnCount: 0))
-            XCTAssert(Array2d<T>(data: [[]]).shape == (rowCount: 0, columnCount: 0))
+            #expect(Array2d<T>(data: []).shape == (rowCount: 0, columnCount: 0))
+            #expect(Array2d<T>(data: [[]]).shape == (rowCount: 0, columnCount: 0))
         }
 
         runTest(Int.self)
@@ -36,7 +38,8 @@ class Array2dTests: XCTestCase {
         runTest(UInt128.self)
     }
 
-    func testZeroAndZeroize() {
+    @Test
+    func zeroAndZeroize() {
         func runTest<T: FixedWidthInteger & Sendable>(_: T.Type) {
             let data = [T](1...16)
             var array = Array2d(data: data, rowCount: 2, columnCount: 8)
@@ -46,8 +49,8 @@ class Array2dTests: XCTestCase {
                 data: [T](repeating: 0, count: 16),
                 rowCount: 2,
                 columnCount: 8)
-            XCTAssertEqual(array, zero)
-            XCTAssertEqual(array, Array2d.zero(rowCount: 2, columnCount: 8))
+            #expect(array == zero)
+            #expect(array == Array2d.zero(rowCount: 2, columnCount: 8))
         }
         runTest(Int.self)
         runTest(Int32.self)
@@ -57,92 +60,100 @@ class Array2dTests: XCTestCase {
         runTest(UInt128.self)
     }
 
-    func testShape() {
+    @Test
+    func shape() {
         let data = [Int](0..<16)
         let array = Array2d(data: data, rowCount: 2, columnCount: 8)
-        XCTAssert(array.shape == (rowCount: 2, columnCount: 8))
+        #expect(array.shape == (rowCount: 2, columnCount: 8))
     }
 
-    func testIndices4x4() {
+    @Test
+    func indices4x4() {
         let data = [Int](0..<16)
         let array = Array2d(data: data, rowCount: 4, columnCount: 4)
 
-        XCTAssertEqual(array.collectValues(indices: array.rowIndices(row: 0)), [0, 1, 2, 3])
-        XCTAssertEqual(array.collectValues(indices: array.columnIndices(column: 0)), [0, 4, 8, 12])
+        #expect(array.collectValues(indices: array.rowIndices(row: 0)) == [0, 1, 2, 3])
+        #expect(array.collectValues(indices: array.columnIndices(column: 0)) == [0, 4, 8, 12])
     }
 
-    func testIndices2x8() {
+    @Test
+    func indices2x8() {
         let data = [Int](0..<16)
         let array = Array2d(data: data, rowCount: 2, columnCount: 8)
 
-        XCTAssertEqual(array.collectValues(indices: array.rowIndices(row: 0)), [0, 1, 2, 3, 4, 5, 6, 7])
-        XCTAssertEqual(array.collectValues(indices: array.columnIndices(column: 0)), [0, 8])
-        XCTAssertEqual(array.collectValues(indices: array.columnIndices(column: 7)), [7, 15])
+        #expect(array.collectValues(indices: array.rowIndices(row: 0)) == [0, 1, 2, 3, 4, 5, 6, 7])
+        #expect(array.collectValues(indices: array.columnIndices(column: 0)) == [0, 8])
+        #expect(array.collectValues(indices: array.columnIndices(column: 7)) == [7, 15])
     }
 
-    func testTransposed() {
+    @Test
+    func transposed() {
         let data = [Int](0..<16)
         let array = Array2d(data: data, rowCount: 2, columnCount: 8)
         let transposed = array.transposed()
 
-        XCTAssert(array.shape == (2, 8))
-        XCTAssert(transposed.shape == (8, 2))
+        #expect(array.shape == (2, 8))
+        #expect(transposed.shape == (8, 2))
 
-        XCTAssertEqual(transposed.collectValues(indices: transposed.rowIndices(row: 0)), [0, 8])
-        XCTAssertEqual(transposed.collectValues(indices: transposed.rowIndices(row: 7)), [7, 15])
-        XCTAssertEqual(transposed.collectValues(indices: transposed.columnIndices(column: 0)), [0, 1, 2, 3, 4, 5, 6, 7])
-        XCTAssertEqual(
-            transposed.collectValues(indices: transposed.columnIndices(column: 1)),
-            [8, 9, 10, 11, 12, 13, 14, 15])
+        #expect(transposed.collectValues(indices: transposed.rowIndices(row: 0)) == [0, 8])
+        #expect(transposed.collectValues(indices: transposed.rowIndices(row: 7)) == [7, 15])
+        #expect(transposed.collectValues(indices: transposed.columnIndices(column: 0)) == [0, 1, 2, 3, 4, 5, 6, 7])
+        #expect(
+            transposed.collectValues(indices: transposed.columnIndices(column: 1)) ==
+                [8, 9, 10, 11, 12, 13, 14, 15])
     }
 
-    func testResizeColumn() {
+    @Test
+    func resizeColumn() {
         var array = Array2d(data: [Int](0..<6), rowCount: 2, columnCount: 3)
 
         array.resizeColumn(newColumnCount: 5, defaultValue: 99)
         let newData: [Int] = [0, 1, 2, 99, 99, 3, 4, 5, 99, 99]
-        XCTAssertEqual(array, Array2d(data: newData, rowCount: 2, columnCount: 5))
+        #expect(array == Array2d(data: newData, rowCount: 2, columnCount: 5))
 
         array.resizeColumn(newColumnCount: 3)
-        XCTAssertEqual(array, Array2d(data: [Int](0..<6), rowCount: 2, columnCount: 3))
+        #expect(array == Array2d(data: [Int](0..<6), rowCount: 2, columnCount: 3))
     }
 
-    func testRemoveLastRows() {
+    @Test
+    func removeLastRows() {
         let data = [Int](0..<32)
         var array = Array2d(data: data, rowCount: 4, columnCount: 8)
 
         array.removeLastRows(2)
-        XCTAssertEqual(array, Array2d(data: [Int](0..<16), rowCount: 2, columnCount: 8))
+        #expect(array == Array2d(data: [Int](0..<16), rowCount: 2, columnCount: 8))
 
         array.removeLastRows(1)
-        XCTAssertEqual(array, Array2d(data: [Int](0..<8), rowCount: 1, columnCount: 8))
+        #expect(array == Array2d(data: [Int](0..<8), rowCount: 1, columnCount: 8))
 
         array.removeLastRows(1)
-        XCTAssertEqual(array, Array2d(data: [], rowCount: 0, columnCount: 8))
+        #expect(array == Array2d(data: [], rowCount: 0, columnCount: 8))
     }
 
-    func testAppendRows() {
+    @Test
+    func appendRows() {
         let data = [Int](0..<32)
         var array = Array2d(data: data, rowCount: 4, columnCount: 8)
         array.append(rows: [])
-        XCTAssertEqual(array, Array2d(data: data, rowCount: 4, columnCount: 8))
+        #expect(array == Array2d(data: data, rowCount: 4, columnCount: 8))
 
         array.append(rows: [32, 33, 34, 35, 36, 37, 38, 39])
-        XCTAssertEqual(array, Array2d(data: [Int](0..<40), rowCount: 5, columnCount: 8))
+        #expect(array == Array2d(data: [Int](0..<40), rowCount: 5, columnCount: 8))
 
         array.append(rows: Array(40..<56))
-        XCTAssertEqual(array, Array2d(data: [Int](0..<56), rowCount: 7, columnCount: 8))
+        #expect(array == Array2d(data: [Int](0..<56), rowCount: 7, columnCount: 8))
     }
 
-    func testMap() {
+    @Test
+    func map() {
         let data = [Int](0..<32)
         let array = Array2d(data: data, rowCount: 4, columnCount: 8)
 
         let arrayPlus1 = array.map { UInt($0) + 1 }
         let expected = Array2d(data: [UInt](1..<33), rowCount: 4, columnCount: 8)
-        XCTAssertEqual(arrayPlus1, expected)
+        #expect(arrayPlus1 == expected)
 
         let roundtripArray = arrayPlus1.map { Int($0 - 1) }
-        XCTAssertEqual(roundtripArray, array)
+        #expect(roundtripArray == array)
     }
 }

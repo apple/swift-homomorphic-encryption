@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,33 +13,36 @@
 // limitations under the License.
 
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-final class NttTests: XCTestCase {
-    func testIsPrimitiveRootOfUnity() {
-        XCTAssertTrue(UInt32(12).isPrimitiveRootOfUnity(degree: 2, modulus: 13))
-        XCTAssertFalse(UInt32(11).isPrimitiveRootOfUnity(degree: 2, modulus: 13))
-        XCTAssertFalse(UInt32(12).isPrimitiveRootOfUnity(degree: 4, modulus: 13))
+@Suite
+struct NttTests {
+    @Test
+    func isPrimitiveRootOfUnity() {
+        #expect(UInt32(12).isPrimitiveRootOfUnity(degree: 2, modulus: 13))
+        #expect(!UInt32(11).isPrimitiveRootOfUnity(degree: 2, modulus: 13))
+        #expect(!UInt32(12).isPrimitiveRootOfUnity(degree: 4, modulus: 13))
 
-        XCTAssertTrue(UInt64(28).isPrimitiveRootOfUnity(degree: 2, modulus: 29))
-        XCTAssertTrue(UInt64(12).isPrimitiveRootOfUnity(degree: 4, modulus: 29))
-        XCTAssertFalse(UInt64(12).isPrimitiveRootOfUnity(degree: 2, modulus: 29))
-        XCTAssertFalse(UInt64(12).isPrimitiveRootOfUnity(degree: 8, modulus: 29))
+        #expect(UInt64(28).isPrimitiveRootOfUnity(degree: 2, modulus: 29))
+        #expect(UInt64(12).isPrimitiveRootOfUnity(degree: 4, modulus: 29))
+        #expect(!UInt64(12).isPrimitiveRootOfUnity(degree: 2, modulus: 29))
+        #expect(!UInt64(12).isPrimitiveRootOfUnity(degree: 8, modulus: 29))
 
-        XCTAssertTrue(UInt64(1_234_565_440).isPrimitiveRootOfUnity(degree: 2, modulus: 1_234_565_441))
-        XCTAssertTrue(UInt64(960_907_033).isPrimitiveRootOfUnity(degree: 8, modulus: 1_234_565_441))
-        XCTAssertTrue(UInt64(1_180_581_915).isPrimitiveRootOfUnity(degree: 16, modulus: 1_234_565_441))
-        XCTAssertFalse(UInt64(1_180_581_915).isPrimitiveRootOfUnity(degree: 32, modulus: 1_234_565_441))
-        XCTAssertFalse(UInt64(1_180_581_915).isPrimitiveRootOfUnity(degree: 8, modulus: 1_234_565_441))
-        XCTAssertFalse(UInt64(1_180_581_915).isPrimitiveRootOfUnity(degree: 2, modulus: 1_234_565_441))
+        #expect(UInt64(1_234_565_440).isPrimitiveRootOfUnity(degree: 2, modulus: 1_234_565_441))
+        #expect(UInt64(960_907_033).isPrimitiveRootOfUnity(degree: 8, modulus: 1_234_565_441))
+        #expect(UInt64(1_180_581_915).isPrimitiveRootOfUnity(degree: 16, modulus: 1_234_565_441))
+        #expect(!UInt64(1_180_581_915).isPrimitiveRootOfUnity(degree: 32, modulus: 1_234_565_441))
+        #expect(!UInt64(1_180_581_915).isPrimitiveRootOfUnity(degree: 8, modulus: 1_234_565_441))
+        #expect(!UInt64(1_180_581_915).isPrimitiveRootOfUnity(degree: 2, modulus: 1_234_565_441))
     }
 
-    func testMinPrimitiveRootOfUnity() {
-        XCTAssertEqual(UInt32(11).minPrimitiveRootOfUnity(degree: 2), 10)
-        XCTAssertEqual(UInt32(29).minPrimitiveRootOfUnity(degree: 2), 28)
-        XCTAssertEqual(UInt32(29).minPrimitiveRootOfUnity(degree: 4), 12)
-        XCTAssertEqual(UInt64(1_234_565_441).minPrimitiveRootOfUnity(degree: 2), 1_234_565_440)
-        XCTAssertEqual(UInt64(1_234_565_441).minPrimitiveRootOfUnity(degree: 8), 249_725_733)
+    @Test
+    func minPrimitiveRootOfUnity() {
+        #expect(UInt32(11).minPrimitiveRootOfUnity(degree: 2) == 10)
+        #expect(UInt32(29).minPrimitiveRootOfUnity(degree: 2) == 28)
+        #expect(UInt32(29).minPrimitiveRootOfUnity(degree: 4) == 12)
+        #expect(UInt64(1_234_565_441).minPrimitiveRootOfUnity(degree: 2) == 1_234_565_440)
+        #expect(UInt64(1_234_565_441).minPrimitiveRootOfUnity(degree: 8) == 249_725_733)
     }
 
     private func runNttTest<T: ScalarType>(
@@ -59,15 +62,16 @@ final class NttTests: XCTestCase {
         let polyCoeff = PolyRq<T, Coeff>(context: context, data: coeffData)
         let polyEval = PolyRq<T, Eval>(context: context, data: evalData)
 
-        XCTAssertEqual(try polyCoeff.forwardNtt(), polyEval)
-        XCTAssertEqual(try polyEval.inverseNtt(), polyCoeff)
-        XCTAssertEqual(try polyEval.convertToCoeffFormat(), polyCoeff)
-        XCTAssertEqual(try polyCoeff.convertToCoeffFormat(), polyCoeff)
-        XCTAssertEqual(try polyEval.convertToEvalFormat(), polyEval)
-        XCTAssertEqual(try polyCoeff.convertToEvalFormat(), polyEval)
+        #expect(try polyCoeff.forwardNtt() == polyEval)
+        #expect(try polyEval.inverseNtt() == polyCoeff)
+        #expect(try polyEval.convertToCoeffFormat() == polyCoeff)
+        #expect(try polyCoeff.convertToCoeffFormat() == polyCoeff)
+        #expect(try polyEval.convertToEvalFormat() == polyEval)
+        #expect(try polyCoeff.convertToEvalFormat() == polyEval)
     }
 
-    func testNtt2() throws {
+    @Test
+    func ntt2() throws {
         try runNttTest(moduli: [UInt32(97)], coeffData: [[0, 0]], evalData: [[0, 0]])
         try runNttTest(moduli: [UInt32(97)], coeffData: [[1, 0]], evalData: [[1, 1]])
 
@@ -76,7 +80,8 @@ final class NttTests: XCTestCase {
         try runNttTest(moduli: [UInt32(97), UInt32(113)], coeffData: [[1, 2], [3, 4]], evalData: [[45, 54], [63, 56]])
     }
 
-    func testNtt4() throws {
+    @Test
+    func ntt4() throws {
         try runNttTest(moduli: [UInt32(97)], coeffData: [[0, 0, 0, 0]], evalData: [[0, 0, 0, 0]])
         try runNttTest(moduli: [UInt32(97)], coeffData: [[1, 0, 0, 0]], evalData: [[1, 1, 1, 1]])
         try runNttTest(moduli: [UInt32(97)], coeffData: [[1, 2, 3, 4]], evalData: [[30, 7, 64, 0]])
@@ -84,7 +89,8 @@ final class NttTests: XCTestCase {
                        coeffData: [[1, 2, 3, 4], [5, 6, 7, 8]], evalData: [[30, 7, 64, 0], [108, 31, 103, 4]])
     }
 
-    func testNtt8() throws {
+    @Test
+    func ntt8() throws {
         try runNttTest(
             moduli: [UInt32(4_194_353)],
             coeffData: [[0, 0, 0, 0, 0, 0, 0, 0]],
@@ -106,7 +112,8 @@ final class NttTests: XCTestCase {
             ])
     }
 
-    func testNtt16() throws {
+    @Test
+    func ntt16() throws {
         // modulus near top of range
         try runNttTest(
             moduli: [UInt32(536_870_849)],
@@ -155,7 +162,8 @@ final class NttTests: XCTestCase {
             ]])
     }
 
-    func testNtt32() throws {
+    @Test
+    func ntt32() throws {
         let modulus = UInt32(769)
 
         let zeros = [UInt32](repeating: 0, count: 32)
@@ -172,7 +180,8 @@ final class NttTests: XCTestCase {
         try runNttTest(moduli: [modulus], coeffData: [coeffData], evalData: [evalData])
     }
 
-    func testNtt4096() throws {
+    @Test
+    func ntt4096() throws {
         let modulus = UInt64(557_057)
         let degree = 4096
         let zeros = [UInt64](repeating: 0, count: degree)
@@ -182,7 +191,8 @@ final class NttTests: XCTestCase {
         try runNttTest(moduli: [modulus], coeffData: [oneHot], evalData: [Array(repeating: 1, count: degree)])
     }
 
-    func testNttRoundtrip() throws {
+    @Test
+    func nttRoundtrip() throws {
         let degree = 256
         // Test large modulus
         let moduli = try UInt64.generatePrimes(
@@ -193,10 +203,11 @@ final class NttTests: XCTestCase {
         let polyCoeff = PolyRq<_, Coeff>.random(context: context)
         let polyEval = try polyCoeff.forwardNtt()
         let polyRoundtrip = try polyEval.inverseNtt()
-        XCTAssertEqual(polyRoundtrip, polyCoeff)
+        #expect(polyRoundtrip == polyCoeff)
     }
 
-    func testNttMatchesNaive() throws {
+    @Test
+    func nttMatchesNaive() throws {
         func naiveMultiplication<T: ScalarType>(_ x: [T], _ y: [T], modulus: T) -> [T] {
             precondition(x.count == y.count)
             let n = x.count
@@ -236,6 +247,6 @@ final class NttTests: XCTestCase {
         let prodNtt = try nttMultiplication(x, y)
         let prodNaive = naiveMultiplication(x.data.data, y.data.data, modulus: moduli[0])
 
-        XCTAssertEqual(prodNtt.data.data, prodNaive)
+        #expect(prodNtt.data.data == prodNaive)
     }
 }

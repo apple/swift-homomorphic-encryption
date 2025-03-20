@@ -15,16 +15,18 @@
 import _TestUtilities
 import HomomorphicEncryption
 @testable import PrivateInformationRetrieval
-import XCTest
+import Testing
 
-class MulPirTests: XCTestCase {
-    func testEvaluationKeyConfig() throws {
+@Suite
+struct MulPirTests {
+    @Test
+    func evaluationKeyConfig() throws {
         func runTest(queryCount: Int, degree: Int, _ keyCompression: PirKeyCompressionStrategy, expected: [Int]) {
             let evalKeyConfig = MulPir<Bfv<UInt32>>.evaluationKeyConfig(
                 expandedQueryCount: queryCount,
                 degree: degree,
                 keyCompression: keyCompression)
-            XCTAssertEqual(evalKeyConfig.galoisElements, expected)
+            #expect(evalKeyConfig.galoisElements == expected)
         }
         // noCompression
         do {
@@ -99,43 +101,32 @@ class MulPirTests: XCTestCase {
 
             let expandedList: [Bool] = decodedQuery.map { decodedCiphertext in
                 // first is either zero or one
-                XCTAssert(decodedCiphertext[0] == 0 || decodedCiphertext[0] == 1)
+                #expect(decodedCiphertext[0] == 0 || decodedCiphertext[0] == 1)
                 // the rest are all zero
-                XCTAssert(decodedCiphertext.dropFirst().allSatisfy { $0 == 0 })
+                #expect(decodedCiphertext.dropFirst().allSatisfy { $0 == 0 })
                 return decodedCiphertext[0] == 1
             }
-            XCTAssertEqual(expandedList.count, outputCount)
+            #expect(expandedList.count == outputCount)
             // right number of set ciphertexts
-            XCTAssertEqual(expandedList.count { $0 }, batchSize * parameter.dimensionCount)
+            #expect(expandedList.count { $0 } == batchSize * parameter.dimensionCount)
 
             // right coordinates are set
             var offset = 0
             for queryIndex in queryIndices {
                 let coordinates = try client.computeCoordinates(at: queryIndex)
                 for (coord, dimension) in zip(coordinates, parameter.dimensions) {
-                    XCTAssert(expandedList[offset + coord])
+                    #expect(expandedList[offset + coord])
                     offset += dimension
                 }
             }
         }
     }
 
-    func testQueryGenerationNoCompression() throws {
-        try queryGenerationTest(scheme: NoOpScheme.self, .noCompression)
-        try queryGenerationTest(scheme: Bfv<UInt32>.self, .noCompression)
-        try queryGenerationTest(scheme: Bfv<UInt64>.self, .noCompression)
-    }
-
-    func testQueryGenerationHybridCompression() throws {
-        try queryGenerationTest(scheme: NoOpScheme.self, .hybridCompression)
-        try queryGenerationTest(scheme: Bfv<UInt32>.self, .hybridCompression)
-        try queryGenerationTest(scheme: Bfv<UInt64>.self, .hybridCompression)
-    }
-
-    func testQueryGenerationMaxCompression() throws {
-        try queryGenerationTest(scheme: NoOpScheme.self, .maxCompression)
-        try queryGenerationTest(scheme: Bfv<UInt32>.self, .maxCompression)
-        try queryGenerationTest(scheme: Bfv<UInt64>.self, .maxCompression)
+    @Test(arguments: PirKeyCompressionStrategy.allCases)
+    func queryGeneration(keyCompression: PirKeyCompressionStrategy) throws {
+        try queryGenerationTest(scheme: NoOpScheme.self, keyCompression)
+        try queryGenerationTest(scheme: Bfv<UInt32>.self, keyCompression)
+        try queryGenerationTest(scheme: Bfv<UInt64>.self, keyCompression)
     }
 
     private func getDatabaseForTesting(
@@ -182,34 +173,20 @@ class MulPirTests: XCTestCase {
             let response = try server.computeResponse(to: query, using: evaluationKey)
             let decoded = try client.decrypt(response: response, at: queryIndices, using: secretKey)
             for index in queryIndices.indices {
-                XCTAssertEqual(decoded[index], database[queryIndices[index]])
+                #expect(decoded[index] == database[queryIndices[index]])
             }
         }
     }
 
-    func testQueryAndResponseNoKeyCompression() throws {
-        try queryAndResponseTest(scheme: NoOpScheme.self, .noCompression)
-        try queryAndResponseTest(scheme: Bfv<UInt32>.self, .noCompression)
-        try queryAndResponseTest(scheme: Bfv<UInt64>.self, .noCompression)
+    @Test(arguments: PirKeyCompressionStrategy.allCases)
+    func queryAndResponse(keyCompression: PirKeyCompressionStrategy) throws {
+        try queryAndResponseTest(scheme: NoOpScheme.self, keyCompression)
+        try queryAndResponseTest(scheme: Bfv<UInt32>.self, keyCompression)
+        try queryAndResponseTest(scheme: Bfv<UInt64>.self, keyCompression)
     }
 
-    func testQueryAndResponseHybridCompression() throws {
-        try queryAndResponseTest(
-            scheme: NoOpScheme.self,
-            .hybridCompression)
-        try queryAndResponseTest(scheme: Bfv<UInt32>.self, .hybridCompression)
-        try queryAndResponseTest(scheme: Bfv<UInt64>.self, .hybridCompression)
-    }
-
-    func testQueryAndResponseMaxCompression() throws {
-        try queryAndResponseTest(
-            scheme: NoOpScheme.self,
-            .maxCompression)
-        try queryAndResponseTest(scheme: Bfv<UInt32>.self, .maxCompression)
-        try queryAndResponseTest(scheme: Bfv<UInt64>.self, .maxCompression)
-    }
-
-    func testComputeCoordinates() throws {
+    @Test
+    func computeCoordinates() throws {
         let context: Context<NoOpScheme> = try TestUtils.getTestContext()
         let evalKeyConfig = EvaluationKeyConfig()
         // two dimensional case
@@ -234,7 +211,7 @@ class MulPirTests: XCTestCase {
             ]
 
             for vector in vectors {
-                XCTAssertEqual(try client.computeCoordinates(at: vector.0), vector.1)
+                #expect(try client.computeCoordinates(at: vector.0) == vector.1)
             }
         }
 
@@ -261,7 +238,7 @@ class MulPirTests: XCTestCase {
             ]
 
             for vector in vectors {
-                XCTAssertEqual(try client.computeCoordinates(at: vector.0), vector.1)
+                #expect(try client.computeCoordinates(at: vector.0) == vector.1)
             }
         }
     }

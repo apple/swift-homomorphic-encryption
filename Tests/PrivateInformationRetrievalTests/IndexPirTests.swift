@@ -15,10 +15,12 @@
 import _TestUtilities
 import HomomorphicEncryption
 @testable import PrivateInformationRetrieval
-import XCTest
+import Testing
 
-class IndexPirTests: XCTestCase {
-    func testGenerateParameter() throws {
+@Suite
+struct IndexPirTests {
+    @Test
+    func generateParameter() throws {
         let context: Context<Bfv<UInt64>> = try TestUtils.getTestContext()
         // unevenDimensions: false
         do {
@@ -29,7 +31,7 @@ class IndexPirTests: XCTestCase {
                                             unevenDimensions: false,
                                             keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
-            XCTAssertEqual(parameter.dimensions, [4, 4])
+            #expect(parameter.dimensions == [4, 4])
         }
         do {
             let config = try IndexPirConfig(entryCount: 10,
@@ -39,7 +41,7 @@ class IndexPirTests: XCTestCase {
                                             unevenDimensions: false,
                                             keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
-            XCTAssertEqual(parameter.dimensions, [4, 3])
+            #expect(parameter.dimensions == [4, 3])
         }
         // unevenDimensions: true
         do {
@@ -50,7 +52,7 @@ class IndexPirTests: XCTestCase {
                                             unevenDimensions: true,
                                             keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
-            XCTAssertEqual(parameter.dimensions, [5, 3])
+            #expect(parameter.dimensions == [5, 3])
         }
         do {
             let config = try IndexPirConfig(entryCount: 15,
@@ -60,7 +62,7 @@ class IndexPirTests: XCTestCase {
                                             unevenDimensions: true,
                                             keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
-            XCTAssertEqual(parameter.dimensions, [5, 3])
+            #expect(parameter.dimensions == [5, 3])
         }
         do {
             let config = try IndexPirConfig(entryCount: 17,
@@ -70,7 +72,7 @@ class IndexPirTests: XCTestCase {
                                             unevenDimensions: true,
                                             keyCompression: .noCompression)
             let parameter = MulPir.generateParameter(config: config, with: context)
-            XCTAssertEqual(parameter.dimensions, [9, 2])
+            #expect(parameter.dimensions == [9, 2])
         }
         // no key compression
         do {
@@ -84,7 +86,7 @@ class IndexPirTests: XCTestCase {
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
                 hasRelinearizationKey: true)
-            XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)
+            #expect(parameter.evaluationKeyConfig == evalKeyConfig)
         }
         // hybrid key compression
         do {
@@ -98,7 +100,7 @@ class IndexPirTests: XCTestCase {
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
                 hasRelinearizationKey: true)
-            XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)
+            #expect(parameter.evaluationKeyConfig == evalKeyConfig)
         }
         // max key compression
         do {
@@ -112,7 +114,7 @@ class IndexPirTests: XCTestCase {
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9],
                 hasRelinearizationKey: true)
-            XCTAssertEqual(parameter.evaluationKeyConfig, evalKeyConfig)
+            #expect(parameter.evaluationKeyConfig == evalKeyConfig)
         }
     }
 
@@ -150,11 +152,11 @@ class IndexPirTests: XCTestCase {
             let query = try client.generateQuery(at: queryIndices, using: secretKey)
             let response = try server.computeResponse(to: query, using: evaluationKey)
             if Server.Scheme.self != NoOpScheme.self {
-                XCTAssertFalse(response.isTransparent())
+                #expect(!response.isTransparent())
             }
             let decryptedResponse = try client.decrypt(response: response, at: queryIndices, using: secretKey)
             for index in queryIndices.indices {
-                XCTAssertEqual(decryptedResponse[index], database[queryIndices[index]])
+                #expect(decryptedResponse[index] == database[queryIndices[index]])
             }
         }
     }
@@ -213,7 +215,8 @@ class IndexPirTests: XCTestCase {
         try indexPirTest(server: MulPirServer<Scheme>.self, client: MulPirClient<Scheme>.self)
     }
 
-    func testIndexPir() throws {
+    @Test
+    func indexPir() throws {
         try mulIndexPirTest(scheme: NoOpScheme.self)
         try mulIndexPirTest(scheme: Bfv<UInt32>.self)
         try mulIndexPirTest(scheme: Bfv<UInt64>.self)

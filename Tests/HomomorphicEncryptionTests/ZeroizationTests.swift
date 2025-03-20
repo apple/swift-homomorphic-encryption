@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,16 +13,18 @@
 // limitations under the License.
 
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-class ZeroizationTests: XCTestCase {
-    func testZeroize() {
+@Suite
+struct ZeroizationTests {
+    @Test
+    func zeroize() {
         var buffer = [UInt32](1...10)
         let size = 5 * MemoryLayout<UInt32>.size
         buffer.withUnsafeMutableBytes { dataPointer in
             // swiftlint:disable:next force_unwrapping
             HomomorphicEncryption.zeroize(dataPointer.baseAddress!, size)
         }
-        XCTAssertEqual(buffer, [0, 0, 0, 0, 0, 6, 7, 8, 9, 10])
+        #expect(buffer == [0, 0, 0, 0, 0, 6, 7, 8, 9, 10])
     }
 }

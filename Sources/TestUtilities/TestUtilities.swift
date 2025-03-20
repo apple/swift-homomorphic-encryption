@@ -37,36 +37,6 @@ extension BinaryFloatingPoint {
     }
 }
 
-/// Validates two expressions are close to each other.
-///
-/// Asserts `abs(a-b) <= abs_tol + rel_tol * abs(b))` where `a, b` are the results of evaluating two expressions.
-/// - Parameters:
-///   - expression1: An expression returning floating-point type `T`.
-///   - expression2: An expression returning floating-point type `T`.
-///   - relativeTolerance: An optional relative tolerance to enforce.
-///   - absoluteTolerance: An optional absolute tolerance to enforce.
-///   - message: An optional description of a failure.
-///   - file: The file where the failure occurs. The default is the filename of the test case where you call this
-/// function.
-///   - line: The line number where the failure occurs. The default is the line number where you call this function.
-package func XCTAssertIsClose<T: BinaryFloatingPoint>(
-    _ expression1: @autoclosure () throws -> T,
-    _ expression2: @autoclosure () throws -> T,
-    relativeTolerance: T = T(1e-5),
-    absoluteTolerance: T = T(1e-8),
-    _ message: @autoclosure () -> String = "",
-    _ file: StaticString = #filePath,
-    _ line: UInt = #line) rethrows
-{
-    let a = try expression1()
-    XCTAssert(a.isFinite)
-    let b = try expression2()
-    XCTAssert(b.isFinite)
-
-    let isClose = abs(a - b) <= absoluteTolerance + relativeTolerance * abs(b)
-    XCTAssert(isClose, "\(a) is not close to \(b). \(message())", file: file, line: line)
-}
-
 /// Asserts that an expression throws a specified error.
 /// - Parameters:
 ///   - expression: The expression to evaluate.
@@ -208,7 +178,7 @@ extension TestUtils {
     }
 
     package static func uniformnessTest<T>(poly: PolyRq<T, some Any>) {
-        XCTAssert(poly.hasValidData())
+        #expect(poly.hasValidData())
         for (rnsIndex, modulus) in poly.moduli.enumerated() {
             var valueCounts = [T: Int]()
             for coeff in poly.poly(rnsIndex: rnsIndex) {
@@ -226,7 +196,10 @@ extension TestUtils {
                     valueCounts.count { _, value in value == binCount }
                 }
 
-                XCTAssertIsClose(expectedCount, Double(observedCount), relativeTolerance: 0.2, absoluteTolerance: 11.0)
+                #expect(expectedCount.isClose(
+                    to: Double(observedCount),
+                    relativeTolerance: 0.2,
+                    absoluteTolerance: 11.0))
             }
         }
     }
@@ -274,10 +247,10 @@ extension TestUtils {
     }
 
     package static func centeredBinomialDistributionTest<T>(poly: PolyRq<T, some Any>) {
-        XCTAssert(poly.hasValidData())
+        #expect(poly.hasValidData())
         let variance = computeVariance(poly: poly)
         let bounds = 9.0..<12.0
-        XCTAssert(bounds.contains(variance), "variance \(variance) not in bounds \(bounds)")
+        #expect(bounds.contains(variance), "variance \(variance) not in bounds \(bounds)")
 
         // absolute value should be small
         let absoluteValueBound = Int64(18)
@@ -298,17 +271,17 @@ extension TestUtils {
                 valueCounts[bigint, default: 0] += 1
                 sum += bigint
             } else {
-                XCTFail("RNS coefficient too large: \(crtForm)")
+                Issue.record("RNS coefficient too large: \(crtForm)")
             }
         }
 
         // Check distribution is zero-mean
         let mean = Double(sum) / Double(poly.degree)
-        XCTAssertLessThan(abs(mean), 0.2)
+        #expect(abs(mean) < 0.2)
     }
 
     package static func ternaryDistributionTest(poly: PolyRq<some Any, some Any>, pValue: Double) {
-        XCTAssert(poly.hasValidData())
+        #expect(poly.hasValidData())
         // Maps {-1, 0, 1} to coefficient count
         var valueCounts = [Int: Int]()
 
@@ -322,7 +295,7 @@ extension TestUtils {
             case crtMinusOne: valueCounts[-1, default: 0] += 1
             case crtZero: valueCounts[0, default: 0] += 1
             case crtOne: valueCounts[1, default: 0] += 1
-            default: XCTFail("Invalid value in polynomial, residues: \(crt)")
+            default: Issue.record("Invalid value in polynomial, residues: \(crt)")
             }
         }
 
@@ -338,7 +311,7 @@ extension TestUtils {
         // F(x; 2) = 1 - e^(-x / 2)
         // observeved P-value = 1 - F(x; 2) => observed P-value = e^(-x / 2)
         let observedPValue = Double.exp(-chiSquareStat / 2)
-        XCTAssertGreaterThan(observedPValue, pValue)
+        #expect(observedPValue > pValue)
     }
 }
 

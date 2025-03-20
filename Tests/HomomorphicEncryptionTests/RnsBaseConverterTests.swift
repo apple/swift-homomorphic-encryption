@@ -14,20 +14,22 @@
 
 import _TestUtilities
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-final class RnsBaseConverterTests: XCTestCase {
-    func testConvertApproximate() throws {
+@Suite
+struct RnsBaseConverterTests {
+    @Test
+    func convertApproximate() throws {
         func runTestConvertApproximate<T: ScalarType>(
             _: T.Type,
             degree: Int,
             significantBitCounts: [Int]) throws
         {
-            let inputSignificantBitCounts = try significantBitCounts + [XCTUnwrap(significantBitCounts.last)]
+            let inputSignificantBitCounts = try significantBitCounts + [#require(significantBitCounts.last)]
             var inputModuli = try T.generatePrimes(
                 significantBitCounts: inputSignificantBitCounts,
                 preferringSmall: true)
-            let t = try XCTUnwrap(inputModuli.popLast())
+            let t = try #require(inputModuli.popLast() as Optional)
             let q: T.DoubleWidth = inputModuli.product()
 
             let inputContext = try PolyContext<T>(degree: degree, moduli: inputModuli)
@@ -46,7 +48,7 @@ final class RnsBaseConverterTests: XCTestCase {
                 let possibleX = (0..<inputContext.moduli.count).map { aX in
                     (x + T.DoubleWidth(aX) * q) % T.DoubleWidth(t)
                 }
-                XCTAssert(possibleX.contains(T.DoubleWidth(coeff)))
+                #expect(possibleX.contains(T.DoubleWidth(coeff)))
             }
         }
 
@@ -63,7 +65,8 @@ final class RnsBaseConverterTests: XCTestCase {
         try runTestConvertApproximate(UInt64.self, degree: 4, significantBitCounts: [20, 20, 20, 20, 20])
     }
 
-    func testCrtCompose() throws {
+    @Test
+    func crtCompose() throws {
         func runTestCrtCompose<T: ScalarType>(
             _: T.Type,
             degree: Int,
@@ -84,7 +87,7 @@ final class RnsBaseConverterTests: XCTestCase {
             for (coeffIndex, composed) in composed.enumerated() {
                 let roundTripValues = TestUtils.crtDecompose(value: composed, moduli: inputContext.moduli)
                 let rnsCoeffs = poly.coefficient(coeffIndex: coeffIndex)
-                XCTAssertEqual(roundTripValues, rnsCoeffs)
+                #expect(roundTripValues == rnsCoeffs)
             }
         }
 

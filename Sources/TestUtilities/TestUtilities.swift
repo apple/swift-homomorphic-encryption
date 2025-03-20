@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Foundation
 import HomomorphicEncryption
 import RealModule
 import Testing
-import XCTest
 
 /// Computes whether `self` is close to another floating-point value.
 ///
@@ -34,26 +34,6 @@ extension BinaryFloatingPoint {
             return false
         }
         return abs(self - value) <= absoluteTolerance + relativeTolerance * abs(value)
-    }
-}
-
-/// Asserts that an expression throws a specified error.
-/// - Parameters:
-///   - expression: The expression to evaluate.
-///   - error: The expected thrown error.
-///   - message: An optional description of a failure.
-///   - file: The file where the failure occurs. The default is the filename of the test case where you call this
-/// function.
-///   - line: The line number where the failure occurs. The default is the line number where you call this function.
-package func XCTAssertThrowsError<E: Error & Equatable>(
-    _ expression: @autoclosure () throws -> some Any,
-    error: E,
-    _ message: @autoclosure () -> String = "",
-    file: StaticString = #filePath,
-    line: UInt = #line)
-{
-    XCTAssertThrowsError(try expression(), message(), file: file, line: line) { foundError in
-        XCTAssertEqual(foundError as? E, error, message(), file: file, line: line)
     }
 }
 

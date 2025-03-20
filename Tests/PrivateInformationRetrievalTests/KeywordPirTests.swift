@@ -15,7 +15,7 @@
 import _TestUtilities
 import HomomorphicEncryption
 @testable import PrivateInformationRetrieval
-import XCTest
+import Testing
 
 extension Response {
     func isTransparent() -> Bool {
@@ -24,8 +24,10 @@ extension Response {
     }
 }
 
-class KeywordPirTests: XCTestCase {
-    func testProcessedDatabaseSerialization() throws {
+@Suite
+struct KeywordPirTests {
+    @Test
+    func processedDatabaseSerialization() throws {
         func runTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
             encryptionParameters: EncryptionParameters<PirServer.Scheme>,
             server _: PirServer.Type,
@@ -45,12 +47,12 @@ class KeywordPirTests: XCTestCase {
                                                                     config: keywordConfig,
                                                                     with: testContext)
             // Ensure we're testing nil plaintexts
-            XCTAssertTrue(processed.database.plaintexts.contains { plaintext in plaintext == nil })
+            #expect(processed.database.plaintexts.contains { plaintext in plaintext == nil })
             let serialized = try processed.database.serialize()
             let loaded = try ProcessedDatabase<PirServer.Scheme>(
                 from: serialized,
                 context: testContext)
-            XCTAssertEqual(loaded, processed.database)
+            #expect(loaded == processed.database)
         }
         try runTest(encryptionParameters: TestUtils.getTestEncryptionParameters(), server:
             MulPirServer<Bfv<UInt32>>.self, client: MulPirClient<Bfv<UInt32>>.self)
@@ -71,7 +73,7 @@ class KeywordPirTests: XCTestCase {
         let processed = try KeywordPirServer<PirServer>.process(database: testDatabase,
                                                                 config: keywordConfig,
                                                                 with: testContext)
-        XCTAssertGreaterThan(processed.pirParameter.dimensions.product(), 1, "trivial PIR")
+        #expect(processed.pirParameter.dimensions.product() > 1, "trivial PIR")
 
         let server = try KeywordPirServer<PirServer>(
             context: testContext,
@@ -86,22 +88,23 @@ class KeywordPirTests: XCTestCase {
             let query = try client.generateQuery(at: testDatabase[index].keyword, using: secretKey)
             let response = try server.computeResponse(to: query, using: evaluationKey)
             if PirServer.Scheme.self != NoOpScheme.self {
-                XCTAssertFalse(response.isTransparent())
+                #expect(!response.isTransparent())
             }
             let result = try client.decrypt(response: response, at: testDatabase[index].keyword, using: secretKey)
-            XCTAssertEqual(result, testDatabase[index].value)
+            #expect(result == testDatabase[index].value)
         }
         let noKey = PirTestUtils.generateRandomData(size: 5)
         let query = try client.generateQuery(at: noKey, using: secretKey)
         let response = try server.computeResponse(to: query, using: evaluationKey)
         if PirServer.Scheme.self != NoOpScheme.self {
-            XCTAssertFalse(response.isTransparent())
+            #expect(!response.isTransparent())
         }
         let result = try client.decrypt(response: response, at: noKey, using: secretKey)
-        XCTAssertNil(result)
+        #expect(result == nil)
     }
 
-    func testKeywordPirMulPir1HashFunction() throws {
+    @Test
+    func keywordPirMulPir1HashFunction() throws {
         let cuckooTableConfig = try CuckooTableConfig(
             hashFunctionCount: 1,
             maxEvictionCount: 100,
@@ -129,7 +132,8 @@ class KeywordPirTests: XCTestCase {
             client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testKeywordPirMulPir3HashFunctions() throws {
+    @Test
+    func keywordPirMulPir3HashFunctions() throws {
         let cuckooTableConfig = try CuckooTableConfig(
             hashFunctionCount: 3,
             maxEvictionCount: 100,
@@ -156,7 +160,8 @@ class KeywordPirTests: XCTestCase {
             client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testKeywordPirMulPir1Dimension() throws {
+    @Test
+    func keywordPirMulPir1Dimension() throws {
         let keywordConfig = try KeywordPirConfig(
             dimensionCount: 1,
             cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
@@ -179,7 +184,8 @@ class KeywordPirTests: XCTestCase {
             client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testKeywordPirMulPir2Dimensions() throws {
+    @Test
+    func keywordPirMulPir2Dimensions() throws {
         let keywordConfig = try KeywordPirConfig(
             dimensionCount: 2,
             cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
@@ -202,7 +208,8 @@ class KeywordPirTests: XCTestCase {
             client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testKeywordPirMulPirHybridKeyCompression() throws {
+    @Test
+    func keywordPirMulPirHybridKeyCompression() throws {
         let keywordConfig = try KeywordPirConfig(
             dimensionCount: 2,
             cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
@@ -225,7 +232,8 @@ class KeywordPirTests: XCTestCase {
             client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testKeywordPirMulPirMaxKeyCompression() throws {
+    @Test
+    func keywordPirMulPirMaxKeyCompression() throws {
         let keywordConfig = try KeywordPirConfig(
             dimensionCount: 2,
             cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
@@ -248,7 +256,8 @@ class KeywordPirTests: XCTestCase {
             client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testKeywordPirMulPirLargerParameters() throws {
+    @Test
+    func keywordPirMulPirLargerParameters() throws {
         do {
             let noOpParameters = try EncryptionParameters<NoOpScheme>(from: PredefinedRlweParameters
                 .insecure_n_512_logq_4x60_logt_20)
@@ -293,7 +302,8 @@ class KeywordPirTests: XCTestCase {
         }
     }
 
-    func testKeywordPirFixedConfig() throws {
+    @Test
+    func keywordPirFixedConfig() throws {
         func runTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
             encryptionParameters: EncryptionParameters<PirServer.Scheme>,
             server _: PirServer.Type,
@@ -333,7 +343,7 @@ class KeywordPirTests: XCTestCase {
             let processed = try KeywordPirServer<PirServer>.process(database: testDatabase,
                                                                     config: keywordConfig,
                                                                     with: testContext)
-            XCTAssertEqual(processed.pirParameter, pirParameter)
+            #expect(processed.pirParameter == pirParameter)
             let server = try KeywordPirServer<PirServer>(
                 context: testContext,
                 processed: processed)
@@ -348,19 +358,19 @@ class KeywordPirTests: XCTestCase {
                 let query = try client.generateQuery(at: testDatabase[index].keyword, using: secretKey)
                 let response = try server.computeResponse(to: query, using: evaluationKey)
                 if PirServer.Scheme.self != NoOpScheme.self {
-                    XCTAssertFalse(response.isTransparent())
+                    #expect(!response.isTransparent())
                 }
                 let result = try client.decrypt(response: response, at: testDatabase[index].keyword, using: secretKey)
-                XCTAssertEqual(result, testDatabase[index].value)
+                #expect(result == testDatabase[index].value)
             }
             let noKey = PirTestUtils.generateRandomData(size: 5)
             let query = try client.generateQuery(at: noKey, using: secretKey)
             let response = try server.computeResponse(to: query, using: evaluationKey)
             if PirServer.Scheme.self != NoOpScheme.self {
-                XCTAssertFalse(response.isTransparent())
+                #expect(!response.isTransparent())
             }
             let result = try client.decrypt(response: response, at: noKey, using: secretKey)
-            XCTAssertNil(result)
+            #expect(result == nil)
         }
         try runTest(encryptionParameters: TestUtils.getTestEncryptionParameters(), server:
             MulPirServer<Bfv<UInt32>>.self, client: MulPirClient<Bfv<UInt32>>.self)
@@ -368,7 +378,8 @@ class KeywordPirTests: XCTestCase {
             MulPirServer<Bfv<UInt64>>.self, client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testInvalidArguments() throws {
+    @Test
+    func invalidArguments() throws {
         let cuckooConfig = try CuckooTableConfig(
             hashFunctionCount: 2,
             maxEvictionCount: 100,
@@ -383,15 +394,17 @@ class KeywordPirTests: XCTestCase {
             keywordPirConfig: keywordConfig)
         let encryptionParameters = try EncryptionParameters<Bfv<UInt32>>(
             from: .n_4096_logq_27_28_28_logt_5)
-        XCTAssertThrowsError(try ProcessKeywordDatabase.Arguments(
-            databaseConfig: databaseConfig,
-            encryptionParameters: encryptionParameters,
-            algorithm: PirAlgorithm.aclsPir, keyCompression: .noCompression,
-            trialsPerShard: 1),
-        error: PirError.invalidPirAlgorithm(PirAlgorithm.aclsPir))
+        #expect(throws: PirError.invalidPirAlgorithm(PirAlgorithm.aclsPir)) {
+            try ProcessKeywordDatabase.Arguments(
+                databaseConfig: databaseConfig,
+                encryptionParameters: encryptionParameters,
+                algorithm: PirAlgorithm.aclsPir, keyCompression: .noCompression,
+                trialsPerShard: 1)
+        }
     }
 
-    func testSharding() throws {
+    @Test
+    func sharding() throws {
         func runTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
             rlweParameters: PredefinedRlweParameters,
             server _: PirServer.Type,
@@ -427,7 +440,7 @@ class KeywordPirTests: XCTestCase {
                 rows: testDatabase,
                 with: args)
 
-            XCTAssertEqual(processed.shards.count, shardCount)
+            #expect(processed.shards.count == shardCount)
 
             let servers = try [String: KeywordPirServer<PirServer>](uniqueKeysWithValues: processed.shards
                 .map { shard in
@@ -450,25 +463,25 @@ class KeywordPirTests: XCTestCase {
             for index in shuffledValues.prefix(3) {
                 let keyword = testDatabase[index].keyword
                 let shardID = keyword.shardID(shardCount: shardCount)
-                let client = try XCTUnwrap(clients[shardID])
+                let client = try #require(clients[shardID])
                 let query = try client.generateQuery(at: testDatabase[index].keyword, using: secretKey)
-                let response = try XCTUnwrap(servers[shardID]).computeResponse(to: query, using: evaluationKey)
+                let response = try #require(servers[shardID]).computeResponse(to: query, using: evaluationKey)
                 if PirServer.Scheme.self != NoOpScheme.self {
-                    XCTAssertFalse(response.isTransparent())
+                    #expect(!response.isTransparent())
                 }
                 let result = try client.decrypt(response: response, at: testDatabase[index].keyword, using: secretKey)
-                XCTAssertEqual(result, testDatabase[index].value)
+                #expect(result == testDatabase[index].value)
             }
             let noKey = PirTestUtils.generateRandomData(size: 3)
             let shardID = noKey.shardID(shardCount: shardCount)
-            let client = try XCTUnwrap(clients[shardID])
+            let client = try #require(clients[shardID])
             let query = try client.generateQuery(at: noKey, using: secretKey)
-            let response = try XCTUnwrap(servers[shardID]).computeResponse(to: query, using: evaluationKey)
+            let response = try #require(servers[shardID]).computeResponse(to: query, using: evaluationKey)
             if PirServer.Scheme.self != NoOpScheme.self {
-                XCTAssertFalse(response.isTransparent())
+                #expect(!response.isTransparent())
             }
             let result = try client.decrypt(response: response, at: noKey, using: secretKey)
-            XCTAssertNil(result)
+            #expect(result == nil)
         }
 
         let rlweParameters = PredefinedRlweParameters.insecure_n_512_logq_4x60_logt_20
@@ -476,7 +489,8 @@ class KeywordPirTests: XCTestCase {
             MulPirServer<Bfv<UInt64>>.self, client: MulPirClient<Bfv<UInt64>>.self)
     }
 
-    func testLimitEntriesPerResponse() throws {
+    @Test
+    func limitEntriesPerResponse() throws {
         func runTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
             rlweParams: PredefinedRlweParameters,
             server _: PirServer.Type,
@@ -511,13 +525,13 @@ class KeywordPirTests: XCTestCase {
                 context: context)
             let secretKey = try context.generateSecretKey()
             let evaluationKey = try client.generateEvaluationKey(using: secretKey)
-            let randomKeyValuePair = try XCTUnwrap(testDatabase.randomElement())
+            let randomKeyValuePair = try #require(testDatabase.randomElement())
             let query = try client.generateQuery(at: randomKeyValuePair.keyword, using: secretKey)
             let response = try server.computeResponse(to: query, using: evaluationKey)
             let result = try client.decrypt(response: response, at: randomKeyValuePair.keyword, using: secretKey)
-            XCTAssertEqual(result, randomKeyValuePair.value)
+            #expect(result == randomKeyValuePair.value)
             let entriesFound = try client.countEntriesInResponse(response: response, using: secretKey)
-            XCTAssertLessThanOrEqual(entriesFound, numberOfEntriesPerResponse)
+            #expect(entriesFound <= numberOfEntriesPerResponse)
         }
         let rlweParams = PredefinedRlweParameters.n_4096_logq_27_28_28_logt_5
         try runTest(rlweParams: rlweParams, server:

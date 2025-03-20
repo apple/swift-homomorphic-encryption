@@ -14,10 +14,12 @@
 
 import _TestUtilities
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-final class RnsToolTests: XCTestCase {
-    func testScaleAndRound() throws {
+@Suite
+struct RnsToolTests {
+    @Test
+    func scaleAndRound() throws {
         func runTestScaleAndRound<T: ScalarType>(
             degree: Int,
             inputModuli: [T],
@@ -46,7 +48,7 @@ final class RnsToolTests: XCTestCase {
                     context: inputContext,
                     data: inputData.transposed())
                 let output = try rnsTool.scaleAndRound(poly: input, scalingFactor: 1)
-                XCTAssertEqual(output.data.data, ms)
+                #expect(output.data.data == ms)
             }
         }
 
@@ -62,17 +64,18 @@ final class RnsToolTests: XCTestCase {
             outputModulus: UInt64.generatePrimes(significantBitCounts: [15], preferringSmall: true)[0])
     }
 
-    func testConvertApproximateBskMTilde() throws {
+    @Test
+    func convertApproximateBskMTilde() throws {
         func runTestConvertApproximateBskMTilde<T: ScalarType>(
             _: T.Type,
             degree: Int,
             significantBitCounts: [Int]) throws
         {
-            let inputSignificantBitCounts = try significantBitCounts + [XCTUnwrap(significantBitCounts.last)]
+            let inputSignificantBitCounts = try significantBitCounts + [#require(significantBitCounts.last)]
             var inputModuli = try T.generatePrimes(
                 significantBitCounts: inputSignificantBitCounts,
                 preferringSmall: true)
-            let t = try XCTUnwrap(inputModuli.min())
+            let t = try #require(inputModuli.min())
             inputModuli = inputModuli.filter { modulus in modulus != t }
             let q: OctoWidth<T> = inputModuli.product()
 
@@ -97,7 +100,7 @@ final class RnsToolTests: XCTestCase {
                 let possibleX = (0..<inputContext.moduli.count).map { aX in
                     ((x * mTildeModQ) % q + OctoWidth<T>(aX) * q) % baseBskMtilde
                 }
-                XCTAssert(possibleX.contains { possibleX in
+                #expect(possibleX.contains { possibleX in
                     let possibleXCrt = TestUtils.crtDecompose(value: possibleX, moduli: output.moduli)
                     return possibleXCrt == outputCoeff
                 })
@@ -113,7 +116,8 @@ final class RnsToolTests: XCTestCase {
         try runTestConvertApproximateBskMTilde(UInt64.self, degree: 8, significantBitCounts: [40, 40, 40, 40])
     }
 
-    func testMontgomeryReduce() throws {
+    @Test
+    func montgomeryReduce() throws {
         func runTestMontgomeryReduceTest<T: ScalarType>(
             _: T.Type,
             degree: Int,
@@ -129,9 +133,9 @@ final class RnsToolTests: XCTestCase {
             var poly: PolyRq<T, Coeff> = PolyRq(context: bSkMtildeContext, data: inputData)
             try rnsTool.smallMontgomeryReduce(poly: &poly)
 
-            let bSkContext = try XCTUnwrap(bSkMtildeContext.next)
+            let bSkContext = try #require(bSkMtildeContext.next)
             let expectedPoly: PolyRq<T, Coeff> = PolyRq(context: bSkContext, data: expectedData)
-            XCTAssertEqual(poly, expectedPoly)
+            #expect(poly == expectedPoly)
         }
 
         // 1 modulus
@@ -162,7 +166,8 @@ final class RnsToolTests: XCTestCase {
         }
     }
 
-    func testLiftQToQBsk() throws {
+    @Test
+    func liftQToQBsk() throws {
         func runTestLiftQToQBsk<T: ScalarType>(
             _: T.Type,
             degree: Int,
@@ -190,7 +195,7 @@ final class RnsToolTests: XCTestCase {
                 }
                 let expectedCrt = TestUtils.crtDecompose(value: expected, moduli: qBskMTildeModuli)
                 let outputCrt = output.rnsIndices(coeffIndex: coeffIndex).map { index in output.data[index] }
-                XCTAssertEqual(outputCrt, expectedCrt)
+                #expect(outputCrt == expectedCrt)
             }
         }
 
@@ -203,7 +208,8 @@ final class RnsToolTests: XCTestCase {
         try runTestLiftQToQBsk(UInt64.self, degree: 16, significantBitCounts: [40, 40, 40, 40])
     }
 
-    func testApproximateFloor() throws {
+    @Test
+    func approximateFloor() throws {
         func runTestApproximateFloor<T: ScalarType>(
             _: T.Type,
             degree: Int,
@@ -242,7 +248,7 @@ final class RnsToolTests: XCTestCase {
                     let aX = OctoWidth<T>(aX)
                     return [(x / q + aX) % bSk, (x / q + bSk - aX) % bSk]
                 }
-                XCTAssert(possibleX.contains { possibleX in
+                #expect(possibleX.contains { possibleX in
                     let possibleXCrt = TestUtils.crtDecompose(value: possibleX, moduli: output.moduli)
                     return possibleXCrt == outputCrt
                 })
@@ -258,7 +264,8 @@ final class RnsToolTests: XCTestCase {
         try runTestApproximateFloor(UInt64.self, degree: 16, significantBitCounts: [40, 40, 40, 40])
     }
 
-    func testConvertApproximateBskToQ() throws {
+    @Test
+    func convertApproximateBskToQ() throws {
         func runTestConvertApproximateBskToQ<T: ScalarType>(
             _: T.Type,
             degree: Int,
@@ -292,7 +299,7 @@ final class RnsToolTests: XCTestCase {
                 }
                 let expectedCrt = TestUtils.crtDecompose(value: expected, moduli: inputModuli)
                 let outputCrt = output.rnsIndices(coeffIndex: coeffIndex).map { index in output.data[index] }
-                XCTAssertEqual(outputCrt, expectedCrt)
+                #expect(outputCrt == expectedCrt)
             }
         }
         try runTestConvertApproximateBskToQ(UInt32.self, degree: 4, significantBitCounts: [20, 20])

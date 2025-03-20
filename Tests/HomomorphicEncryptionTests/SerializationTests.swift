@@ -14,10 +14,12 @@
 
 import _TestUtilities
 @testable import HomomorphicEncryption
-import XCTest
+import Testing
 
-class SerializationTests: XCTestCase {
-    func testCiphertextSerialization() throws {
+@Suite
+struct SerializationTests {
+    @Test
+    func ciphertextSerialization() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
@@ -32,7 +34,7 @@ class SerializationTests: XCTestCase {
                 let serialized = ciphertext.serialize()
                 if case .seeded = serialized {
                 } else {
-                    XCTFail("Must be seeded serialization")
+                    Issue.record("Must be seeded serialization")
                 }
 
                 let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
@@ -40,7 +42,7 @@ class SerializationTests: XCTestCase {
                     context: context,
                     moduliCount: ciphertext.moduli.count)
                 let decrypted = try deserialized.decrypt(using: secretKey)
-                XCTAssertEqual(decrypted, plaintext)
+                #expect(decrypted == plaintext)
             }
             // serialize full
             do {
@@ -48,7 +50,7 @@ class SerializationTests: XCTestCase {
                 ciphertext.clearSeed()
                 let serialized = ciphertext.serialize()
                 if case .full = serialized {} else {
-                    XCTFail("Must be full serialization")
+                    Issue.record("Must be full serialization")
                 }
 
                 let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
@@ -56,7 +58,7 @@ class SerializationTests: XCTestCase {
                     context: context,
                     moduliCount: ciphertext.moduli.count)
                 let decrypted = try deserialized.decrypt(using: secretKey)
-                XCTAssertEqual(decrypted, plaintext)
+                #expect(decrypted == plaintext)
             }
             // serialize for decryption
             do {
@@ -64,16 +66,16 @@ class SerializationTests: XCTestCase {
                 try ciphertext.modSwitchDownToSingle()
                 let serialized = ciphertext.serialize(forDecryption: true)
                 if case let .full(_, skipLSBs, _) = serialized {
-                    XCTAssertTrue(skipLSBs.contains { $0 > 0 })
+                    #expect(skipLSBs.contains { $0 > 0 })
                 } else {
-                    XCTFail("Must be full serialization")
+                    Issue.record("Must be full serialization")
                 }
                 let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
                     deserialize: serialized,
                     context: context,
                     moduliCount: ciphertext.moduli.count)
                 let decrypted = try deserialized.decrypt(using: secretKey)
-                XCTAssertEqual(decrypted, plaintext)
+                #expect(decrypted == plaintext)
             }
             // serialize indices for decryption
             do {
@@ -82,9 +84,9 @@ class SerializationTests: XCTestCase {
                 let indices = [1, 2, 5]
                 let serialized = try ciphertext.serialize(indices: indices, forDecryption: true)
                 if case let .full(_, skipLSBs, _) = serialized {
-                    XCTAssertTrue(skipLSBs.contains { $0 > 0 })
+                    #expect(skipLSBs.contains { $0 > 0 })
                 } else {
-                    XCTFail("Must be full serialization")
+                    Issue.record("Must be full serialization")
                 }
                 let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
                     deserialize: serialized,
@@ -93,7 +95,7 @@ class SerializationTests: XCTestCase {
                 let decrypted = try deserialized.decrypt(using: secretKey)
                 let decoded: [Scheme.Scalar] = try decrypted.decode(format: .coefficient)
                 for index in indices {
-                    XCTAssertEqual(decoded[index], values[index])
+                    #expect(decoded[index] == values[index])
                 }
             }
         }
@@ -106,7 +108,8 @@ class SerializationTests: XCTestCase {
         try runTest(Bfv<UInt64>.self)
     }
 
-    func testPlaintextSerialization() throws {
+    @Test
+    func plaintextSerialization() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type, format: EncodeFormat) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
@@ -114,13 +117,13 @@ class SerializationTests: XCTestCase {
                 let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: format)
                 let serialized = plaintext.serialize()
                 let deserialized: Scheme.CoeffPlaintext = try Plaintext(deserialize: serialized, context: context)
-                XCTAssertEqual(deserialized, plaintext)
+                #expect(deserialized == plaintext)
             }
             do { // EvalPlaintext
                 let plaintext: Scheme.EvalPlaintext = try context.encode(values: values, format: format)
                 let serialized = plaintext.serialize()
                 let deserialized: Scheme.EvalPlaintext = try Plaintext(deserialize: serialized, context: context)
-                XCTAssertEqual(deserialized, plaintext)
+                #expect(deserialized == plaintext)
             }
         }
 
@@ -132,7 +135,8 @@ class SerializationTests: XCTestCase {
         }
     }
 
-    func testEvalPlaintextSerializationWithVariableModuliCount() throws {
+    @Test
+    func evalPlaintextSerializationWithVariableModuliCount() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type, format: EncodeFormat) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
@@ -145,7 +149,7 @@ class SerializationTests: XCTestCase {
                     deserialize: serialized,
                     context: context,
                     moduliCount: moduliCount)
-                XCTAssertEqual(deserialized, plaintext)
+                #expect(deserialized == plaintext)
             }
         }
 
@@ -157,13 +161,14 @@ class SerializationTests: XCTestCase {
         }
     }
 
-    func testSecretKey() throws {
+    @Test
+    func secretKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
             let serialized = secretKey.serialize()
             let deserialized = try SecretKey(deserialize: serialized, context: context)
-            XCTAssertEqual(deserialized, secretKey)
+            #expect(deserialized == secretKey)
         }
 
         try runTest(NoOpScheme.self)
@@ -171,16 +176,17 @@ class SerializationTests: XCTestCase {
         try runTest(Bfv<UInt64>.self)
     }
 
-    func testGaloisKey() throws {
+    @Test
+    func galoisKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
             let evaluationKeyConfig = EvaluationKeyConfig(galoisElements: [3, 5, 7])
             let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
-            let galoisKey = try XCTUnwrap(evaluationKey.galoisKey)
+            let galoisKey = try #require(evaluationKey.galoisKey)
             let serialized = galoisKey.serialize()
             let deserialized = try GaloisKey(deserialize: serialized, context: context)
-            XCTAssertEqual(deserialized, galoisKey)
+            #expect(deserialized == galoisKey)
         }
 
         try runTest(NoOpScheme.self)
@@ -188,16 +194,17 @@ class SerializationTests: XCTestCase {
         try runTest(Bfv<UInt64>.self)
     }
 
-    func testRelinearizationKey() throws {
+    @Test
+    func relinearizationKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
             let evaluationKeyConfig = EvaluationKeyConfig(hasRelinearizationKey: true)
             let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
-            let relinearizationKey = try XCTUnwrap(evaluationKey.relinearizationKey)
+            let relinearizationKey = try #require(evaluationKey.relinearizationKey)
             let serialized = relinearizationKey.serialize()
             let deserialized = try RelinearizationKey(deserialize: serialized, context: context)
-            XCTAssertEqual(deserialized, relinearizationKey)
+            #expect(deserialized == relinearizationKey)
         }
 
         try runTest(NoOpScheme.self)
@@ -205,7 +212,8 @@ class SerializationTests: XCTestCase {
         try runTest(Bfv<UInt64>.self)
     }
 
-    func testEvaluationKey() throws {
+    @Test
+    func evaluationKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
@@ -215,21 +223,21 @@ class SerializationTests: XCTestCase {
             let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let serialized = evaluationKey.serialize()
             let deserialized = try EvaluationKey(deserialize: serialized, context: context)
-            XCTAssertEqual(deserialized, evaluationKey)
+            #expect(deserialized == evaluationKey)
 
             func checkSeededCiphertext(_ ciphertexts: [SerializedCiphertext<Scheme.Scalar>]) {
                 for ciphertext in ciphertexts {
                     if case .full = ciphertext {
-                        XCTFail("Must be seeded serialization inside serialized evaluation key")
+                        Issue.record("Must be seeded serialization inside serialized evaluation key")
                     }
                 }
             }
 
-            let galoisKey = try XCTUnwrap(serialized.galoisKey)
+            let galoisKey = try #require(serialized.galoisKey)
             for keySwitchKey in galoisKey.galoisKey.values {
                 checkSeededCiphertext(keySwitchKey)
             }
-            let relinearizationKey = try XCTUnwrap(serialized.relinearizationKey)
+            let relinearizationKey = try #require(serialized.relinearizationKey)
             checkSeededCiphertext(relinearizationKey.relinKey)
         }
 

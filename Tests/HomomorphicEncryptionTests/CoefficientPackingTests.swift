@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,12 @@
 
 @testable import HomomorphicEncryption
 import ModularArithmetic
-import XCTest
+import Testing
 
-class CoefficientPackingTests: XCTestCase {
-    func testBytesRoundtrip() throws {
+@Suite
+struct CoefficientPackingTests {
+    @Test
+    func bytesRoundtrip() throws {
         func runTest<T: ScalarType>(_: T.Type) throws {
             let n = 512
             let log2t = Int.random(in: 1...(T.bitWidth - 1))
@@ -32,20 +34,21 @@ class CoefficientPackingTests: XCTestCase {
                 bitsPerCoeff: log2t,
                 decode: false)
             for coeff in coeffs {
-                XCTAssertLessThan(coeff, t)
+                #expect(coeff < t)
             }
 
             let decodedBytes: [UInt8] = try CoefficientPacking.coefficientsToBytes(
                 coeffs: coeffs,
                 bitsPerCoeff: log2t)
-            XCTAssertEqual(decodedBytes[0..<bytes.count], bytes[...])
+            #expect(decodedBytes[0..<bytes.count] == bytes[...])
         }
 
         try runTest(UInt32.self)
         try runTest(UInt64.self)
     }
 
-    func testCoeffsRoundtrip() throws {
+    @Test
+    func coeffsRoundtrip() throws {
         func runTest<T: ScalarType>(_: T.Type) throws {
             let n = 512
             let log2t = Int.random(in: 1...(T.bitWidth - 4))
@@ -61,7 +64,7 @@ class CoefficientPackingTests: XCTestCase {
             }
 
             for coeff in coeffs {
-                XCTAssertLessThan(coeff, t)
+                #expect(coeff < t)
             }
 
             let bytes = try CoefficientPacking.coefficientsToBytes(coeffs: coeffs, bitsPerCoeff: log2t + 1)
@@ -70,14 +73,15 @@ class CoefficientPackingTests: XCTestCase {
                 bitsPerCoeff: log2t + 1,
                 decode: true)
 
-            XCTAssertEqual(decodedCoeffs[..<coeffs.count], coeffs[...], "log2t = \(log2t), T = \(T.self)")
+            #expect(decodedCoeffs[..<coeffs.count] == coeffs[...], "log2t = \(log2t), T = \(T.self)")
         }
 
         try runTest(UInt32.self)
         try runTest(UInt64.self)
     }
 
-    func testBytesToCoeffKAT() throws {
+    @Test
+    func bytesToCoeffKAT() throws {
         struct BytesToCoeffKAT<T: ScalarType> {
             let bytes: [UInt8]
             let bitsPerCoeff: Int
@@ -138,7 +142,7 @@ class CoefficientPackingTests: XCTestCase {
                     bitsPerCoeff: kat.bitsPerCoeff,
                     decode: kat.decode,
                     skipLSBs: kat.skipLSBs)
-                XCTAssertEqual(coeffs, kat.expectedCoefficients)
+                #expect(coeffs == kat.expectedCoefficients)
             }
         }
 
@@ -146,7 +150,8 @@ class CoefficientPackingTests: XCTestCase {
         try runTest(UInt64.self)
     }
 
-    func testCoeffsToBytesKAT() throws {
+    @Test
+    func coeffsToBytesKAT() throws {
         struct CoeffsToBytesKAT<T: ScalarType> {
             let coeffs: [T]
             let bitsPerCoeff: Int
@@ -203,7 +208,7 @@ class CoefficientPackingTests: XCTestCase {
                     coeffs: kat.coeffs,
                     bitsPerCoeff: kat.bitsPerCoeff,
                     skipLSBs: kat.skipLSBs)
-                XCTAssertEqual(bytes, kat.expectedBytes)
+                #expect(bytes == kat.expectedBytes)
             }
         }
 

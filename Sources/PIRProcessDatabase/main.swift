@@ -334,7 +334,8 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     }
 }
 
-@main
+// This executable is used in tests, which breaks `swift test -c release` when used with `@main`.
+// So we avoid using `@main` here.
 struct ProcessDatabase: AsyncParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "PIRProcessDatabase", version: Version.current.description)
@@ -549,3 +550,5 @@ extension Duration {
         Double(components.seconds) * 1e3 + Double(components.attoseconds) * 1e-15
     }
 }
+
+ProcessDatabase.main()

@@ -26,6 +26,7 @@ import Testing
 ///   - absoluteTolerance: An optional absolute tolerance to enforce.
 /// - Returns: true if the expressions are close to each other
 extension BinaryFloatingPoint {
+    @inlinable
     package func isClose(to value: Self,
                          relativeTolerance: Self = Self(1e-5),
                          absoluteTolerance: Self = Self(1e-8)) -> Bool
@@ -90,6 +91,7 @@ extension [UInt8] {
     }
 }
 
+@usableFromInline
 package enum TestUtils {
     /// A polynomial degree suitable for testing.
     package static let testPolyDegree = 16
@@ -151,9 +153,8 @@ extension TestUtils {
         return Double(binCount) * probabilityOfExactlyCountBallsInFirstBin
     }
 
-    package static func getRandomPlaintextData<T: ScalarType>(count: Int,
-                                                              in range: Range<T>) -> [T]
-    {
+    @inlinable
+    package static func getRandomPlaintextData<T: ScalarType>(count: Int, in range: Range<T>) -> [T] {
         (0..<count).map { _ in T.random(in: range) }
     }
 

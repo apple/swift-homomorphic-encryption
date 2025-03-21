@@ -176,7 +176,7 @@ struct HeAPITests {
             try await HeAPITestHelpers.schemeApplyGaloisTest(context: context)
             try bfvTestKeySwitching(context: context)
             try HeAPITestHelpers.noiseBudgetTest(context: context)
-            try await HeAPITestHelpers.repeatAdditionTest(context: context)
+            try await HeAPITestHelpers.repeatedAdditionTest(context: context)
             try await HeAPITestHelpers.multiplyInverseTest(context: context)
         }
     }

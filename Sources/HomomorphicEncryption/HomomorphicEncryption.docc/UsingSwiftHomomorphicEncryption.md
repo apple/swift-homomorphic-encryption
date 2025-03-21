@@ -20,7 +20,7 @@ To use the `HomomorphicEncryption` library, add
 to your target's dependencies.
 
 > Important:
-> When linking your executable, make sure to enable `cross-module-optimization`.
+> When linking your executable, make sure to set `-cross-module-optimization`.
 > Without this flag, performance of Swift Homomorphic Encryption degrades dramatically,
 > due to failure to specialize generics. For example,
 > ```swift
@@ -64,3 +64,5 @@ Swift Homomorphic Encryption follows [Semantic Versioning 2.0.0](https://semver.
 Future minor versions of the package may introduce changes to these rules as needed.
 
 We'd like this package to quickly embrace Swift language and toolchain improvements that are relevant to its mandate. Accordingly, from time to time, we expect that new versions of this package will require clients to upgrade to a more recent Swift toolchain release. Requiring a new Swift release will only require a minor version bump.
+
+> Warning: Any symbol beginning with an underscore, and any product beginning with an underscore, is not subject to semantic versioning: these APIs may change without warning.

@@ -14,49 +14,14 @@
 
 import _TestUtilities
 import HomomorphicEncryption
-@testable import PrivateNearestNeighborSearch
 import Testing
 
 @Suite
 struct DatabaseTests {
     @Test
     func serializedProcessedDatabase() throws {
-        func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
-            let vectorDimension = 4
-
-            let rows = (0...10).map { rowIndex in
-                DatabaseRow(
-                    entryId: rowIndex,
-                    entryMetadata: rowIndex.littleEndianBytes,
-                    vector: Array(repeating: Float(rowIndex), count: vectorDimension))
-            }
-            let database = Database(rows: rows)
-
-            let clientConfig = try ClientConfig<Scheme>(
-                encryptionParameters: encryptionParameters,
-                scalingFactor: 123,
-                queryPacking: .denseRow,
-                vectorDimension: vectorDimension,
-                evaluationKeyConfig: EvaluationKeyConfig(galoisElements: [3]),
-                distanceMetric: .cosineSimilarity,
-                extraPlaintextModuli: Scheme.Scalar
-                    .generatePrimes(
-                        significantBitCounts: [7],
-                        preferringSmall: true,
-                        nttDegree: encryptionParameters.polyDegree))
-            let serverConfig = ServerConfig<Scheme>(
-                clientConfig: clientConfig,
-                databasePacking: MatrixPacking
-                    .diagonal(
-                        babyStepGiantStep: BabyStepGiantStep(vectorDimension: vectorDimension)))
-
-            let processed = try database.process(config: serverConfig)
-            let serialized = try processed.serialize()
-            let deserialized = try ProcessedDatabase(from: serialized, contexts: processed.contexts)
-            #expect(deserialized == processed)
-        }
-        try runTest(Bfv<UInt32>.self)
-        try runTest(Bfv<UInt64>.self)
+        try PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: NoOpScheme.self)
+        try PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: Bfv<UInt32>.self)
+        try PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: Bfv<UInt64>.self)
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import ModularArithmetic
 /// Stores a matrix of scalars as ciphertexts.
 public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
     /// Dimensions of the matrix.
-    @usableFromInline let dimensions: MatrixDimensions
+    @usableFromInline package let dimensions: MatrixDimensions
 
     /// Dimensions of the scalar matrix in a SIMD-encoded plaintext.
     @usableFromInline let simdDimensions: SimdEncodingDimensions
@@ -87,7 +87,7 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
     }
 
     @inlinable
-    func decrypt(using secretKey: SecretKey<Scheme>) throws -> PlaintextMatrix<Scheme, Coeff> {
+    package func decrypt(using secretKey: SecretKey<Scheme>) throws -> PlaintextMatrix<Scheme, Coeff> {
         let plaintexts = try ciphertexts.map { ciphertext in try ciphertext.decrypt(using: secretKey) }
         return try PlaintextMatrix(dimensions: dimensions, packing: packing, plaintexts: plaintexts)
     }
@@ -164,8 +164,8 @@ extension CiphertextMatrix {
     /// - Returns: The evaluation key configuration.
     /// - Throws: Error upon failure to generate the evaluation key configuration.
     @inlinable
-    static func extractDenseRowConfig(for encryptionParameters: EncryptionParameters<Scheme>,
-                                      dimensions: MatrixDimensions) throws -> EvaluationKeyConfig
+    package static func extractDenseRowConfig(for encryptionParameters: EncryptionParameters<Scheme>,
+                                              dimensions: MatrixDimensions) throws -> EvaluationKeyConfig
     {
         if dimensions.rowCount == 1 {
             // extractDenseRow is a No-op, so no evaluation key required
@@ -190,7 +190,7 @@ extension CiphertextMatrix {
     /// - Returns: A ciphertext matrix in `.denseRow` format with 1 row
     /// - Throws: Error upon failure to extract the row.
     @inlinable
-    func extractDenseRow(rowIndex: Int, evaluationKey: EvaluationKey<Scheme>) throws -> Self
+    package func extractDenseRow(rowIndex: Int, evaluationKey: EvaluationKey<Scheme>) throws -> Self
         where Format == Scheme.CanonicalCiphertextFormat
     {
         precondition((0..<dimensions.rowCount).contains(rowIndex))

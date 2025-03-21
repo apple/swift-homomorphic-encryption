@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,13 +80,13 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     @usableFromInline let simdDimensions: SimdEncodingDimensions
 
     /// Plaintext packing with which the data is stored.
-    @usableFromInline let packing: MatrixPacking
+    @usableFromInline package let packing: MatrixPacking
 
     /// Plaintexts encoding the scalars.
-    @usableFromInline let plaintexts: [Plaintext<Scheme, Format>]
+    @usableFromInline package let plaintexts: [Plaintext<Scheme, Format>]
 
     /// The parameter context.
-    @usableFromInline var context: Context<Scheme> {
+    @usableFromInline package var context: Context<Scheme> {
         precondition(!plaintexts.isEmpty, "Plaintext array cannot be empty")
         return plaintexts[0].context
     }
@@ -101,10 +101,10 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     @usableFromInline var count: Int { dimensions.count }
 
     /// Number of rows in the stored data.
-    @usableFromInline var rowCount: Int { dimensions.rowCount }
+    @usableFromInline package var rowCount: Int { dimensions.rowCount }
 
     /// Number of columns in the stored data.
-    @usableFromInline var columnCount: Int { dimensions.columnCount }
+    @usableFromInline package var columnCount: Int { dimensions.columnCount }
 
     /// Creates a new plaintext matrix.
     /// - Parameters:
@@ -113,7 +113,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     ///   - plaintexts: Plaintexts encoding the data; must not be empty.
     /// - Throws: Error upon failure to initialize the plaintext matrix.
     @inlinable
-    init(dimensions: MatrixDimensions, packing: MatrixPacking, plaintexts: [Plaintext<Scheme, Format>]) throws {
+    package init(dimensions: MatrixDimensions, packing: MatrixPacking, plaintexts: [Plaintext<Scheme, Format>]) throws {
         guard !plaintexts.isEmpty else {
             throw PnnsError.emptyPlaintextArray
         }
@@ -184,13 +184,12 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     ///   - reduce: If true, values are reduced into the correct range before encoding.
     /// - Throws: Error upon failure to create the plaitnext matrix.
     @inlinable
-    init(
+    package init(
         context: Context<Scheme>,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
         values: [Scheme.Scalar],
-        reduce: Bool = false) throws
-        where Format == Coeff
+        reduce: Bool = false) throws where Format == Coeff
     {
         guard values.count == dimensions.count, !values.isEmpty else {
             throw PnnsError.wrongEncodingValuesCount(got: values.count, expected: values.count)
@@ -475,7 +474,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The stored data values in row-major format.
     /// - Throws: Error upon failure to unpack the matrix.
     @inlinable
-    func unpack() throws -> [Scheme.Scalar] where Format == Coeff {
+    package func unpack() throws -> [Scheme.Scalar] where Format == Coeff {
         switch packing {
         case .denseColumn:
             return try unpackDenseColumn()
@@ -490,7 +489,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The stored data values in row-major format.
     /// - Throws: Error upon failure to unpack the matrix.
     @inlinable
-    func unpack() throws -> [Scheme.SignedScalar] where Format == Coeff {
+    package func unpack() throws -> [Scheme.SignedScalar] where Format == Coeff {
         let unsigned: [Scheme.Scalar] = try unpack()
         return unsigned.map { unsigned in
             unsigned.remainderToCentered(modulus: context.plaintextModulus)

@@ -127,6 +127,7 @@ let package = Package(
             name: "_TestUtilities",
             dependencies: [
                 "HomomorphicEncryption",
+                "PrivateNearestNeighborSearch",
                 .product(name: "Numerics", package: "swift-numerics"),
             ],
             path: "Sources/TestUtilities",

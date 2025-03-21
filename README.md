@@ -93,7 +93,7 @@ To use the `HomomorphicEncryption` library, add
 to your target's dependencies.
 
 > [!IMPORTANT]
-> When linking your executable, make sure to enable `cross-module-optimization`.
+> When linking your executable, make sure to set `-cross-module-optimization`.
 > Without this flag, performance of Swift Homomorphic Encryption degrades dramatically,
 > due to failure to specialize generics. For example,
 > ```swift

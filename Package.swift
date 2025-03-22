@@ -230,7 +230,21 @@ let package = Package(
 package.dependencies += [
     .package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "1.4.0")),
 ]
+package.products += [.library(name: "_BenchmarkUtilities", targets: ["_BenchmarkUtilities"])]
 package.targets += [
+    .target(
+        name: "_BenchmarkUtilities",
+        dependencies: [
+            .product(name: "Benchmark", package: "package-benchmark"),
+            "HomomorphicEncryption",
+            "HomomorphicEncryptionProtobuf",
+            "PrivateInformationRetrieval",
+            "PrivateInformationRetrievalProtobuf",
+            "PrivateNearestNeighborSearch",
+            "PrivateNearestNeighborSearchProtobuf",
+        ],
+        path: "Sources/BenchmarkUtilities",
+        swiftSettings: benchmarkSettings),
     .executableTarget(
         name: "PolyBenchmark",
         dependencies: [
@@ -258,9 +272,7 @@ package.targets += [
         dependencies: [
             .product(name: "Benchmark", package: "package-benchmark"),
             "HomomorphicEncryption",
-            "HomomorphicEncryptionProtobuf",
-            "PrivateInformationRetrieval",
-            "PrivateInformationRetrievalProtobuf",
+            "_BenchmarkUtilities",
         ],
         path: "Benchmarks/PrivateInformationRetrievalBenchmark",
         swiftSettings: benchmarkSettings,
@@ -272,9 +284,7 @@ package.targets += [
         dependencies: [
             .product(name: "Benchmark", package: "package-benchmark"),
             "HomomorphicEncryption",
-            "HomomorphicEncryptionProtobuf",
-            "PrivateNearestNeighborSearch",
-            "PrivateNearestNeighborSearchProtobuf",
+            "_BenchmarkUtilities",
         ],
         path: "Benchmarks/PrivateNearestNeighborSearchBenchmark",
         swiftSettings: benchmarkSettings,

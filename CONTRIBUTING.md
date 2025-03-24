@@ -5,3 +5,5 @@ Welcome to the Swift Homomorphic Encryption community! Thanks for your interest 
 ### Pull Requests:
 Before making a commit for a pull request, please run `pre-commit install`.
 Then on each commit some basic formatting checks will be run.
+
+Please also [enable benchmarking](README.md#Benchmarking).

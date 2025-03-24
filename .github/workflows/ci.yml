@@ -30,6 +30,7 @@ concurrency:
 env:
   SWIFTLINT_VERSION: 0.57.0
   SWIFTFORMAT_VERSION: 0.54.6
+  SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING: 1
 jobs:
   swift-tests:
     timeout-minutes: 15

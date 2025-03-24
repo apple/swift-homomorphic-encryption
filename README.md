@@ -216,6 +216,7 @@ swift test --parallel
 
 ### Benchmarking
 Swift homomorphic encryption uses [Benchmark](https://github.com/ordo-one/package-benchmark) for benchmarking.
+To enable benchmarking, set the environment variable `SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1`.
 By default, benchmarking requires the [jemalloc](http://jemalloc.net) dependency.
 
 > [!WARNING]

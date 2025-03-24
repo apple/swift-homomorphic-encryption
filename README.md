@@ -205,11 +205,11 @@ swift package experimental-install -c release --product PIRProcessDatabase
 ### Testing
 Run unit tests via
 ```sh
-swift test -c release --parallel
+swift test -c release
 ```
 To run tests in debug mode, run
 ```sh
-swift test --parallel
+swift test
 ```
 > [!WARNING]
 > Tests will be slow in debug mode.

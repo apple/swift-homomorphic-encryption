@@ -1,26 +1,12 @@
-# Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 name: CI
 permissions:
   contents: read
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "release/**" ]
+    branches: ["main", "release/**"]
   pull_request:
-    branches: [ "main", "release/**" ]
+    branches: ["main", "release/**"]
     types: [opened, reopened, synchronize]
 # Pushing changes to PR stops currently-running CI
 concurrency:
@@ -39,9 +25,6 @@ jobs:
       # https://github.com/swiftlang/swift-package-manager/issues/8103
       api_breakage_check_enabled: false
       format_check_enabled: false
-      license_header_check_enabled: false
-      python_lint_check_enabled: false
-      yamllint_check_enabled: false
   tests:
     name: swifttests
     uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
@@ -51,7 +34,7 @@ jobs:
       linux_exclude_swift_versions: "[{\"swift_version\": \"5.8\"}, {\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}]"
       linux_pre_build_command: "apt-get update && apt-get install -y libjemalloc-dev"
       linux_build_command: >
-        swift test --configuration release --parallel;
+        swift test --configuration release;
         for filename in $(find Snippets -name \*.swift); do
             basename=$(basename "$filename" .swift)
             swift run --configuration release ${basename}
@@ -60,71 +43,71 @@ jobs:
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Install pre-commit
-      run: pip install pre-commit
-    - name: Pre-commit checks
-      # CI will commit to `main`
-      # swiftformat, swiftlint and license checks tested separately
-      run: >
-        SKIP=no-commit-to-branch,lockwood-swiftformat,swiftlint,check-doc-comments,insert-license
-        pre-commit run --all-files
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Pre-commit checks
+        # CI will commit to `main`
+        # swiftformat, swiftlint and license checks tested separately
+        run: >
+          SKIP=no-commit-to-branch,lockwood-swiftformat,swiftlint,check-doc-comments,insert-license
+          pre-commit run --all-files
   insert-license:
     timeout-minutes: 1
     runs-on: ubuntu-22.04
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 2
-    - name: Install pre-commit
-      run: pip install pre-commit
-    - name: List changed files
-      run: git diff --name-only HEAD~1
-    - name: Run license check
-      run: pre-commit run insert-license --files $(git diff --name-only HEAD~1)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: List changed files
+        run: git diff --name-only HEAD~1
+      - name: Run license check
+        run: pre-commit run insert-license --files $(git diff --name-only HEAD~1)
   lint:
     timeout-minutes: 15
     runs-on: ubuntu-22.04
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Cache SwiftLint
-      id: cache-swiftlint
-      uses: actions/cache@v4
-      with:
-        path: /tmp/swiftlint/SwiftLint/.build/release/swiftlint
-        key: ${{ runner.os }}-swiftlint-${{ env.SWIFTLINT_VERSION }}
-    - name: Install SwiftLint
-      if: steps.cache-swiftlint.outputs.cache-hit != 'true'
-      run: |
-        ci/install-swiftlint.sh
-    - name: Run SwiftLint
-      run: /tmp/swiftlint/SwiftLint/.build/release/swiftlint lint --strict .
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Cache SwiftLint
+        id: cache-swiftlint
+        uses: actions/cache@v4
+        with:
+          path: /tmp/swiftlint/SwiftLint/.build/release/swiftlint
+          key: ${{ runner.os }}-swiftlint-${{ env.SWIFTLINT_VERSION }}
+      - name: Install SwiftLint
+        if: steps.cache-swiftlint.outputs.cache-hit != 'true'
+        run: |
+          ci/install-swiftlint.sh
+      - name: Run SwiftLint
+        run: /tmp/swiftlint/SwiftLint/.build/release/swiftlint lint --strict .
   lockwood-swiftformat:
     timeout-minutes: 5
     runs-on: ubuntu-22.04
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Cache SwiftFormat
-      id: cache-swiftformat
-      uses: actions/cache@v4
-      with:
-        path: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat
-        key: ${{ runner.os }}-swiftformat-${{ env.SWIFTFORMAT_VERSION }}
-    - name: Install Lockwood SwiftFormat
-      if: steps.cache-swiftformat.outputs.cache-hit != 'true'
-      run: |
-        ci/install-lockwood-swiftformat.sh
-    - name: Run SwiftFormat
-      run: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat --strict .
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Cache SwiftFormat
+        id: cache-swiftformat
+        uses: actions/cache@v4
+        with:
+          path: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat
+          key: ${{ runner.os }}-swiftformat-${{ env.SWIFTFORMAT_VERSION }}
+      - name: Install Lockwood SwiftFormat
+        if: steps.cache-swiftformat.outputs.cache-hit != 'true'
+        run: |
+          ci/install-lockwood-swiftformat.sh
+      - name: Run SwiftFormat
+        run: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat --strict .
   check-doc-comments:
     timeout-minutes: 5
     runs-on: ubuntu-22.04
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Check documentation comments
-      run: ci/run-apple-swift-format.sh
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Check documentation comments
+        run: ci/run-apple-swift-format.sh

@@ -1,0 +1,11 @@
+**/.swiftformat
+*.pb.swift
+*.txtpb
+.gitignore
+.gitmodules
+.swiftformat
+CITATION.cff
+Package.resolved
+Package.swift
+Snippets/*
+swift-homomorphic-encryption-protobuf

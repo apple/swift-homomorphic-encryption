@@ -21,7 +21,7 @@ protobuf message that contains a shared evaluation key configuration and configu
 
 ## Sharding function
 
-While we do offer sharding as a convenience feature in ``KeywordDatabase/init(rows:sharding:shardingFunction:)`` and even as a binary
+While we do offer sharding as a convenience feature in ``KeywordDatabase/init(rows:sharding:shardingFunction:symmetricPirConfig:)`` and even as a binary
 ([PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/pirsharddatabase)),
 it might be beneficial to understand how the sharding actually works and to incorporate that directly into your encoding
 pipeline. In Swift you can use ``Swift/Array/shardIndex(shardCount:)``, implemented as follows:
@@ -50,7 +50,7 @@ The output is the index of the shard where this keyword and associated value sho
 To process a single shard we recommend writing your own tool that imports data in the format most convenient for your
 data. Each data row needs to be converted to ``KeywordValuePair`` with ``KeywordValuePair/init(keyword:value:)``, where
 `keyword` and `value` are both `[UInt8]`. Once you have a collection of ``KeywordValuePair``s you have two options:
-1. You can use ``KeywordPirServer/process(database:config:with:onEvent:)`` to process the shard directly.
+1. You can use ``KeywordPirServer/process(database:config:with:onEvent:symmetricPirConfig:)`` to process the shard directly.
 2. Or you can construct a ``KeywordDatabaseShard`` by using ``KeywordDatabaseShard/init(shardID:rows:)`` and then
 ``ProcessKeywordDatabase/processShard(shard:with:onEvent:)``.
 

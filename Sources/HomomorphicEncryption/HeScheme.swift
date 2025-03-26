@@ -886,10 +886,10 @@ public protocol HeScheme {
     ///  - ciphertext: ciphertext to be multiplied.
     ///  - power: Power in the monomial; must be positive.
     /// - Throws: Error upon failure to compute the inverse.
-    /// - seealso: ``multiplyInversePowerOfXAsync(_:)``  for an async version of this API
+    /// - seealso: ``HeScheme/multiplyInversePowerOfXAsync(_:power:)``  for an async version of this API
     static func multiplyInversePowerOfX(_ ciphertext: inout CoeffCiphertext, power: Int) throws
 
-    /// The async version of ``HeScheme/multiplyInversePowerOfX(_:)``.
+    /// The async version of ``HeScheme/multiplyInversePowerOfX(_:power:)``.
     static func multiplyInversePowerOfXAsync(_ ciphertext: inout CoeffCiphertext, power: Int) async throws
 }
 

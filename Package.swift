@@ -237,6 +237,7 @@ var enableBenchmarking: Bool {
 }
 
 if enableBenchmarking {
+    print("Enabling benchmarking")
     package.dependencies += [
         .package(url: "https://github.com/ordo-one/package-benchmark", .upToNextMajor(from: "1.4.0")),
     ]

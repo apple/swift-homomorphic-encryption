@@ -1,4 +1,3 @@
---asynccapturing XCTAssertAsyncThrowsError
 --closingparen same-line
 --exclude **/*.pb.swift
 --extensionacl on-declarations

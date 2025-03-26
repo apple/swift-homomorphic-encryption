@@ -1,6 +1,6 @@
 # ``PrivateNearestNeighborSearchProtobuf``
 
-Protocol buffer support for [PrivateNearestNeighborSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborsearch)
+Protocol buffer support for ``PrivateNearestNeighborSearch``
 
 ## Overview
 `PrivateNearestNeighborProtobuf` contains supports for using [PrivateNearestNeighborSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privatenearestneighborsearch) with [protocol buffers](https://protobuf.dev/), commonly referred to as `protobuf`.

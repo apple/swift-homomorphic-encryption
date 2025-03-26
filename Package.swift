@@ -191,16 +191,6 @@ let package = Package(
                 "_TestUtilities",
             ], swiftSettings: executableSettings),
         .testTarget(
-            name: "PIRGenerateDatabaseTests",
-            dependencies: ["PIRGenerateDatabase",
-                           "_TestUtilities",
-                           .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
-        .testTarget(
-            name: "PIRProcessDatabaseTests",
-            dependencies: ["PIRProcessDatabase",
-                           "_TestUtilities",
-                           .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
-        .testTarget(
             name: "PrivateInformationRetrievalTests",
             dependencies: [
                 "PrivateInformationRetrieval", "_TestUtilities",
@@ -225,6 +215,23 @@ let package = Package(
                 "PrivateNearestNeighborSearchProtobuf",
             ], swiftSettings: executableSettings),
     ])
+
+// Workaround SwiftPM's attempt to link in executables which does not work on all
+// platforms.
+#if !os(Windows)
+package.targets.append(contentsOf: [
+    .testTarget(
+        name: "PIRGenerateDatabaseTests",
+        dependencies: ["PIRGenerateDatabase",
+                       "_TestUtilities",
+                       .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
+    .testTarget(
+        name: "PIRProcessDatabaseTests",
+        dependencies: ["PIRProcessDatabase",
+                       "_TestUtilities",
+                       .product(name: "Numerics", package: "swift-numerics")], swiftSettings: executableSettings),
+])
+#endif
 
 // MARK: - Benchmarks
 

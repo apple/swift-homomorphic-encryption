@@ -34,16 +34,16 @@ extension PrivateNearestNeighborSearchUtil {
             func runTestCase<T: SignedScalarType>(testCase: TestCase<T>) throws {
                 let floatMatrix = Array2d<Float>(data: testCase.input)
                 let normalized = floatMatrix.normalizedRows(norm: testCase.norm)
-                for (normalized, expected) in zip(normalized.data, testCase.normalized.flatMap { $0 }) {
+                for (normalized, expected) in zip(normalized.data, testCase.normalized.flatMap(\.self)) {
                     #expect(normalized.isClose(to: expected))
                 }
 
                 let scaled = normalized.scaled(by: testCase.scalingFactor)
-                for (scaled, expected) in zip(scaled.data, testCase.scaled.flatMap { $0 }) {
+                for (scaled, expected) in zip(scaled.data, testCase.scaled.flatMap(\.self)) {
                     #expect(scaled.isClose(to: expected))
                 }
                 let rounded: Array2d<T> = scaled.rounded()
-                #expect(rounded.data == testCase.rounded.flatMap { $0 })
+                #expect(rounded.data == testCase.rounded.flatMap(\.self))
             }
 
             let testCases: [TestCase<Int32>] = [

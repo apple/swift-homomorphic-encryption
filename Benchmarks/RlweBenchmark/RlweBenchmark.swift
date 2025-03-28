@@ -31,8 +31,8 @@ func benchmark<Scheme: HeScheme>(_ name: String, _: Scheme.Type, body: @escaping
 
 func getModuliForBenchmark<T: ScalarType>(_: T.Type) -> [T] {
     switch T.self {
-    case is UInt32.Type: return [(1 << 27) - 360_447, (1 << 28) - 65535, (1 << 28) - 163_839]
-    case is UInt64.Type: return [(1 << 55) - 311_295, (1 << 55) - 1_392_639, (1 << 55) - 1_507_327]
+    case is UInt32.Type: [(1 << 27) - 360_447, (1 << 28) - 65535, (1 << 28) - 163_839]
+    case is UInt64.Type: [(1 << 55) - 311_295, (1 << 55) - 1_392_639, (1 << 55) - 1_507_327]
     default: preconditionFailure("Unsupported scalar type \(T.self)")
     }
 }

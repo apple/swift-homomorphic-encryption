@@ -51,7 +51,7 @@ extension PrivateNearestNeighborSearchUtil {
                 context: context,
                 dimensions: dimensions,
                 packing: .denseRow,
-                values: encodeValues.flatMap { $0 })
+                values: encodeValues.flatMap(\.self))
             let secretKey = try context.generateSecretKey()
             var ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
             let plaintextMatrixRoundTrip = try ciphertextMatrix.decrypt(using: secretKey)
@@ -80,7 +80,7 @@ extension PrivateNearestNeighborSearchUtil {
                 context: context,
                 dimensions: dimensions,
                 packing: .denseRow,
-                values: encodeValues.flatMap { $0 })
+                values: encodeValues.flatMap(\.self))
             let secretKey = try context.generateSecretKey()
             let ciphertextCoeffMatrix: CiphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
             let ciphertextEvalMatrix = try ciphertextCoeffMatrix.convertToEvalFormat()
@@ -121,7 +121,7 @@ extension PrivateNearestNeighborSearchUtil {
                         context: context,
                         dimensions: dimensions,
                         packing: .denseRow,
-                        values: encodeValues.flatMap { $0 })
+                        values: encodeValues.flatMap(\.self))
                     let secretKey = try context.generateSecretKey()
                     let ciphertextMatrix: CiphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
 
@@ -150,7 +150,7 @@ extension PrivateNearestNeighborSearchUtil {
                         // Check encoded values
                         var row = encodeValues[rowIndex]
                         row += Array(repeating: 0, count: row.count.nextPowerOfTwo - row.count)
-                        let expectedRow = Array(repeating: row, count: degree / row.count).flatMap { $0 }
+                        let expectedRow = Array(repeating: row, count: degree / row.count).flatMap(\.self)
                         let decoded: [Scheme.Scalar] = try decrypted.plaintexts[0].decode(format: .simd)
                         #expect(decoded == expectedRow)
                     }

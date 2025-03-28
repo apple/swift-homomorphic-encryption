@@ -66,21 +66,21 @@ extension PrivateNearestNeighborSearchUtil {
             func runTestCase<T: SignedScalarType>(testCase: TestCase<T>) throws {
                 let floatMatrix = Array2d<Float>(data: testCase.input)
                 let normalized = floatMatrix.normalizedRows(norm: testCase.norm)
-                for (normalized, expected) in zip(normalized.data, testCase.normalized.flatMap { $0 }) {
+                for (normalized, expected) in zip(normalized.data, testCase.normalized.flatMap(\.self)) {
                     #expect(normalized.isClose(to: expected))
                 }
 
                 let scaled = normalized.scaled(by: testCase.scalingFactor)
-                for (scaled, expected) in zip(scaled.data, testCase.scaled.flatMap { $0 }) {
+                for (scaled, expected) in zip(scaled.data, testCase.scaled.flatMap(\.self)) {
                     #expect(scaled.isClose(to: expected))
                 }
                 let rounded: Array2d<T> = scaled.rounded()
-                #expect(rounded.data == testCase.rounded.flatMap { $0 })
+                #expect(rounded.data == testCase.rounded.flatMap(\.self))
 
                 if testCase.norm == Array2d<Float>.Norm.Lp(p: 2.0) {
                     let normalizedScaledAndRounded: Array2d<T> = floatMatrix.normalizedScaledAndRounded(
                         scalingFactor: testCase.scalingFactor)
-                    #expect(normalizedScaledAndRounded.data == testCase.rounded.flatMap { $0 })
+                    #expect(normalizedScaledAndRounded.data == testCase.rounded.flatMap(\.self))
                 }
             }
 

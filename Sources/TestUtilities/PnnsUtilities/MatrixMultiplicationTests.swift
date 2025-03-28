@@ -71,7 +71,7 @@ extension PrivateNearestNeighborSearchUtil {
                     context: context,
                     dimensions: plaintextMatrixDimensions,
                     packing: .diagonal(babyStepGiantStep: babyStepGiantStep),
-                    values: plaintextRows.flatMap { $0 })
+                    values: plaintextRows.flatMap(\.self))
 
                 let evaluationKeyConfig = try EvaluationKeyConfig(galoisElements: [
                     GaloisElement.rotatingColumns(
@@ -152,7 +152,7 @@ extension PrivateNearestNeighborSearchUtil {
                 context: context,
                 dimensions: queryDimensions,
                 packing: .denseRow,
-                values: queryValues.flatMap { $0 }).encrypt(using: secretKey)
+                values: queryValues.flatMap(\.self)).encrypt(using: secretKey)
 
             let babyStepGiantStep = BabyStepGiantStep(vectorDimension: plaintextValues[0].count)
             let plaintextDimensions = try MatrixDimensions(
@@ -162,7 +162,7 @@ extension PrivateNearestNeighborSearchUtil {
                 context: context,
                 dimensions: plaintextDimensions,
                 packing: .diagonal(babyStepGiantStep: babyStepGiantStep),
-                values: plaintextValues.flatMap { $0 })
+                values: plaintextValues.flatMap(\.self))
 
             let evaluationKeyConfig: EvaluationKeyConfig = try MatrixMultiplication.evaluationKeyConfig(
                 plaintextMatrixDimensions: plaintextDimensions,

@@ -8,4 +8,4 @@
 --nospaceoperators ..<, ...
 --ranges no-space
 --self init-only
---swiftversion 5.8
+--swiftversion 6.0

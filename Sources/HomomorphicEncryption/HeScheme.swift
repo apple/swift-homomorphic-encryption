@@ -1299,7 +1299,7 @@ extension HeScheme {
         }
 
         let galoisElements = Array(galoisKey.keys.keys)
-        let steps = GaloisElement.stepsFor(elements: galoisElements, degree: degree).values.compactMap { $0 }
+        let steps = GaloisElement.stepsFor(elements: galoisElements, degree: degree).values.compactMap(\.self)
 
         let positiveStep = if step < 0 {
             step + degree / 2
@@ -1339,7 +1339,7 @@ extension HeScheme {
         }
 
         let galoisElements = Array(galoisKey.keys.keys)
-        let steps = GaloisElement.stepsFor(elements: galoisElements, degree: degree).values.compactMap { $0 }
+        let steps = GaloisElement.stepsFor(elements: galoisElements, degree: degree).values.compactMap(\.self)
 
         let positiveStep = if step < 0 {
             step + degree / 2

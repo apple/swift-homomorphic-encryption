@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -141,9 +141,9 @@ extension DoubleWidthUInt: Equatable {
 extension DoubleWidthUInt: Comparable {
     @inlinable
     public static func < (lhs: DoubleWidthUInt, rhs: DoubleWidthUInt) -> Bool {
-        if lhs._storage.high < rhs._storage.high { return true }
-        else if lhs._storage.high > rhs._storage.high { return false }
-        else { return lhs._storage.low < rhs._storage.low }
+        if lhs._storage.high < rhs._storage.high { true }
+        else if lhs._storage.high > rhs._storage.high { false }
+        else { lhs._storage.low < rhs._storage.low }
     }
 }
 

@@ -240,7 +240,7 @@ extension PlaintextMatrix {
         var innerProducts: [Scheme.CanonicalCiphertext] = try (0..<ciphertextMatrix.rowCount).map { rowIndex in
             let ciphertextRow = try ciphertextMatrix.extractDenseRow(rowIndex: rowIndex, evaluationKey: evaluationKey)
             return try mulTranspose(vector: ciphertextRow, using: evaluationKey)
-        }.flatMap { $0 }
+        }.flatMap(\.self)
 
         // Pack resulting ciphertexts such that no two result ciphertexts span multiple simd rows.
         let columnsPerSimdRowCount = simdColumnCount / dimensions.rowCount

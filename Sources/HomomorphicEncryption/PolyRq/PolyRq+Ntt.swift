@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -294,8 +294,8 @@ extension PolyContext {
             let timeToReduce = lazyReductionCounter > maxLazyReductionCounter
             if timeToReduce {
                 if t == 1 {
-                    // if lazyReductionCounter == 3, `subtractIfExceeds(twiceModulus)`
-                    // only ensures `x in [0, 2 * p - 1]`
+                    // if lazyReductionCounter == 3, `x.subtractIfExceeds(twiceModulus)`
+                    // only ensures `x in [0, twiceModulus - 1]`
                     lazyReductionCounter = max(lazyReductionCounter - 2, 2)
                 } else {
                     lazyReductionCounter = 1

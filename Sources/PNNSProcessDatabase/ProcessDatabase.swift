@@ -219,7 +219,7 @@ struct ProcessDatabase: ParsableCommand {
     ///   - scheme: The HE scheme.
     /// - Throws: Error upon processing the database.
     @inlinable
-    mutating func process<Scheme: HeScheme>(config: Arguments, scheme: Scheme.Type) throws {
+    mutating func process<Scheme: HeScheme>(config: Arguments, scheme _: Scheme.Type) throws {
         let database = try Database(from: config.inputDatabase)
         guard let vectorDimension = database.rows.first?.vector.count else {
             throw PnnsError.emptyDatabase

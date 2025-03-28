@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -105,9 +105,9 @@ extension Context {
     func decode(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [Scheme.Scalar] {
         switch format {
         case .coefficient:
-            return decodeCoefficient(plaintext: plaintext)
+            decodeCoefficient(plaintext: plaintext)
         case .simd:
-            return try decodeSimd(plaintext: plaintext)
+            try decodeSimd(plaintext: plaintext)
         }
     }
 

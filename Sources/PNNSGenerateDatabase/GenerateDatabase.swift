@@ -57,7 +57,7 @@ struct GenerateDatabaseCommand: ParsableCommand {
 
             let rowString = String(rowIndex)
             let repeatCount = metadataSize.dividingCeil(rowString.count, variableTime: true)
-            let metadata = Array([[UInt8]](repeating: Array(rowString.utf8), count: repeatCount).flatMap { $0 }
+            let metadata = Array([[UInt8]](repeating: Array(rowString.utf8), count: repeatCount).flatMap(\.self)
                 .prefix(metadataSize))
             return DatabaseRow(
                 entryId: UInt64(rowIndex),

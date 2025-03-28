@@ -132,13 +132,13 @@ extension PrivateNearestNeighborSearchUtil {
                 context: context,
                 dimensions: dimensions,
                 packing: packing,
-                values: encodeValues.flatMap { $0 })
+                values: encodeValues.flatMap(\.self))
             #expect(plaintextMatrix.rowCount == dimensions.rowCount)
             #expect(plaintextMatrix.columnCount == dimensions.columnCount)
             #expect(plaintextMatrix.packing == packing)
             #expect(plaintextMatrix.context == context)
             // Test round-trip
-            #expect(try plaintextMatrix.unpack() == encodeValues.flatMap { $0 })
+            #expect(try plaintextMatrix.unpack() == encodeValues.flatMap(\.self))
 
             // Test representation
             #expect(plaintextMatrix.plaintexts.count == expected.count)
@@ -158,7 +158,7 @@ extension PrivateNearestNeighborSearchUtil {
             #expect(signedRoundtrip == signedValues)
 
             // Test modular reduction
-            let largerValues = encodeValues.flatMap { $0 }.map { $0 + t }
+            let largerValues = encodeValues.flatMap(\.self).map { $0 + t }
             let largerSignedValues = signedValues.enumerated().map { index, value in
                 if index.isMultiple(of: 2) {
                     value + Scheme.SignedScalar(t)
@@ -500,7 +500,7 @@ extension PrivateNearestNeighborSearchUtil {
                 context: context,
                 dimensions: dimensions,
                 packing: .diagonal(babyStepGiantStep: bsgs),
-                values: values.flatMap { $0 })
+                values: values.flatMap(\.self))
 
             for (plaintext, expected) in zip(plaintextMatrix.plaintexts, expected) {
                 let decoded: [Scheme.Scalar] = try plaintext.decode(format: .simd)
@@ -522,7 +522,7 @@ extension PrivateNearestNeighborSearchUtil {
                 context: context,
                 dimensions: dimensions,
                 packing: .denseRow,
-                values: encodeValues.flatMap { $0 })
+                values: encodeValues.flatMap(\.self))
 
             let evalMatrix = try plaintextMatrix.convertToEvalFormat()
             let coeffMatrixRoundtrip = try evalMatrix.convertToCoeffFormat()

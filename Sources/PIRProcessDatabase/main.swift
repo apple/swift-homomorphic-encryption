@@ -525,7 +525,7 @@ extension ProcessKeywordDatabase.ShardValidationResult {
             label: "keys"
         )
         descriptionDict["response size"] = try sizeString(byteCount: response.size(),
-                                                          count: response.ciphertexts.flatMap { $0 }.count,
+                                                          count: response.ciphertexts.flatMap(\.self).count,
                                                           label: "ciphertexts")
         descriptionDict["noise budget"] = String(format: "%.01f", noiseBudget)
 

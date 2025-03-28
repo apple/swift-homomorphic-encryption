@@ -114,7 +114,7 @@ struct ConversionTests {
                 context: context,
                 dimensions: dimensions,
                 packing: .denseColumn,
-                values: scalars.flatMap { $0 })
+                values: scalars.flatMap(\.self))
             let serialized = try plaintextMatrix.serialize()
             #expect(try serialized.proto().native() == serialized)
             let deserialized = try PlaintextMatrix(deserialize: serialized, context: context)
@@ -151,7 +151,7 @@ struct ConversionTests {
                 context: context,
                 dimensions: dimensions,
                 packing: .denseColumn,
-                values: scalars.flatMap { $0 })
+                values: scalars.flatMap(\.self))
             // Check Canonical Format
             do {
                 let ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
@@ -209,7 +209,7 @@ struct ConversionTests {
                 context: context,
                 dimensions: dimensions,
                 packing: .denseColumn,
-                values: scalars.flatMap { $0 })
+                values: scalars.flatMap(\.self))
             let ciphertextMatrices = try (0...3).map { _ in
                 try plaintextMatrix.encrypt(using: secretKey).convertToCoeffFormat()
             }

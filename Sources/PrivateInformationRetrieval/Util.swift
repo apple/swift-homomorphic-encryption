@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@ import Foundation
 
 extension [UInt8] {
     func utf8OrBase64() -> String {
-        // swiftlint doesn't recognize the API
-        // swiftlint:disable:next optional_data_string_conversion
         if let utf8 = String(validating: self, as: UTF8.self) {
             "\(utf8) (utf8)"
         } else {

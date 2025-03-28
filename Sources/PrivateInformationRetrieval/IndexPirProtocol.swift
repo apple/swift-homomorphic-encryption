@@ -214,7 +214,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     /// Returns the serialization size in bytes of the database.
     @inlinable
     public func serializationByteCount() throws -> Int {
-        let nonNilPlaintexts = plaintexts.compactMap { $0 }
+        let nonNilPlaintexts = plaintexts.compactMap(\.self)
         guard let polyContext = nonNilPlaintexts.first?.polyContext() else {
             throw PirError.emptyDatabase
         }

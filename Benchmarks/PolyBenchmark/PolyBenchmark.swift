@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ func benchmark<T: ScalarType>(_ name: String, _: T.Type, body: @escaping Benchma
 
 func getModuliForBenchmark<T: ScalarType>(_: T.Type) -> [T] {
     switch T.self {
-    case is UInt32.Type: return [(1 << 28) - 65535]
-    case is UInt64.Type: return [(1 << 55) - 311_295]
+    case is UInt32.Type: [(1 << 28) - 65535]
+    case is UInt64.Type: [(1 << 55) - 311_295]
     default: preconditionFailure("Unsupported scalar type \(T.self)")
     }
 }

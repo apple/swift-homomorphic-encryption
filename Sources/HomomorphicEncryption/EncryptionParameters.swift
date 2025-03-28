@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -370,13 +370,13 @@ public enum PredefinedRlweParameters: String, Hashable, CaseIterable, CustomStri
     public var securityLevel: SecurityLevel {
         switch self {
         case .insecure_n_8_logq_5x18_logt_5, .insecure_n_512_logq_4x60_logt_20, .insecure_n_16_logq_60_logt_15:
-            return .unchecked
+            .unchecked
         case .n_4096_logq_16_33_33_logt_4, .n_4096_logq_27_28_28_logt_13, .n_4096_logq_27_28_28_logt_4,
              .n_4096_logq_27_28_28_logt_5, .n_4096_logq_27_28_28_logt_6, .n_4096_logq_27_28_28_logt_16,
              .n_4096_logq_27_28_28_logt_17, .n_8192_logq_29_60_60_logt_15, .n_8192_logq_28_60_60_logt_20,
              .n_8192_logq_3x55_logt_24, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_30,
              .n_8192_logq_40_60_60_logt_26, .n_8192_logq_3x55_logt_42:
-            return .quantum128
+            .quantum128
         }
     }
 
@@ -389,7 +389,7 @@ public enum PredefinedRlweParameters: String, Hashable, CaseIterable, CustomStri
              .n_4096_logq_27_28_28_logt_17, .n_8192_logq_29_60_60_logt_15, .n_8192_logq_28_60_60_logt_20,
              .n_8192_logq_3x55_logt_24, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_30,
              .n_8192_logq_40_60_60_logt_26, .n_8192_logq_3x55_logt_42:
-            return .stdDev32
+            .stdDev32
         }
     }
 
@@ -500,16 +500,16 @@ public enum PredefinedRlweParameters: String, Hashable, CaseIterable, CustomStri
             case .insecure_n_8_logq_5x18_logt_5, .n_4096_logq_27_28_28_logt_13, .n_4096_logq_27_28_28_logt_5,
                  .n_4096_logq_27_28_28_logt_6, .n_4096_logq_27_28_28_logt_16, .n_4096_logq_27_28_28_logt_17,
                  .n_4096_logq_27_28_28_logt_4:
-                return true
+                true
             // avoid `default: false` to ensure new encryption parameter sets explicitly opt in/out of 32-bit support
             case .insecure_n_512_logq_4x60_logt_20, .n_4096_logq_16_33_33_logt_4, .n_8192_logq_3x55_logt_42,
                  .n_8192_logq_3x55_logt_30, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_24,
                  .n_8192_logq_29_60_60_logt_15, .n_8192_logq_40_60_60_logt_26,
                  .n_8192_logq_28_60_60_logt_20, .insecure_n_16_logq_60_logt_15:
-                return false
+                false
             }
-        case 64: return true
-        default: return false
+        case 64: true
+        default: false
         }
     }
 }

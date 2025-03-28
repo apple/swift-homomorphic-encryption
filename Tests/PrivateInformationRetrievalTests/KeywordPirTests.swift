@@ -19,7 +19,7 @@ import Testing
 
 extension Response {
     func isTransparent() -> Bool {
-        ciphertexts.flatMap { $0 }.allSatisfy
+        ciphertexts.flatMap(\.self).allSatisfy
             { ciphertext in ciphertext.isTransparent() }
     }
 }

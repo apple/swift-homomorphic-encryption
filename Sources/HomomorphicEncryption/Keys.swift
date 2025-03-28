@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -124,8 +124,7 @@ public struct EvaluationKey<Scheme: HeScheme>: Equatable, Sendable {
     /// Returns the configuration for the evaluation key.
     public var config: EvaluationKeyConfig {
         EvaluationKeyConfig(
-            // swiftlint:disable:next array_init
-            galoisElements: galoisKey?.keys.keys.map { $0 } ?? [],
+            galoisElements: galoisKey?.keys.keys.map(\.self) ?? [],
             hasRelinearizationKey: relinearizationKey != nil)
     }
 

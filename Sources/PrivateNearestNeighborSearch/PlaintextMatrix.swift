@@ -477,11 +477,11 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     package func unpack() throws -> [Scheme.Scalar] where Format == Coeff {
         switch packing {
         case .denseColumn:
-            return try unpackDenseColumn()
+            try unpackDenseColumn()
         case .denseRow:
-            return try unpackDenseRow()
+            try unpackDenseRow()
         case .diagonal:
-            return try unpackDiagonal()
+            try unpackDiagonal()
         }
     }
 
@@ -607,9 +607,9 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
                 return decodedValues
             }
             let diagonals = rotated.chunks(ofCount: plaintextsPerColumn).map { diagonalChunks in
-                diagonalChunks.flatMap { $0 }[0..<rowCount]
+                diagonalChunks.flatMap(\.self)[0..<rowCount]
             }
-            packedValues.append(rows: diagonals.flatMap { $0 })
+            packedValues.append(rows: diagonals.flatMap(\.self))
         }
         var values = Array2d<Scheme.Scalar>.zero(rowCount: rowCount, columnCount: columnCount)
         let columnNextPowerOfTwo = columnCount.nextPowerOfTwo

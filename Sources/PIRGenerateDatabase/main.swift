@@ -91,7 +91,7 @@ struct GenerateDatabaseCommand: ParsableCommand {
                     value = [UInt8](randomByteCount: valueSize)
                 case .repeated:
                     let repeatCount = valueSize.dividingCeil(keyword.count, variableTime: true)
-                    value = Array([[UInt8]](repeating: keyword, count: repeatCount).flatMap { $0 }.prefix(valueSize))
+                    value = Array([[UInt8]](repeating: keyword, count: repeatCount).flatMap(\.self).prefix(valueSize))
                 }
                 return KeywordValuePair(keyword: keyword, value: value)
             }

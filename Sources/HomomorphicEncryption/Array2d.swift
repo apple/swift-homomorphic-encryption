@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
         if data.isEmpty {
             self.init(data: [], rowCount: 0, columnCount: 0)
         } else {
-            let flatData = data.flatMap { $0 }
+            let flatData = data.flatMap(\.self)
             if flatData.isEmpty {
                 self.init(data: [], rowCount: 0, columnCount: 0)
             } else {

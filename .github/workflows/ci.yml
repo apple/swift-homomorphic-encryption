@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 # Keep versions in sync with README
 env:
-  SWIFTLINT_VERSION: 0.57.0
-  SWIFTFORMAT_VERSION: 0.54.6
+  SWIFTLINT_VERSION: 0.58.2
+  SWIFTFORMAT_VERSION: 0.55.5
   SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING: 1
 jobs:
   soundness:

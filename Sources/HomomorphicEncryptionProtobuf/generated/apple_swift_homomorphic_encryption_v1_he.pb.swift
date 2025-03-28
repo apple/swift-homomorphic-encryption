@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -214,7 +214,7 @@ public struct Apple_SwiftHomomorphicEncryption_V1_SerializedFullCiphertext: @unc
   /// The polynomials in the ciphertext.
   public var polys: Data = Data()
 
-  /// Serialization may exclude low bits from each polyomial's coefficients, yielding reduced serialization size.
+  /// Serialization may exclude low bits from each polynomial's coefficients, yielding reduced serialization size.
   ///
   /// The i'th entry tells how many bits to exclude from each coefficient of the i'th polynomial
   /// This is useful when the ciphertext is immediately decrypted upon deserialization.

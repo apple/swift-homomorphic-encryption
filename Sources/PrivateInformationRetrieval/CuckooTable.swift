@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -105,7 +105,8 @@ public struct CuckooTableConfig: Hashable, Codable, Sendable {
     ///   - bucketCount: Number of buckets in the new configuration.
     /// - Returns: The new configuration.
     /// - Throws: Error upon failure to convert the configuration.
-    func freezingTableSize(maxSerializedBucketSize: Int, bucketCount: Int) throws -> Self {
+    @inlinable
+    package func freezingTableSize(maxSerializedBucketSize: Int, bucketCount: Int) throws -> Self {
         try .init(
             hashFunctionCount: hashFunctionCount,
             maxEvictionCount: maxEvictionCount,

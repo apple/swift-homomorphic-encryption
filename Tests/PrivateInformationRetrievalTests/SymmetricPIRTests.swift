@@ -21,13 +21,7 @@ import HomomorphicEncryption
 import Testing
 
 @Suite
-struct SymmetricPIRTests {
-    private func generateSymmetricPirConfig() throws -> SymmetricPirConfig {
-        let secretKey = [UInt8](OprfPrivateKey().rawRepresentation)
-        return try SymmetricPirConfig(
-            oprfSecretKey: secretKey, configType: .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128)
-    }
-
+struct SymmetricPirTests {
     @Test
     func oprfRoundtrip() throws {
         func roundTrip(keyword: [UInt8], server: OprfServer,
@@ -42,7 +36,7 @@ struct SymmetricPIRTests {
 
             return (queryContext.query, output)
         }
-        let config = try generateSymmetricPirConfig()
+        let config = try PirTestUtils.SymmetricPirTests.generateSymmetricPirConfig()
         let server = try OprfServer(symmetricPirConfig: config)
         let client = try OprfClient(symmetricPirClientConfig: config.clientConfig())
 
@@ -55,19 +49,19 @@ struct SymmetricPIRTests {
     }
 
     @Test
-    func symmetricPIRDatabase() throws {
+    func database() throws {
         let shardCount = 1
         let rowCount = 10
         let valueSize = 3
-        let testDatabase = PirTestUtils.getTestTable(rowCount: rowCount, valueSize: valueSize)
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: rowCount, valueSize: valueSize)
 
-        let symmetricPirConfig = try generateSymmetricPirConfig()
+        let config = try PirTestUtils.SymmetricPirTests.generateSymmetricPirConfig()
         let encryptedDatabase = try KeywordDatabase(
             rows: testDatabase,
             sharding: .shardCount(shardCount),
-            symmetricPirConfig: symmetricPirConfig)
+            symmetricPirConfig: config)
 
-        let oprfSecretKey = try OprfPrivateKey(rawRepresentation: symmetricPirConfig.oprfSecretKey)
+        let oprfSecretKey = try OprfPrivateKey(rawRepresentation: config.oprfSecretKey)
 
         let testIndex = Int.random(in: 0..<rowCount)
         let testKeyword = Data(testDatabase[testIndex].keyword)
@@ -75,8 +69,8 @@ struct SymmetricPIRTests {
 
         let finalizeHash = try oprfSecretKey.evaluate(Data(testKeyword))
         let testShard = try #require(encryptedDatabase.shards["0"])
-        let obliviousKeywordSize = symmetricPirConfig.configType.obliviousKeywordSize
-        let aesKeySize = symmetricPirConfig.configType.entryEncryptionKeySize
+        let obliviousKeywordSize = config.configType.obliviousKeywordSize
+        let aesKeySize = config.configType.entryEncryptionKeySize
         #expect(testShard.rows[[UInt8](finalizeHash.prefix(obliviousKeywordSize))] != nil)
         #expect(testShard.rows[[UInt8](finalizeHash.prefix(1))] == nil)
 
@@ -102,76 +96,9 @@ struct SymmetricPIRTests {
         #expect(throws: (any Error).self) { try AES.GCM.open(sealedBox, using: key) }
     }
 
-    private func SymmetricPirTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
-        encryptionParameters: EncryptionParameters<PirServer.Scheme>,
-        keywordConfig: KeywordPirConfig,
-        symmetricPirConfig: SymmetricPirConfig,
-        server _: PirServer.Type,
-        client _: PirClient.Type) throws where PirServer.IndexPir == PirClient.IndexPir
-    {
-        let context: Context<PirServer.Scheme> = try Context(encryptionParameters: encryptionParameters)
-        let valueSize = context.bytesPerPlaintext / 2
-        let plainDatabase = PirTestUtils.getTestTable(rowCount: 100, valueSize: valueSize)
-        let encryptedDatabase = try KeywordDatabase.symmetricPIRProcess(
-            database: plainDatabase,
-            config: symmetricPirConfig)
-        let processed = try KeywordPirServer<PirServer>.process(database: encryptedDatabase,
-                                                                config: keywordConfig,
-                                                                with: context,
-                                                                symmetricPirConfig: symmetricPirConfig)
-        let server = try KeywordPirServer<PirServer>(
-            context: context,
-            processed: processed)
-        let client = KeywordPirClient<PirClient>(
-            keywordParameter: keywordConfig.parameter, pirParameter: processed.pirParameter,
-            context: context)
-        let secretKey = try context.generateSecretKey()
-        let evaluationKey = try client.generateEvaluationKey(using: secretKey)
-        let shuffledValues = Array(plainDatabase.indices).shuffled()
-
-        let oprfServer = try OprfServer(symmetricPirConfig: symmetricPirConfig)
-        precondition(keywordConfig.symmetricPirClientConfig != nil)
-        let oprfClient = try OprfClient(symmetricPirClientConfig: #require(keywordConfig.symmetricPirClientConfig))
-        for index in shuffledValues.prefix(10) {
-            // OPRF oblivious keyword
-            let oprfQueryContext = try oprfClient.queryContext(at: plainDatabase[index].keyword)
-            let oprfResponse = try oprfServer.computeResponse(query: oprfQueryContext.query)
-            let parsedOprfOutput = try oprfClient.parse(oprfResponse: oprfResponse, with: oprfQueryContext)
-            // Keyword PIR
-            let query = try client.generateQuery(at: parsedOprfOutput.obliviousKeyword, using: secretKey)
-            let response = try server.computeResponse(to: query, using: evaluationKey)
-            #expect(!response.isTransparent())
-            let result = try client.decrypt(response: response, at: parsedOprfOutput.obliviousKeyword, using: secretKey)
-            // SPIR decryption
-            #expect(result != nil)
-            let spirResult = try result.map { res in
-                try oprfClient.decrypt(encryptedEntry: res, with: parsedOprfOutput)
-            }
-            #expect(spirResult == plainDatabase[index].value)
-        }
-    }
-
     @Test
-    func symmetricPIRFullRoundTrip() throws {
-        let symmetricPirConfig = try generateSymmetricPirConfig()
-        let keywordConfig = try KeywordPirConfig(
-            dimensionCount: 2,
-            cuckooTableConfig: PirTestUtils.testCuckooTableConfig(maxSerializedBucketSize: 100),
-            unevenDimensions: true,
-            keyCompression: .noCompression,
-            symmetricPirClientConfig: symmetricPirConfig.clientConfig())
-
-        try SymmetricPirTest(
-            encryptionParameters: TestUtils.getTestEncryptionParameters(),
-            keywordConfig: keywordConfig,
-            symmetricPirConfig: symmetricPirConfig,
-            server: MulPirServer<Bfv<UInt32>>.self,
-            client: MulPirClient<Bfv<UInt32>>.self)
-        try SymmetricPirTest(
-            encryptionParameters: TestUtils.getTestEncryptionParameters(),
-            keywordConfig: keywordConfig,
-            symmetricPirConfig: symmetricPirConfig,
-            server: MulPirServer<Bfv<UInt64>>.self,
-            client: MulPirClient<Bfv<UInt64>>.self)
+    func roundTrip() throws {
+        try PirTestUtils.SymmetricPirTests.roundTrip(Bfv<UInt32>.self)
+        try PirTestUtils.SymmetricPirTests.roundTrip(Bfv<UInt64>.self)
     }
 }

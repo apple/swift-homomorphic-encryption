@@ -551,4 +551,9 @@ extension Duration {
     }
 }
 
-ProcessDatabase.main()
+// workaround to call the async main
+func main() async {
+    await ProcessDatabase.main()
+}
+
+await main()

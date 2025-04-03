@@ -24,8 +24,6 @@ enum ValueTypeArguments: String, CaseIterable, ExpressibleByArgument {
     case repeated
 }
 
-// This executable is used in tests, which breaks `swift test -c release` when used with `@main`.
-// So we avoid using `@main` here.
 struct ValueSizeArguments: ExpressibleByArgument {
     let range: Range<Int>
 
@@ -59,6 +57,8 @@ extension [UInt8] {
     }
 }
 
+// This executable is used in tests, which breaks `swift test -c release` when used with `@main`.
+// So we avoid using `@main` here.
 struct GenerateDatabaseCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "PIRGenerateDatabase", version: Version.current.description)

@@ -101,9 +101,9 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     public let evaluationKeyConfig: EvaluationKeyConfig
 
     /// The number of dimensions in the database.
-    @usableFromInline var dimensionCount: Int { dimensions.count }
+    @usableFromInline package var dimensionCount: Int { dimensions.count }
     /// The number of ciphertexts in each query after server-side expansion.
-    @usableFromInline var expandedQueryCount: Int { dimensions.sum() }
+    @usableFromInline package var expandedQueryCount: Int { dimensions.sum() }
 
     /// Initializes an ``IndexPirParameter``.
     /// - Parameters:

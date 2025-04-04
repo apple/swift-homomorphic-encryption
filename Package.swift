@@ -128,6 +128,7 @@ let package = Package(
             name: "_TestUtilities",
             dependencies: [
                 "HomomorphicEncryption",
+                "PrivateInformationRetrieval",
                 "PrivateNearestNeighborSearch",
                 .product(name: "Numerics", package: "swift-numerics"),
             ],

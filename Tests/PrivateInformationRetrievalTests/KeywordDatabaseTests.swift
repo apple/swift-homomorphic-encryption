@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import _TestUtilities
 import Foundation
 @testable import PrivateInformationRetrieval
 import Testing
@@ -32,7 +33,7 @@ struct KeywordDatabaseTests {
         let shardCount = 10
         let rowCount = 10
         let valueSize = 3
-        let testDatabase = PirTestUtils.getTestTable(rowCount: rowCount, valueSize: valueSize)
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: rowCount, valueSize: valueSize)
 
         let database = try KeywordDatabase(
             rows: testDatabase,

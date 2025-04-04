@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,7 +75,8 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
             evaluationKeyConfig: evalKeyConfig)
     }
 
-    static func evaluationKeyConfig(
+    @inlinable
+    package static func evaluationKeyConfig(
         expandedQueryCount: Int,
         degree: Int,
         keyCompression: PirKeyCompressionStrategy) -> EvaluationKeyConfig
@@ -158,11 +159,12 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
 // MARK: query generation related function
 
 extension MulPirClient {
-    func computeCoordinates(at index: Int) throws -> [Int] {
+    @inlinable
+    package func computeCoordinates(at index: Int) throws -> [Int] {
         guard index >= 0, index < parameter.entryCount else {
             throw PirError.invalidIndex(index: index, numberOfEntries: parameter.entryCount)
         }
-        var plaintextIndex = plaintextIndex(parameter, entryIndex: index)
+        var plaintextIndex = plaintextIndex(entryIndex: index)
         var product = parameter.dimensions.product() as Int
         return parameter.dimensions.map { dimensionSize in
             product /= dimensionSize
@@ -197,11 +199,9 @@ extension MulPirClient {
             using: secretKey), indicesCount: indices.count)
     }
 
-    private func plaintextIndex(_: IndexPirParameter,
-                                entryIndex: Int) -> Int
-    {
-        let entryPerPlaintext = entryChunksPerPlaintext
-        return entryIndex / entryPerPlaintext
+    @inlinable
+    func plaintextIndex(entryIndex: Int) -> Int {
+        entryIndex / entryChunksPerPlaintext
     }
 }
 

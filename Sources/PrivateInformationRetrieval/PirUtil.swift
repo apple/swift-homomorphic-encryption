@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@ import HomomorphicEncryption
 import ModularArithmetic
 
 @usableFromInline
-enum PirUtil<Scheme: HeScheme> {
-    @usableFromInline typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
+package enum PirUtil<Scheme: HeScheme> {
+    @usableFromInline package typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
     typealias CoeffCiphertext = Scheme.CoeffCiphertext
     typealias EvalCiphertext = Scheme.EvalCiphertext
 
@@ -37,7 +37,7 @@ enum PirUtil<Scheme: HeScheme> {
     /// `2^{logStep}*i`-th  or `(2^{logStep}*i + 2^{logStep-1})`-th positions. As the last step, shifting by multiplying
     /// the polynomial with `x^-{2^{logStep-1}}` helps compensate for the offset of `2^{logStep-1})`.
     @inlinable
-    static func expandCiphertextForOneStep(
+    package static func expandCiphertextForOneStep(
         _ ciphertext: CanonicalCiphertext,
         logStep: Int,
         using evaluationKey: EvaluationKey<Scheme>) throws -> (CanonicalCiphertext, CanonicalCiphertext)
@@ -79,7 +79,7 @@ enum PirUtil<Scheme: HeScheme> {
     /// However when outputCount is not power of two, some of them may experience one less expansion. To make them have
     /// the same blow-up factor, we add the ciphertext to itself when returning.
     @inlinable
-    static func expandCiphertext(
+    package static func expandCiphertext(
         _ ciphertext: CanonicalCiphertext,
         outputCount: Int,
         logStep: Int,
@@ -118,7 +118,7 @@ enum PirUtil<Scheme: HeScheme> {
 
     /// Expand a ciphertext array into given number of encrypted constant polynomials.
     @inlinable
-    static func expandCiphertexts(
+    package static func expandCiphertexts(
         _ ciphertexts: [CanonicalCiphertext],
         outputCount: Int,
         using evaluationKey: EvaluationKey<Scheme>) throws -> [CanonicalCiphertext]
@@ -141,8 +141,9 @@ enum PirUtil<Scheme: HeScheme> {
     /// Convert the MulPir indices into a plaintext.
     ///
     /// The MulPir indices are the indices of non-zero results after expansion
-    static func compressInputsForOneCiphertext(totalInputCount: Int, nonZeroInputs: [Int],
-                                               context: Context<Scheme>) throws -> Plaintext<Scheme, Coeff>
+    @inlinable
+    package static func compressInputsForOneCiphertext(totalInputCount: Int, nonZeroInputs: [Int],
+                                                       context: Context<Scheme>) throws -> Plaintext<Scheme, Coeff>
     {
         precondition(totalInputCount <= context.degree)
         var rawData: [Scheme.Scalar] = Array(repeating: 0, count: context.degree)
@@ -160,7 +161,8 @@ enum PirUtil<Scheme: HeScheme> {
     }
 
     /// Generate the ciphertext based on the given non-zero positions.
-    static func compressInputs(
+    @inlinable
+    package static func compressInputs(
         totalInputCount: Int,
         nonZeroInputs: [Int],
         context: Context<Scheme>,

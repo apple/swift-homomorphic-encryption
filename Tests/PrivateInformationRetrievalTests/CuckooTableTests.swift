@@ -21,7 +21,7 @@ struct CuckooTableTests {
     @Test
     func cuckooTableEntries() throws {
         let valueSize = 100
-        let testDatabase = PirTestUtils.getTestTable(
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(
             rowCount: 1000,
             valueSize: valueSize)
         let config = try PirTestUtils.testCuckooTableConfig(maxSerializedBucketSize: 4 * valueSize)
@@ -56,7 +56,7 @@ struct CuckooTableTests {
     @Test
     func reproduceCuckooTable() throws {
         let valueSize = 10
-        let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: valueSize)
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 1000, valueSize: valueSize)
         let config = try PirTestUtils.testCuckooTableConfig(maxSerializedBucketSize: valueSize * 5)
         let rng1 = TestRng(counter: 0)
         let rng2 = TestRng(counter: 0)
@@ -70,7 +70,7 @@ struct CuckooTableTests {
     func summarize() throws {
         var rng = TestRng(counter: 1)
         let valueSize = 10
-        let testDatabase = PirTestUtils.getTestTable(rowCount: 100, valueSize: valueSize, using: &rng)
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 100, valueSize: valueSize, using: &rng)
 
         let config = try CuckooTableConfig(
             hashFunctionCount: 2,
@@ -93,7 +93,7 @@ struct CuckooTableTests {
     @Test
     func cuckooTableLargestSerializedBucketSize() throws {
         let valueSize = 10
-        let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: valueSize)
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 1000, valueSize: valueSize)
         let config = try CuckooTableConfig(
             hashFunctionCount: 2,
             maxEvictionCount: 20,
@@ -112,7 +112,7 @@ struct CuckooTableTests {
     @Test
     func cuckooTableFixedSize() throws {
         var rng = TestRng(counter: 0)
-        let testDatabase = PirTestUtils.getTestTable(rowCount: 100, valueSize: 10, using: &rng)
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 100, valueSize: 10, using: &rng)
         let maxSerializedBucketSize = 50
         let cuckooConfig = try {
             // use a smaller load factor, to ensure the fixed size is possible
@@ -122,10 +122,9 @@ struct CuckooTableTests {
                                                bucketCount:
                                                .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.5))
             let cuckooTable = try CuckooTable(config: config, database: testDatabase, using: rng)
-            return try config
-                .freezingTableSize(
-                    maxSerializedBucketSize: cuckooTable.maxSerializedBucketSize(),
-                    bucketCount: cuckooTable.buckets.count)
+            return try config.freezingTableSize(
+                maxSerializedBucketSize: cuckooTable.maxSerializedBucketSize(),
+                bucketCount: cuckooTable.buckets.count)
         }()
         let cuckooTable = try CuckooTable(config: cuckooConfig, database: testDatabase, using: rng)
         #expect(try cuckooTable.maxSerializedBucketSize() <= maxSerializedBucketSize)
@@ -141,7 +140,7 @@ struct CuckooTableTests {
     func cuckooTableSmallSlotCount() throws {
         let valueSize = 10
         let slotCount = 7
-        let testDatabase = PirTestUtils.getTestTable(rowCount: 1000, valueSize: valueSize)
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 1000, valueSize: valueSize)
         let config = try CuckooTableConfig(
             hashFunctionCount: 2,
             maxEvictionCount: 100,

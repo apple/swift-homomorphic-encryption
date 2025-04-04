@@ -41,6 +41,7 @@ extension BinaryFloatingPoint {
 /// A simple random number generator used for testing.
 ///
 /// This generates an arithmetic sequence by incrementing a UInt64 counter using wrapping arithmetic.
+@usableFromInline
 package struct TestRng: RandomNumberGenerator, PseudoRandomNumberGenerator {
     @usableFromInline var counter: UInt64 = 0
 
@@ -94,9 +95,9 @@ extension [UInt8] {
 @usableFromInline
 package enum TestUtils {
     /// A polynomial degree suitable for testing.
-    package static let testPolyDegree = 16
+    @usableFromInline package static let testPolyDegree = 16
     /// A plaintext modulus suitable for testing.
-    package static let testPlaintextModulus = 1153
+    @usableFromInline package static let testPlaintextModulus = 1153
 }
 
 extension TestUtils {
@@ -297,6 +298,7 @@ extension TestUtils {
 }
 
 extension TestUtils {
+    @inlinable
     package static func testCoefficientModuli<T: ScalarType>(_: T.Type) throws -> [T] {
         if T.self == UInt32.self {
             return try T.generatePrimes(
@@ -313,6 +315,7 @@ extension TestUtils {
         preconditionFailure("Unsupported scalar type \(T.self)")
     }
 
+    @inlinable
     package static func getTestEncryptionParameters<Scheme: HeScheme>() throws -> EncryptionParameters<Scheme> {
         try EncryptionParameters<Scheme>(
             polyDegree: testPolyDegree,
@@ -322,6 +325,7 @@ extension TestUtils {
             securityLevel: SecurityLevel.unchecked)
     }
 
+    @inlinable
     package static func getTestContext<Scheme: HeScheme>() throws -> Context<Scheme> {
         try Context<Scheme>(encryptionParameters: getTestEncryptionParameters())
     }

@@ -45,7 +45,7 @@ public struct KeywordPirConfig: Hashable, Codable, Sendable {
     }
 
     /// Optional configuration for Symmetric PIR client.
-    var symmetricPirClientConfig: SymmetricPirClientConfig?
+    @usableFromInline package var symmetricPirClientConfig: SymmetricPirClientConfig?
 
     /// Initializes a ``KeywordPirConfig``.
     /// - Parameters:

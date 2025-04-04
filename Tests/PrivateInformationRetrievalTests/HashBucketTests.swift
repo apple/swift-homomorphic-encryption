@@ -26,7 +26,7 @@ struct HashBucketTests {
 
     private func getTestEntry() -> HashBucket.HashBucketEntry {
         let size = Int.random(in: 1...100)
-        let randomData = PirTestUtils.generateRandomData(size: size)
+        let randomData = PirTestUtils.generateRandomBytes(size: size)
 
         return HashBucket.HashBucketEntry(keywordHash: UInt64.random(in: UInt64.min...UInt64.max), value: randomData)
     }
@@ -47,7 +47,7 @@ struct HashBucketTests {
     @Test
     func serializationError() throws {
         let size = Int(UInt16.max) + 1
-        let randomData = PirTestUtils.generateRandomData(size: size)
+        let randomData = PirTestUtils.generateRandomBytes(size: size)
         let testBucket = HashBucket.HashBucketEntry(
             keywordHash: UInt64.random(in: UInt64.min...UInt64.max),
             value: randomData)

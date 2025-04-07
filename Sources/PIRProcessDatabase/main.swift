@@ -551,9 +551,12 @@ extension Duration {
     }
 }
 
-// workaround to call the async main
-func main() async {
+// workaround to call the async main, but without using a top-level `await` to not break `swift test -c release`.
+let group = DispatchGroup()
+group.enter()
+let task = Task.detached(priority: .userInitiated) {
+    defer { group.leave() }
     await ProcessDatabase.main()
 }
 
-await main()
+group.wait()

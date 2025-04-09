@@ -89,7 +89,7 @@ public func cosineSimilarityBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () ->
         let queryCount = 1
 
         let benchmarkName = [
-            "CosineSimilarityBenchmark",
+            "CosineSimilarity",
             String(describing: Scheme.self),
             encryptionConfig.description,
             "rowCount=\(databaseConfig.rowCount)",

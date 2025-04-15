@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ public protocol CoreScalarType: FixedWidthInteger, UnsignedInteger, Sendable
     where Self.Magnitude: Sendable
 {
     /// Scalar which can hold a product of two `ScalarType` multiplicands.
-    associatedtype DoubleWidth: DoubleWidthType, Sendable where DoubleWidth.Scalar == Self
+    associatedtype DoubleWidth: DoubleWidthType, Sendable where DoubleWidth.Scalar == Self,
+        DoubleWidth.Magnitude: Sendable
 
     /// Holds signed values of the same bit-width.
     associatedtype SignedScalar: CoreSignedScalarType where SignedScalar.UnsignedScalar == Self

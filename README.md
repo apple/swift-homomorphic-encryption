@@ -225,11 +225,12 @@ By default, benchmarking requires the [jemalloc](http://jemalloc.net) dependency
 
 Two ways to run the benchmarks are:
 * Xcode
-  * Open the `swift-homomorphic-encryption` folder in Xcode.
+  * Open the `swift-homomorphic-encryption` folder in Xcode with `SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1` set, e.g.:
+    * `open --env SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1 Package.swift`
   * Switch to a benchmark target.
   * Run the target, e.g., via the `Product` menu.
 * Command line
-  * Run `swift package benchmark`.
+  * Run `SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1 swift package benchmark`.
   * See the [Benchmark](https://github.com/ordo-one/package-benchmark) documentation for more information on running benchmarks.
 
 ### Contributing

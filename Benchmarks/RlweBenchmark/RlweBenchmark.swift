@@ -14,7 +14,7 @@
 
 // Benchmarks for Rlwe functions.
 // These benchmarks can be triggered with
-// swift package benchmark --target RlweBenchmark
+// SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1 swift package benchmark --target RlweBenchmark
 
 import Benchmark
 import HomomorphicEncryption

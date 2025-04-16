@@ -14,7 +14,7 @@
 
 // Benchmarks for PolyRq functions.
 // These benchmarks can be triggered with
-// swift package benchmark --target PolyBenchmark
+// SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1 swift package benchmark --target PolyBenchmark
 
 import Benchmark
 import HomomorphicEncryption

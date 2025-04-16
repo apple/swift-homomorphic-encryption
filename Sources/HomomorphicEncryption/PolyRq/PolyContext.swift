@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ public final class PolyContext<T: ScalarType>: Sendable {
     public let degree: Int
     /// CRT-representation of the modulus `Q = product_{i=0}^{L-1} q_i`.
     public let moduli: [T]
+    /// The modulus `Q = product_{i=0}^{L-1} q_i`.
+    @usableFromInline let modulus: Width32<T>
     /// Next context, typically formed by dropping `q_{L-1}`.
     @usableFromInline let next: PolyContext<T>?
     /// Operations mod `q_0` up to `q_{L-1}`.
@@ -43,11 +45,12 @@ public final class PolyContext<T: ScalarType>: Sendable {
         guard degree.isPowerOfTwo else {
             throw HeError.invalidDegree(degree)
         }
-        // For CRT correctness, we require all moduli to be co-prime.
-        // For convenience, we instead check a slightly stronger condition, that
-        // additionally restricts an even modulus to be a power of two. This unnecessarily forbids,
-        // 6, e.g., from being in the RNS base.
-        for modulus in moduli {
+
+        func validate(modulus: T) throws {
+            // For CRT correctness, we require all moduli to be co-prime.
+            // For convenience, we instead check a slightly stronger condition, that
+            // additionally restricts an even modulus to be a power of two. This unnecessarily forbids,
+            // 6, e.g., from being in the RNS base.
             guard modulus.isPrime(variableTime: true) || modulus.isPowerOfTwo else {
                 throw HeError.invalidModulus(Int64(modulus))
             }
@@ -63,6 +66,19 @@ public final class PolyContext<T: ScalarType>: Sendable {
         }
         guard moduli.allUnique() else {
             throw HeError.coprimeModuli(moduli: moduli.map { Int64($0) })
+        }
+        guard let lastModulus = moduli.last else {
+            throw HeError.emptyModulus
+        }
+        if let next {
+            precondition(next.moduli[...] == moduli.prefix(moduli.count - 1))
+            try validate(modulus: lastModulus)
+            self.modulus = next.modulus &* Width32<T>(lastModulus)
+        } else {
+            for modulus in moduli {
+                try validate(modulus: modulus)
+            }
+            self.modulus = moduli.product()
         }
 
         self.degree = degree

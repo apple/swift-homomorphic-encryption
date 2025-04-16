@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,9 +71,7 @@ package struct CrtComposer<T: ScalarType>: Sendable {
     /// - Warning: `V`'s operations must be constant time to prevent leaking
     /// `poly` through timing.
     @inlinable
-    package func compose<V: FixedWidthInteger &
-        UnsignedInteger>(data: Array2d<T>) throws -> [V]
-    {
+    package func compose<V: FixedWidthInteger & UnsignedInteger>(data: Array2d<T>) throws -> [V] {
         precondition(data.rowCount == polyContext.moduli.count)
         precondition(Double(V.max) >= Self
             .composeMaxIntermediateValue(moduli: polyContext.moduli))
@@ -109,10 +107,7 @@ package struct CrtComposer<T: ScalarType>: Sendable {
     /// - Warning: `V`'s operations must be constant time to prevent leaking
     /// `poly` through timing.
     @inlinable
-    package func compose<V: FixedWidthInteger & UnsignedInteger>(poly: PolyRq<
-        T,
-        Coeff
-    >) throws -> [V] {
+    package func compose<V: FixedWidthInteger & UnsignedInteger>(poly: PolyRq<T, Coeff>) throws -> [V] {
         try compose(data: poly.data)
     }
 }

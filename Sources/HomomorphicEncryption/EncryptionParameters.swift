@@ -137,8 +137,8 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
         else {
             throw HeError.insecureEncryptionParameters(self)
         }
-        // Due to some usage of OctoWidth
-        guard coefficientModuli.count <= 8 else {
+        // Due to some usage of `Width32`
+        guard coefficientModuli.count <= 32 else {
             throw HeError.invalidEncryptionParameters(self)
         }
         for coefficientModulus in coefficientModuli {

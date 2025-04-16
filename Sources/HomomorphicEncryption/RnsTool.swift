@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -110,15 +110,13 @@ package struct RnsTool<T: ScalarType>: Sendable {
         self.qModT = inputContext.qRemainder(dividingBy: t)
         self.tIncrement = inputContext.moduli.map { qi in qi - t.modulus }
         self.t = t
+        let composedQ = inputContext.modulus
+        let composedT = outputContext.modulus
+        let qDivTComposed = composedQ / composedT
 
-        // At least 8 moduli supported, more when their product is far from `T.max`.
-        let octoModuli = inputContext.moduli.map { modulus in OctoWidth<T>(integerLiteral: Int(modulus)) }
-        let q: OctoWidth<T> = inputContext.moduli.product()
-        let qDivT = q / OctoWidth<T>(integerLiteral: Int(t.modulus))
-
-        self.qDivT = octoModuli.map { qi in MultiplyConstantModulus(
-            multiplicand: T(qDivT % qi),
-            modulus: T(qi),
+        self.qDivT = inputContext.moduli.map { qi in MultiplyConstantModulus(
+            multiplicand: T(qDivTComposed % Width32<T>(qi)),
+            modulus: qi,
             variableTime: true)
         }
 

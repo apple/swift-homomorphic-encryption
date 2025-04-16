@@ -87,3 +87,38 @@ extension Array where Element: FixedWidthInteger {
         reduce(V(0)) { V($0) + V($1) }
     }
 }
+
+extension Array where Element: ScalarType {
+    @inlinable
+    func product() -> Width32<Self.Element> {
+        func wideningProduct<Prod: FixedWidthInteger>(of elements: [some FixedWidthInteger]) -> [Prod] {
+            stride(from: 0, to: elements.count, by: 2).map { index in
+                var product = Prod(elements[index])
+                if index < elements.count - 1 {
+                    product &*= Prod(elements[index + 1])
+                }
+                return product
+            }
+        }
+
+        let doubleWidth: [Self.Element.DoubleWidth] = wideningProduct(of: self)
+        if doubleWidth.count == 1 {
+            return Width32<Self.Element>(doubleWidth[0])
+        }
+        let quadWidth: [QuadWidth<Self.Element>] = wideningProduct(of: doubleWidth)
+        if quadWidth.count == 1 {
+            return Width32<Self.Element>(quadWidth[0])
+        }
+        let octoWidth: [OctoWidth<Self.Element>] = wideningProduct(of: quadWidth)
+        if octoWidth.count == 1 {
+            return Width32<Self.Element>(octoWidth[0])
+        }
+        let width16: [Width16<Self.Element>] = wideningProduct(of: octoWidth)
+        if width16.count == 1 {
+            return Width32<Self.Element>(width16[0])
+        }
+        let width32: [Width32<Self.Element>] = wideningProduct(of: width16)
+        precondition(width32.count == 1)
+        return width32[0]
+    }
+}

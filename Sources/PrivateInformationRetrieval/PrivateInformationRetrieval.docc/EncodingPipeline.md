@@ -5,7 +5,7 @@ Learn how to scale data encoding for Private Information Retrieval.
 ## Overview
 
 While
-[PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirprocessdatabase)
+[PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirprocessdatabase)
 documentation shows how to process small datasets, this page should give you an idea how to process large datasets.
 
 We start by introducing the sharding function. Once a database has been sharded, each shard can be processed
@@ -16,13 +16,13 @@ To encode as fast as possible, one could have multiple nodes that shard slices o
 nodes will collect the rows from the sharding nodes. Once the whole dataset has been divided into shards, each node
 holding a completed shard worth of rows can start processing them. Each node will upload the processed shard & the
 resulting PIR parameters to shared storage. A post-processing job can merge all the PIR parameters to construct a
-[PIRConfig](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_api_v1_pirconfig)
+[PIRConfig](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_api_v1_pirconfig)
 protobuf message that contains a shared evaluation key configuration and configuration for every shard.
 
 ## Sharding function
 
 While we do offer sharding as a convenience feature in ``KeywordDatabase/init(rows:sharding:)`` and even as a binary
-([PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirsharddatabase)),
+([PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirsharddatabase)),
 it might be beneficial to understand how the sharding actually works and to incorporate that directly into your encoding
 pipeline. In Swift you can use ``Swift/Array/shardIndex(shardCount:)``, implemented as follows:
 
@@ -84,5 +84,5 @@ let loadedProcessedDatabaseWithParameters = try pirParameters.native(database: p
 
 Each shard also contains its own evaluation key configuration. But to give a single evaluation key configuration to the
 PIR client, we need to merge the evaluation key configurations from all shards. For that we can use
-[union()](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/homomorphicencryption/swift/sequence/union())
+[union()](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/homomorphicencryption/swift/sequence/union())
 on a sequence of evaluation key configurations.

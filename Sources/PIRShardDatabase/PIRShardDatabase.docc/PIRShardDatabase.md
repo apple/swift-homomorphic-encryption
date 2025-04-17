@@ -4,24 +4,24 @@ Keyword PIR database sharding
 
 ## Overview
 
-[PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirsharddatabase) is an executable which divides a database into disjoint shards.
-Each resulting shard is suitable for processing with the [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirprocessdatabase) executable.
+[PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirsharddatabase) is an executable which divides a database into disjoint shards.
+Each resulting shard is suitable for processing with the [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirprocessdatabase) executable.
 
 `PIRShardDatabase` supports two sharding settings:
 * `shardCount` randomly shards the database using the specified of shards.
 * `entryCountPerShard` shards the database using enough shards such that the average shard contains the specified number of entries.
 
 ### Requirements
-Build the [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirprocessdatabase) executable by running:
+Build the [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirprocessdatabase) executable by running:
 ```sh
 swift build -c release --target PIRProcessDatabase
 ```
 The binary will be generated in `.build/release/PIRProcessDatabase`.
 
 For the example below, you'll also need to install the
-[PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirgeneratedatabse)
+[PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirgeneratedatabse)
 executable in a similar manner as
-[PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirsharddatabase).
+[PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirsharddatabase).
 
 ### Example
 

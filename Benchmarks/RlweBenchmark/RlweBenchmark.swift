@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,6 +112,59 @@ enum StaticRlweBenchmarkContext {
             preconditionFailure("Unsupported Scheme \(Scheme.self)")
         }
         preconditionFailure("Unsupported Scheme \(Scheme.self)")
+    }
+}
+
+struct EncryptionParametersConfig {
+    let polyDegree: Int
+    let plaintextModulusBits: [Int]
+    let coefficientModulusBits: [Int]
+}
+
+extension EncryptionParametersConfig: CustomStringConvertible {
+    var description: String {
+        "N=\(polyDegree)/logt=\(plaintextModulusBits)/logq=\(coefficientModulusBits.description)"
+    }
+}
+
+extension EncryptionParameters {
+    init(config: EncryptionParametersConfig) throws {
+        let plaintextModuli = try Scheme.Scalar.generatePrimes(
+            significantBitCounts: config.plaintextModulusBits,
+            preferringSmall: true,
+            nttDegree: config.polyDegree)
+        let coefficientModuli = try Scheme.Scalar.generatePrimes(
+            significantBitCounts: config.coefficientModulusBits,
+            preferringSmall: false,
+            nttDegree: config.polyDegree)
+        self = try EncryptionParameters<Scheme>(
+            polyDegree: config.polyDegree,
+            plaintextModulus: plaintextModuli[0],
+            coefficientModuli: coefficientModuli,
+            errorStdDev: ErrorStdDev.stdDev32,
+            securityLevel: SecurityLevel.quantum128)
+    }
+}
+
+let contextCreationConfig32 = EncryptionParametersConfig(
+    polyDegree: 8192,
+    plaintextModulusBits: [18],
+    coefficientModulusBits: Array(repeating: 28, count: 5))
+let contextCreationConfig64 = EncryptionParametersConfig(
+    polyDegree: 8192,
+    plaintextModulusBits: [18],
+    coefficientModulusBits: Array(repeating: 33, count: 5))
+
+func contextInitBenchmark<Scheme: HeScheme>(_: Scheme.Type, config: EncryptionParametersConfig) -> () -> Void {
+    {
+        let benchmarkName = ["ContextInit", String(describing: Scheme.self), config.description].joined(separator: "/")
+        Benchmark(benchmarkName, configuration: benchmarkConfiguration) { benchmark in
+            let encryptionParameters = try EncryptionParameters<Scheme>(config: config)
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = Context(encryptionParameters: encryptionParameters))
+            }
+        }
     }
 }
 
@@ -235,8 +288,7 @@ func noiseBudgetBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
                 try blackHole(
-                    benchmarkContext.ciphertext
-                        .noiseBudget(using: benchmarkContext.secretKey, variableTime: true))
+                    benchmarkContext.ciphertext.noiseBudget(using: benchmarkContext.secretKey, variableTime: true))
             }
         }
     }
@@ -548,6 +600,10 @@ func evaluationKeyDeserializeSeedBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> 
 
 // swiftlint:disable:next closure_body_length
 nonisolated(unsafe) let benchmarks: () -> Void = {
+    // Context
+    contextInitBenchmark(Bfv<UInt32>.self, config: contextCreationConfig32)()
+    contextInitBenchmark(Bfv<UInt64>.self, config: contextCreationConfig64)()
+
     // Encode/decode
     encodeSimdBenchmark(Bfv<UInt32>.self)()
     encodeSimdBenchmark(Bfv<UInt64>.self)()

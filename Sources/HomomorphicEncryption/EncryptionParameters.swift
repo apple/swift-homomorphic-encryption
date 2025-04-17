@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -136,8 +136,8 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
         else {
             throw HeError.insecureEncryptionParameters(self)
         }
-        // Due to some usage of OctoWidth
-        guard coefficientModuli.count <= 8 else {
+        // Due to some usage of `Width32`
+        guard coefficientModuli.count <= 32 else {
             throw HeError.invalidEncryptionParameters(self)
         }
         for coefficientModulus in coefficientModuli {

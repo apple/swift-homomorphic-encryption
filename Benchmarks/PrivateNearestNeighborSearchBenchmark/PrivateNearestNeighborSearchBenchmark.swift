@@ -14,7 +14,7 @@
 
 // Benchmarks for Pnns functions.
 // These benchmarks can be triggered with
-// swift package benchmark --target PNNSBenchmark
+// SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1 swift package benchmark --target PNNSBenchmark
 
 import _BenchmarkUtilities
 import HomomorphicEncryption

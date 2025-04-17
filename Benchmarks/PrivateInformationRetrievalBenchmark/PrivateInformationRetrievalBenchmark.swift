@@ -14,7 +14,7 @@
 
 // Benchmarks for Pir functions.
 // These benchmarks can be triggered with
-// swift package benchmark --target PIRBenchmark
+// SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1 swift package benchmark --target PIRBenchmark
 
 import _BenchmarkUtilities
 import HomomorphicEncryption

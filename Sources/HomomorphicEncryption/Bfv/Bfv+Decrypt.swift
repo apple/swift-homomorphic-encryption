@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,12 +83,18 @@ extension Bfv {
         case tMax..<pow(tMax, 2):
             precondition(variableTime)
             return try computeNoiseBudget(of: vTimesT, T.DoubleWidth.self)
-        case tMax..<pow(tMax, 4):
+        case pow(tMax, 2)..<pow(tMax, 4):
             precondition(variableTime)
             return try computeNoiseBudget(of: vTimesT, QuadWidth<T>.self)
-        case tMax..<pow(tMax, 8):
+        case pow(tMax, 4)..<pow(tMax, 8):
             precondition(variableTime)
             return try computeNoiseBudget(of: vTimesT, OctoWidth<T>.self)
+        case pow(tMax, 8)..<pow(tMax, 16):
+            precondition(variableTime)
+            return try computeNoiseBudget(of: vTimesT, Width16<T>.self)
+        case pow(tMax, 16)..<pow(tMax, 32):
+            precondition(variableTime)
+            return try computeNoiseBudget(of: vTimesT, Width32<T>.self)
         default:
             preconditionFailure("crtMaxIntermediateValue \(crtMaxIntermediateValue) too large")
         }

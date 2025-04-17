@@ -720,3 +720,5 @@ extension DoubleWidthUInt: UnsignedInteger where Base: FixedWidthInteger & Unsig
 
 @usableFromInline typealias QuadWidth<T: ModularArithmetic.CoreScalarType> = DoubleWidthUInt<T.DoubleWidth>
 @usableFromInline typealias OctoWidth<T: ModularArithmetic.CoreScalarType> = DoubleWidthUInt<QuadWidth<T>>
+@usableFromInline typealias Width16<T: ModularArithmetic.CoreScalarType> = DoubleWidthUInt<OctoWidth<T>>
+@usableFromInline typealias Width32<T: ModularArithmetic.CoreScalarType> = DoubleWidthUInt<Width16<T>>

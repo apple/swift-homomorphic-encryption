@@ -53,6 +53,7 @@ struct PolyContextTests {
         let context1 = try PolyContext<UInt32>(degree: 4, moduli: [2])
 
         #expect(context3.moduli == [2, 3, 5])
+        #expect(context3.modulus == Width32<UInt32>(30))
         #expect(context3.degree == 4)
         #expect(context3.next == context2)
         if let context3Next = context3.next {

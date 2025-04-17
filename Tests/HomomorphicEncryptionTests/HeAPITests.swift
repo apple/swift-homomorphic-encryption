@@ -142,16 +142,27 @@ struct HeAPITests {
             }
         let custom = try EncryptionParameters<Bfv<T>>(
             polyDegree: TestUtils.testPolyDegree,
-            plaintextModulus: T
-                .generatePrimes(
-                    significantBitCounts: [12],
-                    preferringSmall: true,
-                    nttDegree: TestUtils.testPolyDegree)[0],
+            plaintextModulus: T.generatePrimes(
+                significantBitCounts: [12],
+                preferringSmall: true,
+                nttDegree: TestUtils.testPolyDegree)[0],
             coefficientModuli: HeAPITestHelpers.testCoefficientModuli(),
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
+        let manyModuli = try EncryptionParameters<Bfv<T>>(
+            polyDegree: TestUtils.testPolyDegree,
+            plaintextModulus: T.generatePrimes(
+                significantBitCounts: [12],
+                preferringSmall: true,
+                nttDegree: TestUtils.testPolyDegree)[0],
+            coefficientModuli: T.generatePrimes(
+                significantBitCounts: Array(repeating: T.bitWidth - 4, count: 32),
+                preferringSmall: false,
+                nttDegree: TestUtils.testPolyDegree),
+            errorStdDev: ErrorStdDev.stdDev32,
+            securityLevel: SecurityLevel.unchecked)
 
-        for encryptionParameters in predefined + [custom] {
+        for encryptionParameters in predefined + [custom, manyModuli] {
             let context = try Context<Bfv<T>>(encryptionParameters: encryptionParameters)
             try HeAPITestHelpers.schemeEncodeDecodeTest(context: context)
             try HeAPITestHelpers.schemeEncryptDecryptTest(context: context)

@@ -5,19 +5,19 @@ Homomorphic Encryption (HE) enables computation on encrypted data.
 ## Overview
 Swift Homomorphic Encryption is a collection of libraries and executables implementing homomorphic encryption (HE) and applications, such as private information retrieval (PIR).
 For more information, refer to documentation for the libraries:
-* [HomomorphicEncryptionProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/homomorphicencryptionprotobuf)
-* [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/homomorphicencryption)
-* [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/privateinformationretrievalprotobuf)
-* [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/privateinformationretrieval)
-* [PrivateNearestNeighborSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/privatenearestneighborsearchprotobuf)
-* [PrivateNearestNeighborSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/privatenearestneighborsearch)
+* [HomomorphicEncryptionProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/homomorphicencryptionprotobuf)
+* [HomomorphicEncryption](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/homomorphicencryption)
+* [PrivateInformationRetrievalProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/privateinformationretrievalprotobuf)
+* [PrivateInformationRetrieval](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/privateinformationretrieval)
+* [PrivateNearestNeighborSearchProtobuf](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/privatenearestneighborsearchprotobuf)
+* [PrivateNearestNeighborSearch](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/privatenearestneighborsearch)
 
 and executables:
-* [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirgeneratedatabase)
-* [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirprocessdatabase)
-* [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pirsharddatabase)
-* [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pnnsgeneratedatabase)
-* [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.3/documentation/pnnsprocessdatabase)
+* [PIRGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirgeneratedatabase)
+* [PIRProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirprocessdatabase)
+* [PIRShardDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pirsharddatabase)
+* [PNNSGenerateDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pnnsgeneratedatabase)
+* [PNNSProcessDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/1.0.4/documentation/pnnsprocessdatabase)
 
 ### Background
 Swift Homomorphic Encryption implements a special form of cryptography called homomorphic encryption (HE).

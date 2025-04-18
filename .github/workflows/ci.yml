@@ -32,7 +32,7 @@ env:
   SWIFTFORMAT_VERSION: 0.54.0
 jobs:
   swift-tests:
-    timeout-minutes: 15
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

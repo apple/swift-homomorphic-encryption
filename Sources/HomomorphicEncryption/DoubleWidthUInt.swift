@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -307,6 +307,7 @@ extension DoubleWidthUInt: FixedWidthInteger {
         return (result, didCarry)
     }
 
+    @inlinable
     public func quotientAndRemainder(
         dividingBy other: DoubleWidthUInt) -> (quotient: DoubleWidthUInt, remainder: DoubleWidthUInt)
     {
@@ -720,3 +721,5 @@ extension DoubleWidthUInt: UnsignedInteger where Base: FixedWidthInteger & Unsig
 @usableFromInline typealias DWUInt128 = DoubleWidthUInt<UInt64>
 @usableFromInline typealias QuadWidth<T: FixedWidthInteger & UnsignedInteger> = DoubleWidthUInt<DoubleWidthUInt<T>>
 @usableFromInline typealias OctoWidth<T: FixedWidthInteger & UnsignedInteger> = DoubleWidthUInt<QuadWidth<T>>
+@usableFromInline typealias Width16<T: FixedWidthInteger & UnsignedInteger> = DoubleWidthUInt<OctoWidth<T>>
+@usableFromInline typealias Width32<T: FixedWidthInteger & UnsignedInteger> = DoubleWidthUInt<Width16<T>>

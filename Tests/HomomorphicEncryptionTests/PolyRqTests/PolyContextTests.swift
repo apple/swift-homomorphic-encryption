@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ final class PolyContextTests: XCTestCase {
         let context1 = try PolyContext<UInt32>(degree: 4, moduli: [2])
 
         XCTAssertEqual(context3.moduli, [2, 3, 5])
+        XCTAssertEqual(context3.modulus, Width32<UInt32>(30))
         XCTAssertEqual(context3.degree, 4)
         XCTAssertEqual(context3.next, context2)
         if let context3Next = context3.next {

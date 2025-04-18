@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,8 @@ class UtilTests: XCTestCase {
         XCTAssertEqual([7].product(), 7)
         XCTAssertEqual([1, 2, 3].product(), 6)
         XCTAssertEqual([UInt8(255), UInt8(2)].product(), UInt16(510))
+
+        XCTAssertEqual([UInt32(1 << 17), UInt32(1 << 17)].product(), Width32<UInt32>(1 << 34))
     }
 
     func testSum() {

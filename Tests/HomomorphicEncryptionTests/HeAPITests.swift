@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1066,16 +1066,27 @@ class HeAPITests: XCTestCase {
             }
         let custom = try EncryptionParameters<Bfv<T>>(
             polyDegree: TestUtils.testPolyDegree,
-            plaintextModulus: T
-                .generatePrimes(
-                    significantBitCounts: [12],
-                    preferringSmall: true,
-                    nttDegree: TestUtils.testPolyDegree)[0],
+            plaintextModulus: T.generatePrimes(
+                significantBitCounts: [12],
+                preferringSmall: true,
+                nttDegree: TestUtils.testPolyDegree)[0],
             coefficientModuli: testCoefficientModuli(),
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
+        let manyModuli = try EncryptionParameters<Bfv<T>>(
+            polyDegree: TestUtils.testPolyDegree,
+            plaintextModulus: T.generatePrimes(
+                significantBitCounts: [12],
+                preferringSmall: true,
+                nttDegree: TestUtils.testPolyDegree)[0],
+            coefficientModuli: T.generatePrimes(
+                significantBitCounts: Array(repeating: T.bitWidth - 4, count: 32),
+                preferringSmall: false,
+                nttDegree: TestUtils.testPolyDegree),
+            errorStdDev: ErrorStdDev.stdDev32,
+            securityLevel: SecurityLevel.unchecked)
 
-        for encryptionParameters in predefined + [custom] {
+        for encryptionParameters in predefined + [custom, manyModuli] {
             let context = try Context<Bfv<T>>(encryptionParameters: encryptionParameters)
             try schemeEncodeDecodeTest(context: context)
             try schemeEncryptDecryptTest(context: context)

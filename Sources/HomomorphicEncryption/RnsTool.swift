@@ -167,8 +167,12 @@ package struct RnsTool<T: ScalarType>: Sendable {
         self.qModT = inputContext.qRemainder(dividingBy: t)
         self.tIncrement = inputContext.moduli.map { qi in qi - t.modulus }
         self.t = t
-        let composedQ = inputContext.modulus
-        let composedT = outputContext.modulus
+        guard let composedQ = inputContext.modulus else {
+            throw HeError.invalidPolyContext(inputContext)
+        }
+        guard let composedT = outputContext.modulus else {
+            throw HeError.invalidPolyContext(outputContext)
+        }
         let qDivTComposed = composedQ / composedT
 
         self.qDivT = inputContext.moduli.map { qi in MultiplyConstantModulus(

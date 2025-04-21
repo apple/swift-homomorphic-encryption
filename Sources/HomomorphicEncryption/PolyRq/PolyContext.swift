@@ -21,8 +21,8 @@ public final class PolyContext<T: ScalarType>: Sendable {
     public let degree: Int
     /// CRT-representation of the modulus `Q = product_{i=0}^{L-1} q_i`.
     public let moduli: [T]
-    /// The modulus `Q = product_{i=0}^{L-1} q_i`.
-    @usableFromInline let modulus: Width32<T>
+    /// The modulus `Q = product_{i=0}^{L-1} q_i`, if representable by a `Width32<T>`
+    @usableFromInline let modulus: Width32<T>?
     /// Next context, typically formed by dropping `q_{L-1}`.
     @usableFromInline let next: PolyContext<T>?
     /// Operations mod `q_0` up to `q_{L-1}`.
@@ -74,7 +74,14 @@ public final class PolyContext<T: ScalarType>: Sendable {
         if let next {
             precondition(next.moduli[...] == moduli.prefix(moduli.count - 1))
             try validate(modulus: lastModulus)
-            self.modulus = next.modulus &* Width32<T>(lastModulus)
+            var modulus: Width32<T>?
+            if let nextModulus = next.modulus {
+                let (product, overflow) = nextModulus.multipliedReportingOverflow(by: Width32<T>(lastModulus))
+                if !overflow {
+                    modulus = product
+                }
+            }
+            self.modulus = modulus
         } else {
             for modulus in moduli {
                 try validate(modulus: modulus)

@@ -121,7 +121,7 @@ extension Array where Element: ScalarType {
             return Width32<Self.Element>(width16[0])
         }
         let width32: [Width32<Self.Element>] = wideningProduct(of: width16)
-        precondition(width32.count == 1)
-        return width32[0]
+
+        return width32.reduce(Width32<Self.Element>(1)) { $0 * $1 }
     }
 }

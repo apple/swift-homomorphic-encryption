@@ -83,6 +83,28 @@ struct PolyContextTests {
     }
 
     @Test
+    func initLarge() throws {
+        let moduli = try UInt32.generatePrimes(
+            significantBitCounts: Array(repeating: 28, count: 40),
+            preferringSmall: false)
+        var context = try PolyContext<UInt32>(degree: 4, moduli: moduli)
+        for moduliCount in (2...moduli.count).reversed() {
+            #expect(context.moduli == Array(moduli.prefix(moduliCount)))
+            #expect(context.degree == 4)
+            if moduliCount * 28 < Width32<UInt32>.bitWidth {
+                #expect(context.modulus == context.moduli.product())
+            } else {
+                #expect(context.modulus == nil)
+            }
+            if let next = context.next {
+                context = next
+            } else {
+                Issue.record("Missing next")
+            }
+        }
+    }
+
+    @Test
     func qRemainder() throws {
         let contextSmall: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
         #expect(contextSmall.qRemainder(dividingBy: Modulus(modulus: 11, variableTime: true)) == 8)

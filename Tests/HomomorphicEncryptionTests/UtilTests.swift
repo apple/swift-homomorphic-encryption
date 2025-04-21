@@ -58,6 +58,7 @@ struct UtilTests {
         #expect([UInt8(255), UInt8(2)].product() == UInt16(510))
 
         #expect([UInt32(1 << 17), UInt32(1 << 17)].product() == Width32<UInt32>(1 << 34))
+        #expect([UInt32(1 << 17)].product() == Width32<UInt32>(1 << 17))
     }
 
     @Test

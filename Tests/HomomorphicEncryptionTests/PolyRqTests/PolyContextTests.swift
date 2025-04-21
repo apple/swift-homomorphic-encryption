@@ -65,6 +65,24 @@ struct PolyContextTests {
     }
 
     @Test
+    func testInitChild() throws {
+        let context1 = try PolyContext<UInt32>(degree: 4, moduli: [2])
+        let context2 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3])
+        let context3 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3, 5], child: context1)
+
+        #expect(context3.moduli == [2, 3, 5])
+        #expect(context3.modulus == Width32<UInt32>(30))
+        #expect(context3.degree == 4)
+        #expect(context3.next == context2)
+        if let context3Next = context3.next {
+            #expect(context3Next.next == context1)
+            if let context3NextNext = context3Next.next {
+                #expect(context3NextNext.next == nil)
+            }
+        }
+    }
+
+    @Test
     func qRemainder() throws {
         let contextSmall: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
         #expect(contextSmall.qRemainder(dividingBy: Modulus(modulus: 11, variableTime: true)) == 8)

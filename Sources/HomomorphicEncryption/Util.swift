@@ -101,6 +101,9 @@ extension Array where Element: ScalarType {
             }
         }
 
+        if count == 1 {
+            return Width32<Self.Element>(self[0])
+        }
         let doubleWidth: [Self.Element.DoubleWidth] = wideningProduct(of: self)
         if doubleWidth.count == 1 {
             return Width32<Self.Element>(doubleWidth[0])

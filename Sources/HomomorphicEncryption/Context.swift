@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,10 +103,13 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
             degree: encryptionParameters.polyDegree,
             moduli: [encryptionParameters.plaintextModulus])
 
+        let rnsToolContext = try RnsTool.RnsToolContext(
+            inputContext: ciphertextContext,
+            outputContext: plaintextContext)
         var rnsToolsCiphertextContext = ciphertextContext
-        try rnsTools.append(RnsTool(from: ciphertextContext, to: plaintextContext))
+        try rnsTools.append(RnsTool(from: ciphertextContext, to: plaintextContext, rnsToolContext: rnsToolContext))
         while let nextContext = rnsToolsCiphertextContext.next {
-            try rnsTools.append(RnsTool(from: nextContext, to: plaintextContext))
+            try rnsTools.append(RnsTool(from: nextContext, to: plaintextContext, rnsToolContext: rnsToolContext))
             rnsToolsCiphertextContext = nextContext
         }
         self.rnsTools = rnsTools

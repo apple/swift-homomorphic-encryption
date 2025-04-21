@@ -109,9 +109,12 @@ extension ScalarType {
 struct NttContext<T: ScalarType>: Sendable {
     @usableFromInline let rootOfUnityPowers: MultiplyConstantArrayModulus<T>
     @usableFromInline let inverseRootOfUnityPowers: MultiplyConstantArrayModulus<T>
-    @usableFromInline let inverseDegree: MultiplyConstantModulus<T> // degree^{-1} mod modulus
-    // (degree)^{-1} * w^{-N} mod modulus for `w` a root of unity mod modulus
+    /// `degree^{-1} mod modulus`.
+    @usableFromInline let inverseDegree: MultiplyConstantModulus<T>
+    /// `(degree)^{-1} * w^{-N} mod modulus` for `w` a root of unity mod modulus.
     @usableFromInline let inverseDegreeRootOfUnity: MultiplyConstantModulus<T>
+    @usableFromInline let degree: Int
+    @usableFromInline let modulus: T
 
     @inlinable
     init(degree: Int, modulus: T) throws {
@@ -134,6 +137,9 @@ struct NttContext<T: ScalarType>: Sendable {
                 inverseRootOfUnityPowers[previousIdx])
             previousIdx = reverseIdx
         }
+
+        self.degree = degree
+        self.modulus = modulus
         self.rootOfUnityPowers = MultiplyConstantArrayModulus(
             multiplicands: rootOfUnityPowers,
             modulus: modulus,

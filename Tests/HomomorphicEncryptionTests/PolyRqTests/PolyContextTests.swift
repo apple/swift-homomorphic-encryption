@@ -65,6 +65,46 @@ struct PolyContextTests {
     }
 
     @Test
+    func testInitChild() throws {
+        let context1 = try PolyContext<UInt32>(degree: 4, moduli: [2])
+        let context2 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3])
+        let context3 = try PolyContext<UInt32>(degree: 4, moduli: [2, 3, 5], child: context1)
+
+        #expect(context3.moduli == [2, 3, 5])
+        #expect(context3.modulus == Width32<UInt32>(30))
+        #expect(context3.degree == 4)
+        #expect(context3.next == context2)
+        if let context3Next = context3.next {
+            #expect(context3Next.next == context1)
+            if let context3NextNext = context3Next.next {
+                #expect(context3NextNext.next == nil)
+            }
+        }
+    }
+
+    @Test
+    func initLarge() throws {
+        let moduli = try UInt32.generatePrimes(
+            significantBitCounts: Array(repeating: 28, count: 40),
+            preferringSmall: false)
+        var context = try PolyContext<UInt32>(degree: 4, moduli: moduli)
+        for moduliCount in (2...moduli.count).reversed() {
+            #expect(context.moduli == Array(moduli.prefix(moduliCount)))
+            #expect(context.degree == 4)
+            if moduliCount * 28 < Width32<UInt32>.bitWidth {
+                #expect(context.modulus == context.moduli.product())
+            } else {
+                #expect(context.modulus == nil)
+            }
+            if let next = context.next {
+                context = next
+            } else {
+                Issue.record("Missing next")
+            }
+        }
+    }
+
+    @Test
     func qRemainder() throws {
         let contextSmall: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
         #expect(contextSmall.qRemainder(dividingBy: Modulus(modulus: 11, variableTime: true)) == 8)

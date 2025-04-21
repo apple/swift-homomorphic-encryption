@@ -57,7 +57,12 @@ struct UtilTests {
         #expect([1, 2, 3].product() == 6)
         #expect([UInt8(255), UInt8(2)].product() == UInt16(510))
 
-        #expect([UInt32(1 << 17), UInt32(1 << 17)].product() == Width32<UInt32>(1 << 34))
+        var values = [UInt32]()
+        for count in 1...31 {
+            values.append(UInt32(1 << count))
+            let sumOfPowers = count * (count + 1) / 2
+            #expect(values.product() == Width32<UInt32>(1) << sumOfPowers)
+        }
     }
 
     @Test

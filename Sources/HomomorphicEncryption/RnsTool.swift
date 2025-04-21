@@ -16,6 +16,60 @@ import ModularArithmetic
 
 @usableFromInline
 package struct RnsTool<T: ScalarType>: Sendable {
+    @usableFromInline
+    struct RnsToolContext {
+        @usableFromInline let inputContext: PolyContext<T>
+        @usableFromInline let bSkMTildeContext: PolyContext<T>
+        @usableFromInline let mSkContext: PolyContext<T>
+        @usableFromInline let nttContexts: [T: NttContext<T>]
+        @usableFromInline let tGammaContext: PolyContext<T>
+
+        @inlinable
+        init(inputContext: PolyContext<T>, outputContext: PolyContext<T>) throws {
+            let degree = inputContext.degree
+            let bSkModuli = try T.generatePrimes(
+                significantBitCounts: Array(repeating: T.bitWidth - 3, count: inputContext.moduli.count + 1),
+                preferringSmall: true,
+                nttDegree: degree)
+            self.inputContext = inputContext
+
+            let bSkMTildeModuli = bSkModuli + [T.mTilde]
+            self.bSkMTildeContext = try PolyContext(degree: degree, moduli: bSkMTildeModuli)
+            guard let bSkModuli = bSkMTildeContext.next?.moduli else {
+                throw HeError.invalidPolyContext(bSkMTildeContext)
+            }
+            guard let mSk = bSkModuli.last else {
+                throw HeError.emptyModulus
+            }
+
+            var nttContexts = [T: NttContext<T>]()
+            for moduliCount in 1..<bSkMTildeContext.moduli.count {
+                if let nttContext = try bSkMTildeContext.getContext(moduliCount: moduliCount).nttContext {
+                    nttContexts[nttContext.modulus] = nttContext
+                }
+            }
+            for moduliCount in 1..<inputContext.moduli.count {
+                if let nttContext = try inputContext.getContext(moduliCount: moduliCount).nttContext {
+                    nttContexts[nttContext.modulus] = nttContext
+                }
+            }
+            self.nttContexts = nttContexts
+
+            self.mSkContext = try PolyContext(
+                degree: degree,
+                moduli: [mSk],
+                next: nil,
+                nttContext: nttContexts[mSk])
+            self.tGammaContext = try PolyContext(
+                degree: degree,
+                moduli: [outputContext.moduli[0], T.rnsCorrectionFactor], child: outputContext)
+        }
+
+        func getbSkMTildeNttContext(moduliCount: Int) throws -> NttContext<T>? {
+            try bSkMTildeContext.getContext(moduliCount: moduliCount).nttContext
+        }
+    }
+
     /// `Q = q_0, ..., q_{L-1}`.
     @usableFromInline let inputContext: PolyContext<T>
     /// `t_0, ..., t_{M-1}`.
@@ -75,7 +129,10 @@ package struct RnsTool<T: ScalarType>: Sendable {
     }
 
     @inlinable
-    init(from inputContext: PolyContext<T>, to outputContext: PolyContext<T>) throws {
+    init(from inputContext: PolyContext<T>,
+         to outputContext: PolyContext<T>,
+         rnsToolContext: RnsToolContext) throws
+    {
         guard inputContext.degree == outputContext.degree, outputContext.moduli.count == 1 else {
             throw HeError.invalidPolyContext(inputContext)
         }
@@ -92,7 +149,7 @@ package struct RnsTool<T: ScalarType>: Sendable {
             modulus: t.modulus,
             variableTime: true)
 
-        let tGammaContext = try PolyContext(degree: degree, moduli: [t.modulus, correctionFactor])
+        let tGammaContext = rnsToolContext.tGammaContext
         self.rnsConvertQToTGamma = try RnsBaseConverter(from: inputContext, to: tGammaContext)
         self.negInverseQModTGamma = try tGammaContext.reduceModuli.map { modulus in
             let qMod = inputContext.qRemainder(dividingBy: modulus)
@@ -110,8 +167,12 @@ package struct RnsTool<T: ScalarType>: Sendable {
         self.qModT = inputContext.qRemainder(dividingBy: t)
         self.tIncrement = inputContext.moduli.map { qi in qi - t.modulus }
         self.t = t
-        let composedQ = inputContext.modulus
-        let composedT = outputContext.modulus
+        guard let composedQ = inputContext.modulus else {
+            throw HeError.invalidPolyContext(inputContext)
+        }
+        guard let composedT = outputContext.modulus else {
+            throw HeError.invalidPolyContext(outputContext)
+        }
         let qDivTComposed = composedQ / composedT
 
         self.qDivT = inputContext.moduli.map { qi in MultiplyConstantModulus(
@@ -121,21 +182,19 @@ package struct RnsTool<T: ScalarType>: Sendable {
         }
 
         // auxiliary base B_sk = [B, m_sk]
-        let bSkModuli = try T.generatePrimes(
-            significantBitCounts: Array(repeating: T.bitWidth - 3, count: inputContext.moduli.count + 1),
-            preferringSmall: true,
-            nttDegree: degree)
-        let bSkMTildeModuli = bSkModuli + [T.mTilde]
-        guard let mSk = bSkModuli.last else {
-            throw HeError.emptyModulus
-        }
-
-        let bSkMTildeContext = try PolyContext(degree: degree, moduli: bSkMTildeModuli)
+        let bSkMTildeContext = try rnsToolContext.bSkMTildeContext
+            .getContext(moduliCount: inputContext.moduli.count + 2)
         guard let bSkContext = bSkMTildeContext.next else {
             throw HeError.invalidPolyContext(bSkMTildeContext)
         }
         guard let bContext = bSkContext.next else {
             throw HeError.invalidPolyContext(bSkContext)
+        }
+        guard let bSkModuli = bSkMTildeContext.next?.moduli else {
+            throw HeError.invalidPolyContext(bSkMTildeContext)
+        }
+        guard let mSk = bSkModuli.last else {
+            throw HeError.emptyModulus
         }
 
         let bModQi = inputContext.reduceModuli.map { qi in
@@ -167,7 +226,11 @@ package struct RnsTool<T: ScalarType>: Sendable {
         self.mTildeModQ = inputContext.reduceModuli.map { qi in qi.reduce(T.mTilde) }
 
         let qBSkModuli = inputContext.moduli + bSkModuli
-        self.qBskContext = try PolyContext(degree: degree, moduli: qBSkModuli)
+        self.qBskContext = try PolyContext(
+            degree: degree,
+            moduli: qBSkModuli,
+            child: inputContext,
+            nttContexts: rnsToolContext.nttContexts)
 
         self.inverseQModBSk = try bSkContext.reduceModuli.map { modulus in
             let qMod = inputContext.qRemainder(dividingBy: modulus)
@@ -175,7 +238,7 @@ package struct RnsTool<T: ScalarType>: Sendable {
             return MultiplyConstantModulus(multiplicand: multiplicand, divisionModulus: modulus.divisionModulus)
         }
 
-        let mSkContext = try PolyContext(degree: degree, moduli: [mSk])
+        let mSkContext = rnsToolContext.mSkContext
         self.inverseBModMSk = try {
             let bModMSk = bContext.qRemainder(dividingBy: mSkContext.reduceModuli[0])
             let multiplicand = try bModMSk.inverseMod(modulus: mSk, variableTime: true)
@@ -185,6 +248,14 @@ package struct RnsTool<T: ScalarType>: Sendable {
         self.rnsConvertQToBSkMTilde = try RnsBaseConverter(from: inputContext, to: bSkMTildeContext)
         self.rnsConvertBtoMSk = try RnsBaseConverter(from: bContext, to: mSkContext)
         self.rnsConvertBtoQ = try RnsBaseConverter(from: bContext, to: inputContext)
+    }
+
+    @inlinable
+    init(from inputContext: PolyContext<T>,
+         to outputContext: PolyContext<T>) throws
+    {
+        let rnsToolContext = try RnsTool.RnsToolContext(inputContext: inputContext, outputContext: outputContext)
+        try self.init(from: inputContext, to: outputContext, rnsToolContext: rnsToolContext)
     }
 
     /// Performs scaling and rounding.

@@ -210,11 +210,7 @@ struct RnsToolTests {
 
     @Test
     func approximateFloor() throws {
-        func runTestApproximateFloor<T: ScalarType>(
-            _: T.Type,
-            degree: Int,
-            significantBitCounts: [Int]) throws
-        {
+        func runTestApproximateFloor<T: ScalarType>(_: T.Type, degree: Int, significantBitCounts: [Int]) throws {
             let inputModuli = try T.generatePrimes(significantBitCounts: significantBitCounts, preferringSmall: true)
             let inputContext = try PolyContext(degree: degree, moduli: inputModuli)
             let outputContext = try PolyContext(degree: degree, moduli: [T(2)]) // arbitrary

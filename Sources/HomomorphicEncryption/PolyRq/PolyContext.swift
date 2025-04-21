@@ -21,8 +21,8 @@ public final class PolyContext<T: ScalarType>: Sendable {
     public let degree: Int
     /// CRT-representation of the modulus `Q = product_{i=0}^{L-1} q_i`.
     public let moduli: [T]
-    /// The modulus `Q = product_{i=0}^{L-1} q_i`.
-    @usableFromInline let modulus: Width32<T>
+    /// The modulus `Q = product_{i=0}^{L-1} q_i`, if representable by a `Width32<T>`
+    @usableFromInline let modulus: Width32<T>?
     /// Next context, typically formed by dropping `q_{L-1}`.
     @usableFromInline let next: PolyContext<T>?
     /// Operations mod `q_0` up to `q_{L-1}`.
@@ -39,9 +39,10 @@ public final class PolyContext<T: ScalarType>: Sendable {
     ///   - degree: Polynomial degree.
     ///   - moduli: Decomposition of the modulus `Q` into co-prime factors `q_0, ..., q_{L-1}`.
     ///   - next: The next context in the modulus-switching chain.
+    ///   - nttContext: The NTT context for the last modulus `q_{L-1}`.
     /// - Throws: Error upon failure to initialize the context.
     @inlinable
-    required init(degree: Int, moduli: [T], next: PolyContext<T>?) throws {
+    required init(degree: Int, moduli: [T], next: PolyContext<T>?, nttContext: NttContext<T>? = nil) throws {
         guard degree.isPowerOfTwo else {
             throw HeError.invalidDegree(degree)
         }
@@ -73,7 +74,14 @@ public final class PolyContext<T: ScalarType>: Sendable {
         if let next {
             precondition(next.moduli[...] == moduli.prefix(moduli.count - 1))
             try validate(modulus: lastModulus)
-            self.modulus = next.modulus &* Width32<T>(lastModulus)
+            var modulus: Width32<T>?
+            if let nextModulus = next.modulus {
+                let (product, overflow) = nextModulus.multipliedReportingOverflow(by: Width32<T>(lastModulus))
+                if !overflow {
+                    modulus = product
+                }
+            }
+            self.modulus = modulus
         } else {
             for modulus in moduli {
                 try validate(modulus: modulus)
@@ -101,10 +109,16 @@ public final class PolyContext<T: ScalarType>: Sendable {
             let inverse = try qLast.inverseMod(modulus: modulus, variableTime: true)
             return MultiplyConstantModulus(multiplicand: inverse, modulus: modulus, variableTime: true)
         }
-        if !qLast.isPowerOfTwo, qLast.isNttModulus(for: degree) {
-            self.nttContext = try NttContext(degree: degree, modulus: qLast)
+        if let nttContext {
+            precondition(nttContext.degree == degree, "Wrong degree in NttContext")
+            precondition(nttContext.modulus == qLast, "Wrong modulus in NttContext")
+            self.nttContext = nttContext
         } else {
-            self.nttContext = nil
+            if !qLast.isPowerOfTwo, qLast.isNttModulus(for: degree) {
+                self.nttContext = try NttContext(degree: degree, modulus: qLast)
+            } else {
+                self.nttContext = nil
+            }
         }
     }
 
@@ -124,6 +138,37 @@ public final class PolyContext<T: ScalarType>: Sendable {
             next = try PolyContext(degree: degree, moduli: Array(moduli.prefix(moduliCount)), next: next)
         }
         try self.init(degree: degree, moduli: moduli, next: next)
+    }
+
+    /// Initializes a ``PolyContext``.
+    /// - Parameters:
+    ///   - degree: Polynomial degree.
+    ///   - moduli: Decomposition of the modulus `Q` into co-prime factors `q_0, ..., q_{L-1}`.
+    ///   - child: A child context with moduli `q_0, ..., q_k` for some `k <= L - 1`.
+    ///   - nttContexts: Maps moduli to their corresponding NTT context.
+    /// - Throws: Error upon failure to initialize the context.
+    @inlinable
+    convenience init(degree: Int, moduli: [T], child: PolyContext<T>?, nttContexts: [T: NttContext<T>] = [:]) throws {
+        guard let qLast = moduli.last else {
+            throw HeError.emptyModulus
+        }
+        guard let child else {
+            try self.init(degree: degree, moduli: moduli, next: nil, nttContext: nttContexts[qLast])
+            return
+        }
+        guard child.moduli[...] == moduli.prefix(child.moduli.count) else {
+            throw HeError.invalidPolyContext(child)
+        }
+        var next = child
+        for moduliCount in child.moduli.count + 1..<moduli.count {
+            let nextModuli = Array(moduli.prefix(moduliCount))
+            next = try PolyContext(
+                degree: degree,
+                moduli: nextModuli,
+                next: next,
+                nttContext: nttContexts[nextModuli.last!]) // swiftlint:disable:this force_unwrapping
+        }
+        try self.init(degree: degree, moduli: moduli, next: next, nttContext: nttContexts[qLast])
     }
 
     @inlinable

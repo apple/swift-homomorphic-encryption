@@ -285,9 +285,21 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse: Sendable 
   /// Encrypted replies, each of which is a ciphertext vector.
   public var replies: [HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertextVec] = []
 
+  /// Stash of entries with the most recent updates that have not yet reached the processed database.
+  public var stash: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries {
+    get {return _stash ?? Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries()}
+    set {_stash = newValue}
+  }
+  /// Returns true if `stash` has been explicitly set.
+  public var hasStash: Bool {return self._stash != nil}
+  /// Clears the value of `stash`. Subsequent reads from it will return its default value.
+  public mutating func clearStash() {self._stash = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
+
+  fileprivate var _stash: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries? = nil
 }
 
 /// PIR OPRF Request.
@@ -318,6 +330,33 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: @uncheck
 
   /// Proof of OPRF evaluation.
   public var proof: Data = Data()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+/// Stash of entries.
+///
+/// Stash is meant to be used as temporary storage until we can update the processed database.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries: @unchecked Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Sorted list of hashed keywords.
+  ///
+  /// hashed_keyword = Truncate(SHA256(keyword))
+  public var hashedKeywords: [UInt64] = []
+
+  /// The values associated with each keyword in the `hashed_keywords` list. Must be in the same order.
+  public var values: [Data] = []
+
+  /// Sorted list of hashed keywords that were removed from the dataset.
+  ///
+  /// This list contains hashed keywords that were deleted, but may still be present in the processed database.
+  /// hashed_keyword = Truncate(SHA256(keyword))
+  public var removedHashedKeywords: [UInt64] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -678,6 +717,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse: SwiftProtobuf
   public static let protoMessageName: String = _protobuf_package + ".PIRResponse"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "replies"),
+    2: .same(proto: "stash"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -687,20 +727,29 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse: SwiftProtobuf
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeRepeatedMessageField(value: &self.replies) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._stash) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.replies.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.replies, fieldNumber: 1)
     }
+    try { if let v = self._stash {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse) -> Bool {
     if lhs.replies != rhs.replies {return false}
+    if lhs._stash != rhs._stash {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -777,6 +826,50 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: SwiftProtobu
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse) -> Bool {
     if lhs.evaluatedElement != rhs.evaluatedElement {return false}
     if lhs.proof != rhs.proof {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".StashOfEntries"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "hashed_keywords"),
+    2: .same(proto: "values"),
+    3: .standard(proto: "removed_hashed_keywords"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedUInt64Field(value: &self.hashedKeywords) }()
+      case 2: try { try decoder.decodeRepeatedBytesField(value: &self.values) }()
+      case 3: try { try decoder.decodeRepeatedUInt64Field(value: &self.removedHashedKeywords) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.hashedKeywords.isEmpty {
+      try visitor.visitPackedUInt64Field(value: self.hashedKeywords, fieldNumber: 1)
+    }
+    if !self.values.isEmpty {
+      try visitor.visitRepeatedBytesField(value: self.values, fieldNumber: 2)
+    }
+    if !self.removedHashedKeywords.isEmpty {
+      try visitor.visitPackedUInt64Field(value: self.removedHashedKeywords, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries) -> Bool {
+    if lhs.hashedKeywords != rhs.hashedKeywords {return false}
+    if lhs.values != rhs.values {return false}
+    if lhs.removedHashedKeywords != rhs.removedHashedKeywords {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -109,10 +109,9 @@ struct KeywordPirTests {
         let databaseConfig = KeywordDatabaseConfig(
             sharding: Sharding.shardCount(1),
             keywordPirConfig: keywordConfig)
-        let encryptionParameters = try EncryptionParameters<Bfv<UInt32>>(
-            from: .n_4096_logq_27_28_28_logt_5)
+        let encryptionParameters = try EncryptionParameters<UInt32>(from: .n_4096_logq_27_28_28_logt_5)
         #expect(throws: PirError.invalidPirAlgorithm(PirAlgorithm.aclsPir)) {
-            try ProcessKeywordDatabase.Arguments(
+            try ProcessKeywordDatabase.Arguments<UInt32>(
                 databaseConfig: databaseConfig,
                 encryptionParameters: encryptionParameters,
                 algorithm: PirAlgorithm.aclsPir, keyCompression: .noCompression,

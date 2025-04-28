@@ -84,7 +84,7 @@ extension Ciphertext {
             guard Format.self == Coeff.self else {
                 throw HeError.invalidFormat(Format.self)
             }
-            var poly0 = PolyRq<Scheme.Scalar, Format>.zero(context: polyContext())
+            var poly0 = PolyRq<Scalar, Format>.zero(context: polyContext())
             for coeffIndex in coeffIndices {
                 guard poly0.coeffIndices.contains(coeffIndex) else {
                     throw HeError.invalidCoefficientIndex(
@@ -103,6 +103,15 @@ extension Ciphertext {
         return toSerialize.serialize(forDecryption: forDecryption)
     }
 
+    @inlinable
+    func skipLSBs(forDecryption: Bool = false) -> [Int] {
+        if forDecryption, Format.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            return Scheme.skipLSBsForDecryption(for: self as! Scheme.CoeffCiphertext)
+        }
+        return Array(repeating: 0, count: polyCount)
+    }
+
     /// Serializes a ciphertext.
     /// - Parameter forDecryption: If true, serialization may use a more concise format, yielding a ciphertext which,
     /// once deserialized, is only compatible with decryption, and not any other HE operations.
@@ -113,16 +122,7 @@ extension Ciphertext {
         if !seed.isEmpty, polys.count == 2 {
             return serialize(seed: seed)
         }
-
-        let skipLSBs: [Int] = if forDecryption, polyContext().moduli.count == 1,
-                                 polys.count == context.encryptionParameters.skipLSBsForDecryption().count,
-                                 Format.self == Coeff.self
-        {
-            context.encryptionParameters.skipLSBsForDecryption()
-        } else {
-            Array(repeating: 0, count: polys.count)
-        }
-
+        let skipLSBs = skipLSBs(forDecryption: forDecryption)
         var byteCount = MemoryLayout<UInt16>.size
         for skipLSB in skipLSBs {
             byteCount += polyContext().serializationByteCount(skipLSBs: skipLSB)
@@ -130,12 +130,11 @@ extension Ciphertext {
         var polysBuffer = [UInt8](repeating: 0, count: byteCount)
         // safe because we initialize the buffer with correct count
         // swiftlint:disable:next force_try
-        try! Serialize
-            .serializePolys(
-                polys,
-                to: &polysBuffer,
-                context: polyContext(),
-                skipLSBs: skipLSBs)
+        try! Serialize.serializePolys(
+            polys,
+            to: &polysBuffer,
+            context: polyContext(),
+            skipLSBs: skipLSBs)
         return .full(
             polys: polysBuffer,
             skipLSBs: skipLSBs,

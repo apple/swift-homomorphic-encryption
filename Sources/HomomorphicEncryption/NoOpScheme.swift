@@ -47,7 +47,7 @@ public enum NoOpScheme: HeScheme {
     }
 
     @inlinable
-    public static func encodeSimdDimensions(for parameters: EncryptionParameters<NoOpScheme>)
+    public static func encodeSimdDimensions(for parameters: EncryptionParameters<Scalar>)
         -> SimdEncodingDimensions?
     {
         guard parameters.supportsSimdEncoding else {

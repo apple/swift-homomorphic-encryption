@@ -231,17 +231,17 @@ struct ProcessDatabase: ParsableCommand {
         let config: ResolvedArguments = try config.resolve(for: vectorDimension, scheme: Scheme.self)
         ProcessDatabase.logger.info("Processing database with configuration: \(config)")
 
-        let encryptionParameters = try EncryptionParameters<Scheme>(from: config.rlweParameters)
+        let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: config.rlweParameters)
         let clientConfig = try ClientConfig<Scheme>(
             encryptionParameters: encryptionParameters,
             scalingFactor: config.scalingFactor,
             queryPacking: config.queryPacking,
             vectorDimension: vectorDimension,
-            evaluationKeyConfig: MatrixMultiplication
-                .evaluationKeyConfig(
-                    plaintextMatrixDimensions: plaintextMatrixDimensions,
-                    encryptionParameters: encryptionParameters,
-                    maxQueryCount: config.batchSize),
+            evaluationKeyConfig: MatrixMultiplication.evaluationKeyConfig(
+                plaintextMatrixDimensions: plaintextMatrixDimensions,
+                maxQueryCount: config.batchSize,
+                encryptionParameters: encryptionParameters,
+                scheme: Scheme.self),
             distanceMetric: config.distanceMetric)
         let serverConfig = ServerConfig<Scheme>(
             clientConfig: clientConfig,

@@ -1,7 +1,7 @@
 // Example for noise budget: ``Ciphertext/noiseBudget(using:variableTime:)``.
 
 // snippet.hide
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,9 +43,9 @@ func checkDecryptsDecodes<Scheme: HeScheme>(
 // snippet.show
 // We start by choosing some encryption parameters for the Bfv<UInt32> scheme.
 let encryptionParameters =
-    try EncryptionParameters<Bfv<UInt32>>(from: .insecure_n_8_logq_5x18_logt_5)
+    try EncryptionParameters<UInt32>(from: .insecure_n_8_logq_5x18_logt_5)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context(encryptionParameters: encryptionParameters)
+let context = try Context<Bfv<UInt32>>(encryptionParameters: encryptionParameters)
 
 // We encode N values in coefficient format and SIMD encoding.
 let values = (0..<8).map { UInt32($0) }

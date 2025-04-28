@@ -134,13 +134,13 @@ struct HeAPITests {
     }
 
     private func runBfvTests<T: ScalarType>(_: T.Type) async throws {
-        let predefined: [EncryptionParameters<Bfv<T>>] = try PredefinedRlweParameters.allCases
+        let predefined: [EncryptionParameters<T>] = try PredefinedRlweParameters.allCases
             .filter { rlweParams in rlweParams.supportsScalar(T.self) }
             .filter { rlweParams in rlweParams.polyDegree <= 512 } // large degrees are slow
             .map { rlweParams in
-                try EncryptionParameters<Bfv<T>>(from: rlweParams)
+                try EncryptionParameters<T>(from: rlweParams)
             }
-        let custom = try EncryptionParameters<Bfv<T>>(
+        let custom = try EncryptionParameters<T>(
             polyDegree: TestUtils.testPolyDegree,
             plaintextModulus: T.generatePrimes(
                 significantBitCounts: [12],
@@ -149,7 +149,7 @@ struct HeAPITests {
             coefficientModuli: HeAPITestHelpers.testCoefficientModuli(),
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
-        let manyModuli = try EncryptionParameters<Bfv<T>>(
+        let manyModuli = try EncryptionParameters<T>(
             polyDegree: TestUtils.testPolyDegree,
             plaintextModulus: T.generatePrimes(
                 significantBitCounts: [12],
@@ -206,7 +206,7 @@ struct HeAPITests {
 /// This will compile if `Plaintext/decode` is generic across PolyFormat.
 extension Plaintext {
     private func checkDecodeIsGeneric() throws {
-        let _: [Scheme.Scalar] = try decode(format: .coefficient)
+        let _: [Scalar] = try decode(format: .coefficient)
         let _: [Scheme.SignedScalar] = try decode(format: .coefficient)
     }
 }

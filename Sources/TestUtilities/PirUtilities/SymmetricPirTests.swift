@@ -44,7 +44,7 @@ extension PirTestUtils {
                 keyCompression: .noCompression,
                 symmetricPirClientConfig: symmetricPirConfig.clientConfig())
 
-            let encryptionParameters: EncryptionParameters<Scheme> = try TestUtils.getTestEncryptionParameters()
+            let encryptionParameters: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
             let context: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
             let valueSize = context.bytesPerPlaintext / 2
             let plainDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 100, valueSize: valueSize)

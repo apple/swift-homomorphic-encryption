@@ -364,11 +364,11 @@ public struct KeywordDatabase {
 /// Utilities for processing a ``KeywordDatabase``.
 public enum ProcessKeywordDatabase {
     /// Arguments for processing a keyword database.
-    public struct Arguments<Scheme: HeScheme>: Codable, Sendable {
+    public struct Arguments<Scalar: ScalarType>: Codable, Sendable {
         /// Database configuration.
         public let databaseConfig: KeywordDatabaseConfig
         /// Encryption parameters.
-        public let encryptionParameters: EncryptionParameters<Scheme>
+        public let encryptionParameters: EncryptionParameters<Scalar>
         /// PIR algorithm to process with.
         public let algorithm: PirAlgorithm
         /// Strategy for evaluation key compression.
@@ -389,7 +389,7 @@ public enum ProcessKeywordDatabase {
         ///  - Throws: Error upon invalid arguments
         public init(
             databaseConfig: KeywordDatabaseConfig,
-            encryptionParameters: EncryptionParameters<Scheme>,
+            encryptionParameters: EncryptionParameters<Scalar>,
             algorithm: PirAlgorithm,
             keyCompression: PirKeyCompressionStrategy,
             trialsPerShard: Int,
@@ -485,13 +485,13 @@ public enum ProcessKeywordDatabase {
     /// - Throws: Error upon failure to process the shard.
     @inlinable
     public static func processShard<Scheme: HeScheme>(shard: KeywordDatabaseShard,
-                                                      with arguments: Arguments<Scheme>,
+                                                      with arguments: Arguments<Scheme.Scalar>,
                                                       onEvent: @escaping (ProcessShardEvent) throws -> Void = { _ in
                                                       }) throws
         -> ProcessedDatabaseWithParameters<Scheme>
     {
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
-        let context = try Context(encryptionParameters: arguments.encryptionParameters)
+        let context = try Context<Scheme>(encryptionParameters: arguments.encryptionParameters)
         guard arguments.algorithm == .mulPir else {
             throw PirError.invalidPirAlgorithm(arguments.algorithm)
         }
@@ -591,12 +591,12 @@ public enum ProcessKeywordDatabase {
     @inlinable
     public static func process<Scheme: HeScheme>(
         rows: some Collection<KeywordValuePair>,
-        with arguments: Arguments<Scheme>) throws -> Processed<Scheme>
+        with arguments: Arguments<Scheme.Scalar>) throws -> Processed<Scheme>
     {
         var evaluationKeyConfig = EvaluationKeyConfig()
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
 
-        let context = try Context(encryptionParameters: arguments.encryptionParameters)
+        let context = try Context<Scheme>(encryptionParameters: arguments.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(
             rows: rows,
             sharding: arguments.databaseConfig.sharding,

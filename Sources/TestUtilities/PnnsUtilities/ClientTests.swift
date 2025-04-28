@@ -25,7 +25,7 @@ extension PrivateNearestNeighborSearchUtil {
                 PredefinedRlweParameters.n_4096_logq_27_28_28_logt_16,
                 PredefinedRlweParameters.n_4096_logq_27_28_28_logt_17,
             ].map { rlweParams in
-                try EncryptionParameters<Scheme>(from: rlweParams).plaintextModulus
+                try EncryptionParameters<Scheme.Scalar>(from: rlweParams).plaintextModulus
             }
             // Check scaling factor increases as we add plaintext moduli.
             let maxScalingFactor1 = ClientConfig<Scheme>.maxScalingFactor(
@@ -107,7 +107,7 @@ extension PrivateNearestNeighborSearchUtil {
         @inlinable
         public static func queryAsResponse<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let degree = 512
-            let encryptionParameters = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
                 polyDegree: degree,
                 plaintextModulus: Scheme.Scalar.generatePrimes(
                     significantBitCounts: [16],
@@ -135,7 +135,7 @@ extension PrivateNearestNeighborSearchUtil {
                 significantBitCounts: [17],
                 preferringSmall: true, nttDegree: degree)]
             {
-                let config = try ClientConfig(
+                let config = try ClientConfig<Scheme>(
                     encryptionParameters: encryptionParameters,
                     scalingFactor: scalingFactor,
                     queryPacking: .denseRow,
@@ -171,7 +171,7 @@ extension PrivateNearestNeighborSearchUtil {
         @inlinable
         public static func clientServer<Scheme: HeScheme>(for _: Scheme.Type) throws {
             func runSingleTest(
-                encryptionParameters: EncryptionParameters<Scheme>,
+                encryptionParameters: EncryptionParameters<Scheme.Scalar>,
                 dimensions: MatrixDimensions,
                 plaintextModuli: [Scheme.Scalar],
                 queryCount: Int) throws
@@ -183,8 +183,9 @@ extension PrivateNearestNeighborSearchUtil {
                     plaintextModuli: plaintextModuli)
                 let evaluatonKeyConfig = try MatrixMultiplication.evaluationKeyConfig(
                     plaintextMatrixDimensions: dimensions,
+                    maxQueryCount: queryCount,
                     encryptionParameters: encryptionParameters,
-                    maxQueryCount: queryCount)
+                    scheme: Scheme.self)
                 let clientConfig = try ClientConfig<Scheme>(
                     encryptionParameters: encryptionParameters,
                     scalingFactor: scalingFactor,
@@ -240,7 +241,7 @@ extension PrivateNearestNeighborSearchUtil {
                     count: 3),
                 preferringSmall: false,
                 nttDegree: degree)
-            let encryptionParameters = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
                 polyDegree: degree,
                 plaintextModulus: plaintextModuli[0],
                 coefficientModuli: coefficientModuli,

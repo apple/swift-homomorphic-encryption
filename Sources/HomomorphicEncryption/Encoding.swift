@@ -27,7 +27,7 @@ extension Context {
     /// - Returns: The plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
     @inlinable
-    public func encode(values: some Collection<Scheme.Scalar>,
+    public func encode(values: some Collection<Scalar>,
                        format: EncodeFormat) throws -> Plaintext<Scheme, Coeff>
     {
         try validDataForEncoding(values: values)
@@ -57,7 +57,7 @@ extension Context {
             guard bounds.contains(Scheme.SignedScalar(value)) else {
                 throw HeError.encodingDataOutOfBounds(for: bounds)
             }
-            return Scheme.Scalar(value.centeredToRemainder(modulus: plaintextModulus))
+            return Scalar(value.centeredToRemainder(modulus: plaintextModulus))
         }
         return try encode(values: centeredValues, format: format)
     }
@@ -72,7 +72,7 @@ extension Context {
     /// - Throws: Error upon failure to encode.
     @inlinable
     public func encode(
-        values: some Collection<Scheme.Scalar>,
+        values: some Collection<Scalar>,
         format: EncodeFormat,
         moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
     {
@@ -102,7 +102,7 @@ extension Context {
     /// - Returns: The decoded values.
     /// - Throws: Error upon failure to decode.
     @inlinable
-    func decode(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [Scheme.Scalar] {
+    func decode(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [Scalar] {
         switch format {
         case .coefficient:
             decodeCoefficient(plaintext: plaintext)
@@ -120,7 +120,7 @@ extension Context {
     /// - Throws: Error upon failure to decode.
     @inlinable
     func decode(plaintext: Plaintext<Scheme, Coeff>, format: EncodeFormat) throws -> [Scheme.SignedScalar] {
-        let unsignedValues: [Scheme.Scalar] = try decode(plaintext: plaintext, format: format)
+        let unsignedValues: [Scalar] = try decode(plaintext: plaintext, format: format)
         return unsignedValues.map { value in
             value.remainderToCentered(modulus: plaintextModulus)
         }
@@ -139,7 +139,7 @@ extension Context {
     }
 
     @inlinable
-    func validDataForEncoding(values: some Collection<Scheme.Scalar>) throws {
+    func validDataForEncoding(values: some Collection<Scalar>) throws {
         guard values.count <= encryptionParameters.polyDegree else {
             throw HeError.encodingDataCountExceedsLimit(count: values.count, limit: encryptionParameters.polyDegree)
         }
@@ -159,7 +159,7 @@ extension Context {
     /// `f(x) = values_0 + values_1 x + ... values_{N_1} x^{N-1}`, padding
     /// with 0 coefficients if fewer than `N` values are provided.
     @inlinable
-    func encodeCoefficient(values: some Collection<Scheme.Scalar>) throws
+    func encodeCoefficient(values: some Collection<Scalar>) throws
         -> Plaintext<Scheme, Coeff>
     {
         if values.isEmpty {
@@ -169,7 +169,7 @@ extension Context {
         if valuesArray.count < degree {
             valuesArray.append(contentsOf: repeatElement(0, count: degree - valuesArray.count))
         }
-        let array: Array2d<Scheme.Scalar> = Array2d(data: valuesArray, rowCount: 1, columnCount: valuesArray.count)
+        let array: Array2d<Scalar> = Array2d(data: valuesArray, rowCount: 1, columnCount: valuesArray.count)
         return Plaintext<Scheme, Coeff>(
             context: self,
             poly: PolyRq(context: plaintextContext, data: array))
@@ -182,7 +182,7 @@ extension Context {
     /// - Parameter plaintext: Plaintext to decode.
     /// - Returns: The decoded plaintext values, each in `[0, t - 1]` for plaintext modulus `t`.
     @inlinable
-    func decodeCoefficient(plaintext: Plaintext<Scheme, Coeff>) -> [Scheme.Scalar] {
+    func decodeCoefficient(plaintext: Plaintext<Scheme, Coeff>) -> [Scalar] {
         plaintext.poly.data.data
     }
 }
@@ -190,7 +190,7 @@ extension Context {
 // code for SIMD encoding/decoding
 extension Context {
     @inlinable
-    static func generateEncodingMatrix(encryptionParameters: EncryptionParameters<Scheme>) -> [Int] {
+    static func generateEncodingMatrix(encryptionParameters: EncryptionParameters<Scalar>) -> [Int] {
         guard encryptionParameters.plaintextModulus.isNttModulus(for: encryptionParameters.polyDegree) else {
             return [Int]()
         }
@@ -215,12 +215,12 @@ extension Context {
     }
 
     @inlinable
-    func encodeSimd(values: some Collection<Scheme.Scalar>) throws -> Plaintext<Scheme, Coeff> {
+    func encodeSimd(values: some Collection<Scalar>) throws -> Plaintext<Scheme, Coeff> {
         guard !simdEncodingMatrix.isEmpty else { throw HeError.simdEncodingNotSupported(for: encryptionParameters) }
         let polyDegree = encryptionParameters.polyDegree
-        var array = Array2d<Scheme.Scalar>.zero(rowCount: 1, columnCount: polyDegree)
+        var array = Array2d<Scalar>.zero(rowCount: 1, columnCount: polyDegree)
         for (index, value) in values.enumerated() {
-            array[0, simdEncodingMatrix[index]] = Scheme.Scalar(value)
+            array[0, simdEncodingMatrix[index]] = Scalar(value)
         }
         let poly = PolyRq<_, Eval>(context: plaintextContext, data: array)
         let coeffPoly = try poly.inverseNtt()
@@ -228,7 +228,7 @@ extension Context {
     }
 
     @inlinable
-    func decodeSimd(plaintext: Plaintext<Scheme, Coeff>) throws -> [Scheme.Scalar] {
+    func decodeSimd(plaintext: Plaintext<Scheme, Coeff>) throws -> [Scalar] {
         guard !simdEncodingMatrix.isEmpty else {
             throw HeError.simdEncodingNotSupported(for: encryptionParameters)
         }

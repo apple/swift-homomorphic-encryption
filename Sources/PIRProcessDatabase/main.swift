@@ -214,7 +214,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
         let cuckooTableArguments = cuckooTableArguments ?? CuckooTableArguments()
         let maxValueSize = database.map { row in row.value.count }.max() ?? 0
         let maxSerializedBucketSize = try cuckooTableArguments.maxSerializedBucketSize ?? {
-            let bytesPerPlaintext = try EncryptionParameters<Scheme>(from:
+            let bytesPerPlaintext = try EncryptionParameters<Scheme.Scalar>(from:
                 rlweParameters).bytesPerPlaintext
             let singleBucketSize = HashBucket.serializedSize(singleValueSize: maxValueSize)
             return if singleBucketSize >= bytesPerPlaintext / 2 {
@@ -378,14 +378,15 @@ struct ProcessDatabase: AsyncParsableCommand {
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
 
-        let encryptionParameters = try EncryptionParameters<Scheme>(from: config.rlweParameters)
-        let processArgs = try ProcessKeywordDatabase.Arguments<Scheme>(databaseConfig: databaseConfig,
-                                                                       encryptionParameters: encryptionParameters,
-                                                                       algorithm: config.algorithm,
-                                                                       keyCompression: config.keyCompression,
-                                                                       trialsPerShard: config.trialsPerShard,
-                                                                       symmetricPirConfig: config.symmetricPirConfig)
-        let context = try Context(encryptionParameters: processArgs.encryptionParameters)
+        let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: config.rlweParameters)
+        let processArgs = try ProcessKeywordDatabase.Arguments<Scheme.Scalar>(
+            databaseConfig: databaseConfig,
+            encryptionParameters: encryptionParameters,
+            algorithm: config.algorithm,
+            keyCompression: config.keyCompression,
+            trialsPerShard: config.trialsPerShard,
+            symmetricPirConfig: config.symmetricPirConfig)
+        let context = try Context<Scheme>(encryptionParameters: processArgs.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(
             rows: database,
             sharding: processArgs.databaseConfig.sharding,
@@ -424,7 +425,9 @@ struct ProcessDatabase: AsyncParsableCommand {
         }
 
         if let evaluationKeyConfigFile = config.outputEvaluationKeyConfig {
-            let protoEvaluationKeyConfig = try evaluationKeyConfig.proto(encryptionParameters: encryptionParameters)
+            let protoEvaluationKeyConfig = try evaluationKeyConfig.proto(
+                encryptionParameters: encryptionParameters,
+                scheme: Scheme.self)
             try protoEvaluationKeyConfig.save(to: evaluationKeyConfigFile)
             ProcessDatabase.logger.info("Saved evaluation key configuration to \(evaluationKeyConfigFile)")
         }
@@ -435,7 +438,7 @@ struct ProcessDatabase: AsyncParsableCommand {
         shard: KeywordDatabaseShard,
         config: ResolvedArguments,
         context: Context<Scheme>,
-        processArgs: ProcessKeywordDatabase.Arguments<Scheme>) async throws -> EvaluationKeyConfig
+        processArgs: ProcessKeywordDatabase.Arguments<Scheme.Scalar>) async throws -> EvaluationKeyConfig
     {
         var logger = ProcessDatabase.logger
         logger[metadataKey: "shardID"] = .string(shardID)
@@ -462,7 +465,7 @@ struct ProcessDatabase: AsyncParsableCommand {
         }
 
         logger.info("Processing shard with \(shard.rows.count) rows")
-        let processed = try ProcessKeywordDatabase.processShard(
+        let processed: ProcessedDatabaseWithParameters<Scheme> = try ProcessKeywordDatabase.processShard(
             shard: shard,
             with: processArgs,
             onEvent: logEvent)

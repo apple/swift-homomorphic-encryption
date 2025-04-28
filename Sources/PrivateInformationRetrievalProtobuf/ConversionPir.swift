@@ -57,7 +57,7 @@ extension ProcessedDatabaseWithParameters {
     public func proto(context: Context<Scheme>) throws -> Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
         let encryptionParameters = context.encryptionParameters
         return try Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters.with { params in
-            params.encryptionParameters = try encryptionParameters.proto()
+            params.encryptionParameters = try encryptionParameters.proto(scheme: Scheme.self)
             params.numEntries = UInt64(pirParameter.entryCount)
             params.entrySize = UInt64(pirParameter.entrySizeInBytes)
             params.dimensions = pirParameter.dimensions.map(UInt64.init)
@@ -67,7 +67,7 @@ extension ProcessedDatabaseWithParameters {
             params.algorithm = algorithm.proto()
             params.batchSize = UInt64(pirParameter.batchSize)
             params.evaluationKeyConfig = try evaluationKeyConfig
-                .proto(encryptionParameters: encryptionParameters)
+                .proto(encryptionParameters: encryptionParameters, scheme: Scheme.self)
             params.keyCompressionStrategy = .unspecified
         }
     }

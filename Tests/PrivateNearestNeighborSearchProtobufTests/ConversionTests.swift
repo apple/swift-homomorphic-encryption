@@ -103,7 +103,7 @@ struct ConversionTests {
     @Test
     func serializedPlaintextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
@@ -139,7 +139,7 @@ struct ConversionTests {
     @Test
     func serializedCiphertextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let secretKey = try context.generateSecretKey()
 
@@ -197,7 +197,7 @@ struct ConversionTests {
     @Test
     func query() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let secretKey = try context.generateSecretKey()
 
@@ -225,7 +225,7 @@ struct ConversionTests {
     @Test
     func serializedProcessedDatabase() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
             let vectorDimension = 4
 
             let rows = (0...10).map { rowIndex in
@@ -246,11 +246,10 @@ struct ConversionTests {
                 vectorDimension: vectorDimension,
                 evaluationKeyConfig: EvaluationKeyConfig(galoisElements: [3]),
                 distanceMetric: .cosineSimilarity,
-                extraPlaintextModuli: Scheme.Scalar
-                    .generatePrimes(
-                        significantBitCounts: [7],
-                        preferringSmall: true,
-                        nttDegree: encryptionParameters.polyDegree))
+                extraPlaintextModuli: Scheme.Scalar.generatePrimes(
+                    significantBitCounts: [7],
+                    preferringSmall: true,
+                    nttDegree: encryptionParameters.polyDegree))
             let serverConfig = ServerConfig<Scheme>(
                 clientConfig: clientConfig,
                 databasePacking: MatrixPacking

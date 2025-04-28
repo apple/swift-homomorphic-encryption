@@ -57,18 +57,20 @@ public enum MatrixMultiplication {
     /// Computes the evaluation key configuration for matrix multiplication.
     /// - Parameters:
     ///   - plaintextMatrixDimensions: Dimensions of the plaintext matrix.
-    ///   - encryptionParameters: Encryption paramterss
     ///   - maxQueryCount: Maximum number of queries in one batch. The returned`EvaluationKeyConfig` will support all
+    ///   - encryptionParameters: Encryption paramterss
+    ///   - scheme: The metatype of the generic parameter `Scheme`.
     /// batch sizes up to and including `maxQueryCount`.
     /// - Returns: The evaluation key configuration.
     /// - Throws: Error upon failure to compute the configuration.
     @inlinable
     package static func evaluationKeyConfig<Scheme: HeScheme>(
         plaintextMatrixDimensions: MatrixDimensions,
-        encryptionParameters: EncryptionParameters<Scheme>,
-        maxQueryCount: Int) throws -> EvaluationKeyConfig
+        maxQueryCount: Int,
+        encryptionParameters: EncryptionParameters<Scheme.Scalar>,
+        scheme _: Scheme.Type) throws -> EvaluationKeyConfig
     {
-        guard let simdColumnCount = encryptionParameters.simdDimensions?.columnCount else {
+        guard let simdColumnCount = encryptionParameters.simdDimensions(for: Scheme.self)?.columnCount else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let degree = encryptionParameters.polyDegree

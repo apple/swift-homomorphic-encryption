@@ -316,11 +316,11 @@ extension TestUtils {
     }
 
     @inlinable
-    package static func getTestEncryptionParameters<Scheme: HeScheme>() throws -> EncryptionParameters<Scheme> {
-        try EncryptionParameters<Scheme>(
+    package static func getTestEncryptionParameters<Scalar: ScalarType>() throws -> EncryptionParameters<Scalar> {
+        try EncryptionParameters<Scalar>(
             polyDegree: testPolyDegree,
-            plaintextModulus: Scheme.Scalar(testPlaintextModulus),
-            coefficientModuli: testCoefficientModuli(Scheme.Scalar.self),
+            plaintextModulus: Scalar(testPlaintextModulus),
+            coefficientModuli: testCoefficientModuli(Scalar.self),
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
     }

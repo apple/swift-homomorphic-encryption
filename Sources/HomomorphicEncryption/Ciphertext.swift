@@ -14,10 +14,12 @@
 
 /// Ciphertext type.
 public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
+    public typealias Scalar = Scheme.Scalar
+
     /// Context for HE computation.
     public let context: Context<Scheme>
-    @usableFromInline package var polys: [PolyRq<Scheme.Scalar, Format>]
-    @usableFromInline var correctionFactor: Scheme.Scalar
+    @usableFromInline package var polys: [PolyRq<Scalar, Format>]
+    @usableFromInline var correctionFactor: Scalar
     @usableFromInline var seed: [UInt8] = []
 
     /// The number of polynomials in the ciphertext.
@@ -32,8 +34,8 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     @inlinable
     init(
         context: Context<Scheme>,
-        polys: [PolyRq<Scheme.Scalar, Format>],
-        correctionFactor: Scheme.Scalar,
+        polys: [PolyRq<Scalar, Format>],
+        correctionFactor: Scalar,
         seed: [UInt8] = [])
     {
         self.context = context
@@ -329,10 +331,8 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
 }
 
 extension Ciphertext: PolyCollection {
-    public typealias Scalar = Scheme.Scalar
-
     @inlinable
-    public func polyContext() -> PolyContext<Scheme.Scalar> {
+    public func polyContext() -> PolyContext<Scalar> {
         polys[0].context
     }
 }

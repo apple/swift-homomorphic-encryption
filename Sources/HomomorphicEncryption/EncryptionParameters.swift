@@ -46,10 +46,10 @@ public enum SecurityLevel: Hashable, Codable, Sendable {
 /// Encryption parameters for an RLWE-based HE scheme.
 ///
 /// These parameters are considered public.
-public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendable {
+public struct EncryptionParameters<Scalar: ScalarType>: Hashable, Codable, Sendable {
     /// The maximum modulus value for a single coefficient or plaintext modulus.
-    public static var maxSingleModulus: Scheme.Scalar {
-        Modulus<Scheme.Scalar>.max
+    public static var maxSingleModulus: Scalar {
+        Modulus<Scalar>.max
     }
 
     /// Polynomial degree `N` of the RLWE polynomial ring.
@@ -59,7 +59,7 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     /// Plaintext modulus, `t`.
     ///
     /// This is the modulus on which encrypted computation occurs.
-    public let plaintextModulus: Scheme.Scalar
+    public let plaintextModulus: Scalar
 
     /// Co-prime coefficient moduli.
     ///
@@ -73,7 +73,7 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     /// and should generally be chosen as the largest of the coefficient moduli to minimize noise growth on those
     /// operations.
     /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)``
-    public let coefficientModuli: [Scheme.Scalar]
+    public let coefficientModuli: [Scalar]
 
     /// RLWE error polynomial standard deviation.
     public let errorStdDev: ErrorStdDev
@@ -85,13 +85,6 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
 
     /// Whether or not encryption parameters support ``EncodeFormat/simd`` encoding.
     public var supportsSimdEncoding: Bool { plaintextModulus.isNttModulus(for: polyDegree) }
-
-    /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
-    ///
-    /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
-    public var simdDimensions: SimdEncodingDimensions? {
-        Scheme.encodeSimdDimensions(for: self)
-    }
 
     /// Whether or not encryption parameters use of an ``EvaluationKey``.
     public var supportsEvaluationKey: Bool { coefficientModuli.count > 1 }
@@ -115,8 +108,8 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     /// security.
     public init(
         polyDegree: Int,
-        plaintextModulus: Scheme.Scalar,
-        coefficientModuli: [Scheme.Scalar],
+        plaintextModulus: Scalar,
+        coefficientModuli: [Scalar],
         errorStdDev: ErrorStdDev,
         securityLevel: SecurityLevel) throws
     {
@@ -151,8 +144,8 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
         for modulus in coefficientModuli + [plaintextModulus] {
             guard modulus.isPrime(variableTime: true),
                   (1...Self.maxSingleModulus).contains(modulus),
-                  modulus != Scheme.Scalar.rnsCorrectionFactor,
-                  modulus != Scheme.Scalar.mTilde
+                  modulus != Scalar.rnsCorrectionFactor,
+                  modulus != Scalar.mTilde
             else {
                 throw HeError.invalidEncryptionParameters(self)
             }
@@ -165,8 +158,8 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
     public init(from rlweParameters: PredefinedRlweParameters) throws {
         try self.init(
             polyDegree: rlweParameters.polyDegree,
-            plaintextModulus: Scheme.Scalar(rlweParameters.plaintextModulus),
-            coefficientModuli: rlweParameters.coefficientModuli.map { Scheme.Scalar($0) },
+            plaintextModulus: Scalar(rlweParameters.plaintextModulus),
+            coefficientModuli: rlweParameters.coefficientModuli.map { Scalar($0) },
             errorStdDev: rlweParameters.errorStdDev,
             securityLevel: rlweParameters.securityLevel)
     }
@@ -198,78 +191,19 @@ public struct EncryptionParameters<Scheme: HeScheme>: Hashable, Codable, Sendabl
         }
     }
 
-    /// Calculates the number of least significant bits (LSBs) per polynomial that can be excluded
-    /// from serialization of a single-modulus ciphertext, when decryption is performed immediately after
-    /// deserialization.
+    /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
     ///
-    /// In BFV, the LSB bits of each polynomial may be excluded from the serialization,
-    /// since they are rarely used in decryption. This yields a smaller
-    /// serialization size, at the cost of a small chance of decryption
-    /// error.
-    /// - seealso: Section 5.2 of <https://eprint.iacr.org/2022/207.pdf>.
-    @inlinable
-    func skipLSBsForDecryption() -> [Int] {
-        guard Scheme.self == Bfv<Scheme.Scalar>.self else {
-            return Array(repeating: 0, count: Scheme.freshCiphertextPolyCount)
-        }
-        let q0 = coefficientModuli[0]
-        let t = plaintextModulus
-        // Note, Appendix F of the paper claims the low `l' = floor(log2(q/t))` bits of
-        // a message are unused during decryption. This is off by one, due to
-        // also needing the MSB decimal bit for correct rounding.
-        // Concretely, let x=7, t=5, q=64. Then, floor(log2(q/t)) = 3.
-        // Decrypting `x` yields `round(x * t / q) = round(0.546875) = 1`,
-        // whereas decrypting `(x >> 3) >> 3) = 0` yields `round(0 * t / q) = 0`.
-        // Hence, we subtract one from the definition of `l'` compared to the paper.
-        //
-        // Also, Appendix F fails to address ciphertext error. If the error
-        // is less than q/4t, then we have the error introduced by the dropped
-        // bits be less than q/4t so we can correctly decrypt.
-        let lPrime = if q0 >= 2 * t {
-            (q0 / t).log2 - 3
-        } else {
-            0
-        }
-
-        // Then, we want the error introduced by dropping
-        // bits to be `<= q/4p` since it is additive with the
-        // ciphertext error. Set number of bits dropped
-        // in `b` to `floor(log(q/8p))`. Next, estimate
-        // how many bits to drop from a so that
-        // w.h.p., the introduced error is less
-        // than q/8p.
-        //
-        // The paper uses `z_score * sqrt(2N/9) * 2^{l_a} + 2^{l_b} < 2^{l'}`
-        // Setting `l_b = l' - 1`, this yields
-        // `z_score * sqrt(2N/9) * 2^{l_a} < 2^{l'-1}`, iff
-        // `log2(z_score * sqrt(2N/9)) + l_a < l' - 1`, iff
-        // `l_a < l' - 1 - log2(z_score * sqrt(2N/9))`, which is true for
-        // `l_a = floor(l' - 1 - log2(z_score * sqrt(2N/9)))`
-        // The paper uses z_score = 7; we use a larger z_score since we are decrypting N
-        // coefficients, rather than a single LWE coefficient. This yields a
-        // a per-coefficient decryption error `Pr(|x| > z_score)`, where `x ~ N(0, 1)`.
-        // This yields a < 2^-49.5 per-coefficient decryption error.
-        // By union bound, the message decryption error is
-        // `< 2^(log2(N) - 49.5) = 2^-36.5` for `N=8192`
-        //
-        // We also add a check: if we're only dropping at most one bit in `a`, then
-        // it is safer to drop that bit in `b` instead since the error's
-        // dependence on `b` is deterministic.
-        var poly0SkipLSBs = max(lPrime, 0)
-        let zScore = 8.0
-        let tmp = Int(zScore * (2.0 * Double(polyDegree) / 9.0).squareRoot())
-        var poly1SkipLSBs = lPrime - (tmp == 0 ? 0 : tmp.ceilLog2)
-        if poly1SkipLSBs <= 1 {
-            poly0SkipLSBs = max(lPrime + 1, 0)
-            poly1SkipLSBs = 0
-        }
-        return [poly0SkipLSBs, poly1SkipLSBs]
+    /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
+    public func simdDimensions<Scheme: HeScheme>(for _: Scheme.Type) -> SimdEncodingDimensions?
+        where Scheme.Scalar == Scalar
+    {
+        Scheme.encodeSimdDimensions(for: self)
     }
 }
 
 extension EncryptionParameters: CustomStringConvertible {
     public var description: String {
-        "EncryptionParameters<\(Scheme.self)>(" +
+        "EncryptionParameters<\(Scalar.self)>(" +
             "degree=\(polyDegree), " +
             "plaintextModulus=\(plaintextModulus), " +
             "coefficientModuli=\(coefficientModuli), " +

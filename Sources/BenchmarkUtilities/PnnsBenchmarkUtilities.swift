@@ -162,10 +162,10 @@ extension PnnsEncryptionParametersConfig: CustomStringConvertible {
 
 extension EncryptionParameters {
     init(from config: PnnsEncryptionParametersConfig) throws {
-        let plaintextModulus = try Scheme.Scalar.generatePrimes(
+        let plaintextModulus = try Scalar.generatePrimes(
             significantBitCounts: config.plaintextModulusBits,
             preferringSmall: true)[0]
-        let coefficientModuli = try Scheme.Scalar.generatePrimes(
+        let coefficientModuli = try Scalar.generatePrimes(
             significantBitCounts: config.coefficientModulusBits,
             preferringSmall: false,
             nttDegree: config.polyDegree)
@@ -203,7 +203,7 @@ struct PnnsProcessBenchmarkContext<Scheme: HeScheme> {
             preferringSmall: false,
             nttDegree: parameterConfig.polyDegree)
 
-        let encryptionParameters = try EncryptionParameters<Scheme>(
+        let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
             polyDegree: parameterConfig.polyDegree,
             plaintextModulus: plaintextModuli[0],
             coefficientModuli: coefficientModuli,
@@ -215,8 +215,9 @@ struct PnnsProcessBenchmarkContext<Scheme: HeScheme> {
             plaintextMatrixDimensions: MatrixDimensions(
                 rowCount: databaseConfig.rowCount,
                 columnCount: databaseConfig.vectorDimension),
+            maxQueryCount: batchSize,
             encryptionParameters: encryptionParameters,
-            maxQueryCount: batchSize)
+            scheme: Scheme.self)
         let scalingFactor = ClientConfig<Scheme>
             .maxScalingFactor(
                 distanceMetric: .cosineSimilarity,
@@ -230,7 +231,7 @@ struct PnnsProcessBenchmarkContext<Scheme: HeScheme> {
             evaluationKeyConfig: evaluationKeyConfig,
             distanceMetric: .cosineSimilarity)
         let babyStepGiantStep = BabyStepGiantStep(vectorDimension: databaseConfig.vectorDimension)
-        let serverConfig = ServerConfig(
+        let serverConfig = ServerConfig<Scheme>(
             clientConfig: clientConfig,
             databasePacking: .diagonal(babyStepGiantStep: babyStepGiantStep))
         self.serverConfig = serverConfig
@@ -269,7 +270,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
             significantBitCounts: parameterConfig.coefficientModulusBits,
             preferringSmall: false,
             nttDegree: parameterConfig.polyDegree)
-        let encryptionParameters = try EncryptionParameters<Scheme>(
+        let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
             polyDegree: parameterConfig.polyDegree,
             plaintextModulus: plaintextModuli[0],
             coefficientModuli: coefficientModuli,
@@ -280,8 +281,9 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
             plaintextMatrixDimensions: MatrixDimensions(
                 rowCount: databaseConfig.rowCount,
                 columnCount: databaseConfig.vectorDimension),
+            maxQueryCount: queryCount,
             encryptionParameters: encryptionParameters,
-            maxQueryCount: queryCount)
+            scheme: Scheme.self)
         let scalingFactor = ClientConfig<Scheme>
             .maxScalingFactor(
                 distanceMetric: .cosineSimilarity,
@@ -297,13 +299,13 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
             extraPlaintextModuli: Array(plaintextModuli[1...]))
 
         let babyStepGiantStep = BabyStepGiantStep(vectorDimension: databaseConfig.vectorDimension)
-        let serverConfig = ServerConfig(
+        let serverConfig = ServerConfig<Scheme>(
             clientConfig: clientConfig,
             databasePacking: .diagonal(babyStepGiantStep: babyStepGiantStep))
 
         let database = getDatabaseForTesting(config: databaseConfig)
         let contexts = try clientConfig.encryptionParameters
-            .map { encryptionParameters in try Context(encryptionParameters: encryptionParameters) }
+            .map { encryptionParameters in try Context<Scheme>(encryptionParameters: encryptionParameters) }
         self.processedDatabase = try database.process(config: serverConfig, contexts: contexts)
         self.client = try Client(config: clientConfig, contexts: contexts)
         self.server = try Server(database: processedDatabase)

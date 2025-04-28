@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ extension CiphertextMatrix {
     /// - Throws: Error upon failure to deserialize the ciphertext matrix.
     @inlinable
     public init(
-        deserialize serialized: SerializedCiphertextMatrix<Scheme.Scalar>,
+        deserialize serialized: SerializedCiphertextMatrix<Scalar>,
         context: Context<Scheme>,
         moduliCount: Int? = nil) throws
     {
@@ -69,7 +69,7 @@ extension CiphertextMatrix {
     /// - Returns: The serialized ciphertext matrix.
     /// - Throws: Error upon failure to serialize.
     @inlinable
-    public func serialize(forDecryption: Bool = false) throws -> SerializedCiphertextMatrix<Scheme.Scalar> {
+    public func serialize(forDecryption: Bool = false) throws -> SerializedCiphertextMatrix<Scalar> {
         try SerializedCiphertextMatrix(
             dimensions: dimensions,
             packing: packing,

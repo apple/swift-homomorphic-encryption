@@ -362,6 +362,8 @@ public protocol IndexPirServer: Sendable {
     /// Processed keyword-value database.
     typealias Database = PrivateInformationRetrieval.ProcessedDatabase<Scheme>
 
+    typealias Scalar = Scheme.Scalar
+
     /// The processed databases.
     var databases: [Database] { get }
     /// The index PIR parameters, suitable for use with any of the databases.

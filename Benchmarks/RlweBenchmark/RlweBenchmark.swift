@@ -42,7 +42,7 @@ func getRandomPlaintextData<T: ScalarType>(count: Int, in range: Range<T>) -> [T
 }
 
 struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
-    var encryptionParameters: EncryptionParameters<Scheme>
+    var encryptionParameters: EncryptionParameters<Scheme.Scalar>
     var context: Context<Scheme>
 
     let data: [Scheme.Scalar]
@@ -130,15 +130,15 @@ extension EncryptionParametersConfig: CustomStringConvertible {
 
 extension EncryptionParameters {
     init(config: EncryptionParametersConfig) throws {
-        let plaintextModuli = try Scheme.Scalar.generatePrimes(
+        let plaintextModuli = try Scalar.generatePrimes(
             significantBitCounts: config.plaintextModulusBits,
             preferringSmall: true,
             nttDegree: config.polyDegree)
-        let coefficientModuli = try Scheme.Scalar.generatePrimes(
+        let coefficientModuli = try Scalar.generatePrimes(
             significantBitCounts: config.coefficientModulusBits,
             preferringSmall: false,
             nttDegree: config.polyDegree)
-        self = try EncryptionParameters<Scheme>(
+        self = try EncryptionParameters<Scalar>(
             polyDegree: config.polyDegree,
             plaintextModulus: plaintextModuli[0],
             coefficientModuli: coefficientModuli,
@@ -160,10 +160,10 @@ func contextInitBenchmark<Scheme: HeScheme>(_: Scheme.Type, config: EncryptionPa
     {
         let benchmarkName = ["ContextInit", String(describing: Scheme.self), config.description].joined(separator: "/")
         Benchmark(benchmarkName, configuration: benchmarkConfiguration) { benchmark in
-            let encryptionParameters = try EncryptionParameters<Scheme>(config: config)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(config: config)
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                try blackHole(_ = Context(encryptionParameters: encryptionParameters))
+                try blackHole(_ = Context<Scheme>(encryptionParameters: encryptionParameters))
             }
         }
     }

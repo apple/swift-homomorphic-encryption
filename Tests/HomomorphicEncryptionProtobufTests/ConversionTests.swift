@@ -17,14 +17,6 @@ import _TestUtilities
 import HomomorphicEncryptionProtobuf
 import Testing
 
-extension SerializedCiphertext {
-    /// Returns the number of non-zero bytes in the serialized data.
-    func nonZeroBytes() throws -> Int {
-        let data = try proto().serializedData()
-        return data.count { byte in byte != 0 }
-    }
-}
-
 @Suite
 struct ConversionTests {
     @Test
@@ -56,97 +48,84 @@ struct ConversionTests {
 
     // MARK: - Largely copied from SerializationTests and then edited
 
-    @Test
-    func ciphertextSerialization() throws {
+    @Test(arguments: CiphertextSerializationConfig.allCases)
+    func ciphertextSerialization(config: CiphertextSerializationConfig) throws {
+        let indices: [Int]? = if config.indices { [1, 2, 3] } else { nil }
+        if indices != nil, config.polyFormat == .eval {
+            return
+        }
+
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
-            let plaintext: Scheme.CoeffPlaintext = try context.encode(
-                values: values,
-                format: .coefficient)
+            let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: .coefficient)
             let secretKey = try context.generateSecretKey()
-            let ciphertext = try plaintext.encrypt(using: secretKey)
+            var ciphertext = try plaintext.encrypt(using: secretKey)
 
-            // serialize seeded
-            do {
-                let serialized = ciphertext.serialize().proto()
-                if case .seeded = serialized.serializedCiphertextType {
-                } else {
+            func checkDeserialization<Format: PolyFormat>(
+                serialized: SerializedCiphertext<Scheme.Scalar>,
+                isSmallerThan upperBound: Int?,
+                _: Format.Type) throws
+            {
+                if let upperBound {
+                    try #expect(serialized.nonZeroBytes() < upperBound)
+                }
+
+                let shouldBeSeeded = Scheme.self != NoOpScheme.self && !config.modSwitchDownToSingle
+                let proto = serialized.proto()
+                switch (proto.serializedCiphertextType, shouldBeSeeded) {
+                case (.full, true):
+                    Issue.record("Must be full serialization")
+                case (.seeded, false):
                     Issue.record("Must be seeded serialization")
+                default:
+                    break
                 }
-
-                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
-                    deserialize: serialized.native(),
+                let deserialized: Ciphertext<Scheme, Format> = try Ciphertext(
+                    deserialize: proto.native(),
                     context: context,
                     moduliCount: ciphertext.moduli.count)
                 let decrypted = try deserialized.decrypt(using: secretKey)
-                #expect(decrypted == plaintext)
-            }
-            // serialize full
-            do {
-                var ciphertext = ciphertext
-                ciphertext.clearSeed()
-                let serialized = ciphertext.serialize().proto()
-                if case .full = serialized.serializedCiphertextType {} else {
-                    Issue.record("Must be full serialization")
-                }
-
-                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
-                    deserialize: serialized.native(),
-                    context: context,
-                    moduliCount: ciphertext.moduli.count)
-                let decrypted = try deserialized.decrypt(using: secretKey)
-                #expect(decrypted == plaintext)
-            }
-            // serialize for decryption
-            do {
-                var ciphertext = ciphertext
-                try ciphertext.modSwitchDownToSingle()
-                let serialized = ciphertext.serialize(forDecryption: true).proto()
-                if case let .some(.full(full)) = serialized.serializedCiphertextType {
-                    #expect(full.skipLsbs.contains { $0 > 0 })
+                if let indices {
+                    let decoded: [Scheme.Scalar] = try decrypted.decode(format: .coefficient)
+                    for index in indices {
+                        #expect(decoded[index] == values[index])
+                    }
                 } else {
-                    Issue.record("Must be full serialization")
+                    #expect(decrypted == plaintext)
                 }
-                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
-                    deserialize: serialized.native(),
-                    context: context,
-                    moduliCount: ciphertext.moduli.count)
-                let decrypted = try deserialized.decrypt(using: secretKey)
-                #expect(decrypted == plaintext)
             }
-            // serialize indices for decryption
-            do {
-                var ciphertext = ciphertext
-                try ciphertext.modSwitchDownToSingle()
-                let indices = [1, 3, 5]
-                let serializedAllIndices = ciphertext.serialize(forDecryption: true)
-                let serialized = try ciphertext.serialize(indices: indices, forDecryption: true)
-                if case let .full(_, skipLSBs, _) = serialized {
-                    #expect(skipLSBs.contains { $0 > 0 })
-                } else {
-                    Issue.record("Must be full serialization")
-                }
-                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
-                    deserialize: serialized,
-                    context: context,
-                    moduliCount: 1)
-                let decrypted = try deserialized.decrypt(using: secretKey)
-                let decoded: [Scheme.Scalar] = try decrypted.decode(format: .coefficient)
-                for index in indices {
-                    #expect(decoded[index] == values[index])
-                }
 
-                // Check non-zero byte count.
-                let allIndicesSize = try serializedAllIndices.nonZeroBytes()
-                let indicesSize = try serialized.nonZeroBytes()
-                #expect(indicesSize < allIndicesSize)
+            if config.modSwitchDownToSingle {
+                try ciphertext.modSwitchDownToSingle()
+            }
+            switch config.polyFormat {
+            case .coeff:
+                let coeffCiphertext = try ciphertext.convertToCoeffFormat()
+                let serialized = if let indices {
+                    try coeffCiphertext.serialize(indices: indices, forDecryption: config.forDecryption)
+                } else {
+                    coeffCiphertext.serialize(forDecryption: config.forDecryption)
+                }
+                let baseline: Int? = if config.modSwitchDownToSingle, config.forDecryption || config.indices {
+                    try coeffCiphertext.serialize().nonZeroBytes()
+                } else {
+                    nil
+                }
+                try checkDeserialization(serialized: serialized, isSmallerThan: baseline, Coeff.self)
+
+            case .eval:
+                let evalCiphertext = try ciphertext.convertToEvalFormat()
+                let serialized = if let indices {
+                    try evalCiphertext.serialize(indices: indices, forDecryption: config.forDecryption)
+                } else {
+                    evalCiphertext.serialize(forDecryption: config.forDecryption)
+                }
+                try checkDeserialization(serialized: serialized, isSmallerThan: nil, Eval.self)
             }
         }
 
         // TODO: NoOpScheme is broken: ciphertext.polyContext != context.ciphertextContext
-        // ciphertext.polyContext == context.plaintextContext
-
         // try runTest(NoOpScheme.self)
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)
@@ -272,4 +251,40 @@ struct ConversionTests {
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)
     }
+}
+
+extension SerializedCiphertext {
+    /// Returns the number of non-zero bytes in the serialized data.
+    func nonZeroBytes() throws -> Int {
+        let data = try proto().serializedData()
+        return data.count { byte in byte != 0 }
+    }
+}
+
+enum PolyFormatEnum: CaseIterable {
+    case coeff
+    case eval
+}
+
+struct CiphertextSerializationConfig: CaseIterable {
+    static var allCases: [Self] {
+        [false, true].flatMap { modSwitchDownToSingle in
+            [false, true].flatMap { forDecryption in
+                [false, true].flatMap { indices in
+                    PolyFormatEnum.allCases.map { polyFormat in
+                        CiphertextSerializationConfig(
+                            modSwitchDownToSingle: modSwitchDownToSingle,
+                            forDecryption: forDecryption,
+                            indices: indices,
+                            polyFormat: polyFormat)
+                    }
+                }
+            }
+        }
+    }
+
+    let modSwitchDownToSingle: Bool
+    let forDecryption: Bool
+    let indices: Bool
+    let polyFormat: PolyFormatEnum
 }

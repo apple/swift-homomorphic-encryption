@@ -386,7 +386,7 @@ struct ProcessDatabase: AsyncParsableCommand {
             keyCompression: config.keyCompression,
             trialsPerShard: config.trialsPerShard,
             symmetricPirConfig: config.symmetricPirConfig)
-        let context = try Context<Scheme>(encryptionParameters: processArgs.encryptionParameters)
+        let context = try Context<Scheme.Scalar>(encryptionParameters: processArgs.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(
             rows: database,
             sharding: processArgs.databaseConfig.sharding,
@@ -405,7 +405,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                             shard: shard,
                             config: config,
                             context: context,
-                            processArgs: processArgs)
+                            processArgs: processArgs, scheme: scheme.self)
                     }
                 }
 
@@ -419,7 +419,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                     shardID: shardID,
                     shard: shard, config:
                     config, context: context,
-                    processArgs: processArgs)
+                    processArgs: processArgs, scheme: scheme.self)
                 evaluationKeyConfig = [evaluationKeyConfig, processedEvaluationKeyConfig].union()
             }
         }
@@ -433,12 +433,14 @@ struct ProcessDatabase: AsyncParsableCommand {
         }
     }
 
+    // swiftlint:disable:next function_parameter_count
     private func processShard<Scheme: HeScheme>(
         shardID: String,
         shard: KeywordDatabaseShard,
         config: ResolvedArguments,
-        context: Context<Scheme>,
-        processArgs: ProcessKeywordDatabase.Arguments<Scheme.Scalar>) async throws -> EvaluationKeyConfig
+        context: Context<Scheme.Scalar>,
+        processArgs: ProcessKeywordDatabase.Arguments<Scheme.Scalar>,
+        scheme _: Scheme.Type) async throws -> EvaluationKeyConfig
     {
         var logger = ProcessDatabase.logger
         logger[metadataKey: "shardID"] = .string(shardID)

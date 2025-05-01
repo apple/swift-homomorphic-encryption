@@ -43,7 +43,7 @@ extension PrivateNearestNeighborSearchUtil {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
@@ -53,7 +53,7 @@ extension PrivateNearestNeighborSearchUtil {
                 dimensions: dimensions,
                 packing: .denseRow,
                 values: encodeValues.flatMap(\.self))
-            let secretKey = try context.generateSecretKey()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             var ciphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
             let plaintextMatrixRoundTrip = try ciphertextMatrix.decrypt(using: secretKey)
             #expect(plaintextMatrixRoundTrip == plaintextMatrix)
@@ -72,7 +72,7 @@ extension PrivateNearestNeighborSearchUtil {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
@@ -82,7 +82,7 @@ extension PrivateNearestNeighborSearchUtil {
                 dimensions: dimensions,
                 packing: .denseRow,
                 values: encodeValues.flatMap(\.self))
-            let secretKey = try context.generateSecretKey()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let ciphertextCoeffMatrix: CiphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
             let ciphertextEvalMatrix = try ciphertextCoeffMatrix.convertToEvalFormat()
             let ciphertextMatrixRoundTrip = try ciphertextEvalMatrix.convertToCoeffFormat()
@@ -109,7 +109,7 @@ extension PrivateNearestNeighborSearchUtil {
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
 
             for rowCount in 1..<(2 * degree) {
                 for columnCount in 1..<degree / 2 {
@@ -123,7 +123,7 @@ extension PrivateNearestNeighborSearchUtil {
                         dimensions: dimensions,
                         packing: .denseRow,
                         values: encodeValues.flatMap(\.self))
-                    let secretKey = try context.generateSecretKey()
+                    let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
                     let ciphertextMatrix: CiphertextMatrix = try plaintextMatrix.encrypt(using: secretKey)
 
                     let evaluationKeyConfig = try CiphertextMatrix<Scheme, Coeff>.extractDenseRowConfig(

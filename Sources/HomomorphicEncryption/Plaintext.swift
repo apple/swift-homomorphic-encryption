@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
     public typealias SignedScalar = Scheme.SignedScalar
 
     /// Context for HE computation.
-    public let context: Context<Scheme>
+    public let context: Context<Scheme.Scalar>
 
     @usableFromInline var poly: PolyRq<Scalar, Format>
 
     @inlinable
-    package init(context: Context<Scheme>, poly: PolyRq<Scalar, Format>) {
+    package init(context: Context<Scheme.Scalar>, poly: PolyRq<Scalar, Format>) {
         self.context = context
         self.poly = poly
     }

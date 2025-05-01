@@ -88,7 +88,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     @usableFromInline package let plaintexts: [Plaintext<Scheme, Format>]
 
     /// The parameter context.
-    @usableFromInline package var context: Context<Scheme> {
+    @usableFromInline package var context: Context<Scheme.Scalar> {
         precondition(!plaintexts.isEmpty, "Plaintext array cannot be empty")
         return plaintexts[0].context
     }
@@ -121,7 +121,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
         }
         let context = plaintexts[0].context
         let encryptionParameters = context.encryptionParameters
-        guard let simdDimensions = context.simdDimensions else {
+        guard let simdDimensions = context.simdDimensions(for: Scheme.self) else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let expectedPlaintextCount = try PlaintextMatrix.plaintextCount(
@@ -153,7 +153,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Throws: Error upon failure to create the plaitnext matrix.
     @inlinable
     public init(
-        context: Context<Scheme>,
+        context: Context<Scheme.Scalar>,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
         signedValues: [Scheme.SignedScalar],
@@ -187,7 +187,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Throws: Error upon failure to create the plaitnext matrix.
     @inlinable
     package init(
-        context: Context<Scheme>,
+        context: Context<Scheme.Scalar>,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
         values: [Scalar],
@@ -272,11 +272,11 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The plaintexts for `denseColumn` packing.
     /// - Throws: Error upon plaintext to compute the plaintexts.
     @inlinable
-    static func denseColumnPlaintexts(context: Context<Scheme>, dimensions: MatrixDimensions,
+    static func denseColumnPlaintexts(context: Context<Scheme.Scalar>, dimensions: MatrixDimensions,
                                       values: [Scalar]) throws -> [Scheme.CoeffPlaintext]
     {
         let degree = context.degree
-        guard let simdColumnCount = context.simdDimensions?.columnCount else {
+        guard let simdColumnCount = context.simdDimensions(for: Scheme.self)?.columnCount else {
             throw PnnsError.simdEncodingNotSupported(for: context.encryptionParameters)
         }
 
@@ -329,12 +329,12 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Throws: Error upon failure to compute the plaintexts.
     @inlinable
     static func denseRowPlaintexts(
-        context: Context<Scheme>,
+        context: Context<Scheme.Scalar>,
         dimensions: MatrixDimensions,
         values: [Scalar]) throws -> [Plaintext<Scheme, Coeff>]
     {
         let encryptionParameters = context.encryptionParameters
-        guard let simdDimensions = context.simdDimensions else {
+        guard let simdDimensions = context.simdDimensions(for: Scheme.self) else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         guard simdDimensions.rowCount == 2 else {
@@ -405,13 +405,13 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Throws: Error upon failure to compute the plaintexts.
     @inlinable
     static func diagonalPlaintexts(
-        context: Context<Scheme>,
+        context: Context<Scheme.Scalar>,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
         values: [Scalar]) throws -> [Scheme.CoeffPlaintext]
     {
         let encryptionParameters = context.encryptionParameters
-        guard let simdDimensions = context.simdDimensions else {
+        guard let simdDimensions = context.simdDimensions(for: Scheme.self) else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let simdColumnCount = simdDimensions.columnCount
@@ -463,7 +463,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
                     chunk[chunk.startIndex..<middle].rotate(toStartAt: middle - rotationStep)
                     chunk[middle...].rotate(toStartAt: chunk.endIndex - rotationStep)
                 }
-                let plaintext = try context.encode(values: chunk, format: .simd)
+                let plaintext: Plaintext<Scheme, Coeff> = try context.encode(values: chunk, format: .simd)
                 plaintexts.append(plaintext)
             }
         }

@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import ModularArithmetic
 extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func generateSecretKey(context: Context<Self>) throws -> SecretKey<Bfv<T>> {
+    public static func generateSecretKey(context: Context<Scalar>) throws -> SecretKey<Bfv<T>> {
         var s = PolyRq<Scalar, Coeff>.zero(context: context.secretKeyContext)
         var rng = SystemRandomNumberGenerator()
         s.randomizeTernary(using: &rng)
@@ -28,7 +28,7 @@ extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
     public static func generateEvaluationKey(
-        context: Context<Bfv<T>>,
+        context: Context<T>,
         config: EvaluationKeyConfig,
         using secretKey: borrowing SecretKey<Bfv<T>>) throws -> EvaluationKey<Bfv<T>>
     {
@@ -55,7 +55,7 @@ extension Bfv {
     }
 
     @inlinable
-    static func generateRelinearizationKey(context: Context<Self>,
+    static func generateRelinearizationKey(context: Context<Scalar>,
                                            secretKey: borrowing SecretKey<Self>) throws
         -> RelinearizationKey<Self>
     {
@@ -65,7 +65,7 @@ extension Bfv {
     }
 
     @inlinable
-    static func generateKeySwitchKey(context: Context<Bfv<T>>,
+    static func generateKeySwitchKey(context: Context<T>,
                                      currentKey: consuming PolyRq<T, Eval>,
                                      targetKey: borrowing SecretKey<Bfv<T>>) throws -> KeySwitchKey<Bfv<T>>
     {
@@ -120,7 +120,7 @@ extension Bfv {
     /// - seealso: ``Bfv/generateEvaluationKey(context:config:using:)``.
     @inlinable
     static func computeKeySwitchingUpdate(
-        context: Context<Bfv<T>>,
+        context: Context<T>,
         target: PolyRq<Scalar, CanonicalCiphertextFormat>,
         keySwitchingKey: KeySwitchKey<Self>) throws -> [PolyRq<Scalar, CanonicalCiphertextFormat>]
     {

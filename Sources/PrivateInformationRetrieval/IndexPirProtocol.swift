@@ -167,7 +167,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - context: Context for HE computation.
     /// - Throws: Error upon failure to load the database.
     @inlinable
-    public init(from path: String, context: Context<Scheme>) throws {
+    public init(from path: String, context: Context<Scheme.Scalar>) throws {
         let loadedFile = try [UInt8](Data(contentsOf: URL(fileURLWithPath: path)))
         try self.init(from: loadedFile, context: context)
     }
@@ -178,7 +178,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - context: Context for HE computation.
     /// - Throws: Error upon failure to deserialize.
     @inlinable
-    public init(from buffer: [UInt8], context: Context<Scheme>) throws {
+    public init(from buffer: [UInt8], context: Context<Scheme.Scalar>) throws {
         var offset = buffer.startIndex
         let versionNumber = buffer[offset]
         offset += MemoryLayout<SerializationVersionType>.size
@@ -344,7 +344,7 @@ public protocol IndexPirProtocol {
     ///   - config: Database configuration.
     ///   - context: Context for HE computation.
     /// - Returns: The PIR parameters for the database.
-    static func generateParameter(config: IndexPirConfig, with context: Context<Scheme>) -> IndexPirParameter
+    static func generateParameter(config: IndexPirConfig, with context: Context<Scheme.Scalar>) -> IndexPirParameter
 }
 
 /// Protocol for a server hosting index PIR databases for lookup.
@@ -380,7 +380,7 @@ public protocol IndexPirServer: Sendable {
     ///   - context: Context for HE computation.
     ///   - database: Integer-indexed database.
     /// - Throws: Error upon failure to initialize the server.
-    init(parameter: IndexPirParameter, context: Context<Scheme>, database: Database) throws
+    init(parameter: IndexPirParameter, context: Context<Scheme.Scalar>, database: Database) throws
 
     /// Initializes an ``IndexPirServer`` with databases.
     ///
@@ -389,7 +389,7 @@ public protocol IndexPirServer: Sendable {
     ///   - context: Context for HE computation.
     ///   - databases: Integer-indexed databases, each compatible with the given `parameter`.
     /// - Throws: Error upon failure to initialize the server.
-    init(parameter: IndexPirParameter, context: Context<Scheme>, databases: [Database]) throws
+    init(parameter: IndexPirParameter, context: Context<Scheme.Scalar>, databases: [Database]) throws
 
     /// Processes the database to prepare for PIR queries.
     ///
@@ -401,7 +401,7 @@ public protocol IndexPirServer: Sendable {
     /// - Returns: A processed database.
     /// - Throws: Error upon failure to process the database.
     static func process(database: some Collection<[UInt8]>,
-                        with context: Context<Scheme>,
+                        with context: Context<Scheme.Scalar>,
                         using parameter: IndexPirParameter) throws -> Database
 
     /// Compute the encrypted response to a query lookup.
@@ -422,7 +422,7 @@ extension IndexPirServer {
     ///   - database: Database.
     /// - Throws: Error upon failure to initialize the server.
     @inlinable
-    public init(parameter: IndexPirParameter, context: Context<Scheme>, database: Database) throws {
+    public init(parameter: IndexPirParameter, context: Context<Scheme.Scalar>, database: Database) throws {
         try self.init(parameter: parameter, context: context, databases: [database])
     }
 
@@ -432,7 +432,9 @@ extension IndexPirServer {
     ///   - context: Context for HE computation.
     /// - Returns: The PIR parameters for the database.
     @inlinable
-    public static func generateParameter(config: IndexPirConfig, with context: Context<Scheme>) -> IndexPirParameter {
+    public static func generateParameter(config: IndexPirConfig,
+                                         with context: Context<Scheme.Scalar>) -> IndexPirParameter
+    {
         IndexPir.generateParameter(config: config, with: context)
     }
 }
@@ -460,7 +462,7 @@ public protocol IndexPirClient: Sendable {
     /// - Parameters:
     ///   - parameter: Parameters for the database.
     ///   - context: Context for HE computation.
-    init(parameter: IndexPirParameter, context: Context<Scheme>)
+    init(parameter: IndexPirParameter, context: Context<Scheme.Scalar>)
 
     /// Generates an encrypted query.
     /// - Parameters:

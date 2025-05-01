@@ -55,8 +55,8 @@ extension PrivateNearestNeighborSearchUtil {
                 _ queryValues: [Scheme.Scalar]) throws
             {
                 let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .n_4096_logq_27_28_28_logt_16)
-                let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
-                let secretKey = try context.generateSecretKey()
+                let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+                let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
 
                 var expected: [Scheme.Scalar] = try plaintextRows.mul(
                     queryValues,
@@ -68,7 +68,7 @@ extension PrivateNearestNeighborSearchUtil {
                 }
 
                 let babyStepGiantStep = BabyStepGiantStep(vectorDimension: queryValues.count)
-                let plaintextMatrix = try PlaintextMatrix(
+                let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                     context: context,
                     dimensions: plaintextMatrixDimensions,
                     packing: .diagonal(babyStepGiantStep: babyStepGiantStep),
@@ -140,12 +140,12 @@ extension PrivateNearestNeighborSearchUtil {
 
         @inlinable
         package static func matrixMulRunner<Scheme: HeScheme>(
-            context: Context<Scheme>,
+            context: Context<Scheme.Scalar>,
             plaintextValues: [[Scheme.Scalar]],
-            queryValues: [[Scheme.Scalar]]) throws
+            queryValues: [[Scheme.Scalar]], for _: Scheme.Type) throws
         {
             let encryptionParameters = context.encryptionParameters
-            let secretKey = try context.generateSecretKey()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let expected = try plaintextValues.mulTranspose(queryValues, modulus: context.plaintextModulus)
             // Query matrix
             let queryDimensions = try MatrixDimensions(rowCount: queryValues.count, columnCount: queryValues[0].count)
@@ -159,7 +159,7 @@ extension PrivateNearestNeighborSearchUtil {
             let plaintextDimensions = try MatrixDimensions(
                 rowCount: plaintextValues.count,
                 columnCount: plaintextValues[0].count)
-            let plaintextMatrix = try PlaintextMatrix(
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                 context: context,
                 dimensions: plaintextDimensions,
                 packing: .diagonal(babyStepGiantStep: babyStepGiantStep),
@@ -181,12 +181,12 @@ extension PrivateNearestNeighborSearchUtil {
 
         /// Testing matrix multiplication for large dimensions.
         @inlinable
-        public static func matrixMulLargeDimensions<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func matrixMulLargeDimensions<Scheme: HeScheme>(for scheme: Scheme.Type) throws {
             func testOnRandomData(
                 plaintextRows: Int,
                 plaintextCols: Int,
                 ciphertextRows: Int,
-                context: Context<Scheme>) throws
+                context: Context<Scheme.Scalar>) throws
             {
                 let plaintextMatrixDimensions = try MatrixDimensions(
                     rowCount: plaintextRows,
@@ -203,7 +203,8 @@ extension PrivateNearestNeighborSearchUtil {
                 try Self.matrixMulRunner(
                     context: context,
                     plaintextValues: plaintextValues,
-                    queryValues: queryValues)
+                    queryValues: queryValues,
+                    for: scheme)
             }
             let degree = 2048
             let coefficientModuli = try Scheme.Scalar.generatePrimes(
@@ -221,7 +222,7 @@ extension PrivateNearestNeighborSearchUtil {
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
 
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
             do {
                 // Tall
                 try testOnRandomData(plaintextRows: degree / 2, plaintextCols: 128, ciphertextRows: 3, context: context)
@@ -300,11 +301,11 @@ extension PrivateNearestNeighborSearchUtil {
 
         /// Testing matrix multiplication for small dimensions
         @inlinable
-        public static func matrixMulSmallDimensions<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func matrixMulSmallDimensions<Scheme: HeScheme>(for scheme: Scheme.Type) throws {
             func testOnIncreasingData(
                 plaintextDimensions: MatrixDimensions,
                 queryDimensions: MatrixDimensions,
-                context: Context<Scheme>) throws
+                context: Context<Scheme.Scalar>) throws
             {
                 let plaintextModulus = context.encryptionParameters.plaintextModulus
                 let plaintextValues: [[Scheme.Scalar]] = increasingData(
@@ -316,11 +317,11 @@ extension PrivateNearestNeighborSearchUtil {
                 try Self.matrixMulRunner(
                     context: context,
                     plaintextValues: plaintextValues,
-                    queryValues: queryValues)
+                    queryValues: queryValues, for: scheme)
             }
 
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
             do {
                 // 8x4x2
                 let plaintextDimensions = try MatrixDimensions(rowCount: 8, columnCount: 4)

@@ -24,7 +24,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices {
     /// - Parameter context: Context to associate with the native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon invalid protobuf object.
-    public func native<Scheme: HeScheme>(context: Context<Scheme>) throws -> Query<Scheme> {
+    public func native<Scheme: HeScheme>(context: Context<Scheme.Scalar>) throws -> Query<Scheme> {
         let ciphertexts: [Scheme.CanonicalCiphertext] = try ciphertexts.map { ciphertext in
             let serializedCiphertext: SerializedCiphertext<Scheme.Scalar> = try ciphertext.native()
             return try Ciphertext(
@@ -54,7 +54,7 @@ extension ProcessedDatabaseWithParameters {
     /// - Parameter context: The context that was used to create processed database.
     /// - Returns: The PIR parameters protobuf object.
     /// - Throws: Error when the parameters cannot be represented as a protobuf object.
-    public func proto(context: Context<Scheme>) throws -> Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
+    public func proto(context: Context<Scheme.Scalar>) throws -> Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
         let encryptionParameters = context.encryptionParameters
         return try Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters.with { params in
             params.encryptionParameters = try encryptionParameters.proto(scheme: Scheme.self)

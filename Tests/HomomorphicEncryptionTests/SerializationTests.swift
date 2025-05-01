@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,6 +69,24 @@ class SerializationTests: XCTestCase {
                     XCTFail("Must be full serialization")
                 }
                 let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
+                    deserialize: serialized,
+                    context: context,
+                    moduliCount: ciphertext.moduli.count)
+                let decrypted = try deserialized.decrypt(using: secretKey)
+                XCTAssertEqual(decrypted, plaintext)
+            }
+            // serialize for decryption eval format
+            do {
+                var ciphertext = ciphertext
+                try ciphertext.modSwitchDownToSingle()
+                let evalCiphertext = try ciphertext.convertToEvalFormat()
+                let serialized = evalCiphertext.serialize(forDecryption: true)
+                if case let .full(_, skipLSBs, _) = serialized {
+                    XCTAssertTrue(skipLSBs.allSatisfy { $0 == 0 })
+                } else {
+                    XCTFail("Must be full serialization")
+                }
+                let deserialized: Scheme.EvalCiphertext = try Ciphertext(
                     deserialize: serialized,
                     context: context,
                     moduliCount: ciphertext.moduli.count)

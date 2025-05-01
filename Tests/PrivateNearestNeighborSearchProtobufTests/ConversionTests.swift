@@ -104,27 +104,27 @@ struct ConversionTests {
     func serializedPlaintextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
                 modulus: encryptionParameters.plaintextModulus)
-            let plaintextMatrix = try PlaintextMatrix(
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                 context: context,
                 dimensions: dimensions,
                 packing: .denseColumn,
                 values: scalars.flatMap(\.self))
             let serialized = try plaintextMatrix.serialize()
             #expect(try serialized.proto().native() == serialized)
-            let deserialized = try PlaintextMatrix(deserialize: serialized, context: context)
+            let deserialized = try PlaintextMatrix<Scheme, Coeff>(deserialize: serialized, context: context)
             #expect(deserialized == plaintextMatrix)
 
             for moduliCount in 1..<encryptionParameters.coefficientModuli.count {
                 let evalPlaintextMatrix = try plaintextMatrix.convertToEvalFormat(moduliCount: moduliCount)
                 let serialized = try evalPlaintextMatrix.serialize()
                 #expect(try serialized.proto().native() == serialized)
-                let deserialized = try PlaintextMatrix(
+                let deserialized = try PlaintextMatrix<Scheme, Eval>(
                     deserialize: serialized,
                     context: context,
                     moduliCount: moduliCount)
@@ -140,14 +140,14 @@ struct ConversionTests {
     func serializedCiphertextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
-            let secretKey = try context.generateSecretKey()
+            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
                 modulus: encryptionParameters.plaintextModulus)
-            let plaintextMatrix = try PlaintextMatrix(
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                 context: context,
                 dimensions: dimensions,
                 packing: .denseColumn,
@@ -198,14 +198,14 @@ struct ConversionTests {
     func query() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
-            let secretKey = try context.generateSecretKey()
+            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
                 modulus: encryptionParameters.plaintextModulus)
-            let plaintextMatrix = try PlaintextMatrix(
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                 context: context,
                 dimensions: dimensions,
                 packing: .denseColumn,
@@ -215,7 +215,7 @@ struct ConversionTests {
             }
 
             let query = Query(ciphertextMatrices: ciphertextMatrices)
-            let roundtrip = try query.proto().native(context: context)
+            let roundtrip: Query<Scheme> = try query.proto().native(context: context)
             #expect(roundtrip == query)
         }
         try runTest(Bfv<UInt32>.self)

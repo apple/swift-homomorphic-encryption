@@ -22,7 +22,7 @@ extension PirTestUtils {
         /// Testing client configuration.
         @inlinable
         func generateParameter() throws {
-            let context: Context<Bfv<UInt64>> = try TestUtils.getTestContext()
+            let context: Context<UInt64> = try TestUtils.getTestContext()
             // unevenDimensions: false
             do {
                 let config = try IndexPirConfig(entryCount: 16,
@@ -31,7 +31,7 @@ extension PirTestUtils {
                                                 batchSize: 1,
                                                 unevenDimensions: false,
                                                 keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
+                let parameter = MulPir<Bfv<_>>.generateParameter(config: config, with: context)
                 #expect(parameter.dimensions == [4, 4])
             }
             do {
@@ -41,7 +41,7 @@ extension PirTestUtils {
                                                 batchSize: 2,
                                                 unevenDimensions: false,
                                                 keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
+                let parameter = MulPir<Bfv<_>>.generateParameter(config: config, with: context)
                 #expect(parameter.dimensions == [4, 3])
             }
             // unevenDimensions: true
@@ -52,7 +52,7 @@ extension PirTestUtils {
                                                 batchSize: 1,
                                                 unevenDimensions: true,
                                                 keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
+                let parameter = MulPir<Bfv<_>>.generateParameter(config: config, with: context)
                 #expect(parameter.dimensions == [5, 3])
             }
             do {
@@ -62,7 +62,7 @@ extension PirTestUtils {
                                                 batchSize: 2,
                                                 unevenDimensions: true,
                                                 keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
+                let parameter = MulPir<Bfv<_>>.generateParameter(config: config, with: context)
                 #expect(parameter.dimensions == [5, 3])
             }
             do {
@@ -72,7 +72,7 @@ extension PirTestUtils {
                                                 batchSize: 2,
                                                 unevenDimensions: true,
                                                 keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
+                let parameter = MulPir<Bfv<_>>.generateParameter(config: config, with: context)
                 #expect(parameter.dimensions == [9, 2])
             }
             // no key compression
@@ -83,7 +83,7 @@ extension PirTestUtils {
                                                 batchSize: 2,
                                                 unevenDimensions: true,
                                                 keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
+                let parameter = MulPir<Bfv<_>>.generateParameter(config: config, with: context)
                 let evalKeyConfig = EvaluationKeyConfig(
                     galoisElements: [3, 5, 9, 17],
                     hasRelinearizationKey: true)
@@ -97,7 +97,7 @@ extension PirTestUtils {
                                                 batchSize: 2,
                                                 unevenDimensions: true,
                                                 keyCompression: .hybridCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
+                let parameter = MulPir<Bfv<_>>.generateParameter(config: config, with: context)
                 let evalKeyConfig = EvaluationKeyConfig(
                     galoisElements: [3, 5, 9, 17],
                     hasRelinearizationKey: true)
@@ -111,7 +111,7 @@ extension PirTestUtils {
                                                 batchSize: 2,
                                                 unevenDimensions: true,
                                                 keyCompression: .maxCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
+                let parameter = MulPir<Bfv<_>>.generateParameter(config: config, with: context)
                 let evalKeyConfig = EvaluationKeyConfig(
                     galoisElements: [3, 5, 9],
                     hasRelinearizationKey: true)
@@ -124,7 +124,7 @@ extension PirTestUtils {
             server _: Server.Type,
             client _: Client.Type,
             for parameter: IndexPirParameter,
-            with context: Context<Server.Scheme>) throws
+            with context: Context<Server.Scheme.Scalar>) throws
             where Server.IndexPir == Client.IndexPir
         {
             let database = PirTestUtils.randomIndexPirDatabase(
@@ -135,7 +135,7 @@ extension PirTestUtils {
             let server = try Server(parameter: parameter, context: context, database: processedDb)
             let client = Client(parameter: parameter, context: context)
 
-            let secretKey = try context.generateSecretKey()
+            let secretKey: SecretKey<Server.Scheme> = try context.generateSecretKey()
             let evaluationKey = try client.generateEvaluationKey(using: secretKey)
 
             for _ in 0..<10 {
@@ -199,7 +199,7 @@ extension PirTestUtils {
                                keyCompression: .maxCompression),
             ]
 
-            let context: Context<Server.Scheme> = try TestUtils.getTestContext()
+            let context: Context<Server.Scheme.Scalar> = try TestUtils.getTestContext()
             for config in configs {
                 let parameter = Server.generateParameter(config: config, with: context)
                 try indexPirTestForParameter(server: server, client: client, for: parameter, with: context)

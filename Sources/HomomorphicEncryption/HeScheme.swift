@@ -144,7 +144,7 @@ public protocol HeScheme {
     /// - Returns: A freshly generated secret key.
     /// - Throws: Error upon failure to generate a secret key.
     /// - seealso: ``Context/generateSecretKey()`` for an alternative API.
-    static func generateSecretKey(context: Context<Self>) throws -> SecretKey
+    static func generateSecretKey(context: Context<Scalar>) throws -> SecretKey
 
     /// Generates an ``EvaluationKey``.
     /// - Parameters:
@@ -155,7 +155,7 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to generate an evaluation key.
     /// - seealso: ``Context/generateEvaluationKey(config:using:)`` for an alternative API.
     static func generateEvaluationKey(
-        context: Context<Self>,
+        context: Context<Scalar>,
         config: EvaluationKeyConfig,
         using secretKey: SecretKey) throws
         -> EvaluationKey
@@ -173,7 +173,7 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(values:format:)`` for an alternative API.
     /// - seealso: ``HeScheme/encode(context:signedValues:format:)`` to encode signed values.
-    static func encode(context: Context<Self>, values: some Collection<Scalar>, format: EncodeFormat) throws
+    static func encode(context: Context<Scalar>, values: some Collection<Scalar>, format: EncodeFormat) throws
         -> CoeffPlaintext
 
     /// Encodes signed values into a plaintext with coefficient format.
@@ -186,7 +186,10 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(signedValues:format:)`` for an alternative API.
     /// - seealso: ``HeScheme/encode(context:values:format:)`` to encode unsigned values.
-    static func encode(context: Context<Self>, signedValues: some Collection<SignedScalar>, format: EncodeFormat) throws
+    static func encode(
+        context: Context<Scalar>,
+        signedValues: some Collection<SignedScalar>,
+        format: EncodeFormat) throws
         -> CoeffPlaintext
 
     /// Encodes values into a plaintext with evaluation format.
@@ -202,7 +205,7 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(values:format:moduliCount:)`` for an alternative API.
     /// - seealso: ``HeScheme/encode(context:signedValues:format:moduliCount:)`` to encode signed values.
-    static func encode(context: Context<Self>, values: some Collection<Scalar>, format: EncodeFormat,
+    static func encode(context: Context<Scalar>, values: some Collection<Scalar>, format: EncodeFormat,
                        moduliCount: Int?) throws -> EvalPlaintext
 
     /// Encodes signed values into a plaintext with evaluation format.
@@ -218,8 +221,11 @@ public protocol HeScheme {
     /// - Throws: Error upon failure to encode.
     /// - seealso: ``Context/encode(signedValues:format:moduliCount:)`` for an alternative API.
     /// - seealso: ``HeScheme/encode(context:values:format:moduliCount:)`` to encode unsigned values.
-    static func encode(context: Context<Self>, signedValues: some Collection<Scalar.SignedScalar>, format: EncodeFormat,
-                       moduliCount: Int?) throws -> EvalPlaintext
+    static func encode(
+        context: Context<Scalar>,
+        signedValues: some Collection<Scalar.SignedScalar>,
+        format: EncodeFormat,
+        moduliCount: Int?) throws -> EvalPlaintext
 
     /// Decodes a plaintext in ``Coeff`` format.
     /// - Parameters:
@@ -286,7 +292,7 @@ public protocol HeScheme {
     /// ```
     /// - seealso: ``HeScheme/isTransparent(ciphertext:)``
     /// - seealso: ``Ciphertext/zero(context:moduliCount:)`` for an alternative API.
-    static func zeroCiphertextCoeff(context: Context<Self>, moduliCount: Int?) throws -> CoeffCiphertext
+    static func zeroCiphertextCoeff(context: Context<Scalar>, moduliCount: Int?) throws -> CoeffCiphertext
 
     /// Generates a ciphertext of zeros in ``Eval`` format.
     ///
@@ -308,7 +314,7 @@ public protocol HeScheme {
     /// ```
     /// - seealso: ``HeScheme/isTransparent(ciphertext:)``
     /// - seealso: ``Ciphertext/zero(context:moduliCount:)`` for an alternative API.
-    static func zeroCiphertextEval(context: Context<Self>, moduliCount: Int?) throws -> EvalCiphertext
+    static func zeroCiphertextEval(context: Context<Scalar>, moduliCount: Int?) throws -> EvalCiphertext
 
     /// Computes whether a ciphertext is transparent.
     ///
@@ -849,7 +855,7 @@ public protocol HeScheme {
     ///   - lhs: A Context to compare.
     ///   - rhs: Another context to compare.
     /// - Throws: Error upon unequal contexts.
-    static func validateEquality(of lhs: Context<Self>, and rhs: Context<Self>) throws
+    static func validateEquality(of lhs: Context<Scalar>, and rhs: Context<Scalar>) throws
 
     /// Computes the noise budget of a ciphertext.
     ///
@@ -1187,7 +1193,7 @@ extension HeScheme {
     /// ```
     /// - seelaso: ``Ciphertext/isTransparent()``
     @inlinable
-    public static func zero<Format: PolyFormat>(context: Context<Self>,
+    public static func zero<Format: PolyFormat>(context: Context<Scalar>,
                                                 moduliCount: Int? = nil) throws -> Ciphertext<Self, Format>
     {
         if Format.self == Coeff.self {
@@ -1257,7 +1263,7 @@ extension HeScheme {
 extension HeScheme {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func validateEquality(of lhs: Context<Self>, and rhs: Context<Self>) throws {
+    public static func validateEquality(of lhs: Context<Scalar>, and rhs: Context<Scalar>) throws {
         guard lhs == rhs else {
             throw HeError.unequalContexts(got: lhs, expected: rhs)
         }
@@ -1447,7 +1453,7 @@ extension Context {
     /// - Throws: Error upon failure to generate a secret key.
     /// - seealso: ``HeScheme/generateSecretKey(context:)`` for an alternative API.
     @inlinable
-    public func generateSecretKey() throws -> SecretKey<Scheme> {
+    public func generateSecretKey<Scheme>() throws -> SecretKey<Scheme> where Scheme.Scalar == Scalar {
         try Scheme.generateSecretKey(context: self)
     }
 
@@ -1459,10 +1465,10 @@ extension Context {
     /// - Throws: Error upon failure to generate an evaluation key.
     /// - seealso: ``HeScheme/generateEvaluationKey(context:config:using:)`` for an alternative API.
     @inlinable
-    public func generateEvaluationKey(
+    public func generateEvaluationKey<Scheme>(
         config: EvaluationKeyConfig,
         using secretKey: SecretKey<Scheme>) throws
-        -> EvaluationKey<Scheme>
+        -> EvaluationKey<Scheme> where Scheme.Scalar == Scalar
     {
         try Scheme.generateEvaluationKey(context: self, config: config, using: secretKey)
     }

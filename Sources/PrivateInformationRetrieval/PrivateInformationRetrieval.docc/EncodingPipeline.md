@@ -70,8 +70,8 @@ let pirParameters = try processedDatabaseWithParameters.proto(context: context)
 ## Loading processed shard
 
 To load a processed shard, one needs two parts:
-1. ``ProcessedDatabase`` can be loaded using ``ProcessedDatabase/init(from:context:)-9ppkq`` or
-``ProcessedDatabase/init(from:context:)-4pmcl``.
+1. ``ProcessedDatabase`` can be loaded using ``ProcessedDatabase/init(from:context:)-4so32`` or
+``ProcessedDatabase/init(from:context:)-6tq82``.
 2. Use the `pirParameters` from protobuf and add them in like this:
 
 ```swift

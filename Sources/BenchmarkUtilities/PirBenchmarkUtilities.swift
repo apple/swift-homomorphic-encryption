@@ -83,7 +83,7 @@ extension PrivateInformationRetrieval.Response {
 
 struct ProcessBenchmarkContext<Server: IndexPirServer> {
     let database: [[UInt8]]
-    let context: Context<Server.Scheme>
+    let context: Context<Server.Scheme.Scalar>
     let parameter: IndexPirParameter
     init(server _: Server.Type, pirConfig: IndexPirConfig,
          parameterConfig: PirEncryptionParametersConfig) throws
@@ -171,7 +171,7 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
     {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
             try EncryptionParameters(from: parameterConfig)
-        let context = try Context<Server.Scheme>(encryptionParameters: encryptParameter)
+        let context = try Context<Server.Scheme.Scalar>(encryptionParameters: encryptParameter)
         let indexPirParameters = Server.generateParameter(config: pirConfig, with: context)
         let database = getDatabaseForTesting(
             numberOfEntries: pirConfig.entryCount,
@@ -286,7 +286,7 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
     {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
             try EncryptionParameters(from: parameterConfig)
-        let context = try Context<Server.Scheme>(encryptionParameters: encryptParameter)
+        let context = try Context<Server.Scheme.Scalar>(encryptionParameters: encryptParameter)
         let rows = (0..<databaseCount).map { index in KeywordValuePair(
             keyword: [UInt8](String(index).utf8),
             value: (0..<payloadSize).map { _ in UInt8.random(in: 0..<UInt8.max) })

@@ -77,14 +77,14 @@ extension PirTestUtils {
         {
             let entryCount = 200
             let entrySizeInBytes = 16
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let parameter = try PirTestUtils.getTestParameter(
                 pir: MulPir<Scheme>.self,
                 with: context,
                 entryCount: entryCount,
                 entrySizeInBytes: entrySizeInBytes, keyCompression: keyCompression)
-            let client = MulPirClient(parameter: parameter, context: context)
+            let client = MulPirClient<Scheme>(parameter: parameter, context: context)
 
             let evaluationKey = try client.generateEvaluationKey(using: secretKey)
             for _ in 0..<3 {
@@ -128,7 +128,7 @@ extension PirTestUtils {
         /// Tests client computing query coordinates.
         @inlinable
         public static func computeCoordinates<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
             let evalKeyConfig = EvaluationKeyConfig()
             // two dimensional case
             do {
@@ -138,7 +138,7 @@ extension PirTestUtils {
                     dimensions: [10, 10],
                     batchSize: 1,
                     evaluationKeyConfig: evalKeyConfig)
-                let client = MulPirClient(parameter: parameter, context: context)
+                let client = MulPirClient<Scheme>(parameter: parameter, context: context)
 
                 let vectors = [
                     (0, [0, 0]),
@@ -163,7 +163,7 @@ extension PirTestUtils {
                     dimensions: [5, 3, 2],
                     batchSize: 1,
                     evaluationKeyConfig: evalKeyConfig)
-                let client = MulPirClient(parameter: parameter, context: context)
+                let client = MulPirClient<Scheme>(parameter: parameter, context: context)
 
                 let vectors = [
                     (0, [0, 0, 0]),

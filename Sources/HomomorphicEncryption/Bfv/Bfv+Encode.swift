@@ -24,7 +24,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func encode(context: Context<Bfv<T>>, values: some Collection<Scalar>,
+    public static func encode(context: Context<T>, values: some Collection<Scalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(values: values, format: format)
@@ -32,7 +32,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func encode(context: Context<Bfv<T>>, signedValues: some Collection<SignedScalar>,
+    public static func encode(context: Context<T>, signedValues: some Collection<SignedScalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(signedValues: signedValues, format: format)
@@ -40,7 +40,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func encode(context: Context<Bfv<T>>, values: some Collection<Scalar>, format: EncodeFormat,
+    public static func encode(context: Context<T>, values: some Collection<Scalar>, format: EncodeFormat,
                               moduliCount: Int?) throws -> EvalPlaintext
     {
         let coeffPlaintext = try Self.encode(context: context, values: values, format: format)
@@ -50,7 +50,7 @@ extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
     public static func encode(
-        context: Context<Bfv<T>>,
+        context: Context<T>,
         signedValues: some Collection<SignedScalar>,
         format: EncodeFormat,
         moduliCount: Int?) throws -> EvalPlaintext

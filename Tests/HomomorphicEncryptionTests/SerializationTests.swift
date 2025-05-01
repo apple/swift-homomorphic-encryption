@@ -18,91 +18,74 @@ import Testing
 
 @Suite
 struct SerializationTests {
-    @Test
-    func ciphertextSerialization() throws {
+    @Test(arguments: CiphertextSerializationConfig.allCases)
+    func ciphertextSerialization(config: CiphertextSerializationConfig) throws {
+        let indices: [Int]? = if config.indices { [1, 2, 3] } else { nil }
+        if indices != nil, config.polyFormat == .eval {
+            return
+        }
+
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
-            let plaintext: Scheme.CoeffPlaintext = try context.encode(
-                values: values,
-                format: .coefficient)
+            let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: .coefficient)
             let secretKey = try context.generateSecretKey()
-            let ciphertext = try plaintext.encrypt(using: secretKey)
+            var ciphertext = try plaintext.encrypt(using: secretKey)
 
-            // serialize seeded
-            do {
-                let serialized = ciphertext.serialize()
-                if case .seeded = serialized {
-                } else {
+            func checkDeserialization<Format: PolyFormat>(
+                serialized: SerializedCiphertext<Scheme.Scalar>,
+                _: Format.Type) throws
+            {
+                let shouldBeSeeded = Scheme.self != NoOpScheme.self && !config.modSwitchDownToSingle
+                switch (serialized, shouldBeSeeded) {
+                case (.full, true):
+                    Issue.record("Must be full serialization")
+                case (.seeded, false):
                     Issue.record("Must be seeded serialization")
+                default:
+                    break
                 }
 
-                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
+                let deserialized: Ciphertext<Scheme, Format> = try Ciphertext(
                     deserialize: serialized,
                     context: context,
                     moduliCount: ciphertext.moduli.count)
                 let decrypted = try deserialized.decrypt(using: secretKey)
-                #expect(decrypted == plaintext)
-            }
-            // serialize full
-            do {
-                var ciphertext = ciphertext
-                ciphertext.clearSeed()
-                let serialized = ciphertext.serialize()
-                if case .full = serialized {} else {
-                    Issue.record("Must be full serialization")
+                if let indices {
+                    let decoded: [Scheme.Scalar] = try decrypted.decode(format: .coefficient)
+                    for index in indices {
+                        #expect(decoded[index] == values[index])
+                    }
+                } else {
+                    #expect(decrypted == plaintext)
                 }
+            }
 
-                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
-                    deserialize: serialized,
-                    context: context,
-                    moduliCount: ciphertext.moduli.count)
-                let decrypted = try deserialized.decrypt(using: secretKey)
-                #expect(decrypted == plaintext)
-            }
-            // serialize for decryption
-            do {
-                var ciphertext = ciphertext
+            if config.modSwitchDownToSingle {
                 try ciphertext.modSwitchDownToSingle()
-                let serialized = ciphertext.serialize(forDecryption: true)
-                if case let .full(_, skipLSBs, _) = serialized {
-                    #expect(skipLSBs.contains { $0 > 0 })
-                } else {
-                    Issue.record("Must be full serialization")
-                }
-                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
-                    deserialize: serialized,
-                    context: context,
-                    moduliCount: ciphertext.moduli.count)
-                let decrypted = try deserialized.decrypt(using: secretKey)
-                #expect(decrypted == plaintext)
             }
-            // serialize indices for decryption
-            do {
-                var ciphertext = ciphertext
-                try ciphertext.modSwitchDownToSingle()
-                let indices = [1, 2, 5]
-                let serialized = try ciphertext.serialize(indices: indices, forDecryption: true)
-                if case let .full(_, skipLSBs, _) = serialized {
-                    #expect(skipLSBs.contains { $0 > 0 })
+            switch config.polyFormat {
+            case .coeff:
+                let coeffCiphertext = try ciphertext.convertToCoeffFormat()
+                let serialized = if let indices {
+                    try coeffCiphertext.serialize(indices: indices, forDecryption: config.forDecryption)
                 } else {
-                    Issue.record("Must be full serialization")
+                    coeffCiphertext.serialize(forDecryption: config.forDecryption)
                 }
-                let deserialized: Scheme.CanonicalCiphertext = try Ciphertext(
-                    deserialize: serialized,
-                    context: context,
-                    moduliCount: ciphertext.moduli.count)
-                let decrypted = try deserialized.decrypt(using: secretKey)
-                let decoded: [Scheme.Scalar] = try decrypted.decode(format: .coefficient)
-                for index in indices {
-                    #expect(decoded[index] == values[index])
+                try checkDeserialization(serialized: serialized, Coeff.self)
+
+            case .eval:
+                let evalCiphertext = try ciphertext.convertToEvalFormat()
+                let serialized = if let indices {
+                    try evalCiphertext.serialize(indices: indices, forDecryption: config.forDecryption)
+                } else {
+                    evalCiphertext.serialize(forDecryption: config.forDecryption)
                 }
+                try checkDeserialization(serialized: serialized, Eval.self)
             }
         }
 
         // TODO: NoOpScheme is broken: ciphertext.polyContext != context.ciphertextContext
-        // ciphertext.polyContext == context.plaintextContext
-
         // try runTest(NoOpScheme.self)
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)
@@ -245,4 +228,32 @@ struct SerializationTests {
         try runTest(Bfv<UInt32>.self)
         try runTest(Bfv<UInt64>.self)
     }
+}
+
+enum PolyFormatEnum: CaseIterable {
+    case coeff
+    case eval
+}
+
+struct CiphertextSerializationConfig: CaseIterable {
+    static var allCases: [Self] {
+        [false, true].flatMap { modSwitchDownToSingle in
+            [false, true].flatMap { forDecryption in
+                [false, true].flatMap { indices in
+                    PolyFormatEnum.allCases.map { polyFormat in
+                        CiphertextSerializationConfig(
+                            modSwitchDownToSingle: modSwitchDownToSingle,
+                            forDecryption: forDecryption,
+                            indices: indices,
+                            polyFormat: polyFormat)
+                    }
+                }
+            }
+        }
+    }
+
+    let modSwitchDownToSingle: Bool
+    let forDecryption: Bool
+    let indices: Bool
+    let polyFormat: PolyFormatEnum
 }

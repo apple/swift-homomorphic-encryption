@@ -29,6 +29,7 @@ extension PrivateNearestNeighborSearchUtil {
         }
 
         /// Error cases.
+        @inlinable
         public static func plaintextMatrixError<Scheme: HeScheme>(for _: Scheme.Type) throws {
             func runTest(rlweParams: PredefinedRlweParameters) throws {
                 let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
@@ -80,6 +81,7 @@ extension PrivateNearestNeighborSearchUtil {
         }
 
         /// Errors for `denseRow` packing.
+        @inlinable
         public static func plaintextMatrixDenseRowError<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
@@ -111,7 +113,8 @@ extension PrivateNearestNeighborSearchUtil {
             }
         }
 
-        private static func runPlaintextMatrixInitTest<Scheme: HeScheme>(
+        @inlinable
+        static func runPlaintextMatrixInitTest<Scheme: HeScheme>(
             context: Context<Scheme>,
             dimensions: MatrixDimensions,
             packing: MatrixPacking,
@@ -185,6 +188,7 @@ extension PrivateNearestNeighborSearchUtil {
         }
 
         /// Errors for `denseColumn` packing.
+        @inlinable
         public static func plaintextMatrixDenseColumn<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let kats: [((rowCount: Int, columnCount: Int), expected: [[Int]])] = [
                 ((1, 1), [[1, 0, 0, 0, 0, 0, 0, 0]]),
@@ -287,6 +291,7 @@ extension PrivateNearestNeighborSearchUtil {
         }
 
         /// Testing `.denseRow` format.
+        @inlinable
         public static func plaintextMatrixDenseRow<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let kats: [((rowCount: Int, columnCount: Int), expected: [[Int]])] = [
                 ((1, 1), [[1, 1, 1, 1, 1, 1, 1, 1]]),
@@ -366,6 +371,7 @@ extension PrivateNearestNeighborSearchUtil {
         }
 
         /// Testing `.diagonal` format.
+        @inlinable
         public static func plaintextMatrixDiagonal<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let kats: [((rowCount: Int, columnCount: Int), expected: [[Int]])] = [
                 ((1, 3), [
@@ -465,6 +471,7 @@ extension PrivateNearestNeighborSearchUtil {
         }
 
         /// Testing `.diagonal` format.
+        @inlinable
         public static func diagonalRotation<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme>(
                 polyDegree: 16,
@@ -509,6 +516,7 @@ extension PrivateNearestNeighborSearchUtil {
         }
 
         /// Testing format conversion.
+        @inlinable
         public static func plaintextMatrixConversion<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)

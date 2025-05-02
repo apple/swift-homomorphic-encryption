@@ -495,8 +495,8 @@ extension Ciphertext where Format == Scheme.CanonicalCiphertextFormat {
     /// - Throws: Error upon failure to apply the Galois transformation.
     /// - seealso: ``HeScheme/applyGalois(ciphertext:element:using:)`` for an alternative API and more information.
     @inlinable
-    public mutating func applyGalois(element: Int, using key: EvaluationKey<Scheme>) throws {
-        try Scheme.applyGalois(ciphertext: &self, element: element, using: key)
+    public mutating func applyGalois(element: Int, using evaluationKey: EvaluationKey<Scheme>) throws {
+        try Scheme.applyGalois(ciphertext: &self, element: element, using: evaluationKey)
     }
 
     /// Relinearizes the ciphertext.

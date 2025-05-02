@@ -193,9 +193,9 @@ extension HeScheme {
     public static func applyGaloisAsync(
         ciphertext: inout CanonicalCiphertext,
         element: Int,
-        using key: EvaluationKey) async throws
+        using evaluationKey: EvaluationKey) async throws
     {
-        try applyGalois(ciphertext: &ciphertext, element: element, using: key)
+        try applyGalois(ciphertext: &ciphertext, element: element, using: evaluationKey)
     }
 
     @inlinable

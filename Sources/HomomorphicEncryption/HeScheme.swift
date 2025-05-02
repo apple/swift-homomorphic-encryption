@@ -783,13 +783,13 @@ public protocol HeScheme {
     ///   - ciphertext: Ciphertext to transform.
     ///   - element: Galois element of the transformation. Must be odd in `[1, 2 * N - 1]` where `N` is the RLWE ring
     /// dimension, given by ``EncryptionParameters/polyDegree``.
-    ///   - key: Evaluation key. Must contain Galois element `element`.
+    ///   - evaluationKey: Evaluation key. Must contain Galois element `element`.
     /// - Throws: Error upon failure to apply the Galois transformation.
     /// - seealso: ``applyGaloisAsync(ciphertext:element:using:)``  for an async version of this API
     static func applyGalois(
         ciphertext: inout CanonicalCiphertext,
         element: Int,
-        using key: EvaluationKey) throws
+        using evaluationKey: EvaluationKey) throws
 
     /// The async version of ``HeScheme/applyGalois(ciphertext:element:using:)``.
     static func applyGaloisAsync(

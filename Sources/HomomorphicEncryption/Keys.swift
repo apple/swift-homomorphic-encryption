@@ -19,10 +19,10 @@
 public final class SecretKey<Scheme: HeScheme>: Equatable, @unchecked Sendable {
     // This should be safely `@unchecked Sendable`, because poly is only mutated in `deinit`.
 
-    @usableFromInline var poly: PolyRq<Scheme.Scalar, Eval>
+    @usableFromInline var poly: PolyRq<Scalar, Eval>
 
     @inlinable
-    init(poly: consuming PolyRq<Scheme.Scalar, Eval>) {
+    init(poly: consuming PolyRq<Scalar, Eval>) {
         self.poly = poly
     }
 
@@ -39,7 +39,7 @@ extension SecretKey: PolyCollection {
     public typealias Scalar = Scheme.Scalar
 
     @inlinable
-    public func polyContext() -> PolyContext<Scheme.Scalar> {
+    public func polyContext() -> PolyContext<Scalar> {
         poly.context
     }
 }
@@ -67,7 +67,7 @@ extension KeySwitchKey: PolyCollection {
     public typealias Scalar = Scheme.Scalar
 
     @inlinable
-    public func polyContext() -> PolyContext<Scheme.Scalar> {
+    public func polyContext() -> PolyContext<Scalar> {
         ciphers[0].polyContext()
     }
 }
@@ -86,7 +86,7 @@ extension RelinearizationKey: PolyCollection {
     public typealias Scalar = Scheme.Scalar
 
     @inlinable
-    public func polyContext() -> PolyContext<Scheme.Scalar> {
+    public func polyContext() -> PolyContext<Scalar> {
         keySwitchKey.ciphers[0].polyContext()
     }
 }
@@ -105,7 +105,7 @@ extension GaloisKey: PolyCollection {
     public typealias Scalar = Scheme.Scalar
 
     @inlinable
-    public func polyContext() -> PolyContext<Scheme.Scalar> {
+    public func polyContext() -> PolyContext<Scalar> {
         if let firstKey = keys.values.first {
             firstKey.ciphers[0].polyContext()
         } else {

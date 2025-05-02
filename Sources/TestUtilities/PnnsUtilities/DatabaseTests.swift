@@ -22,7 +22,7 @@ extension PrivateNearestNeighborSearchUtil {
         /// Test serialization.
         @inlinable
         public static func serializedProcessedDatabase<Scheme: HeScheme>(for _: Scheme.Type) throws {
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
             let vectorDimension = 4
 
             let rows = (0...10).map { rowIndex in
@@ -49,9 +49,9 @@ extension PrivateNearestNeighborSearchUtil {
                 .diagonal(babyStepGiantStep: BabyStepGiantStep(vectorDimension: vectorDimension))
             let serverConfig = ServerConfig<Scheme>(clientConfig: clientConfig, databasePacking: databasePacking)
 
-            let processed = try database.process(config: serverConfig)
+            let processed: ProcessedDatabase<Scheme> = try database.process(config: serverConfig)
             let serialized = try processed.serialize()
-            let deserialized = try ProcessedDatabase(from: serialized, contexts: processed.contexts)
+            let deserialized = try ProcessedDatabase<Scheme>(from: serialized, contexts: processed.contexts)
             #expect(deserialized == processed)
         }
     }

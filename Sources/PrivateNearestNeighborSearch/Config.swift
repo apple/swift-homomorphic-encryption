@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,27 +27,31 @@ public enum CosineSimilarity {
     /// Computes the evaluation key configuration for matrix multiplication.
     /// - Parameters:
     ///   - plaintextMatrixDimensions: Dimensions of the plaintext matrix.
-    ///   - encryptionParameters: Encryption parameters.
     ///   - maxQueryCount: Maximum number of queries in one batch. The returned`EvaluationKeyConfig` will support all
-    /// batch sizes up to and including `maxQueryCount`.
-    /// - Returns: The evaluation key configuration.
+    ///     batch sizes up to and including `maxQueryCount`.
+    ///   - encryptionParameters: Encryption parameters..
+    ///   - scheme: The HE scheme.
     /// - Throws: Error upon failure to compute the configuration.
-    public static func evaluationKeyConfig(
+    /// - Returns: The evaluation key configuration.
+    public static func evaluationKeyConfig<Scheme: HeScheme>(
         plaintextMatrixDimensions: MatrixDimensions,
-        encryptionParameters: EncryptionParameters<some HeScheme>,
-        maxQueryCount: Int) throws -> EvaluationKeyConfig
+        maxQueryCount: Int,
+        encryptionParameters: EncryptionParameters<Scheme.Scalar>,
+        scheme: Scheme.Type) throws -> EvaluationKeyConfig
     {
         try MatrixMultiplication.evaluationKeyConfig(
             plaintextMatrixDimensions: plaintextMatrixDimensions,
+            maxQueryCount: maxQueryCount,
             encryptionParameters: encryptionParameters,
-            maxQueryCount: maxQueryCount)
+            scheme: scheme)
     }
 }
 
 /// Client configuration.
 public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Sendable {
+    public typealias Scalar = Scheme.Scalar
     /// Encryption parameters.
-    public let encryptionParameters: [EncryptionParameters<Scheme>]
+    public let encryptionParameters: [EncryptionParameters<Scalar>]
     /// Factor by which to scale floating-point entries before rounding to integers.
     public let scalingFactor: Int
     /// Packing for the query.
@@ -61,10 +65,10 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     /// For plaintext CRT, the list of extra plaintext moduli.
     ///
     /// The first plaintext modulus will be the one in ``ClientConfig/encryptionParameters``.
-    public let extraPlaintextModuli: [Scheme.Scalar]
+    public let extraPlaintextModuli: [Scalar]
 
     /// The plaintext CRT moduli.
-    public var plaintextModuli: [Scheme.Scalar] { encryptionParameters.map(\.plaintextModulus) }
+    public var plaintextModuli: [Scalar] { encryptionParameters.map(\.plaintextModulus) }
 
     /// Creates a new ``ClientConfig``.
     /// - Parameters:
@@ -78,16 +82,16 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     /// will be the one in ``ClientConfig/encryptionParameters``.
     /// - Throws: Error upon failure to create a new client config.
     public init(
-        encryptionParameters: EncryptionParameters<Scheme>,
+        encryptionParameters: EncryptionParameters<Scheme.Scalar>,
         scalingFactor: Int,
         queryPacking: MatrixPacking,
         vectorDimension: Int,
         evaluationKeyConfig: EvaluationKeyConfig,
         distanceMetric: DistanceMetric,
-        extraPlaintextModuli: [Scheme.Scalar] = []) throws
+        extraPlaintextModuli: [Scalar] = []) throws
     {
         let extraEncryptionParams = try extraPlaintextModuli.map { plaintextModulus in
-            try EncryptionParameters<Scheme>(
+            try EncryptionParameters<Scheme.Scalar>(
                 polyDegree: encryptionParameters.polyDegree,
                 plaintextModulus: plaintextModulus,
                 coefficientModuli: encryptionParameters.coefficientModuli,
@@ -105,7 +109,7 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
 
     @inlinable
     public static func maxScalingFactor(distanceMetric: DistanceMetric, vectorDimension: Int,
-                                        plaintextModuli: [Scheme.Scalar]) -> Int
+                                        plaintextModuli: [Scalar]) -> Int
     {
         precondition(distanceMetric == .cosineSimilarity)
         let t = plaintextModuli.map { Float($0) }.reduce(1, *)
@@ -131,6 +135,8 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
 
 /// Server configuration.
 public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Sendable {
+    public typealias Scalar = Scheme.Scalar
+
     /// Configuration shared with the client.
     public let clientConfig: ClientConfig<Scheme>
 
@@ -141,12 +147,12 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     public var scalingFactor: Int { clientConfig.scalingFactor }
 
     /// The plaintext CRT moduli.
-    public var plaintextModuli: [Scheme.Scalar] { clientConfig.plaintextModuli }
+    public var plaintextModuli: [Scalar] { clientConfig.plaintextModuli }
 
     /// For plaintext CRT, the list of extra plaintext moduli.
     ///
     /// The first plaintext modulus will be the one in ``ClientConfig/encryptionParameters``.
-    public var extraPlaintextModuli: [Scheme.Scalar] {
+    public var extraPlaintextModuli: [Scalar] {
         clientConfig.extraPlaintextModuli
     }
 
@@ -154,7 +160,7 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     public var distanceMetric: DistanceMetric { clientConfig.distanceMetric }
 
     /// The encryption parameters, one per plaintext modulus.
-    public var encryptionParameters: [EncryptionParameters<Scheme>] {
+    public var encryptionParameters: [EncryptionParameters<Scalar>] {
         clientConfig.encryptionParameters
     }
 

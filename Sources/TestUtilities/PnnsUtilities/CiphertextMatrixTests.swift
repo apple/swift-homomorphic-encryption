@@ -40,7 +40,7 @@ extension PrivateNearestNeighborSearchUtil {
         @inlinable
         public static func encryptDecryptRoundTrip<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
@@ -69,7 +69,7 @@ extension PrivateNearestNeighborSearchUtil {
         @inlinable
         public static func convertFormatRoundTrip<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParams)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
             let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
@@ -101,7 +101,7 @@ extension PrivateNearestNeighborSearchUtil {
                 significantBitCounts: Array(repeating: Scheme.Scalar.bitWidth - 4, count: 2),
                 preferringSmall: false,
                 nttDegree: degree)
-            let encryptionParameters = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
                 polyDegree: degree,
                 plaintextModulus: plaintextModulus,
                 coefficientModuli: coefficientModuli,

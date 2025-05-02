@@ -1,7 +1,7 @@
 // Choosing encryption parameters.
 
 // snippet.hide
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,22 +37,20 @@ import HomomorphicEncryption
 // encryption parameters. Generally, the coefficient moduli should all be as
 // large as possible, while remaining under the maxLog2CoefficientModulus, and
 // as close to the same size as possible.
-let params4096 =
-    try EncryptionParameters<Bfv<UInt64>>(from: .n_4096_logq_27_28_28_logt_5)
-let params8192 =
-    try EncryptionParameters<Bfv<UInt64>>(from: .n_8192_logq_3x55_logt_24)
+let params4096 = try EncryptionParameters<UInt64>(from: .n_4096_logq_27_28_28_logt_5)
+let params8192 = try EncryptionParameters<UInt64>(from: .n_8192_logq_3x55_logt_24)
 
 // We can also create custom parameters.
 // For instance, for a very small HE circuit, N=2048 might suffice.
 // To maintain security, we ensure the coefficient modulus does not exceed the
 // maximum log2 coefficient modulus for post-quantum 128-bit security.
 let degree = 2048
-let maxLog2Q = try EncryptionParameters<Bfv<UInt64>>.maxLog2CoefficientModulus(
+let maxLog2Q = try EncryptionParameters<UInt64>.maxLog2CoefficientModulus(
     degree: degree,
     securityLevel: .quantum128)
 precondition(maxLog2Q == 41)
 // We can also stay in the range for 32-bit moduli, for faster runtimes.
-let max2BitModulus = EncryptionParameters<Bfv<UInt32>>.maxSingleModulus
+let max2BitModulus = EncryptionParameters<UInt32>.maxSingleModulus
 precondition(max2BitModulus.ceilLog2 == 30)
 
 // The coefficient moduli must be NTT-friendly, so we set nttDegree: degree.
@@ -73,21 +71,21 @@ let plaintextModulus = try UInt32.generatePrimes(
     preferringSmall: false)[0]
 // This custom parameter set has only a single coefficient modulus, so it is not
 // compatible with evaluation key operations.
-let customParams = try EncryptionParameters<Bfv<UInt32>>(
+let customUInt32Params = try EncryptionParameters<UInt32>(
     polyDegree: degree,
     plaintextModulus: plaintextModulus,
     coefficientModuli: coefficientModuli,
     errorStdDev: .stdDev32,
     securityLevel: .quantum128)
-precondition(!customParams.supportsSimdEncoding)
-precondition(!customParams.supportsEvaluationKey)
+precondition(!customUInt32Params.supportsSimdEncoding)
+precondition(!customUInt32Params.supportsEvaluationKey)
 
 // snippet.hide
 func summarize<Scheme: HeScheme>(
-    parameters: EncryptionParameters<Scheme>) throws
+    parameters: EncryptionParameters<Scheme.Scalar>, _: Scheme.Type) throws
 {
     let values = (0..<8).map { Scheme.Scalar($0) }
-    let context = try Context(encryptionParameters: parameters)
+    let context = try Context<Scheme>(encryptionParameters: parameters)
     let plaintext: Scheme.CoeffPlaintext = try context.encode(
         values: values,
         format: .coefficient)
@@ -106,6 +104,6 @@ func summarize<Scheme: HeScheme>(
         """)
 }
 
-try summarize(parameters: customParams)
-try summarize(parameters: params4096)
-try summarize(parameters: params8192)
+try summarize(parameters: customUInt32Params, Bfv<UInt32>.self)
+try summarize(parameters: params4096, Bfv<UInt64>.self)
+try summarize(parameters: params8192, Bfv<UInt64>.self)

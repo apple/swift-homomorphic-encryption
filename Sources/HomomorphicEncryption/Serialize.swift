@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
 import Foundation
 
 @usableFromInline
-package enum Serialize {}
+enum Serialize {}
 
 extension Serialize {
     @inlinable
-    package static func serializePolysBufferSize(polyCount: Int, context: PolyContext<some ScalarType>,
-                                                 skipLSBs: [Int] = []) -> Int
+    static func serializePolysBufferSize(polyCount: Int, context: PolyContext<some ScalarType>,
+                                         skipLSBs: [Int] = []) -> Int
     {
         let skipLSBs = skipLSBs.isEmpty ? .init(repeating: 0, count: polyCount) : skipLSBs
         return skipLSBs.map { context.serializationByteCount(skipLSBs: $0) }
@@ -28,7 +28,7 @@ extension Serialize {
     }
 
     @inlinable
-    package static func serializePolys<C, T>(
+    static func serializePolys<C, T>(
         _ polys: some Collection<PolyRq<T, some Any>>,
         to buffer: inout C,
         context: PolyContext<T>,
@@ -68,9 +68,9 @@ extension Serialize {
     }
 
     @inlinable
-    package static func deserializePolys<C, T, F>(from buffer: C,
-                                                  context: PolyContext<T>,
-                                                  skipLSBs: [Int] = []) throws -> [PolyRq<T, F>]
+    static func deserializePolys<C, T, F>(from buffer: C,
+                                          context: PolyContext<T>,
+                                          skipLSBs: [Int] = []) throws -> [PolyRq<T, F>]
         where C: Collection, C.Element == UInt8, C.Index == Int
     {
         guard buffer.count >= MemoryLayout<UInt16>.size else {

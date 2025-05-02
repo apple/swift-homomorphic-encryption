@@ -31,7 +31,7 @@ extension PirTestUtils {
                 significantBitCounts: significantBitCounts,
                 preferringSmall: false,
                 nttDegree: degree)
-            let encryptionParameters = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
                 polyDegree: degree,
                 plaintextModulus: Scheme.Scalar(17),
                 coefficientModuli: coefficientModuli,

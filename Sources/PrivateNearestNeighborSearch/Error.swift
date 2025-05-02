@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ public enum PnnsError: Error, Equatable {
 
 extension PnnsError {
     @inlinable
-    static func simdEncodingNotSupported(for encryptionParameters: EncryptionParameters<some HeScheme>) -> Self {
+    static func simdEncodingNotSupported(for encryptionParameters: EncryptionParameters<some ScalarType>) -> Self {
         .simdEncodingNotSupported(encryptionParameters.description)
     }
 
@@ -62,8 +62,8 @@ extension PnnsError {
 
     @inlinable
     static func wrongEncryptionParameters(
-        got: EncryptionParameters<some HeScheme>,
-        expected: EncryptionParameters<some HeScheme>) -> Self
+        got: EncryptionParameters<some ScalarType>,
+        expected: EncryptionParameters<some ScalarType>) -> Self
     {
         PnnsError.wrongEncryptionParameters(gotDescription: got.description, expectedDescription: expected.description)
     }

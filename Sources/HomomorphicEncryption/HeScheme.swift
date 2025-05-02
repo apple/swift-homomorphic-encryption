@@ -160,9 +160,8 @@ public protocol HeScheme {
         using secretKey: SecretKey) throws
         -> EvaluationKey
 
-    /// Returns the dimension counts for ``EncodeFormat/simd`` encoding, or `nil` if the HE scheme does
-    /// not support SIMD encoding for the given parameters.
-    static func encodeSimdDimensions(for parameters: EncryptionParameters<Self>) -> SimdEncodingDimensions?
+    /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
+    static func encodeSimdDimensions(for encryptionParameter: EncryptionParameters<Scalar>) -> SimdEncodingDimensions?
 
     /// Encodes values into a plaintext with coefficient format.
     ///
@@ -350,6 +349,14 @@ public protocol HeScheme {
     ///  - seealso: The noise budget can be computed using ``Ciphertext/noiseBudget(using:variableTime:)``.
     ///  - seealso: ``Ciphertext/decrypt(using:)`` for an alternative API.
     static func decryptEval(_ ciphertext: EvalCiphertext, using secretKey: SecretKey) throws -> CoeffPlaintext
+
+    /// Calculates the number of least significant bits (LSBs) per polynomial that can be excluded
+    /// from serialization of a single-modulus ciphertext, when decryption is performed immediately after
+    /// deserialization.
+    ///
+    /// - Parameter ciphertext: Ciphertext to decrypt with.
+    /// - Returns: the number of LSBs per polynomial to skip when decrypting a ciphertext.
+    static func skipLSBsForDecryption(for ciphertext: CoeffCiphertext) -> [Int]
 
     /// Rotates the columns of a ciphertext.
     ///
@@ -1257,6 +1264,8 @@ extension HeScheme {
     }
 }
 
+// MARK: - Default implementations
+
 extension HeScheme {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
@@ -1364,6 +1373,12 @@ extension HeScheme {
         while ciphertext.moduli.count > 1 {
             try modSwitchDown(&ciphertext)
         }
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func skipLSBsForDecryption(for ciphertext: CoeffCiphertext) -> [Int] {
+        Array(repeating: 0, count: ciphertext.polyCount)
     }
 }
 

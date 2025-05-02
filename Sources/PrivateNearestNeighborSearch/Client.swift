@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ import ModularArithmetic
 
 /// Private nearest neighbor search client.
 public struct Client<Scheme: HeScheme> {
+    @usableFromInline typealias Scalar = Scheme.Scalar
+
     /// Configuration.
     public let config: ClientConfig<Scheme>
 
@@ -25,10 +27,10 @@ public struct Client<Scheme: HeScheme> {
     public let contexts: [Context<Scheme>]
 
     /// Performs composition of the plaintext CRT responses.
-    @usableFromInline let crtComposer: CrtComposer<Scheme.Scalar>
+    @usableFromInline let crtComposer: CrtComposer<Scalar>
 
     /// Context for the plaintext CRT moduli.
-    @usableFromInline let plaintextContext: PolyContext<Scheme.Scalar>
+    @usableFromInline let plaintextContext: PolyContext<Scalar>
 
     /// The evaluation key configuration used by the ``Server``.
     public var evaluationKeyConfig: EvaluationKeyConfig {
@@ -99,11 +101,11 @@ public struct Client<Scheme: HeScheme> {
         guard let dimensions = response.ciphertextMatrices.first?.dimensions else {
             throw PnnsError.emptyCiphertextArray
         }
-        let decoded: [[Scheme.Scalar]] = try response.ciphertextMatrices.map { ciphertextMatrix in
+        let decoded: [[Scalar]] = try response.ciphertextMatrices.map { ciphertextMatrix in
             try ciphertextMatrix.decrypt(using: secretKey).unpack()
         }
         // CRT-decomposed scores
-        let values = Array2d<Scheme.Scalar>(data: decoded)
+        let values = Array2d<Scalar>(data: decoded)
         // Plaintext CRT modulus must be < `UInt64.max`
         let composedDistances: [UInt64] = try crtComposer.compose(data: values)
 

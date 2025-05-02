@@ -1,7 +1,7 @@
 // Example showing the basics.
 
 // snippet.hide
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import HomomorphicEncryption
 // We start by choosing some encryption parameters for the Bfv<UInt64> scheme.
 // *These encryption parameters are insecure, suitable for testing only.*
 let encryptParams =
-    try EncryptionParameters<Bfv<UInt64>>(from: .insecure_n_8_logq_5x18_logt_5)
+    try EncryptionParameters<UInt64>(from: .insecure_n_8_logq_5x18_logt_5)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context(encryptionParameters: encryptParams)
+let context = try Context<Bfv<UInt64>>(encryptionParameters: encryptParams)
 
 // We encode N values using coefficient encoding.
 let values: [UInt64] = [8, 5, 12, 12, 15, 0, 8, 5]

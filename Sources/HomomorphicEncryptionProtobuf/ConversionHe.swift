@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -247,14 +247,16 @@ extension Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig {
 
 extension EvaluationKeyConfig {
     /// Converts the native object into a protobuf object.
-    /// - Parameter encryptionParameters: Encryption parameters to associate with the protobuf object.
-    /// - Returns: The converted protobuf object.
+    /// - Parameters:
+    ///   - encryptionParameters: Encryption parameters to associate with the protobuf object.
+    ///   - scheme: HE scheme to associate with the protobuf object.
     /// - Throws: Error upon unsupported encryption parameters.
-    public func proto(encryptionParameters: EncryptionParameters<some HeScheme>) throws
+    /// - Returns: The converted protobuf object.
+    public func proto(encryptionParameters: EncryptionParameters<some ScalarType>, scheme: (some HeScheme).Type) throws
         -> Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig
     {
         try Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig.with { evalKeyConfig in
-            evalKeyConfig.encryptionParameters = try encryptionParameters.proto()
+            evalKeyConfig.encryptionParameters = try encryptionParameters.proto(scheme: scheme)
             evalKeyConfig.galoisElements = galoisElements.map(UInt32.init)
             evalKeyConfig.hasRelinKey_p = hasRelinearizationKey
         }
@@ -348,14 +350,13 @@ extension Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon invalid object.
-    public func native<Scheme: HeScheme>() throws -> EncryptionParameters<Scheme> {
-        try validate(scheme: heScheme, schemeType: Scheme.self)
-        guard plaintextModulus < Scheme.Scalar.max, coefficientModuli.allSatisfy({ $0 < Scheme.Scalar.max }) else {
+    public func native<Scalar: ScalarType>() throws -> EncryptionParameters<Scalar> {
+        guard plaintextModulus < Scalar.max, coefficientModuli.allSatisfy({ $0 < Scalar.max }) else {
             throw ConversionError.invalidScheme
         }
         return try EncryptionParameters(polyDegree: Int(polynomialDegree),
-                                        plaintextModulus: Scheme.Scalar(plaintextModulus),
-                                        coefficientModuli: coefficientModuli.map { Scheme.Scalar($0) },
+                                        plaintextModulus: Scalar(plaintextModulus),
+                                        coefficientModuli: coefficientModuli.map { Scalar($0) },
                                         errorStdDev: errorStdDev.native(),
                                         securityLevel: securityLevel.native())
     }
@@ -365,14 +366,14 @@ extension EncryptionParameters {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
-    public func proto() throws -> Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
+    public func proto(scheme: (some HeScheme).Type) throws -> Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
         try Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters.with { encParams in
             encParams.polynomialDegree = UInt64(polyDegree)
             encParams.plaintextModulus = UInt64(plaintextModulus)
             encParams.coefficientModuli = coefficientModuli.map(UInt64.init)
             encParams.errorStdDev = errorStdDev.proto()
             encParams.securityLevel = securityLevel.proto()
-            encParams.heScheme = try Scheme.proto()
+            encParams.heScheme = try scheme.proto()
         }
     }
 }

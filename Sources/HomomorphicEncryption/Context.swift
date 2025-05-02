@@ -17,35 +17,37 @@
 /// HE operations are typically only supported between objects, such as ``Ciphertext``, ``Plaintext``,
 /// ``EvaluationKey``, ``SecretKey``,  with the same context.
 public final class Context<Scheme: HeScheme>: Equatable, Sendable {
+    public typealias Scalar = Scheme.Scalar
+
     /// Encryption parameters.
-    public let encryptionParameters: EncryptionParameters<Scheme>
+    public let encryptionParameters: EncryptionParameters<Scalar>
 
     /// Plaintext context, with modulus `t`, the plaintext modulus.
-    @usableFromInline let plaintextContext: PolyContext<Scheme.Scalar>
+    @usableFromInline let plaintextContext: PolyContext<Scalar>
 
     /// Encoding matrix for ``Encoding.simd`` encoding.
     @usableFromInline let simdEncodingMatrix: [Int]
 
     /// Context for the secret key.
-    @usableFromInline let secretKeyContext: PolyContext<Scheme.Scalar>
+    @usableFromInline let secretKeyContext: PolyContext<Scalar>
 
     /// Top-level ciphertext context.
-    @usableFromInline package let ciphertextContext: PolyContext<Scheme.Scalar>
+    @usableFromInline package let ciphertextContext: PolyContext<Scalar>
 
     /// Contexts for key-switching keys.
     ///
     /// The i'th context contains `q_0, ..., q_i, q_{L-1}`, and has next context dropping `q_{L-1}`
     /// E.g., `keySwitchingContexts[0].context.moduli = [q_0, q_1, q_L]`, and
     /// `keySwitchingContexts[0].next.moduli = [q_0, q_1]`
-    @usableFromInline let keySwitchingContexts: [PolyContext<Scheme.Scalar>]
+    @usableFromInline let keySwitchingContexts: [PolyContext<Scalar>]
 
     /// The rns tools for each level of ciphertexts, with number of moduli in descending order.
-    @usableFromInline let rnsTools: [RnsTool<Scheme.Scalar>]
+    @usableFromInline let rnsTools: [RnsTool<Scalar>]
 
     /// The plaintext modulus,`t`.
-    public var plaintextModulus: Scheme.Scalar { encryptionParameters.plaintextModulus }
+    public var plaintextModulus: Scalar { encryptionParameters.plaintextModulus }
     /// The coefficient moduli, `q_0, ..., q_L`.
-    public var coefficientModuli: [Scheme.Scalar] { encryptionParameters.coefficientModuli }
+    public var coefficientModuli: [Scalar] { encryptionParameters.coefficientModuli }
     /// The RLWE polynomial degree `N`.
     public var degree: Int { encryptionParameters.polyDegree }
     /// Whether or not the context supports ``EncodeFormat/simd`` encoding.
@@ -53,7 +55,10 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
     ///
     /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
-    public var simdDimensions: SimdEncodingDimensions? { encryptionParameters.simdDimensions }
+    public var simdDimensions: SimdEncodingDimensions? {
+        Scheme.encodeSimdDimensions(for: encryptionParameters)
+    }
+
     /// Whether or not the context supports use of an ``EvaluationKey``.
     public var supportsEvaluationKey: Bool { encryptionParameters.supportsEvaluationKey }
     /// The number of bits that can be encoded in a single ``Plaintext``.
@@ -66,7 +71,7 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     /// - Parameter encryptionParameters: Encryption parameters.
     /// - Throws: Error upon failure to initialize the context.
     @inlinable
-    public init(encryptionParameters: EncryptionParameters<Scheme>) throws {
+    public init(encryptionParameters: EncryptionParameters<Scalar>) throws {
         self.encryptionParameters = encryptionParameters
         self.simdEncodingMatrix = Self.generateEncodingMatrix(encryptionParameters: encryptionParameters)
 
@@ -75,14 +80,16 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
             moduli: encryptionParameters.coefficientModuli)
 
         var ciphertextModuli = encryptionParameters.coefficientModuli
-        let keySwitchModulus: Scheme.Scalar? = if ciphertextModuli.count > 1 {
+        let keySwitchModulus: Scalar? = if ciphertextModuli.count > 1 {
             ciphertextModuli.popLast()
         } else {
             nil
         }
-        var rnsTools = [RnsTool<Scheme.Scalar>]()
+        var rnsTools = [RnsTool<Scalar>]()
         rnsTools.reserveCapacity(ciphertextModuli.count)
-        let ciphertextContext = try PolyContext(degree: encryptionParameters.polyDegree, moduli: ciphertextModuli)
+        let ciphertextContext = try PolyContext<Scalar>(
+            degree: encryptionParameters.polyDegree,
+            moduli: ciphertextModuli)
 
         self.keySwitchingContexts = try keySwitchModulus.map { keySwitchModulus in
             try (1...ciphertextModuli.count).map { prefixCount in
@@ -126,7 +133,7 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     }
 
     @inlinable
-    func getRnsTool(moduliCount: Int) -> RnsTool<Scheme.Scalar> {
+    func getRnsTool(moduliCount: Int) -> RnsTool<Scalar> {
         precondition(moduliCount <= rnsTools.count && moduliCount > 0, "Invalid number of moduli")
         return rnsTools[rnsTools.count - moduliCount]
     }

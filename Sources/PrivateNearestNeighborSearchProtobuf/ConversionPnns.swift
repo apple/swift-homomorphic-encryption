@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ extension ClientConfig {
     /// - Throws: Error upon unsupported object.
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig {
         try Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig.with { config in
-            config.encryptionParameters = try encryptionParameters[0].proto()
+            config.encryptionParameters = try encryptionParameters[0].proto(scheme: Scheme.self)
             config.scalingFactor = UInt64(scalingFactor)
             config.queryPacking = try queryPacking.proto()
             config.vectorDimension = UInt32(vectorDimension)

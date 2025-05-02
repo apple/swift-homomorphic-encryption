@@ -37,9 +37,9 @@ struct ConversionTests {
     func encryptionParameters() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let context: Context<Scheme> = try TestUtils.getTestContext()
-            let parametersProto = try context.encryptionParameters.proto()
+            let parametersProto = try context.encryptionParameters.proto(scheme: Scheme.self)
 
-            let _: EncryptionParameters<Scheme> = try parametersProto.native()
+            let _: EncryptionParameters<Scheme.Scalar> = try parametersProto.native()
         }
 
         try runTest(Bfv<UInt32>.self)

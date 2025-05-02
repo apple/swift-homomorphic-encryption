@@ -57,10 +57,10 @@ extension PirEncryptionParametersConfig: CustomStringConvertible {
 
 extension EncryptionParameters {
     init(from config: PirEncryptionParametersConfig) throws {
-        let plaintextModulus = try Scheme.Scalar.generatePrimes(
+        let plaintextModulus = try Scalar.generatePrimes(
             significantBitCounts: [config.plaintextModulusBits],
             preferringSmall: true)[0]
-        let coefficientModuli = try Scheme.Scalar.generatePrimes(
+        let coefficientModuli = try Scalar.generatePrimes(
             significantBitCounts: config.coefficientModulusBits,
             preferringSmall: false,
             nttDegree: config.polyDegree)
@@ -88,7 +88,7 @@ struct ProcessBenchmarkContext<Server: IndexPirServer> {
     init(server _: Server.Type, pirConfig: IndexPirConfig,
          parameterConfig: PirEncryptionParametersConfig) throws
     {
-        let encryptParameter: EncryptionParameters<Server.Scheme> =
+        let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
             try EncryptionParameters(from: parameterConfig)
         self.database = getDatabaseForTesting(
             numberOfEntries: pirConfig.entryCount,
@@ -169,8 +169,9 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
         pirConfig: IndexPirConfig,
         parameterConfig: PirEncryptionParametersConfig) throws
     {
-        let encryptParameter: EncryptionParameters<Server.Scheme> = try EncryptionParameters(from: parameterConfig)
-        let context = try Context(encryptionParameters: encryptParameter)
+        let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
+            try EncryptionParameters(from: parameterConfig)
+        let context = try Context<Server.Scheme>(encryptionParameters: encryptParameter)
         let indexPirParameters = Server.generateParameter(config: pirConfig, with: context)
         let database = getDatabaseForTesting(
             numberOfEntries: pirConfig.entryCount,
@@ -283,9 +284,9 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
         parameterConfig: PirEncryptionParametersConfig,
         keyCompression: PirKeyCompressionStrategy) async throws
     {
-        let encryptParameter: EncryptionParameters<Server.Scheme> = try EncryptionParameters(from: parameterConfig)
-        let context = try Context(encryptionParameters: encryptParameter)
-
+        let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
+            try EncryptionParameters(from: parameterConfig)
+        let context = try Context<Server.Scheme>(encryptionParameters: encryptParameter)
         let rows = (0..<databaseCount).map { index in KeywordValuePair(
             keyword: [UInt8](String(index).utf8),
             value: (0..<payloadSize).map { _ in UInt8.random(in: 0..<UInt8.max) })

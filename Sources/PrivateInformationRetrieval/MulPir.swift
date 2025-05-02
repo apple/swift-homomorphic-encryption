@@ -109,6 +109,8 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
 
 /// Client which can compute queries and decrypt responses using the ``PirAlgorithm/mulPir`` algorithm.
 public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
+    @usableFromInline typealias Scalar = Scheme.Scalar
+
     /// IndexPir protocol type.
     public typealias IndexPir = MulPir<Scheme>
     /// Encrypted query type.
@@ -237,7 +239,7 @@ extension MulPirClient {
             }
             let bytes: [UInt8] = try reply.flatMap { ciphertext in
                 let plaintext = try ciphertext.decrypt(using: secretKey)
-                let coefficients: [Scheme.Scalar] = try plaintext.decode(format: .coefficient)
+                let coefficients: [Scalar] = try plaintext.decode(format: .coefficient)
                 return try CoefficientPacking.coefficientsToBytes(
                     coeffs: coefficients,
                     bitsPerCoeff: context.plaintextModulus.log2)
@@ -252,7 +254,7 @@ extension MulPirClient {
         try response.ciphertexts.map { reply in
             try reply.flatMap { ciphertext in
                 let plaintext = try ciphertext.decrypt(using: secretKey)
-                let coefficients: [Scheme.Scalar] = try plaintext.decode(format: .coefficient)
+                let coefficients: [Scalar] = try plaintext.decode(format: .coefficient)
                 return try CoefficientPacking.coefficientsToBytes(
                     coeffs: coefficients,
                     bitsPerCoeff: context.plaintextModulus.log2)
@@ -272,6 +274,7 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     public typealias Response = IndexPir.Response
 
     @usableFromInline typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
+    @usableFromInline typealias Scalar = Scheme.Scalar
 
     /// Index PIR parameters.
     ///
@@ -454,7 +457,7 @@ extension MulPirServer {
                     return nil
                 }
                 let bytes = Array(entry[startIndex..<endIndex])
-                let coefficients: [Scheme.Scalar] = try CoefficientPacking.bytesToCoefficients(
+                let coefficients: [Scalar] = try CoefficientPacking.bytesToCoefficients(
                     bytes: bytes,
                     bitsPerCoeff: context.plaintextModulus.log2,
                     decode: false)
@@ -503,7 +506,7 @@ extension MulPirServer {
             .map { startIndex in
                 let endIndex = min(startIndex + bytesPerPlaintext, flatDatabase.count)
                 let values = Array(flatDatabase[startIndex..<endIndex])
-                let plaintextCoefficients: [Scheme.Scalar] = try CoefficientPacking.bytesToCoefficients(
+                let plaintextCoefficients: [Scalar] = try CoefficientPacking.bytesToCoefficients(
                     bytes: values,
                     bitsPerCoeff: context.plaintextModulus.log2,
                     decode: false)

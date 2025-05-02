@@ -17,6 +17,7 @@ import ModularArithmetic
 
 @usableFromInline
 package enum PirUtil<Scheme: HeScheme> {
+    @usableFromInline typealias Scalar = Scheme.Scalar
     @usableFromInline package typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
     typealias CoeffCiphertext = Scheme.CoeffCiphertext
     typealias EvalCiphertext = Scheme.EvalCiphertext
@@ -146,11 +147,11 @@ package enum PirUtil<Scheme: HeScheme> {
                                                        context: Context<Scheme>) throws -> Plaintext<Scheme, Coeff>
     {
         precondition(totalInputCount <= context.degree)
-        var rawData: [Scheme.Scalar] = Array(repeating: 0, count: context.degree)
+        var rawData: [Scalar] = Array(repeating: 0, count: context.degree)
 
         let inputCountCeilLog = totalInputCount.ceilLog2
-        let inverseInputCountCeilLog = try Scheme.Scalar(2).powMod(
-            exponent: Scheme.Scalar(inputCountCeilLog),
+        let inverseInputCountCeilLog = try Scalar(2).powMod(
+            exponent: Scalar(inputCountCeilLog),
             modulus: context.plaintextModulus,
             variableTime: true).inverseMod(modulus: context.plaintextModulus, variableTime: true)
 

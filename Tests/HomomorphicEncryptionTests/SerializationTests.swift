@@ -33,7 +33,7 @@ struct SerializationTests {
             var ciphertext = try plaintext.encrypt(using: secretKey)
 
             func checkDeserialization<Format: PolyFormat>(
-                serialized: SerializedCiphertext<Scheme.Scalar>,
+                serialized: SerializedCiphertext<Scheme.Scalar>, forDecryption: Bool,
                 _: Format.Type) throws
             {
                 let shouldBeSeeded = Scheme.self != NoOpScheme.self && !config.modSwitchDownToSingle
@@ -42,6 +42,10 @@ struct SerializationTests {
                     Issue.record("Must be full serialization")
                 case (.seeded, false):
                     Issue.record("Must be seeded serialization")
+                case (.full(_, let skipLSBs, _), false):
+                    if Format.self == Coeff.self, forDecryption {
+                        #expect(try skipLSBs == Scheme.skipLSBsForDecryption(for: ciphertext.convertToCoeffFormat()))
+                    }
                 default:
                     break
                 }
@@ -72,7 +76,7 @@ struct SerializationTests {
                 } else {
                     coeffCiphertext.serialize(forDecryption: config.forDecryption)
                 }
-                try checkDeserialization(serialized: serialized, Coeff.self)
+                try checkDeserialization(serialized: serialized, forDecryption: config.forDecryption, Coeff.self)
 
             case .eval:
                 let evalCiphertext = try ciphertext.convertToEvalFormat()
@@ -81,7 +85,7 @@ struct SerializationTests {
                 } else {
                     evalCiphertext.serialize(forDecryption: config.forDecryption)
                 }
-                try checkDeserialization(serialized: serialized, Eval.self)
+                try checkDeserialization(serialized: serialized, forDecryption: config.forDecryption, Eval.self)
             }
         }
 

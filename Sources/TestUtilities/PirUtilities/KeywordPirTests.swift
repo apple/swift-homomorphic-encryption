@@ -25,7 +25,7 @@ extension PirTestUtils {
             let rowCount = 100
             let valueSize = 10
             let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: rowCount, valueSize: valueSize)
-            let encryptionParameters: EncryptionParameters<Scheme> = try TestUtils.getTestEncryptionParameters()
+            let encryptionParameters: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
             let testContext: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
 
             let keywordConfig = try KeywordPirConfig(
@@ -47,7 +47,7 @@ extension PirTestUtils {
 
         @inlinable
         static func keywordPirTest<PirServer: IndexPirServer, PirClient: IndexPirClient>(
-            encryptionParameters: EncryptionParameters<PirServer.Scheme>,
+            encryptionParameters: EncryptionParameters<PirServer.Scalar>,
             keywordConfig: KeywordPirConfig,
             server _: PirServer.Type,
             client _: PirClient.Type) throws where PirServer.IndexPir == PirClient.IndexPir
@@ -192,7 +192,7 @@ extension PirTestUtils {
         @inlinable
         public static func keywordPirMulPirLargeParameters<Scheme: HeScheme>(_: Scheme.Type) throws {
             if Scheme.Scalar.self == UInt32.self {
-                let parameters = try EncryptionParameters<Scheme>(from: PredefinedRlweParameters
+                let parameters = try EncryptionParameters<Scheme.Scalar>(from: PredefinedRlweParameters
                     .n_4096_logq_27_28_28_logt_5)
                 let keywordConfig = try KeywordPirConfig(
                     dimensionCount: 2,
@@ -205,7 +205,7 @@ extension PirTestUtils {
                     server: MulPirServer<Scheme>.self,
                     client: MulPirClient<Scheme>.self)
             } else if Scheme.Scalar.self == UInt64.self, Scheme.self != NoOpScheme.self {
-                let parameters = try EncryptionParameters<Scheme>(from: PredefinedRlweParameters
+                let parameters = try EncryptionParameters<Scheme.Scalar>(from: PredefinedRlweParameters
                     .insecure_n_512_logq_4x60_logt_20)
                 let keywordConfig = try KeywordPirConfig(
                     dimensionCount: 2,
@@ -219,7 +219,7 @@ extension PirTestUtils {
                     client: MulPirClient<Scheme>.self)
             }
             if Scheme.self == NoOpScheme.self {
-                let noOpParameters = try EncryptionParameters<NoOpScheme>(from: PredefinedRlweParameters
+                let noOpParameters = try EncryptionParameters<NoOpScheme.Scalar>(from: PredefinedRlweParameters
                     .insecure_n_512_logq_4x60_logt_20)
                 let keywordConfig = try KeywordPirConfig(
                     dimensionCount: 2,
@@ -239,7 +239,7 @@ extension PirTestUtils {
         public static func keywordPirFixedConfig<Scheme: HeScheme>(_: Scheme.Type) throws {
             let rowCount = 100
             let valueSize = 9
-            let encryptionParams: EncryptionParameters<Scheme> = try TestUtils.getTestEncryptionParameters()
+            let encryptionParams: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
             let testContext: Context<Scheme> = try Context(encryptionParameters: encryptionParams)
             var rng = TestRng()
 
@@ -321,7 +321,7 @@ extension PirTestUtils {
             let rowCount = 1000
             let valueSize = 10
             let rlweParameters = PredefinedRlweParameters.n_4096_logq_27_28_28_logt_5
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: rlweParameters)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParameters)
             let testContext: Context<Scheme> = try Context(
                 encryptionParameters: encryptionParameters)
             let shardCount = 2
@@ -340,7 +340,7 @@ extension PirTestUtils {
                 keywordPirConfig: keywordConfig)
             let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: rowCount, valueSize: valueSize)
 
-            let args = try ProcessKeywordDatabase.Arguments(
+            let args = try ProcessKeywordDatabase.Arguments<Scheme.Scalar>(
                 databaseConfig: databaseConfig,
                 encryptionParameters: encryptionParameters,
                 algorithm: PirAlgorithm.mulPir, keyCompression: .noCompression,

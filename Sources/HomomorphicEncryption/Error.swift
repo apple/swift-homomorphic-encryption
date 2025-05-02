@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ extension HeError {
     }
 
     @inlinable
-    static func insecureEncryptionParameters(_ encryptionParameters: EncryptionParameters<some HeScheme>) -> Self {
+    static func insecureEncryptionParameters(_ encryptionParameters: EncryptionParameters<some ScalarType>) -> Self {
         .insecureEncryptionParameters("\(encryptionParameters.description)")
     }
 
@@ -119,7 +119,7 @@ extension HeError {
     }
 
     @inlinable
-    static func invalidEncryptionParameters(_ encryptionParameters: EncryptionParameters<some HeScheme>) -> Self {
+    static func invalidEncryptionParameters(_ encryptionParameters: EncryptionParameters<some ScalarType>) -> Self {
         .invalidEncryptionParameters(encryptionParameters.description)
     }
 
@@ -163,7 +163,7 @@ extension HeError {
     }
 
     @inlinable
-    static func simdEncodingNotSupported(for encryptionParameters: EncryptionParameters<some HeScheme>) -> Self {
+    static func simdEncodingNotSupported(for encryptionParameters: EncryptionParameters<some ScalarType>) -> Self {
         .simdEncodingNotSupported(encryptionParameters.description)
     }
 

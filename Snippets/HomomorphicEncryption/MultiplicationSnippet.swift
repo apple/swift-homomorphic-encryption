@@ -1,7 +1,7 @@
 // Example showing HE multiplication.
 
 // snippet.hide
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,10 +31,10 @@ precondition(PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
 precondition(PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
     .supportsScalar(UInt32.self))
 let encryptParams =
-    try EncryptionParameters<Bfv<UInt32>>(from: .insecure_n_8_logq_5x18_logt_5)
+    try EncryptionParameters<UInt32>(from: .insecure_n_8_logq_5x18_logt_5)
 precondition(encryptParams.plaintextModulus == 17)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context(encryptionParameters: encryptParams)
+let context = try Context<Bfv<UInt32>>(encryptionParameters: encryptParams)
 
 // We don't need to use all the slots in the encoding.
 // However, performing HE operations on ciphertexts with fewer slots doesn't give

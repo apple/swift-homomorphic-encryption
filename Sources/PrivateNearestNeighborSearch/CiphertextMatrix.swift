@@ -17,6 +17,8 @@ import ModularArithmetic
 
 /// Stores a matrix of scalars as ciphertexts.
 public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
+    public typealias Scalar = Scheme.Scalar
+
     /// Dimensions of the matrix.
     @usableFromInline package let dimensions: MatrixDimensions
 
@@ -64,7 +66,7 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
             throw PnnsError.emptyCiphertextArray
         }
         let encryptionParameters = context.encryptionParameters
-        guard let simdDimensions = encryptionParameters.simdDimensions else {
+        guard let simdDimensions = context.simdDimensions else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let expectedCiphertextCount = try PlaintextMatrix<Scheme, Format>.plaintextCount(
@@ -164,14 +166,14 @@ extension CiphertextMatrix {
     /// - Returns: The evaluation key configuration.
     /// - Throws: Error upon failure to generate the evaluation key configuration.
     @inlinable
-    package static func extractDenseRowConfig(for encryptionParameters: EncryptionParameters<Scheme>,
+    package static func extractDenseRowConfig(for encryptionParameters: EncryptionParameters<Scheme.Scalar>,
                                               dimensions: MatrixDimensions) throws -> EvaluationKeyConfig
     {
         if dimensions.rowCount == 1 {
             // extractDenseRow is a No-op, so no evaluation key required
             return EvaluationKeyConfig()
         }
-        guard let simdDimensions = encryptionParameters.simdDimensions else {
+        guard let simdDimensions = encryptionParameters.simdDimensions(for: Scheme.self) else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let degree = encryptionParameters.polyDegree
@@ -261,12 +263,12 @@ extension CiphertextMatrix {
         // plaintextMask = [[0, 0, 1, 1, 0, 0, 1, 1],
         //                  [0, 0, 0, 0, 0, 0, 0, 0]]
         let (plaintextMask, copiesInMask) = try {
-            var repeatMask = Array(repeating: Scheme.Scalar(1), count: columnCountPowerOfTwo)
+            var repeatMask = Array(repeating: Scalar(1), count: columnCountPowerOfTwo)
             repeatMask += Array(repeating: 0, count: columnCountPowerOfTwo * (rowCountInBatch - 1))
             // pad to next power of two
             repeatMask += Array(repeating: 0, count: repeatMask.count.nextPowerOfTwo - repeatMask.count)
 
-            var mask = Array(repeating: Scheme.Scalar(0), count: batchIndices.lowerBound)
+            var mask = Array(repeating: Scalar(0), count: batchIndices.lowerBound)
             var repeatCountInMask = 0
             while mask.count < batchIndices.upperBound {
                 mask += repeatMask

@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ extension SecretKey {
     ///   - context: Context to associate with the secret key.
     /// - Throws: ``HeError`` upon failure to deserialize.
     public convenience init(deserialize serialized: SerializedSecretKey, context: Context<Scheme>) throws {
-        let polys: [PolyRq<Scheme.Scalar, Eval>] = try Serialize.deserializePolys(
+        let polys: [PolyRq<Scalar, Eval>] = try Serialize.deserializePolys(
             from: serialized.polys,
             context: context.secretKeyContext)
         self.init(poly: polys[0])

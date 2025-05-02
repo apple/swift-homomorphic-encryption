@@ -53,8 +53,8 @@ extension PrivateNearestNeighborSearchUtil {
                 _ plaintextMatrixDimensions: MatrixDimensions,
                 _ queryValues: [Scheme.Scalar]) throws
             {
-                let encryptionParameters = try EncryptionParameters<Scheme>(from: .n_4096_logq_27_28_28_logt_16)
-                let context = try Context(encryptionParameters: encryptionParameters)
+                let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .n_4096_logq_27_28_28_logt_16)
+                let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
                 let secretKey = try context.generateSecretKey()
 
                 var expected: [Scheme.Scalar] = try plaintextRows.mul(
@@ -166,8 +166,9 @@ extension PrivateNearestNeighborSearchUtil {
 
             let evaluationKeyConfig: EvaluationKeyConfig = try MatrixMultiplication.evaluationKeyConfig(
                 plaintextMatrixDimensions: plaintextDimensions,
+                maxQueryCount: queryDimensions.rowCount,
                 encryptionParameters: encryptionParameters,
-                maxQueryCount: queryDimensions.rowCount)
+                scheme: Scheme.self)
             let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let decryptedValues: [Scheme.Scalar] = try plaintextMatrix.mulTranspose(
                 matrix: ciphertextMatrix,
@@ -212,14 +213,14 @@ extension PrivateNearestNeighborSearchUtil {
                 significantBitCounts: [16],
                 preferringSmall: true,
                 nttDegree: degree)[0]
-            let encryptionParameters = try EncryptionParameters<Scheme>(
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
                 polyDegree: degree,
                 plaintextModulus: plaintextModulus,
                 coefficientModuli: coefficientModuli,
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
 
-            let context = try Context(encryptionParameters: encryptionParameters)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             do {
                 // Tall
                 try testOnRandomData(plaintextRows: degree / 2, plaintextCols: 128, ciphertextRows: 3, context: context)
@@ -317,8 +318,8 @@ extension PrivateNearestNeighborSearchUtil {
                     queryValues: queryValues)
             }
 
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context(encryptionParameters: encryptionParameters)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
+            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
             do {
                 // 8x4x2
                 let plaintextDimensions = try MatrixDimensions(rowCount: 8, columnCount: 4)
@@ -378,19 +379,21 @@ extension PrivateNearestNeighborSearchUtil {
 
         /// Testing evaluation key configuration containment.
         public static func evaluationKeyContainment<Scheme: HeScheme>(for _: Scheme.Type) throws {
-            let encryptionParameters = try EncryptionParameters<Scheme>(from: .n_4096_logq_27_28_28_logt_16)
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .n_4096_logq_27_28_28_logt_16)
             let columnCount = 20
             let plaintextDims = try MatrixDimensions(rowCount: 100, columnCount: columnCount)
             for maxQueryCount in 1..<(columnCount + 1) {
                 let maxQueryCountConfig = try MatrixMultiplication.evaluationKeyConfig(
                     plaintextMatrixDimensions: plaintextDims,
+                    maxQueryCount: maxQueryCount,
                     encryptionParameters: encryptionParameters,
-                    maxQueryCount: maxQueryCount)
+                    scheme: Scheme.self)
                 for queryCount in 1..<maxQueryCount {
                     let config = try MatrixMultiplication.evaluationKeyConfig(
                         plaintextMatrixDimensions: plaintextDims,
+                        maxQueryCount: queryCount,
                         encryptionParameters: encryptionParameters,
-                        maxQueryCount: queryCount)
+                        scheme: Scheme.self)
                     #expect(maxQueryCountConfig.contains(config))
                 }
             }

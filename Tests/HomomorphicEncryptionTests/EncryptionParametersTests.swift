@@ -22,7 +22,7 @@ struct EncryptionParametersTests {
     func invalid() throws {
         let plaintextModulus: UInt32 = (1 << 17) + 177
         let coefficientModuli: [UInt32] = [(1 << 17) + 225, (1 << 17) + 369, (1 << 17) + 417]
-        let parameters = try EncryptionParameters<Bfv<UInt32>>(
+        let parameters = try EncryptionParameters<UInt32>(
             polyDegree: 8,
             plaintextModulus: plaintextModulus,
             coefficientModuli: coefficientModuli,
@@ -36,7 +36,7 @@ struct EncryptionParametersTests {
 
         // degree not a power of two
         #expect(throws: expectedError(replacing: "degree=8", with: "degree=7")) {
-            try EncryptionParameters<Bfv<UInt32>>(
+            try EncryptionParameters<UInt32>(
                 polyDegree: 7,
                 plaintextModulus: plaintextModulus,
                 coefficientModuli: coefficientModuli,
@@ -50,7 +50,7 @@ struct EncryptionParametersTests {
             replacing: "plaintextModulus=\(plaintextModulus)",
             with: "plaintextModulus=131248"))
         {
-            try EncryptionParameters<Bfv<UInt32>>(
+            try EncryptionParameters<UInt32>(
                 polyDegree: 8,
                 plaintextModulus: 131_248,
                 coefficientModuli: coefficientModuli,
@@ -63,7 +63,7 @@ struct EncryptionParametersTests {
             replacing: "plaintextModulus=\(plaintextModulus)",
             with: "plaintextModulus=\(coefficientModuli[0])"))
         {
-            try EncryptionParameters<Bfv<UInt32>>(
+            try EncryptionParameters<UInt32>(
                 polyDegree: 8,
                 plaintextModulus: coefficientModuli[0],
                 coefficientModuli: coefficientModuli,
@@ -80,7 +80,7 @@ struct EncryptionParametersTests {
                 replacing: "plaintextModulus=\(plaintextModulus)",
                 with: "plaintextModulus=\(bigPrime)"))
             {
-                try EncryptionParameters<Bfv<UInt32>>(
+                try EncryptionParameters<UInt32>(
                     polyDegree: 8,
                     plaintextModulus: bigPrime,
                     coefficientModuli: coefficientModuli,
@@ -98,7 +98,7 @@ struct EncryptionParametersTests {
                 replacing: "plaintextModulus=\(plaintextModulus)",
                 with: "plaintextModulus=\(bigPrime)"))
             {
-                try EncryptionParameters<Bfv<UInt32>>(
+                try EncryptionParameters<UInt32>(
                     polyDegree: 8,
                     plaintextModulus: bigPrime,
                     coefficientModuli: coefficientModuli,
@@ -111,7 +111,7 @@ struct EncryptionParametersTests {
             replacing: "plaintextModulus=\(plaintextModulus)",
             with: "plaintextModulus=\(1)"))
         {
-            try EncryptionParameters<Bfv<UInt32>>(
+            try EncryptionParameters<UInt32>(
                 polyDegree: 8,
                 plaintextModulus: 1,
                 coefficientModuli: coefficientModuli,
@@ -128,7 +128,7 @@ struct EncryptionParametersTests {
                 replacing: "coefficientModuli=\(coefficientModuli)",
                 with: "coefficientModuli=\(excessCoefficientModuli)"))
             {
-                try EncryptionParameters<Bfv<UInt32>>(
+                try EncryptionParameters<UInt32>(
                     polyDegree: 8,
                     plaintextModulus: plaintextModulus,
                     coefficientModuli: excessCoefficientModuli,
@@ -143,11 +143,11 @@ struct EncryptionParametersTests {
         do {
             #expect(throws: HeError.insecureEncryptionParameters(
                 """
-                EncryptionParameters<NoOpScheme>(degree=1024, plaintextModulus=257, \
+                EncryptionParameters<UInt64>(degree=1024, plaintextModulus=257, \
                 coefficientModuli=[17179869209], errorStdDev=stdDev32, securityLevel=quantum128
                 """))
             {
-                try EncryptionParameters<NoOpScheme>(
+                try EncryptionParameters<NoOpScheme.Scalar>(
                     polyDegree: 1024,
                     plaintextModulus: 257,
                     coefficientModuli: [17_179_869_209], // 2**34 - 25
@@ -179,18 +179,18 @@ struct EncryptionParametersTests {
                 preferringSmall: false,
                 nttDegree: params.degree)
             #expect(throws: Never.self) {
-                try EncryptionParameters<Bfv<UInt64>>(polyDegree: params.degree,
-                                                      plaintextModulus: 1153,
-                                                      coefficientModuli: secureCoefficientModuli,
-                                                      errorStdDev: ErrorStdDev.stdDev32,
-                                                      securityLevel: SecurityLevel.quantum128)
+                try EncryptionParameters<UInt64>(polyDegree: params.degree,
+                                                 plaintextModulus: 1153,
+                                                 coefficientModuli: secureCoefficientModuli,
+                                                 errorStdDev: ErrorStdDev.stdDev32,
+                                                 securityLevel: SecurityLevel.quantum128)
             }
             #expect(throws: Never.self) {
-                try EncryptionParameters<Bfv<UInt64>>(polyDegree: params.degree,
-                                                      plaintextModulus: 1153,
-                                                      coefficientModuli: secureCoefficientModuli,
-                                                      errorStdDev: ErrorStdDev.stdDev32,
-                                                      securityLevel: SecurityLevel.unchecked)
+                try EncryptionParameters<UInt64>(polyDegree: params.degree,
+                                                 plaintextModulus: 1153,
+                                                 coefficientModuli: secureCoefficientModuli,
+                                                 errorStdDev: ErrorStdDev.stdDev32,
+                                                 securityLevel: SecurityLevel.unchecked)
             }
 
             // insecure moduli
@@ -199,18 +199,18 @@ struct EncryptionParametersTests {
                 preferringSmall: false,
                 nttDegree: params.degree)
             #expect(throws: (any Error).self) {
-                try EncryptionParameters<Bfv<UInt64>>(polyDegree: params.degree,
-                                                      plaintextModulus: 1153,
-                                                      coefficientModuli: insecureCoefficientModuli,
-                                                      errorStdDev: ErrorStdDev.stdDev32,
-                                                      securityLevel: SecurityLevel.quantum128)
+                try EncryptionParameters<UInt64>(polyDegree: params.degree,
+                                                 plaintextModulus: 1153,
+                                                 coefficientModuli: insecureCoefficientModuli,
+                                                 errorStdDev: ErrorStdDev.stdDev32,
+                                                 securityLevel: SecurityLevel.quantum128)
             }
             #expect(throws: Never.self) {
-                try EncryptionParameters<Bfv<UInt64>>(polyDegree: params.degree,
-                                                      plaintextModulus: 1153,
-                                                      coefficientModuli: insecureCoefficientModuli,
-                                                      errorStdDev: ErrorStdDev.stdDev32,
-                                                      securityLevel: SecurityLevel.unchecked)
+                try EncryptionParameters<UInt64>(polyDegree: params.degree,
+                                                 plaintextModulus: 1153,
+                                                 coefficientModuli: insecureCoefficientModuli,
+                                                 errorStdDev: ErrorStdDev.stdDev32,
+                                                 securityLevel: SecurityLevel.unchecked)
             }
         }
     }
@@ -227,25 +227,34 @@ struct EncryptionParametersTests {
             let skipLSBs: [Int]
         }
 
-        func checkParameters(
-            _ kat: ParametersKAT) throws
-        {
+        func checkParameters(_ kat: ParametersKAT) throws {
             #expect(kat.predefined.polyDegree == kat.polyDegree)
             #expect(kat.predefined.coefficientModuli.map { qi in qi.ceilLog2 } == kat.coefficientModuliBitCounts)
             #expect(kat.predefined.plaintextModulus.ceilLog2 == kat.plaintextModulusBitCount)
             #expect(kat.predefined.supportsSimdEncoding == kat.supportsSimdEncoding)
             #expect(kat.predefined.supportsEvaluationKey == kat.supportsEvaluationKey)
 
-            let params = try EncryptionParameters<Bfv<UInt64>>(from: kat.predefined)
+            let params = try EncryptionParameters<UInt64>(from: kat.predefined)
             #expect(params.polyDegree == kat.polyDegree)
             #expect(params.coefficientModuli.map { qi in qi.ceilLog2 } == kat.coefficientModuliBitCounts)
             #expect(params.plaintextModulus.ceilLog2 == kat.plaintextModulusBitCount)
             #expect(params.supportsSimdEncoding == kat.supportsSimdEncoding)
             #expect(params.supportsEvaluationKey == kat.supportsEvaluationKey)
-            #expect(params.skipLSBsForDecryption() == kat.skipLSBs)
+
+            // check skipLSBsForDecryption
+            do {
+                let context = try Context<Bfv<UInt64>>(encryptionParameters: params)
+                let data = TestUtils.getRandomPlaintextData(count: params.polyDegree, in: 0..<params.plaintextModulus)
+                let plaintext = try context.encode(values: data, format: .coefficient)
+                let secretKey = try context.generateSecretKey()
+                var ciphertext = try plaintext.encrypt(using: secretKey)
+                try ciphertext.modSwitchDownToSingle()
+                let skipLSBs = try ciphertext.convertToCoeffFormat().skipLSBs(forDecryption: true)
+                #expect(skipLSBs == kat.skipLSBs)
+            }
 
             if kat.predefined.supportsScalar(UInt32.self) {
-                let params = try EncryptionParameters<Bfv<UInt32>>(from: kat.predefined)
+                let params = try EncryptionParameters<UInt32>(from: kat.predefined)
                 #expect(params.polyDegree == kat.polyDegree)
                 #expect(params.coefficientModuli.map { qi in qi.ceilLog2 } == kat.coefficientModuliBitCounts)
                 #expect(params.plaintextModulus.ceilLog2 == kat.plaintextModulusBitCount)

@@ -1,7 +1,7 @@
 // Example using an ``EvaluationKey``.
 
 // snippet.hide
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,10 +43,10 @@ func checkDecryptsDecodes<Scheme: HeScheme>(
 precondition(PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
     .supportsScalar(Bfv<UInt32>.Scalar.self))
 let encryptionParameters =
-    try EncryptionParameters<Bfv<UInt32>>(from: .insecure_n_8_logq_5x18_logt_5)
+    try EncryptionParameters<UInt32>(from: .insecure_n_8_logq_5x18_logt_5)
 precondition(encryptionParameters.plaintextModulus == 17)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context(encryptionParameters: encryptionParameters)
+let context = try Context<Bfv<UInt32>>(encryptionParameters: encryptionParameters)
 
 // We encode N values using SIMD encoding.
 // Each value is a Bfv<UInt32>.Scalar, which is UInt32.

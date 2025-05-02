@@ -43,7 +43,7 @@ extension Ciphertext {
     @inlinable
     public init(
         deserialize serialized: SerializedCiphertext<Scalar>,
-        context: Context<Scheme.Scalar>,
+        context: Scheme.Context,
         moduliCount: Int? = nil) throws
     {
         self.context = context

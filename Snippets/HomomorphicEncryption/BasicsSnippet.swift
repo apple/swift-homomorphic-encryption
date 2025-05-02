@@ -24,16 +24,14 @@ import HomomorphicEncryption
 let encryptParams =
     try EncryptionParameters<UInt64>(from: .insecure_n_8_logq_5x18_logt_5)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context<UInt64>(encryptionParameters: encryptParams)
+let context = try Bfv<UInt64>.Context(encryptionParameters: encryptParams)
 
 // We encode N values using coefficient encoding.
 let values: [UInt64] = [8, 5, 12, 12, 15, 0, 8, 5]
-let plaintext: Bfv<UInt64>.CoeffPlaintext = try context.encode(
-    values: values,
-    format: .coefficient)
+let plaintext = try context.encode(values: values, format: .coefficient)
 
 // We generate a secret key and use it to encrypt the plaintext.
-let secretKey: SecretKey<Bfv<UInt64>> = try context.generateSecretKey()
+let secretKey = try context.generateSecretKey()
 var ciphertext = try plaintext.encrypt(using: secretKey)
 
 // Decrypting the plaintext yields the original values.

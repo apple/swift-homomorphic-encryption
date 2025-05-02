@@ -30,7 +30,7 @@ extension SecretKey {
     ///   - serialized: Serialized secret key.
     ///   - context: Context to associate with the secret key.
     /// - Throws: ``HeError`` upon failure to deserialize.
-    public convenience init(deserialize serialized: SerializedSecretKey, context: Context<Scheme.Scalar>) throws {
+    public convenience init(deserialize serialized: SerializedSecretKey, context: Scheme.Context) throws {
         let polys: [PolyRq<Scalar, Eval>] = try Serialize.deserializePolys(
             from: serialized.polys,
             context: context.secretKeyContext)
@@ -52,7 +52,7 @@ extension SecretKey {
 
 extension KeySwitchKey {
     @inlinable
-    init(deserialize ciphertexts: [SerializedCiphertext<Scalar>], context: Context<Scheme.Scalar>) throws {
+    init(deserialize ciphertexts: [SerializedCiphertext<Scalar>], context: Scheme.Context) throws {
         self.context = context
         self.ciphers = try ciphertexts.map { serializedCiphertext in
             try Ciphertext(
@@ -81,7 +81,7 @@ public struct SerializedGaloisKey<Scalar: ScalarType>: Hashable, Codable, Sendab
 
 extension GaloisKey {
     @inlinable
-    init(deserialize serialized: SerializedGaloisKey<Scalar>, context: Context<Scheme.Scalar>) throws {
+    init(deserialize serialized: SerializedGaloisKey<Scalar>, context: Scheme.Context) throws {
         self.keys = try serialized.galoisKey.mapValues { serializedKeySwitchKey in
             try KeySwitchKey(deserialize: serializedKeySwitchKey, context: context)
         }
@@ -106,7 +106,7 @@ public struct SerializedRelinearizationKey<Scalar: ScalarType>: Hashable, Codabl
 
 extension RelinearizationKey {
     @inlinable
-    init(deserialize serialized: SerializedRelinearizationKey<Scalar>, context: Context<Scheme.Scalar>) throws {
+    init(deserialize serialized: SerializedRelinearizationKey<Scalar>, context: Scheme.Context) throws {
         self.keySwitchKey = try KeySwitchKey(deserialize: serialized.relinKey, context: context)
     }
 
@@ -140,7 +140,7 @@ extension EvaluationKey {
     /// - Throws: ``HeError`` upon failure to deserialize.
     @inlinable
     public init(deserialize serialized: SerializedEvaluationKey<Scheme.Scalar>,
-                context: Context<Scheme.Scalar>) throws
+                context: Scheme.Context) throws
     {
         self.galoisKey = try serialized.galoisKey.map { serialized in
             try GaloisKey(deserialize: serialized, context: context)

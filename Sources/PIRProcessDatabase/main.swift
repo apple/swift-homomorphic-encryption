@@ -386,7 +386,7 @@ struct ProcessDatabase: AsyncParsableCommand {
             keyCompression: config.keyCompression,
             trialsPerShard: config.trialsPerShard,
             symmetricPirConfig: config.symmetricPirConfig)
-        let context = try Context<Scheme.Scalar>(encryptionParameters: processArgs.encryptionParameters)
+        let context = try Scheme.Context(encryptionParameters: processArgs.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(
             rows: database,
             sharding: processArgs.databaseConfig.sharding,
@@ -405,7 +405,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                             shard: shard,
                             config: config,
                             context: context,
-                            processArgs: processArgs, scheme: scheme.self)
+                            processArgs: processArgs)
                     }
                 }
 
@@ -419,7 +419,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                     shardID: shardID,
                     shard: shard, config:
                     config, context: context,
-                    processArgs: processArgs, scheme: scheme.self)
+                    processArgs: processArgs)
                 evaluationKeyConfig = [evaluationKeyConfig, processedEvaluationKeyConfig].union()
             }
         }
@@ -433,15 +433,16 @@ struct ProcessDatabase: AsyncParsableCommand {
         }
     }
 
-    // swiftlint:disable:next function_parameter_count
-    private func processShard<Scheme: HeScheme>(
+    private func processShard<Context: HeContext>(
         shardID: String,
         shard: KeywordDatabaseShard,
         config: ResolvedArguments,
-        context: Context<Scheme.Scalar>,
-        processArgs: ProcessKeywordDatabase.Arguments<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws -> EvaluationKeyConfig
+        context: Context,
+        processArgs: ProcessKeywordDatabase.Arguments<Context.Scalar>) async throws -> EvaluationKeyConfig
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
+
         var logger = ProcessDatabase.logger
         logger[metadataKey: "shardID"] = .string(shardID)
 

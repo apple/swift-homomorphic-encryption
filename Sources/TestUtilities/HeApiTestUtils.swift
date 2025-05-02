@@ -21,7 +21,7 @@ public enum HeAPITestHelpers {
     /// Test environment with plaintexts and ciphertexts ready for use
     public struct TestEnv<Scheme: HeScheme> {
         /// Context for testing.
-        public let context: Context<Scheme.Scalar>
+        public let context: Scheme.Context
         /// Raw data for first plaintext/ciphertext
         public let data1: [Scheme.Scalar]
         /// Raw data fro second plaintext/ciphertext
@@ -46,11 +46,11 @@ public enum HeAPITestHelpers {
         public let evaluationKey: EvaluationKey<Scheme>?
 
         /// Create the test environment.
-        public init(
-            context: Context<Scheme.Scalar>,
-            format: EncodeFormat,
-            galoisElements: [Int] = [],
-            relinearizationKey: Bool = false) throws
+        public init<Context: HeContext>(context: Context,
+                                        format: EncodeFormat,
+                                        galoisElements: [Int] = [],
+                                        relinearizationKey: Bool = false) throws where Context.Scheme == Scheme,
+            Context == Scheme.Context
         {
             self.context = context
             let polyDegree = context.degree
@@ -119,45 +119,23 @@ public enum HeAPITestHelpers {
     }
 
     /// generate the context for test
-    public static func getTestContext<Scalar: ScalarType>() throws -> Context<Scalar> {
-        try Context<Scalar>(encryptionParameters: EncryptionParameters(
+    public static func getTestContext<Context: HeContext>() throws -> Context {
+        try Context(encryptionParameters: EncryptionParameters(
             polyDegree: TestUtils.testPolyDegree,
-            plaintextModulus: Scalar(TestUtils.testPlaintextModulus),
+            plaintextModulus: Context.Scalar(TestUtils.testPlaintextModulus),
             coefficientModuli: testCoefficientModuli(),
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked))
     }
 
-    /// test the evaluation key configuration
-    public static func schemeEvaluationKeyTest(context _: Context<some ScalarType>) throws {
-        do {
-            let config = EvaluationKeyConfig()
-            #expect(!config.hasRelinearizationKey)
-            #expect(config.galoisElements.isEmpty)
-            #expect(config.keyCount == 0)
-        }
-        do {
-            let config = EvaluationKeyConfig(hasRelinearizationKey: true)
-            #expect(config.hasRelinearizationKey)
-            #expect(config.galoisElements.isEmpty)
-            #expect(config.keyCount == 1)
-        }
-        do {
-            let config = EvaluationKeyConfig(galoisElements: [1, 3], hasRelinearizationKey: true)
-            #expect(config.hasRelinearizationKey)
-            #expect(config.galoisElements == [1, 3])
-            #expect(config.keyCount == 3)
-        }
-    }
-
     @inlinable
-    static func encodingTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
+    static func encodingTest<Context: HeContext>(
+        context: Context,
         encodeFormat: EncodeFormat,
         polyFormat: (some PolyFormat).Type,
-        valueCount: Int,
-        scheme _: Scheme.Type) throws
+        valueCount: Int) throws where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding || encodeFormat != .simd else {
             return
         }
@@ -206,28 +184,27 @@ public enum HeAPITestHelpers {
         let bounds = -(signedModulus >> 1)...((signedModulus - 1) >> 1)
         signedData[0] = (Scheme.SignedScalar(context.plaintextModulus) - 1) / 2 + 1
         #expect(throws: HeError.encodingDataOutOfBounds(bounds).self) {
-            let _: Plaintext<Scheme, Coeff> = try context.encode(signedValues: signedData, format: encodeFormat)
+            _ = try context.encode(signedValues: signedData, format: encodeFormat)
         }
         signedData[0] = -Scheme.SignedScalar(context.plaintextModulus) / 2 - 1
         #expect(throws: HeError.encodingDataOutOfBounds(bounds).self) {
-            let _: Plaintext<Scheme, Coeff> = try context.encode(signedValues: signedData, format: encodeFormat)
+            _ = try context.encode(signedValues: signedData, format: encodeFormat)
         }
     }
 
     /// Testing the encoding/decoding functions of the scheme.
     @inlinable
-    public static func schemeEncodeDecodeTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme: Scheme.Type) throws
+    public static func schemeEncodeDecodeTest<Context: HeContext>(context: Context) throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         for encodeFormat in EncodeFormat.allCases {
             for polyFormat: PolyFormat.Type in [Coeff.self, Eval.self] {
                 for valueCount in [context.degree / 2, context.degree] {
-                    try encodingTest(
-                        context: context,
-                        encodeFormat: encodeFormat,
-                        polyFormat: polyFormat,
-                        valueCount: valueCount, scheme: scheme)
+                    try encodingTest(context: context,
+                                     encodeFormat: encodeFormat,
+                                     polyFormat: polyFormat,
+                                     valueCount: valueCount)
                 }
             }
         }
@@ -235,10 +212,10 @@ public enum HeAPITestHelpers {
 
     /// Testing the encryption and decryption of the scheme.
     @inlinable
-    public static func schemeEncryptDecryptTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) throws
+    public static func schemeEncryptDecryptTest<Context: HeContext>(context: Context) throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .coefficient)
         var ciphertext1 = testEnv.ciphertext1
 
@@ -256,10 +233,10 @@ public enum HeAPITestHelpers {
 
     /// Testing zero-ciphertext generation of the scheme.
     @inlinable
-    public static func schemeEncryptZeroDecryptTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) throws
+    public static func schemeEncryptZeroDecryptTest<Context: HeContext>(context: Context) throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .coefficient)
         let zeros = [Scheme.Scalar](repeating: 0, count: context.degree)
 
@@ -285,10 +262,10 @@ public enum HeAPITestHelpers {
 
     /// Testing addition with zero-ciphertext of the scheme.
     @inlinable
-    public static func schemeEncryptZeroAddDecryptTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) throws
+    public static func schemeEncryptZeroAddDecryptTest<Context: HeContext>(context: Context) throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .coefficient)
         let expected = [Scheme.Scalar](repeating: 0, count: context.degree)
 
@@ -312,10 +289,10 @@ public enum HeAPITestHelpers {
 
     /// Testing multiplication with zero-ciphertext of the scheme.
     @inlinable
-    public static func schemeEncryptZeroMultiplyDecryptTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) throws
+    public static func schemeEncryptZeroMultiplyDecryptTest<Context: HeContext>(context: Context) throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .coefficient)
         let expected = [Scheme.Scalar](repeating: 0, count: context.degree)
 
@@ -328,10 +305,10 @@ public enum HeAPITestHelpers {
 
     /// Testing ciphertext addition of the scheme.
     @inlinable
-    public static func schemeCiphertextAddTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextAddTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .coefficient)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
@@ -435,10 +412,10 @@ public enum HeAPITestHelpers {
 
     /// Testing ciphertext subtraction of the scheme.
     @inlinable
-    public static func schemeCiphertextSubtractTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextSubtractTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .coefficient)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
@@ -543,9 +520,10 @@ public enum HeAPITestHelpers {
 
     /// testing ciphertext multiplication of the scheme.
     @inlinable
-    public static func schemeCiphertextCiphertextMultiplyTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>, scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextCiphertextMultiplyTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding, context.supportsEvaluationKey else {
             return
         }
@@ -582,9 +560,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-PT inner product of the scheme.
     @inlinable
-    public static func schemeCiphertextPlaintextInnerProductTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>, scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextPlaintextInnerProductTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .simd)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
@@ -653,9 +632,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-CT inner product of the scheme.
     @inlinable
-    public static func schemeCiphertextCiphertextInnerProductTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>, scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextCiphertextInnerProductTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .simd)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
@@ -677,10 +657,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-CT multiplication followed by CT-CT addition of the scheme.
     @inlinable
-    public static func schemeCiphertextMultiplyAddTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextMultiplyAddTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -711,10 +691,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-CT multiplication followed by CT-PT addition of the scheme.
     @inlinable
-    public static func schemeCiphertextMultiplyAddPlainTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) throws
+    public static func schemeCiphertextMultiplyAddPlainTest<Context: HeContext>(context: Context) throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -740,9 +720,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-CT multiplication followed by CT-PT subtraction of the scheme.
     @inlinable
-    public static func schemeCiphertextMultiplySubtractPlainTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>, scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextMultiplySubtractPlainTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -776,9 +757,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-PT multiplication followed by CT-PT addition of the scheme.
     @inlinable
-    public static func schemeCiphertextPlaintextMultiplyAddPlainTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>, scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextPlaintextMultiplyAddPlainTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -811,9 +793,11 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-PT multiplication followed by CT-PT subtraction of the scheme.
     @inlinable
-    public static func schemeCiphertextPlaintextMultiplySubtractPlainTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>, scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextPlaintextMultiplySubtractPlainTest<Context: HeContext>(
+        context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -849,10 +833,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-CT multiplication followed by CT-CT subtraction of the scheme.
     @inlinable
-    public static func schemeCiphertextMultiplySubtractTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextMultiplySubtractTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -886,10 +870,10 @@ public enum HeAPITestHelpers {
 
     /// Testing ciphertext negation of the scheme.
     @inlinable
-    public static func schemeCiphertextNegateTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextNegateTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .coefficient)
         let negatedData = testEnv.data1.map { data1 in
             data1.negateMod(modulus: context.plaintextModulus)
@@ -916,10 +900,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-PT addition of the scheme.
     @inlinable
-    public static func schemeCiphertextPlaintextAddTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextPlaintextAddTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -1037,9 +1021,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-PT subtraction of the scheme.
     @inlinable
-    public static func schemeCiphertextPlaintextSubtractTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>, scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextPlaintextSubtractTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -1152,9 +1137,10 @@ public enum HeAPITestHelpers {
 
     /// Testing CT-PT multiplication of the scheme.
     @inlinable
-    public static func schemeCiphertextPlaintextMultiplyTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>, scheme _: Scheme.Type) async throws
+    public static func schemeCiphertextPlaintextMultiplyTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding else {
             return
         }
@@ -1210,11 +1196,11 @@ public enum HeAPITestHelpers {
 
     /// Testing ciphertext rotation of the scheme.
     @inlinable
-    public static func schemeRotationTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func schemeRotationTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
-        func runRotationTest(context: Context<Scheme.Scalar>, galoisElements: [Int], multiStep: Bool) async throws {
+        typealias Scheme = Context.Scheme
+        func runRotationTest(context: Scheme.Context, galoisElements: [Int], multiStep: Bool) async throws {
             let degree = context.degree
             let testEnv = try TestEnv<Scheme>(context: context, format: .simd, galoisElements: galoisElements)
             let evaluationKey = try #require(testEnv.evaluationKey)
@@ -1295,10 +1281,10 @@ public enum HeAPITestHelpers {
 
     /// Testing apply Galois element of the scheme.
     @inlinable
-    public static func schemeApplyGaloisTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func schemeApplyGaloisTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         guard context.supportsSimdEncoding, context.supportsEvaluationKey else {
             return
         }
@@ -1338,9 +1324,10 @@ public enum HeAPITestHelpers {
 
     /// testing noise budget estimation.
     @inlinable
-    public static func noiseBudgetTest<Scheme: HeScheme>(context: Context<Scheme.Scalar>,
-                                                         scheme _: Scheme.Type) throws
+    public static func noiseBudgetTest<Context: HeContext>(context: Context) throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try TestEnv<Scheme>(context: context, format: .coefficient)
 
         let zeroCoeffCiphertext = try Scheme.CoeffCiphertext.zero(context: context, moduliCount: 1)
@@ -1386,10 +1373,11 @@ public enum HeAPITestHelpers {
 
     /// testing repeated addition.
     @inlinable
-    public static func repeatedAdditionTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func repeatedAdditionTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
+
         let testEnv = try HeAPITestHelpers.TestEnv<Scheme>(context: context, format: .coefficient)
 
         var coeffCiphertext = testEnv.ciphertext1
@@ -1414,10 +1402,10 @@ public enum HeAPITestHelpers {
 
     /// testing multiply inverse power of x.
     @inlinable
-    public static func multiplyInverseTest<Scheme: HeScheme>(
-        context: Context<Scheme.Scalar>,
-        scheme _: Scheme.Type) async throws
+    public static func multiplyInverseTest<Context: HeContext>(context: Context) async throws
+        where Context.Scheme.Context == Context
     {
+        typealias Scheme = Context.Scheme
         let testEnv = try HeAPITestHelpers.TestEnv<Scheme>(context: context, format: .coefficient)
 
         var coeffCiphertext1 = try testEnv.ciphertext1.convertToCoeffFormat()

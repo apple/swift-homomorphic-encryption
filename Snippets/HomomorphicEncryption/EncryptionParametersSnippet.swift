@@ -85,11 +85,9 @@ func summarize<Scheme: HeScheme>(
     parameters: EncryptionParameters<Scheme.Scalar>, _: Scheme.Type) throws
 {
     let values = (0..<8).map { Scheme.Scalar($0) }
-    let context = try Context<Scheme.Scalar>(encryptionParameters: parameters)
-    let plaintext: Scheme.CoeffPlaintext = try context.encode(
-        values: values,
-        format: .coefficient)
-    let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
+    let context = try Scheme.Context(encryptionParameters: parameters)
+    let plaintext = try context.encode(values: values, format: .coefficient)
+    let secretKey = try context.generateSecretKey()
     let ciphertext = try plaintext.encrypt(using: secretKey)
     let noiseBudget = try ciphertext.noiseBudget(
         using: secretKey,

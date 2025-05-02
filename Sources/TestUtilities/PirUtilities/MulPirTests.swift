@@ -77,8 +77,8 @@ extension PirTestUtils {
         {
             let entryCount = 200
             let entrySizeInBytes = 16
-            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
-            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
+            let context: Scheme.Context = try TestUtils.getTestContext()
+            let secretKey = try context.generateSecretKey()
             let parameter = try PirTestUtils.getTestParameter(
                 pir: MulPir<Scheme>.self,
                 with: context,
@@ -128,7 +128,7 @@ extension PirTestUtils {
         /// Tests client computing query coordinates.
         @inlinable
         public static func computeCoordinates<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let context: Scheme.Context = try TestUtils.getTestContext()
             let evalKeyConfig = EvaluationKeyConfig()
             // two dimensional case
             do {

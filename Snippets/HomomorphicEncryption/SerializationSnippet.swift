@@ -36,18 +36,15 @@ extension SerializedCiphertext {
 let encryptionParameters =
     try EncryptionParameters<UInt32>(from: .n_4096_logq_27_28_28_logt_5)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context<UInt32>(encryptionParameters: encryptionParameters)
+let context = try Bfv<UInt32>.Context(encryptionParameters: encryptionParameters)
 
 // We encode some values in coefficient format and coefficient encoding.
 let values = (0..<8).map { UInt32($0) }
-let plaintext: Bfv<UInt32>.CoeffPlaintext = try context.encode(
-    values: values,
-    format: .coefficient)
+let plaintext = try context.encode(values: values, format: .coefficient)
 
 // We generate a secret key and encrypt the plaintext.
-let secretKey: SecretKey<Bfv<UInt32>> = try context.generateSecretKey()
-var ciphertext: Bfv<UInt32>.CanonicalCiphertext = try plaintext
-    .encrypt(using: secretKey)
+let secretKey = try context.generateSecretKey()
+var ciphertext = try plaintext.encrypt(using: secretKey)
 
 // A freshly-encrypted ciphertext has one of its 2 polynomials sampled uniformly
 // randomly from a seeded random number generator (RNG). We compress such

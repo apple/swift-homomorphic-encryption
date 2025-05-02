@@ -17,7 +17,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     public typealias Scalar = Scheme.Scalar
 
     /// Context for HE computation.
-    public let context: Context<Scheme.Scalar>
+    public let context: Scheme.Context
     @usableFromInline package var polys: [PolyRq<Scalar, Format>]
     @usableFromInline var correctionFactor: Scalar
     @usableFromInline var seed: [UInt8] = []
@@ -33,7 +33,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
 
     @inlinable
     init(
-        context: Context<Scheme.Scalar>,
+        context: Scheme.Context,
         polys: [PolyRq<Scalar, Format>],
         correctionFactor: Scalar,
         seed: [UInt8] = [])
@@ -64,7 +64,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// ```
     /// - seelaso: ``Ciphertext/isTransparent()``
     @inlinable
-    public static func zero(context: Context<Scheme.Scalar>,
+    public static func zero(context: Scheme.Context,
                             moduliCount: Int? = nil) throws -> Ciphertext<Scheme, Format>
     {
         try Scheme.zero(context: context, moduliCount: moduliCount)

@@ -83,7 +83,7 @@ extension PrivateInformationRetrieval.Response {
 
 struct ProcessBenchmarkContext<Server: IndexPirServer> {
     let database: [[UInt8]]
-    let context: Context<Server.Scheme.Scalar>
+    let context: Server.Scheme.Context
     let parameter: IndexPirParameter
     init(server _: Server.Type, pirConfig: IndexPirConfig,
          parameterConfig: PirEncryptionParametersConfig) throws
@@ -93,7 +93,7 @@ struct ProcessBenchmarkContext<Server: IndexPirServer> {
         self.database = getDatabaseForTesting(
             numberOfEntries: pirConfig.entryCount,
             entrySizeInBytes: pirConfig.entrySizeInBytes)
-        self.context = try Context(encryptionParameters: encryptParameter)
+        self.context = try Server.Scheme.Context(encryptionParameters: encryptParameter)
         self.parameter = Server.generateParameter(config: pirConfig, with: context)
     }
 }
@@ -171,7 +171,7 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
     {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
             try EncryptionParameters(from: parameterConfig)
-        let context = try Context<Server.Scheme.Scalar>(encryptionParameters: encryptParameter)
+        let context = try Server.Scheme.Context(encryptionParameters: encryptParameter)
         let indexPirParameters = Server.generateParameter(config: pirConfig, with: context)
         let database = getDatabaseForTesting(
             numberOfEntries: pirConfig.entryCount,
@@ -286,7 +286,7 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
     {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
             try EncryptionParameters(from: parameterConfig)
-        let context = try Context<Server.Scheme.Scalar>(encryptionParameters: encryptParameter)
+        let context = try Server.Scheme.Context(encryptionParameters: encryptParameter)
         let rows = (0..<databaseCount).map { index in KeywordValuePair(
             keyword: [UInt8](String(index).utf8),
             value: (0..<payloadSize).map { _ in UInt8.random(in: 0..<UInt8.max) })

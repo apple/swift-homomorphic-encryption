@@ -55,8 +55,8 @@ extension PrivateNearestNeighborSearchUtil {
                 _ queryValues: [Scheme.Scalar]) throws
             {
                 let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .n_4096_logq_27_28_28_logt_16)
-                let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
-                let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
+                let context = try Scheme.Context(encryptionParameters: encryptionParameters)
+                let secretKey = try context.generateSecretKey()
 
                 var expected: [Scheme.Scalar] = try plaintextRows.mul(
                     queryValues,
@@ -140,12 +140,12 @@ extension PrivateNearestNeighborSearchUtil {
 
         @inlinable
         package static func matrixMulRunner<Scheme: HeScheme>(
-            context: Context<Scheme.Scalar>,
+            context: Scheme.Context,
             plaintextValues: [[Scheme.Scalar]],
             queryValues: [[Scheme.Scalar]], for _: Scheme.Type) throws
         {
             let encryptionParameters = context.encryptionParameters
-            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
+            let secretKey = try context.generateSecretKey()
             let expected = try plaintextValues.mulTranspose(queryValues, modulus: context.plaintextModulus)
             // Query matrix
             let queryDimensions = try MatrixDimensions(rowCount: queryValues.count, columnCount: queryValues[0].count)
@@ -186,7 +186,7 @@ extension PrivateNearestNeighborSearchUtil {
                 plaintextRows: Int,
                 plaintextCols: Int,
                 ciphertextRows: Int,
-                context: Context<Scheme.Scalar>) throws
+                context: Scheme.Context) throws
             {
                 let plaintextMatrixDimensions = try MatrixDimensions(
                     rowCount: plaintextRows,
@@ -222,7 +222,7 @@ extension PrivateNearestNeighborSearchUtil {
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
 
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             do {
                 // Tall
                 try testOnRandomData(plaintextRows: degree / 2, plaintextCols: 128, ciphertextRows: 3, context: context)
@@ -305,7 +305,7 @@ extension PrivateNearestNeighborSearchUtil {
             func testOnIncreasingData(
                 plaintextDimensions: MatrixDimensions,
                 queryDimensions: MatrixDimensions,
-                context: Context<Scheme.Scalar>) throws
+                context: Scheme.Context) throws
             {
                 let plaintextModulus = context.encryptionParameters.plaintextModulus
                 let plaintextValues: [[Scheme.Scalar]] = increasingData(
@@ -321,7 +321,7 @@ extension PrivateNearestNeighborSearchUtil {
             }
 
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             do {
                 // 8x4x2
                 let plaintextDimensions = try MatrixDimensions(rowCount: 8, columnCount: 4)

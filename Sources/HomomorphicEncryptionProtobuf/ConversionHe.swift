@@ -216,7 +216,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedEvaluationKey {
     /// - Parameter context: Context to associate with the native object.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
-    public func native<Scheme: HeScheme>(context: Context<Scheme.Scalar>) throws -> EvaluationKey<Scheme> {
+    public func native<Scheme: HeScheme>(context: Scheme.Context) throws -> EvaluationKey<Scheme> {
         let serialized: SerializedEvaluationKey<Scheme.Scalar> = try native()
         return try EvaluationKey(deserialize: serialized, context: context)
     }

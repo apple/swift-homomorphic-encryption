@@ -16,21 +16,24 @@
 ///
 /// HE operations are typically only supported between objects, such as ``Ciphertext``, ``Plaintext``,
 /// ``EvaluationKey``, ``SecretKey``,  with the same context.
-public final class Context<Scalar: ScalarType>: Equatable, Sendable {
+public final class Context<Scheme: HeScheme>: Equatable, Sendable, HeContext {
+    public typealias Scheme = Scheme
+    public typealias Scalar = Scheme.Scalar
+
     /// Encryption parameters.
     public let encryptionParameters: EncryptionParameters<Scalar>
 
     /// Plaintext context, with modulus `t`, the plaintext modulus.
-    @usableFromInline let plaintextContext: PolyContext<Scalar>
+    public let plaintextContext: PolyContext<Scalar>
 
-    /// Encoding matrix for ``Encoding.simd`` encoding.
-    @usableFromInline let simdEncodingMatrix: [Int]
+    /// Encoding matrix for ``EncodeFormat/simd`` encoding.
+    public let simdEncodingMatrix: [Int]
 
     /// Context for the secret key.
-    @usableFromInline let secretKeyContext: PolyContext<Scalar>
+    public let secretKeyContext: PolyContext<Scalar>
 
     /// Top-level ciphertext context.
-    @usableFromInline package let ciphertextContext: PolyContext<Scalar>
+    public let ciphertextContext: PolyContext<Scalar>
 
     /// Contexts for key-switching keys.
     ///
@@ -42,22 +45,6 @@ public final class Context<Scalar: ScalarType>: Equatable, Sendable {
     /// The rns tools for each level of ciphertexts, with number of moduli in descending order.
     @usableFromInline let rnsTools: [RnsTool<Scalar>]
 
-    /// The plaintext modulus,`t`.
-    public var plaintextModulus: Scalar { encryptionParameters.plaintextModulus }
-    /// The coefficient moduli, `q_0, ..., q_L`.
-    public var coefficientModuli: [Scalar] { encryptionParameters.coefficientModuli }
-    /// The RLWE polynomial degree `N`.
-    public var degree: Int { encryptionParameters.polyDegree }
-    /// Whether or not the context supports ``EncodeFormat/simd`` encoding.
-    public var supportsSimdEncoding: Bool { encryptionParameters.supportsSimdEncoding }
-
-    /// Whether or not the context supports use of an ``EvaluationKey``.
-    public var supportsEvaluationKey: Bool { encryptionParameters.supportsEvaluationKey }
-    /// The number of bits that can be encoded in a single ``Plaintext``.
-    public var bitsPerPlaintext: Int { encryptionParameters.bitsPerPlaintext }
-    /// The number of bytes that can be encoded in a single ``Plaintext``.
-    public var bytesPerPlaintext: Int { encryptionParameters.bytesPerPlaintext }
-
     /// Initializes a context.
     ///
     /// - Parameter encryptionParameters: Encryption parameters.
@@ -65,7 +52,7 @@ public final class Context<Scalar: ScalarType>: Equatable, Sendable {
     @inlinable
     public init(encryptionParameters: EncryptionParameters<Scalar>) throws {
         self.encryptionParameters = encryptionParameters
-        self.simdEncodingMatrix = Self.generateEncodingMatrix(encryptionParameters: encryptionParameters)
+        self.simdEncodingMatrix = Scheme.Context.generateEncodingMatrix(encryptionParameters: encryptionParameters)
 
         self.secretKeyContext = try PolyContext(
             degree: encryptionParameters.polyDegree,
@@ -120,21 +107,12 @@ public final class Context<Scalar: ScalarType>: Equatable, Sendable {
     ///   - rhs: Another context to compare.
     /// - Returns: Whether or not the two contexts are equal.
     @inlinable
-    public static func == (lhs: Context<Scalar>, rhs: Context<Scalar>) -> Bool {
+    public static func == (lhs: Context, rhs: Context) -> Bool {
         lhs === rhs || lhs.encryptionParameters == rhs.encryptionParameters
     }
 
-    /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
-    ///
-    /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
-    public func simdDimensions<Scheme: HeScheme>(for _: Scheme.Type) -> SimdEncodingDimensions?
-        where Scheme.Scalar == Scalar
-    {
-        Scheme.encodeSimdDimensions(for: encryptionParameters)
-    }
-
     @inlinable
-    func getRnsTool(moduliCount: Int) -> RnsTool<Scalar> {
+    public func getRnsTool(moduliCount: Int) -> _RnsTool<Scalar> {
         precondition(moduliCount <= rnsTools.count && moduliCount > 0, "Invalid number of moduli")
         return rnsTools[rnsTools.count - moduliCount]
     }
@@ -142,6 +120,6 @@ public final class Context<Scalar: ScalarType>: Equatable, Sendable {
 
 extension Context: CustomStringConvertible {
     public var description: String {
-        "Context<\(Scalar.self)>(encryptionParameters=\(encryptionParameters.description))"
+        "Context<\(Scheme.self)>(encryptionParameters=\(encryptionParameters.description))"
     }
 }

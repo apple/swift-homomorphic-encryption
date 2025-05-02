@@ -56,7 +56,7 @@ extension PnnsError {
     }
 
     @inlinable
-    static func wrongContext(got: Context<some ScalarType>, expected: Context<some ScalarType>) -> Self {
+    static func wrongContext(got: some HeContext, expected: some HeContext) -> Self {
         PnnsError.wrongContext(gotDescription: got.description, expectedDescription: expected.description)
     }
 

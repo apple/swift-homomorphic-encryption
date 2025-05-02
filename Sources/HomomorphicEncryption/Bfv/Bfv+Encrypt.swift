@@ -23,7 +23,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func zeroCiphertextCoeff(context: Context<Scalar>, moduliCount: Int?) throws -> CoeffCiphertext {
+    public static func zeroCiphertextCoeff(context: Context, moduliCount: Int?) throws -> CoeffCiphertext {
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count
         let zeroPoly = try PolyRq<Scalar, Coeff>.zero(
             context: context.ciphertextContext
@@ -34,7 +34,7 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func zeroCiphertextEval(context: Context<Scalar>, moduliCount: Int?) throws -> EvalCiphertext {
+    public static func zeroCiphertextEval(context: Context, moduliCount: Int?) throws -> EvalCiphertext {
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count
         let zeroPoly = try PolyRq<Scalar, Eval>.zero(
             context: context.ciphertextContext
@@ -143,7 +143,7 @@ extension Bfv {
     }
 
     @inlinable
-    static func encryptZero(for context: Context<T>,
+    static func encryptZero(for context: Context,
                             using secretKey: SecretKey<Bfv<T>>) throws -> CanonicalCiphertext
     {
         let ciphertextContext = context.ciphertextContext
@@ -151,7 +151,7 @@ extension Bfv {
     }
 
     @inlinable
-    static func encryptZero(for context: Context<T>,
+    static func encryptZero(for context: Context,
                             using secretKey: SecretKey<Bfv<T>>,
                             with ciphertextContext: PolyContext<T>) throws -> CanonicalCiphertext
     {

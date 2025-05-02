@@ -34,19 +34,17 @@ let encryptParams =
     try EncryptionParameters<UInt32>(from: .insecure_n_8_logq_5x18_logt_5)
 precondition(encryptParams.plaintextModulus == 17)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context<UInt32>(encryptionParameters: encryptParams)
+let context = try Bfv<UInt32>.Context(encryptionParameters: encryptParams)
 
 // We don't need to use all the slots in the encoding.
 // However, performing HE operations on ciphertexts with fewer slots doesn't give
 // any runtime savings.
 let valueCount = encryptParams.polyDegree / 2
 let values = (0..<valueCount).map { UInt32($0) }
-let plaintext: Bfv<UInt32>.CoeffPlaintext = try context.encode(
-    values: values,
-    format: .simd)
+let plaintext = try context.encode(values: values, format: .simd)
 
 // We generate a secret key and encrypt the plaintext.
-let secretKey: SecretKey<Bfv<UInt32>> = try context.generateSecretKey()
+let secretKey = try context.generateSecretKey()
 let ciphertext = try plaintext.encrypt(using: secretKey)
 
 // Multiplication requires the ciphertext and plaintext to be in Evaluation

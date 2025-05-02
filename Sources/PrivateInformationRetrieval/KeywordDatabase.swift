@@ -490,7 +490,7 @@ public enum ProcessKeywordDatabase {
                                                       }) throws -> ProcessedDatabaseWithParameters<Scheme>
     {
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
-        let context = try Context<Scheme.Scalar>(encryptionParameters: arguments.encryptionParameters)
+        let context = try Scheme.Context(encryptionParameters: arguments.encryptionParameters)
         guard arguments.algorithm == .mulPir else {
             throw PirError.invalidPirAlgorithm(arguments.algorithm)
         }
@@ -514,7 +514,7 @@ public enum ProcessKeywordDatabase {
         shard: ProcessedDatabaseWithParameters<Scheme>,
         row: KeywordValuePair,
         trials: Int,
-        context: Context<Scheme.Scalar>) throws -> ShardValidationResult<Scheme>
+        context: Scheme.Context) throws -> ShardValidationResult<Scheme>
     {
         guard trials > 0 else {
             throw PirError.validationError("Invalid trialsPerShard: \(trials)")
@@ -536,8 +536,8 @@ public enum ProcessKeywordDatabase {
         var response = Response<Scheme>(ciphertexts: [[]])
         let clock = ContinuousClock()
         var minNoiseBudget = Double.infinity
-        let results: [(Duration, Int)] = try (0..<trials).map { trial in
-            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
+        let results = try (0..<trials).map { trial in
+            let secretKey = try context.generateSecretKey()
             let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
             let trialQuery = try client.generateQuery(at: row.keyword, using: secretKey)
             let computeTime = try clock.measure {
@@ -595,7 +595,7 @@ public enum ProcessKeywordDatabase {
         var evaluationKeyConfig = EvaluationKeyConfig()
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
 
-        let context = try Context<Scheme.Scalar>(encryptionParameters: arguments.encryptionParameters)
+        let context = try Scheme.Context(encryptionParameters: arguments.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(
             rows: rows,
             sharding: arguments.databaseConfig.sharding,

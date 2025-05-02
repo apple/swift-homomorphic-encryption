@@ -38,7 +38,7 @@ extension Plaintext where Format == Coeff {
     ///   - context: Context to associate with the plaintext.
     /// - Throws: Error upon failure to deserialize.
     @inlinable
-    public init(deserialize serialized: SerializedPlaintext, context: Context<Scheme.Scalar>) throws {
+    public init(deserialize serialized: SerializedPlaintext, context: Scheme.Context) throws {
         self.context = context
         self.poly = try PolyRq(deserialize: serialized.poly, context: context.plaintextContext)
     }
@@ -55,7 +55,7 @@ extension Plaintext where Format == Eval {
     @inlinable
     public init(
         deserialize serialized: SerializedPlaintext,
-        context: Context<Scheme.Scalar>,
+        context: Scheme.Context,
         moduliCount: Int? = nil) throws
     {
         self.context = context

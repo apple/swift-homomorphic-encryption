@@ -35,7 +35,7 @@ public struct Server<Scheme: HeScheme>: Sendable {
     }
 
     /// One context per plaintext modulus.
-    public var contexts: [Context<Scheme.Scalar>] {
+    public var contexts: [Scheme.Context] {
         database.contexts
     }
 

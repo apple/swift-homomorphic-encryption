@@ -22,7 +22,7 @@ extension PirTestUtils {
         /// Testing client configuration.
         @inlinable
         func generateParameter() throws {
-            let context: Context<UInt64> = try TestUtils.getTestContext()
+            let context: Bfv<UInt64>.Context = try TestUtils.getTestContext()
             // unevenDimensions: false
             do {
                 let config = try IndexPirConfig(entryCount: 16,
@@ -124,7 +124,7 @@ extension PirTestUtils {
             server _: Server.Type,
             client _: Client.Type,
             for parameter: IndexPirParameter,
-            with context: Context<Server.Scheme.Scalar>) throws
+            with context: Server.Scheme.Context) throws
             where Server.IndexPir == Client.IndexPir
         {
             let database = PirTestUtils.randomIndexPirDatabase(
@@ -199,7 +199,7 @@ extension PirTestUtils {
                                keyCompression: .maxCompression),
             ]
 
-            let context: Context<Server.Scheme.Scalar> = try TestUtils.getTestContext()
+            let context: Server.Scheme.Context = try TestUtils.getTestContext()
             for config in configs {
                 let parameter = Server.generateParameter(config: config, with: context)
                 try indexPirTestForParameter(server: server, client: client, for: parameter, with: context)

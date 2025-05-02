@@ -315,7 +315,7 @@ extension [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] 
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
-    public func native<Scheme: HeScheme>(context: Context<Scheme.Scalar>) throws -> Query<Scheme> {
+    public func native<Scheme: HeScheme>(context: Scheme.Context) throws -> Query<Scheme> {
         let matrices: [CiphertextMatrix<Scheme, Coeff>] = try map { matrix in
             let native: SerializedCiphertextMatrix<Scheme.Scalar> = try matrix.native()
             return try CiphertextMatrix(deserialize: native, context: context)

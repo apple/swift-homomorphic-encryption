@@ -32,7 +32,7 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
     @usableFromInline package var ciphertexts: [Ciphertext<Scheme, Format>]
 
     /// The parameter context.
-    @usableFromInline var context: Context<Scheme.Scalar> {
+    @usableFromInline var context: Scheme.Context {
         precondition(!ciphertexts.isEmpty, "Ciphertext array cannot be empty")
         return ciphertexts[0].context
     }
@@ -66,7 +66,7 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
             throw PnnsError.emptyCiphertextArray
         }
         let encryptionParameters = context.encryptionParameters
-        guard let simdDimensions = context.simdDimensions(for: Scheme.self) else {
+        guard let simdDimensions = context.simdDimensions else {
             throw PnnsError.simdEncodingNotSupported(for: encryptionParameters)
         }
         let expectedCiphertextCount = try PlaintextMatrix<Scheme, Format>.plaintextCount(

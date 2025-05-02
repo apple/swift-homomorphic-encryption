@@ -43,7 +43,7 @@ func getRandomPlaintextData<T: ScalarType>(count: Int, in range: Range<T>) -> [T
 
 struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
     var encryptionParameters: EncryptionParameters<Scheme.Scalar>
-    var context: Context<Scheme.Scalar>
+    var context: Scheme.Context
 
     let data: [Scheme.Scalar]
     let signedData: [Scheme.SignedScalar]
@@ -69,7 +69,7 @@ struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
                                                                  Scheme.Scalar.self),
                                                              errorStdDev: ErrorStdDev.stdDev32,
                                                              securityLevel: SecurityLevel.quantum128)
-        self.context = try Context(encryptionParameters: encryptionParameters)
+        self.context = try Scheme.Context(encryptionParameters: encryptionParameters)
         self.secretKey = try context.generateSecretKey()
         let columnElement = GaloisElement.swappingRows(degree: polyDegree)
         let rowElement = try GaloisElement.rotatingColumns(by: rotateColumnsStep, degree: polyDegree)
@@ -163,7 +163,7 @@ func contextInitBenchmark<Scheme: HeScheme>(_: Scheme.Type, config: EncryptionPa
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(config: config)
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                try blackHole(_ = Context<Scheme.Scalar>(encryptionParameters: encryptionParameters))
+                try blackHole(_ = Scheme.Context(encryptionParameters: encryptionParameters))
             }
         }
     }

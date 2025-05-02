@@ -40,13 +40,11 @@ extension PrivateNearestNeighborSearchUtil {
                 }
                 let dims = try MatrixDimensions(rowCount: encryptionParameters.polyDegree, columnCount: 2)
                 let packing = MatrixPacking.denseRow
-                let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+                let context = try Scheme.Context(encryptionParameters: encryptionParameters)
                 let values = TestUtils.getRandomPlaintextData(
                     count: encryptionParameters.polyDegree,
                     in: 0..<encryptionParameters.plaintextModulus)
-                let plaintext: Plaintext<Scheme, Coeff> = try context.encode(
-                    values: values,
-                    format: EncodeFormat.coefficient)
+                let plaintext = try context.encode(values: values, format: EncodeFormat.coefficient)
                 #expect(throws: Never.self) { try PlaintextMatrix<Scheme, Coeff>(
                     dimensions: dims,
                     packing: packing,
@@ -63,7 +61,7 @@ extension PrivateNearestNeighborSearchUtil {
                         .insecure_n_8_logq_5x18_logt_5 ? .n_4096_logq_27_28_28_logt_16 : PredefinedRlweParameters
                         .insecure_n_8_logq_5x18_logt_5
                     let diffEncryptionParams = try EncryptionParameters<Scheme.Scalar>(from: diffRlweParams)
-                    let diffContext = try Context<Scheme.Scalar>(encryptionParameters: diffEncryptionParams)
+                    let diffContext = try Scheme.Context(encryptionParameters: diffEncryptionParams)
                     let diffValues = TestUtils.getRandomPlaintextData(
                         count: diffEncryptionParams.polyDegree,
                         in: 0..<diffEncryptionParams.plaintextModulus)
@@ -86,7 +84,7 @@ extension PrivateNearestNeighborSearchUtil {
         public static func plaintextMatrixDenseRowError<Scheme: HeScheme>(for _: Scheme.Type) throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let rowCount = encryptionParameters.polyDegree
             let columnCount = 2
             let values = TestUtils.getRandomPlaintextData(
@@ -117,7 +115,7 @@ extension PrivateNearestNeighborSearchUtil {
         @inlinable
         static func runPlaintextMatrixInitTest<Scheme: HeScheme>(
             for _: Scheme.Type,
-            context: Context<Scheme.Scalar>,
+            context: Scheme.Context,
             dimensions: MatrixDimensions,
             packing: MatrixPacking,
             expected: [[Int]]) throws
@@ -281,7 +279,7 @@ extension PrivateNearestNeighborSearchUtil {
                     nttDegree: 8),
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             for ((rowCount, columnCount), expected) in kats {
                 let dimensions = try MatrixDimensions((rowCount, columnCount))
                 try Self.runPlaintextMatrixInitTest(for: scheme,
@@ -360,7 +358,7 @@ extension PrivateNearestNeighborSearchUtil {
 
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             for ((rowCount, columnCount), expected) in kats {
                 let dimensions = try MatrixDimensions((rowCount, columnCount))
                 try Self.runPlaintextMatrixInitTest(for: scheme,
@@ -458,7 +456,7 @@ extension PrivateNearestNeighborSearchUtil {
                     nttDegree: 8),
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             for ((rowCount, columnCount), expected) in kats {
                 let dimensions = try MatrixDimensions((rowCount, columnCount))
                 let bsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount.nextPowerOfTwo)
@@ -482,7 +480,7 @@ extension PrivateNearestNeighborSearchUtil {
                     nttDegree: 16),
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
 
             let dimensions = try MatrixDimensions(rowCount: 4, columnCount: 5)
             let bsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
@@ -521,7 +519,7 @@ extension PrivateNearestNeighborSearchUtil {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,

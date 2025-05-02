@@ -17,7 +17,7 @@ import HomomorphicEncryption
 /// A database after processing to prepare for PNNS queries.
 public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     /// One context per plaintext modulus.
-    public let contexts: [Context<Scheme.Scalar>]
+    public let contexts: [Scheme.Context]
 
     /// The processed vectors in the database.
     public let plaintextMatrices: [PlaintextMatrix<Scheme, Eval>]
@@ -33,7 +33,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
 
     @inlinable
     public init(
-        contexts: [Context<Scheme.Scalar>],
+        contexts: [Scheme.Context],
         plaintextMatrices: [PlaintextMatrix<Scheme, Eval>],
         entryIds: [UInt64],
         entryMetadatas: [[UInt8]],
@@ -52,11 +52,11 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - serialized: Serialized processed database.
     ///   - contexts: Contexts for HE computation, one per plaintext modulus.
     /// - Throws: Error upon failure to load the database.
-    public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Context<Scheme.Scalar>] = []) throws {
+    public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Scheme.Context] = []) throws {
         var contexts = contexts
         if contexts.isEmpty {
             contexts = try serialized.serverConfig.encryptionParameters.map { encryptionParameters in
-                try Context(encryptionParameters: encryptionParameters)
+                try Scheme.Context(encryptionParameters: encryptionParameters)
             }
         }
         try serialized.serverConfig.validateContexts(contexts: contexts)
@@ -188,7 +188,7 @@ extension Database {
     /// - Throws: Error upon failure to process the database.
     @inlinable
     public func process<Scheme: HeScheme>(config: ServerConfig<Scheme>,
-                                          contexts: [Context<Scheme.Scalar>] = []) throws -> ProcessedDatabase<Scheme>
+                                          contexts: [Scheme.Context] = []) throws -> ProcessedDatabase<Scheme>
     {
         guard config.distanceMetric == .cosineSimilarity else {
             throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)
@@ -196,7 +196,7 @@ extension Database {
         var contexts = contexts
         if contexts.isEmpty {
             contexts = try config.encryptionParameters.map { encryptionParameters in
-                try Context(encryptionParameters: encryptionParameters)
+                try Scheme.Context(encryptionParameters: encryptionParameters)
             }
         }
         try config.validateContexts(contexts: contexts)

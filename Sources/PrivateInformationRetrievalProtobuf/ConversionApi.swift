@@ -21,7 +21,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse {
     /// - Parameter context: Context to associate with the native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon invalid protobuf object.
-    public func native<Scheme: HeScheme>(context: Context<Scheme.Scalar>) throws -> Response<Scheme> {
+    public func native<Scheme: HeScheme>(context: Scheme.Context) throws -> Response<Scheme> {
         let ciphertexts: [[Scheme.CoeffCiphertext]] = try replies.map { reply in
             let serializedCiphertexts: [SerializedCiphertext<Scheme.Scalar>] = try reply.native()
             return try serializedCiphertexts.map { serialized in

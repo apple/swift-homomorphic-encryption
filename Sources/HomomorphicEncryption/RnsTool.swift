@@ -14,8 +14,10 @@
 
 import ModularArithmetic
 
-@usableFromInline
-package struct RnsTool<T: ScalarType>: Sendable {
+@usableFromInline package typealias RnsTool = _RnsTool
+
+// swiftlint:disable:next type_name
+public struct _RnsTool<T: ScalarType>: Sendable {
     @usableFromInline
     struct RnsToolContext {
         @usableFromInline let inputContext: PolyContext<T>

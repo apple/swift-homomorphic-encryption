@@ -52,12 +52,12 @@ extension SecretKey: PolyCollection {
 @usableFromInline
 struct KeySwitchKey<Scheme: HeScheme>: Equatable, Sendable {
     /// The context used for key-switching operations.
-    @usableFromInline let context: Context<Scheme.Scalar>
+    @usableFromInline let context: Scheme.Context
     /// The ciphertexts of the key-switching key.
     @usableFromInline let ciphers: [Ciphertext<Scheme, Eval>]
 
     @inlinable
-    init(context: Context<Scheme.Scalar>, ciphers: [Ciphertext<Scheme, Eval>]) {
+    init(context: Scheme.Context, ciphers: [Ciphertext<Scheme, Eval>]) {
         self.context = context
         self.ciphers = ciphers
     }

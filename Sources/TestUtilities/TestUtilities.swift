@@ -326,7 +326,7 @@ extension TestUtils {
     }
 
     @inlinable
-    package static func getTestContext<Scalar: ScalarType>() throws -> Context<Scalar> {
-        try Context<Scalar>(encryptionParameters: getTestEncryptionParameters())
+    package static func getTestContext<Context: HeContext>() throws -> Context {
+        try Context(encryptionParameters: getTestEncryptionParameters())
     }
 }

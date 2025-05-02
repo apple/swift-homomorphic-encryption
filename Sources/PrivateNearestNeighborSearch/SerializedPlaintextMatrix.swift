@@ -60,7 +60,7 @@ extension PlaintextMatrix where Format == Coeff {
     ///   - serialized: Serialized plaintext matrix.
     ///   - context: Context to associate with the plaintext matrix.
     /// - Throws: Error upon failure to deserialize.
-    init(deserialize serialized: SerializedPlaintextMatrix, context: Context<Scheme.Scalar>) throws {
+    init(deserialize serialized: SerializedPlaintextMatrix, context: Scheme.Context) throws {
         let plaintexts = try serialized.plaintexts.map { serializedPlaintext in
             try Plaintext<Scheme, Coeff>(deserialize: serializedPlaintext, context: context)
         }
@@ -78,7 +78,7 @@ extension PlaintextMatrix where Format == Eval {
     /// - Throws: Error upon failure to deserialize.
     init(
         deserialize serialized: SerializedPlaintextMatrix,
-        context: Context<Scheme.Scalar>,
+        context: Scheme.Context,
         moduliCount: Int? = nil) throws
     {
         let plaintexts = try serialized.plaintexts.map { serializedPlaintext in

@@ -109,7 +109,7 @@ extension HeError {
     }
 
     @inlinable
-    static func invalidContext(_ context: Context<some Any>) -> Self {
+    static func invalidContext(_ context: some HeContext) -> Self {
         .invalidContext("\(context.description)")
     }
 
@@ -168,7 +168,7 @@ extension HeError {
     }
 
     @inlinable
-    static func unequalContexts(got: Context<some Any>, expected: Context<some Any>) -> Self {
+    static func unequalContexts(got: some HeContext, expected: some HeContext) -> Self {
         .unequalContexts("Unequal contexts: \(got.description) is not equal to \(expected.description)")
     }
 

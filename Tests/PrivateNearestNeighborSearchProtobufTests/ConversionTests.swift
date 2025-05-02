@@ -104,7 +104,7 @@ struct ConversionTests {
     func serializedPlaintextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(
@@ -140,8 +140,8 @@ struct ConversionTests {
     func serializedCiphertextMatrix() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
-            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
+            let secretKey = try context.generateSecretKey()
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(
@@ -198,8 +198,8 @@ struct ConversionTests {
     func query() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters)
-            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
+            let secretKey = try context.generateSecretKey()
 
             let dimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
             let scalars: [[Scheme.Scalar]] = increasingData(

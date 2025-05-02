@@ -43,7 +43,7 @@ struct ConversionTests {
     @Test
     func processedDatabaseWithParameters() throws {
         let rows = (0..<10).map { KeywordValuePair(keyword: Array(String($0).utf8), value: Array(String($0).utf8)) }
-        let context: Context<UInt32> = try .init(encryptionParameters: .init(from: .n_4096_logq_27_28_28_logt_13))
+        let context: Bfv<UInt32>.Context = try .init(encryptionParameters: .init(from: .n_4096_logq_27_28_28_logt_13))
         let config = try KeywordPirConfig(
             dimensionCount: 2,
             cuckooTableConfig: .defaultKeywordPir(maxSerializedBucketSize: context.bytesPerPlaintext),

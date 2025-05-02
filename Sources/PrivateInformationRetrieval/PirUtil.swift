@@ -144,8 +144,7 @@ package enum PirUtil<Scheme: HeScheme> {
     /// The MulPir indices are the indices of non-zero results after expansion
     @inlinable
     package static func compressInputsForOneCiphertext(totalInputCount: Int, nonZeroInputs: [Int],
-                                                       context: Context<Scheme.Scalar>) throws
-        -> Plaintext<Scheme, Coeff>
+                                                       context: Scheme.Context) throws -> Plaintext<Scheme, Coeff>
     {
         precondition(totalInputCount <= context.degree)
         var rawData: [Scalar] = Array(repeating: 0, count: context.degree)
@@ -167,7 +166,7 @@ package enum PirUtil<Scheme: HeScheme> {
     package static func compressInputs(
         totalInputCount: Int,
         nonZeroInputs: [Int],
-        context: Context<Scheme.Scalar>,
+        context: Scheme.Context,
         using secretKey: SecretKey<Scheme>) throws -> [CanonicalCiphertext]
     {
         var remainingInputs = totalInputCount

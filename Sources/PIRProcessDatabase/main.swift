@@ -513,7 +513,7 @@ struct ProcessDatabase: AsyncParsableCommand {
 
 extension ProcessKeywordDatabase.ShardValidationResult {
     /// Returns a description of processed database validation.
-    public func description() throws -> String {
+    func description() throws -> String {
         func sizeString(byteCount: Int, count: Int, label: String) -> String {
             let sizeKB = String(format: "%.01f", Double(byteCount) / 1000.0)
             return "\(sizeKB) KB (\(count) \(label))"

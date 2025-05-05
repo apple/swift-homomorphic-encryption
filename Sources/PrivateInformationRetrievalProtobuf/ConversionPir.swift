@@ -76,25 +76,13 @@ extension ProcessedDatabaseWithParameters {
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
-    @available(*, deprecated, message: "Will be replaced by 'native() throws' in future version.")
-    public func nativeWithSymmetricPirClientConfig() throws -> KeywordPirParameter {
+    /// - Throws: Error when the parameters cannot be represented as a protobuf object.
+    public func native() throws -> KeywordPirParameter {
         let symmetricPirClientConfig = hasSymmetricPirClientConfig ? try symmetricPirClientConfig.native() : nil
         return KeywordPirParameter(
             hashFunctionCount: Int(numHashFunctions),
             shardingFunction: shardingFunction.native(),
             symmetricPirClientConfig: symmetricPirClientConfig)
-    }
-
-    /// Converts the protobuf object to a native type.
-    ///
-    /// To be used only for protobuf objects not containing `SymmetricPirClientConfig`.
-    /// - Returns: The converted native type.
-    @available(*, deprecated, message: "Will be replaced by 'native() throws' in future version.")
-    public func native() -> KeywordPirParameter {
-        precondition(!hasSymmetricPirClientConfig)
-        return KeywordPirParameter(
-            hashFunctionCount: Int(numHashFunctions),
-            shardingFunction: shardingFunction.native())
     }
 }
 
@@ -202,7 +190,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
             algorithm: algorithm.native(),
             evaluationKeyConfig: evaluationKeyConfig.native(),
             pirParameter: native(),
-            keywordPirParameter: hasKeywordPirParams ? keywordPirParams.nativeWithSymmetricPirClientConfig() : nil)
+            keywordPirParameter: hasKeywordPirParams ? keywordPirParams.native() : nil)
     }
 }
 

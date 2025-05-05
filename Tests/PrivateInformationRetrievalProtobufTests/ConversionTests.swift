@@ -106,13 +106,13 @@ struct ConversionTests {
     @Test
     func keywordPirParameter() throws {
         var keywordPirParameter = KeywordPirParameter(hashFunctionCount: 2)
-        var roundTrip = keywordPirParameter.proto().native()
+        var roundTrip = try keywordPirParameter.proto().native()
         #expect(roundTrip == keywordPirParameter)
         let symmetricPirClientConfig = SymmetricPirClientConfig(serverPublicKey: [],
                                                                 configType: .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128)
         keywordPirParameter = KeywordPirParameter(hashFunctionCount: 2,
                                                   symmetricPirClientConfig: symmetricPirClientConfig)
-        roundTrip = try keywordPirParameter.proto().nativeWithSymmetricPirClientConfig()
+        roundTrip = try keywordPirParameter.proto().native()
         #expect(roundTrip == keywordPirParameter)
     }
 }

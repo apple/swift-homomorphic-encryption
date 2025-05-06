@@ -26,6 +26,8 @@
 // * Restrict `Base` to unsigned integers only.
 // * Rename `DoubleWidth` to `DoubleWidthUInt`.
 
+import ModularArithmetic
+
 /// A fixed-width integer that has twice the bit width of its base type.
 ///
 /// You can use the `DoubleWidthUInt` type to continue calculations with the result

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import HomomorphicEncryption
+import ModularArithmetic
 import Testing
 
 /// A collection of helpers for HeScheme level API tests.

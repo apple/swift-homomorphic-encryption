@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import HomomorphicEncryption
+import ModularArithmetic
 import PrivateNearestNeighborSearch
 import Testing
 

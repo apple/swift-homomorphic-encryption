@@ -30,7 +30,9 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
 
     public static var algorithm: PirAlgorithm { .mulPir }
 
-    public static func generateParameter(config: IndexPirConfig, with context: Context<Scheme>) -> IndexPirParameter {
+    public static func generateParameter(config: IndexPirConfig,
+                                         with context: Context<Scheme.Scalar>) -> IndexPirParameter
+    {
         let entrySizeInBytes = config.entrySizeInBytes
         let perChunkPlaintextCount = if entrySizeInBytes <= context.bytesPerPlaintext {
             config.entryCount.dividingCeil(context.bytesPerPlaintext / entrySizeInBytes, variableTime: true)
@@ -121,7 +123,7 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
     public let parameter: IndexPirParameter
 
     /// Context for HE computation.
-    public let context: HomomorphicEncryption.Context<Scheme>
+    public let context: HomomorphicEncryption.Context<Scheme.Scalar>
 
     public var evaluationKeyConfig: EvaluationKeyConfig {
         parameter.evaluationKeyConfig
@@ -140,7 +142,7 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
         IndexPir.computePerChunkPlaintextCount(for: parameter)
     }
 
-    public init(parameter: IndexPirParameter, context: Context<Scheme>) {
+    public init(parameter: IndexPirParameter, context: Context<Scheme.Scalar>) {
         self.parameter = parameter
         self.context = context
     }
@@ -285,7 +287,7 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     /// Context for HE computation.
     ///
     /// Must be the same between client and server.
-    public let context: HomomorphicEncryption.Context<Scheme>
+    public let context: HomomorphicEncryption.Context<Scheme.Scalar>
 
     /// Evaluation key configuration.
     public var evaluationKeyConfig: EvaluationKeyConfig {
@@ -317,7 +319,7 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     ///   - context: Context for HE computation.
     ///   - databases: Databases, each compatible with the given `parameter`.
     /// - Throws: Error upon failure to initialize the server.
-    public init(parameter: IndexPirParameter, context: Context<Scheme>, databases: [Database]) throws {
+    public init(parameter: IndexPirParameter, context: Context<Scheme.Scalar>, databases: [Database]) throws {
         self.parameter = parameter
         self.context = context
         self.databases = databases
@@ -331,7 +333,7 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     }
 
     @inlinable
-    package static func chunkCount(parameter: IndexPirParameter, context: Context<Scheme>) -> Int {
+    package static func chunkCount(parameter: IndexPirParameter, context: Context<Scheme.Scalar>) -> Int {
         parameter.entrySizeInBytes.dividingCeil(context.bytesPerPlaintext, variableTime: true)
     }
 }
@@ -423,7 +425,7 @@ extension MulPirServer {
 extension MulPirServer {
     @inlinable
     // swiftlint:disable:next attributes missing_docs
-    public static func process(database: some Collection<[UInt8]>, with context: Context<Scheme>,
+    public static func process(database: some Collection<[UInt8]>, with context: Context<Scheme.Scalar>,
                                using parameter: IndexPirParameter) throws -> Database
     {
         guard database.count == parameter.entryCount else {
@@ -445,7 +447,7 @@ extension MulPirServer {
     @inlinable
     static func processSplitLargeEntries(
         database: some Collection<[UInt8]>,
-        with context: Context<Scheme>,
+        with context: Context<Scheme.Scalar>,
         using parameter: IndexPirParameter) throws -> Database
     {
         let chunkCount = Self.chunkCount(parameter: parameter, context: context)
@@ -490,7 +492,7 @@ extension MulPirServer {
     @inlinable
     static func processPackEntries(
         database: some Collection<[UInt8]>,
-        with context: Context<Scheme>,
+        with context: Context<Scheme.Scalar>,
         using parameter: IndexPirParameter) throws -> Database
     {
         assert(database.count == parameter.entryCount)

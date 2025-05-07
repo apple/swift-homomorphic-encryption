@@ -28,17 +28,17 @@ public enum NoOpScheme: HeScheme {
         0
     }
 
-    public static func generateSecretKey(context: Context<NoOpScheme>) -> SecretKey<NoOpScheme> {
+    public static func generateSecretKey(context: Context<Scalar>) -> SecretKey<NoOpScheme> {
         let poly = PolyRq<Scalar, Eval>.zero(context: context.secretKeyContext)
         return SecretKey(poly: poly)
     }
 
     public static func generateEvaluationKey(
-        context: Context<NoOpScheme>,
+        context: Context<Scalar>,
         config: EvaluationKeyConfig, using _: SecretKey<NoOpScheme>) throws -> EvaluationKey<NoOpScheme>
     {
-        let keySwitchKey = KeySwitchKey(context: context, ciphers: [])
-        let galoisKeys = [Int: KeySwitchKey<NoOpScheme>](
+        let keySwitchKey = KeySwitchKey<NoOpScheme>(context: context, ciphers: [])
+        let galoisKeys = [Int: KeySwitchKey](
             config.galoisElements
                 .map { g in (g, keySwitchKey) }) { first, _ in first }
         return EvaluationKey(
@@ -56,19 +56,19 @@ public enum NoOpScheme: HeScheme {
         return SimdEncodingDimensions(rowCount: 2, columnCount: parameters.polyDegree / 2)
     }
 
-    public static func encode(context: Context<NoOpScheme>, values: some Collection<Scalar>,
+    public static func encode(context: Context<Scalar>, values: some Collection<Scalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(values: values, format: format)
     }
 
-    public static func encode(context: Context<NoOpScheme>, signedValues: some Collection<SignedScalar>,
+    public static func encode(context: Context<Scalar>, signedValues: some Collection<SignedScalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(signedValues: signedValues, format: format)
     }
 
-    public static func encode(context: Context<NoOpScheme>, values: some Collection<Scalar>,
+    public static func encode(context: Context<Scalar>, values: some Collection<Scalar>,
                               format: EncodeFormat, moduliCount _: Int?) throws -> EvalPlaintext
     {
         let coeffPlaintext = try Self.encode(context: context, values: values, format: format)
@@ -76,7 +76,7 @@ public enum NoOpScheme: HeScheme {
     }
 
     public static func encode(
-        context: Context<NoOpScheme>,
+        context: Context<Scalar>,
         signedValues: some Collection<SignedScalar>,
         format: EncodeFormat,
         moduliCount _: Int?) throws -> EvalPlaintext
@@ -101,7 +101,7 @@ public enum NoOpScheme: HeScheme {
         try plaintext.inverseNtt().decode(format: format)
     }
 
-    public static func zeroCiphertextCoeff(context: Context<Self>, moduliCount _: Int?) throws -> CoeffCiphertext {
+    public static func zeroCiphertextCoeff(context: Context<Scalar>, moduliCount _: Int?) throws -> CoeffCiphertext {
         NoOpScheme
             .CoeffCiphertext(
                 context: context,
@@ -109,7 +109,7 @@ public enum NoOpScheme: HeScheme {
                 correctionFactor: 1)
     }
 
-    public static func zeroCiphertextEval(context: Context<Self>, moduliCount _: Int?) throws -> EvalCiphertext {
+    public static func zeroCiphertextEval(context: Context<Scalar>, moduliCount _: Int?) throws -> EvalCiphertext {
         NoOpScheme
             .EvalCiphertext(
                 context: context,

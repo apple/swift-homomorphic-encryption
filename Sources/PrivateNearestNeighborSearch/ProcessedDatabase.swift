@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import HomomorphicEncryption
 /// A database after processing to prepare for PNNS queries.
 public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     /// One context per plaintext modulus.
-    public let contexts: [Context<Scheme>]
+    public let contexts: [Context<Scheme.Scalar>]
 
     /// The processed vectors in the database.
     public let plaintextMatrices: [PlaintextMatrix<Scheme, Eval>]
@@ -33,7 +33,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
 
     @inlinable
     public init(
-        contexts: [Context<Scheme>],
+        contexts: [Context<Scheme.Scalar>],
         plaintextMatrices: [PlaintextMatrix<Scheme, Eval>],
         entryIds: [UInt64],
         entryMetadatas: [[UInt8]],
@@ -52,7 +52,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - serialized: Serialized processed database.
     ///   - contexts: Contexts for HE computation, one per plaintext modulus.
     /// - Throws: Error upon failure to load the database.
-    public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Context<Scheme>] = []) throws {
+    public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Context<Scheme.Scalar>] = []) throws {
         var contexts = contexts
         if contexts.isEmpty {
             contexts = try serialized.serverConfig.encryptionParameters.map { encryptionParameters in
@@ -188,7 +188,7 @@ extension Database {
     /// - Throws: Error upon failure to process the database.
     @inlinable
     public func process<Scheme: HeScheme>(config: ServerConfig<Scheme>,
-                                          contexts: [Context<Scheme>] = []) throws -> ProcessedDatabase<Scheme>
+                                          contexts: [Context<Scheme.Scalar>] = []) throws -> ProcessedDatabase<Scheme>
     {
         guard config.distanceMetric == .cosineSimilarity else {
             throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)

@@ -21,7 +21,7 @@ import Testing
 struct IndexPirTests {
     @Test
     func generateParameter() throws {
-        let context: Context<Bfv<UInt64>> = try TestUtils.getTestContext()
+        let context: Context<UInt64> = try TestUtils.getTestContext()
         // unevenDimensions: false
         do {
             let config = try IndexPirConfig(entryCount: 16,

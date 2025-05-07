@@ -26,10 +26,10 @@ struct SerializationTests {
         }
 
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: .coefficient)
-            let secretKey = try context.generateSecretKey()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             var ciphertext = try plaintext.encrypt(using: secretKey)
 
             func checkDeserialization<Format: PolyFormat>(
@@ -98,7 +98,7 @@ struct SerializationTests {
     @Test
     func plaintextSerialization() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type, format: EncodeFormat) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             do { // CoeffPlaintext
                 let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: format)
@@ -125,7 +125,7 @@ struct SerializationTests {
     @Test
     func evalPlaintextSerializationWithVariableModuliCount() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type, format: EncodeFormat) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             for moduliCount in 1...context.ciphertextContext.moduli.count {
                 let plaintext: Scheme.EvalPlaintext = try context.encode(values: values,
@@ -151,10 +151,10 @@ struct SerializationTests {
     @Test
     func secretKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let serialized = secretKey.serialize()
-            let deserialized = try SecretKey(deserialize: serialized, context: context)
+            let deserialized = try SecretKey<Scheme>(deserialize: serialized, context: context)
             #expect(deserialized == secretKey)
         }
 
@@ -166,13 +166,13 @@ struct SerializationTests {
     @Test
     func galoisKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let evaluationKeyConfig = EvaluationKeyConfig(galoisElements: [3, 5, 7])
             let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let galoisKey = try #require(evaluationKey.galoisKey)
             let serialized = galoisKey.serialize()
-            let deserialized = try GaloisKey(deserialize: serialized, context: context)
+            let deserialized = try GaloisKey<Scheme>(deserialize: serialized, context: context)
             #expect(deserialized == galoisKey)
         }
 
@@ -184,13 +184,13 @@ struct SerializationTests {
     @Test
     func relinearizationKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let evaluationKeyConfig = EvaluationKeyConfig(hasRelinearizationKey: true)
             let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let relinearizationKey = try #require(evaluationKey.relinearizationKey)
             let serialized = relinearizationKey.serialize()
-            let deserialized = try RelinearizationKey(deserialize: serialized, context: context)
+            let deserialized = try RelinearizationKey<Scheme>(deserialize: serialized, context: context)
             #expect(deserialized == relinearizationKey)
         }
 
@@ -202,14 +202,14 @@ struct SerializationTests {
     @Test
     func evaluationKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let evaluationKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 7],
                 hasRelinearizationKey: true)
             let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
             let serialized = evaluationKey.serialize()
-            let deserialized = try EvaluationKey(deserialize: serialized, context: context)
+            let deserialized = try EvaluationKey<Scheme>(deserialize: serialized, context: context)
             #expect(deserialized == evaluationKey)
 
             func checkSeededCiphertext(_ ciphertexts: [SerializedCiphertext<Scheme.Scalar>]) {

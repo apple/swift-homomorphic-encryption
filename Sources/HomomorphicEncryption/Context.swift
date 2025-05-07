@@ -16,9 +16,7 @@
 ///
 /// HE operations are typically only supported between objects, such as ``Ciphertext``, ``Plaintext``,
 /// ``EvaluationKey``, ``SecretKey``,  with the same context.
-public final class Context<Scheme: HeScheme>: Equatable, Sendable {
-    public typealias Scalar = Scheme.Scalar
-
+public final class Context<Scalar: ScalarType>: Equatable, Sendable {
     /// Encryption parameters.
     public let encryptionParameters: EncryptionParameters<Scalar>
 
@@ -52,12 +50,6 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     public var degree: Int { encryptionParameters.polyDegree }
     /// Whether or not the context supports ``EncodeFormat/simd`` encoding.
     public var supportsSimdEncoding: Bool { encryptionParameters.supportsSimdEncoding }
-    /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
-    ///
-    /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
-    public var simdDimensions: SimdEncodingDimensions? {
-        Scheme.encodeSimdDimensions(for: encryptionParameters)
-    }
 
     /// Whether or not the context supports use of an ``EvaluationKey``.
     public var supportsEvaluationKey: Bool { encryptionParameters.supportsEvaluationKey }
@@ -128,8 +120,17 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     ///   - rhs: Another context to compare.
     /// - Returns: Whether or not the two contexts are equal.
     @inlinable
-    public static func == (lhs: Context<Scheme>, rhs: Context<Scheme>) -> Bool {
+    public static func == (lhs: Context<Scalar>, rhs: Context<Scalar>) -> Bool {
         lhs === rhs || lhs.encryptionParameters == rhs.encryptionParameters
+    }
+
+    /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
+    ///
+    /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
+    public func simdDimensions<Scheme: HeScheme>(for _: Scheme.Type) -> SimdEncodingDimensions?
+        where Scheme.Scalar == Scalar
+    {
+        Scheme.encodeSimdDimensions(for: encryptionParameters)
     }
 
     @inlinable
@@ -141,6 +142,6 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
 
 extension Context: CustomStringConvertible {
     public var description: String {
-        "Context<\(Scheme.self)>(encryptionParameters=\(encryptionParameters.description))"
+        "Context<\(Scalar.self)>(encryptionParameters=\(encryptionParameters.description))"
     }
 }

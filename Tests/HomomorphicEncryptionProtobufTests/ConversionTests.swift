@@ -36,7 +36,7 @@ struct ConversionTests {
     @Test
     func encryptionParameters() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
             let parametersProto = try context.encryptionParameters.proto(scheme: Scheme.self)
 
             let _: EncryptionParameters<Scheme.Scalar> = try parametersProto.native()
@@ -56,10 +56,10 @@ struct ConversionTests {
         }
 
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: .coefficient)
-            let secretKey = try context.generateSecretKey()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             var ciphertext = try plaintext.encrypt(using: secretKey)
 
             func checkDeserialization<Format: PolyFormat>(
@@ -134,7 +134,7 @@ struct ConversionTests {
     @Test(arguments: EncodeFormat.allCases)
     func plaintextSerialization(format: EncodeFormat) throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type, format: EncodeFormat) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             do { // CoeffPlaintext
                 let plaintext: Scheme.CoeffPlaintext = try context.encode(values: values, format: format)
@@ -159,7 +159,7 @@ struct ConversionTests {
     @Test(arguments: EncodeFormat.allCases)
     func evalPlaintextSerializationWithVariableModuliCount(format: EncodeFormat) throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type, format: EncodeFormat) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
             let values = TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
             for moduliCount in 1...context.ciphertextContext.moduli.count {
                 let plaintext: Scheme.EvalPlaintext = try context.encode(
@@ -184,10 +184,10 @@ struct ConversionTests {
     @Test
     func secretKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let proto = secretKey.serialize().proto()
-            let deserialized = try SecretKey(deserialize: proto.native(), context: context)
+            let deserialized = try SecretKey<Scheme>(deserialize: proto.native(), context: context)
             #expect(deserialized == secretKey)
         }
 
@@ -199,13 +199,13 @@ struct ConversionTests {
     @Test
     func galoisKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let evaluationKey = try context.generateEvaluationKey(
                 config: EvaluationKeyConfig(galoisElements: [3, 5, 7]), using: secretKey)
             let galoisKey = try #require(evaluationKey.galoisKey)
             let proto = galoisKey.serialize().proto()
-            let deserialized = try GaloisKey(deserialize: proto.native(), context: context)
+            let deserialized = try GaloisKey<Scheme>(deserialize: proto.native(), context: context)
             #expect(deserialized == galoisKey)
         }
 
@@ -217,14 +217,14 @@ struct ConversionTests {
     @Test
     func relinearizationKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let evaluationKey = try context.generateEvaluationKey(
                 config: EvaluationKeyConfig(
                     hasRelinearizationKey: true), using: secretKey)
             let relinearizationKey = try #require(evaluationKey.relinearizationKey)
             let proto = relinearizationKey.serialize().proto()
-            let deserialized = try RelinearizationKey(deserialize: proto.native(), context: context)
+            let deserialized = try RelinearizationKey<Scheme>(deserialize: proto.native(), context: context)
             #expect(deserialized == relinearizationKey)
         }
 
@@ -236,14 +236,14 @@ struct ConversionTests {
     @Test
     func evaluationKey() throws {
         func runTest<Scheme: HeScheme>(_: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
-            let secretKey = try context.generateSecretKey()
+            let context: Context<Scheme.Scalar> = try TestUtils.getTestContext()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let evaluationKey = try context.generateEvaluationKey(
                 config: EvaluationKeyConfig(
                     galoisElements: [3, 5, 7],
                     hasRelinearizationKey: true), using: secretKey)
             let proto = evaluationKey.serialize().proto()
-            let deserialized = try EvaluationKey(deserialize: proto.native(), context: context)
+            let deserialized = try EvaluationKey<Scheme>(deserialize: proto.native(), context: context)
             #expect(deserialized == evaluationKey)
         }
 

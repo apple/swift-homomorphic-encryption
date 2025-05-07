@@ -188,7 +188,7 @@ extension PrivateNearestNeighborSearch.Response {
 
 struct PnnsProcessBenchmarkContext<Scheme: HeScheme> {
     let database: Database
-    let contexts: [Context<Scheme>]
+    let contexts: [Context<Scheme.Scalar>]
     let serverConfig: ServerConfig<Scheme>
 
     init(databaseConfig: DatabaseConfig,
@@ -305,7 +305,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
 
         let database = getDatabaseForTesting(config: databaseConfig)
         let contexts = try clientConfig.encryptionParameters
-            .map { encryptionParameters in try Context<Scheme>(encryptionParameters: encryptionParameters) }
+            .map { encryptionParameters in try Context<Scheme.Scalar>(encryptionParameters: encryptionParameters) }
         self.processedDatabase = try database.process(config: serverConfig, contexts: contexts)
         self.client = try Client(config: clientConfig, contexts: contexts)
         self.server = try Server(database: processedDatabase)

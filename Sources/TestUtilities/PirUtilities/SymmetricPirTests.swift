@@ -45,7 +45,7 @@ extension PirTestUtils {
                 symmetricPirClientConfig: symmetricPirConfig.clientConfig())
 
             let encryptionParameters: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
-            let context: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
+            let context: Context<Scheme.Scalar> = try Context(encryptionParameters: encryptionParameters)
             let valueSize = context.bytesPerPlaintext / 2
             let plainDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 100, valueSize: valueSize)
             let encryptedDatabase = try KeywordDatabase.symmetricPIRProcess(
@@ -61,7 +61,7 @@ extension PirTestUtils {
             let client = KeywordPirClient<PirClient>(
                 keywordParameter: keywordConfig.parameter, pirParameter: processed.pirParameter,
                 context: context)
-            let secretKey = try context.generateSecretKey()
+            let secretKey: SecretKey<Scheme> = try context.generateSecretKey()
             let evaluationKey = try client.generateEvaluationKey(using: secretKey)
             let shuffledValues = Array(plainDatabase.indices).shuffled()
 

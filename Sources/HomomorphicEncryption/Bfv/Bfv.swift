@@ -16,6 +16,8 @@ import ModularArithmetic
 
 /// Brakerski-Fan-Vercauteren cryptosystem.
 public enum Bfv<T: ScalarType>: HeScheme {
+    public typealias Context = HomomorphicEncryption.Context<Self>
+
     public typealias Scalar = T
 
     public typealias CanonicalCiphertextFormat = Coeff

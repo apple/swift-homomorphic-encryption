@@ -120,7 +120,7 @@ extension PrivateNearestNeighborSearchUtil {
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let vectorDimension = 32
             let queryDimensions = try MatrixDimensions(rowCount: 1, columnCount: vectorDimension)
 
@@ -150,7 +150,7 @@ extension PrivateNearestNeighborSearchUtil {
                 let entryIds = [UInt64(42)]
                 let entryMetadatas = [42.littleEndianBytes]
                 // Treat the query as a response
-                let response = Response(
+                let response = Response<Scheme>(
                     ciphertextMatrices: query.ciphertextMatrices,
                     entryIds: entryIds, entryMetadatas: entryMetadatas)
                 let databaseDistances = try client.decrypt(response: response, using: secretKey)

@@ -19,7 +19,7 @@ import Testing
 @Suite
 struct HeAPITests {
     private struct TestEnv<Scheme: HeScheme> {
-        let context: Context<Scheme>
+        let context: Scheme.Context
         let data1: [Scheme.Scalar]
         let data2: [Scheme.Scalar]
         let coeffPlaintext1: Plaintext<Scheme, Coeff>
@@ -33,7 +33,7 @@ struct HeAPITests {
         let evaluationKey: EvaluationKey<Scheme>?
 
         init(
-            context: Context<Scheme>,
+            context: Scheme.Context,
             format: EncodeFormat,
             galoisElements: [Int] = [],
             relinearizationKey: Bool = false) throws
@@ -86,7 +86,7 @@ struct HeAPITests {
 
     @Test
     func testNoOpScheme() async throws {
-        let context: Context<NoOpScheme> = try TestUtils.getTestContext()
+        let context: NoOpScheme.Context = try TestUtils.getTestContext()
         try HeAPITestHelpers.schemeEncodeDecodeTest(context: context)
         try HeAPITestHelpers.schemeEncryptDecryptTest(context: context)
         try HeAPITestHelpers.schemeEncryptZeroDecryptTest(context: context)
@@ -105,17 +105,18 @@ struct HeAPITests {
         try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context)
         try await HeAPITestHelpers.schemeCiphertextPlaintextInnerProductTest(context: context)
         try await HeAPITestHelpers.schemeCiphertextCiphertextInnerProductTest(context: context)
-        try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
         try await HeAPITestHelpers.schemeRotationTest(context: context)
         try await HeAPITestHelpers.schemeApplyGaloisTest(context: context)
+        try await HeAPITestHelpers.repeatedAdditionTest(context: context)
+        try await HeAPITestHelpers.multiplyInverseTest(context: context)
     }
 
-    private func bfvTestKeySwitching<T>(context: Context<Bfv<T>>) throws {
+    private func bfvTestKeySwitching<T>(context: Bfv<T>.Context) throws {
         guard context.supportsEvaluationKey else {
             return
         }
 
-        let testEnv = try TestEnv(context: context, format: .coefficient)
+        let testEnv = try TestEnv<Bfv<T>>(context: context, format: .coefficient)
         let newSecretKey = try context.generateSecretKey()
 
         let keySwitchKey = try Bfv<T>.generateKeySwitchKey(context: context,
@@ -126,7 +127,7 @@ struct HeAPITests {
             target: testEnv.ciphertext1.polys[1],
             keySwitchingKey: keySwitchKey)
         switchedPolys[0] += testEnv.ciphertext1.polys[0]
-        let switchedCiphertext = Ciphertext(context: context, polys: switchedPolys, correctionFactor: 1)
+        let switchedCiphertext = Bfv<T>.CanonicalCiphertext(context: context, polys: switchedPolys, correctionFactor: 1)
         let plaintext = try switchedCiphertext.decrypt(using: newSecretKey)
         let decrypted: [T] = try plaintext.decode(format: .coefficient)
 
@@ -163,7 +164,7 @@ struct HeAPITests {
             securityLevel: SecurityLevel.unchecked)
 
         for encryptionParameters in predefined + [custom, manyModuli] {
-            let context = try Context<Bfv<T>>(encryptionParameters: encryptionParameters)
+            let context = try Bfv<T>.Context(encryptionParameters: encryptionParameters)
             try HeAPITestHelpers.schemeEncodeDecodeTest(context: context)
             try HeAPITestHelpers.schemeEncryptDecryptTest(context: context)
             try HeAPITestHelpers.schemeEncryptZeroDecryptTest(context: context)
@@ -182,7 +183,6 @@ struct HeAPITests {
             try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context)
             try await HeAPITestHelpers.schemeCiphertextPlaintextInnerProductTest(context: context)
             try await HeAPITestHelpers.schemeCiphertextCiphertextInnerProductTest(context: context)
-            try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
             try await HeAPITestHelpers.schemeRotationTest(context: context)
             try await HeAPITestHelpers.schemeApplyGaloisTest(context: context)
             try bfvTestKeySwitching(context: context)
@@ -200,6 +200,28 @@ struct HeAPITests {
     @Test
     func testBfvUInt64() async throws {
         try await runBfvTests(UInt64.self)
+    }
+
+    @Test
+    func schemeEvaluationKeyTest() throws {
+        do {
+            let config = EvaluationKeyConfig()
+            #expect(!config.hasRelinearizationKey)
+            #expect(config.galoisElements.isEmpty)
+            #expect(config.keyCount == 0)
+        }
+        do {
+            let config = EvaluationKeyConfig(hasRelinearizationKey: true)
+            #expect(config.hasRelinearizationKey)
+            #expect(config.galoisElements.isEmpty)
+            #expect(config.keyCount == 1)
+        }
+        do {
+            let config = EvaluationKeyConfig(galoisElements: [1, 3], hasRelinearizationKey: true)
+            #expect(config.hasRelinearizationKey)
+            #expect(config.galoisElements == [1, 3])
+            #expect(config.keyCount == 3)
+        }
     }
 }
 

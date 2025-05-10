@@ -39,7 +39,7 @@ extension PirTestUtils {
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
 
-            let context: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let plaintextModulus = context.plaintextModulus
             let logDegree = degree.log2
             for logStep in 1...logDegree {
@@ -48,7 +48,7 @@ extension PirTestUtils {
                 let data: [Scheme.Scalar] = TestUtils.getRandomPlaintextData(
                     count: degree,
                     in: 0..<plaintextModulus)
-                let plaintext: Plaintext<Scheme, Coeff> = try context.encode(values: data, format: .coefficient)
+                let plaintext = try context.encode(values: data, format: .coefficient)
                 let secretKey = try context.generateSecretKey()
 
                 let expandedQueryCount = degree
@@ -79,13 +79,13 @@ extension PirTestUtils {
         /// Tests compressInputsForOneCiphertext and expandCiphertexts roundtrip.
         @inlinable
         public static func oneCiphertextRoundtrip<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Scheme.Context = try TestUtils.getTestContext()
             let degree = context.degree
             let logDegree = degree.log2
             for inputCount in 1...degree {
                 let data: [Scheme.Scalar] = (0..<inputCount).map { _ in Scheme.Scalar(Int.random(in: 0...1)) }
                 let nonZeroInputs = data.enumerated().compactMap { $0.element == 0 ? nil : $0.offset }
-                let plaintext: Plaintext<Scheme, Coeff> = try PirUtil.compressInputsForOneCiphertext(
+                let plaintext = try PirUtil<Scheme>.compressInputsForOneCiphertext(
                     totalInputCount: inputCount,
                     nonZeroInputs: nonZeroInputs,
                     context: context)
@@ -114,7 +114,7 @@ extension PirTestUtils {
         /// Tests compressInputs and expandCiphertexts roundtrip with multiple ciphertexts.
         @inlinable
         public static func multipleCiphertextsRoundtrip<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: Scheme.Context = try TestUtils.getTestContext()
             let degree = TestUtils.testPolyDegree
             let logDegree = degree.log2
             for inputCount in 1...degree * 2 {

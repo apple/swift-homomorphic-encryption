@@ -45,13 +45,11 @@ func checkDecryptsDecodes<Scheme: HeScheme>(
 let encryptionParameters =
     try EncryptionParameters<UInt32>(from: .insecure_n_8_logq_5x18_logt_5)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context<Bfv<UInt32>>(encryptionParameters: encryptionParameters)
+let context = try Bfv<UInt32>.Context(encryptionParameters: encryptionParameters)
 
 // We encode N values in coefficient format and SIMD encoding.
 let values = (0..<8).map { UInt32($0) }
-let plaintext: Bfv<UInt32>.CoeffPlaintext = try context.encode(
-    values: values,
-    format: .simd)
+let plaintext = try context.encode(values: values, format: .simd)
 
 // We generate a secret key and encrypt the plaintext.
 let secretKey = try context.generateSecretKey()

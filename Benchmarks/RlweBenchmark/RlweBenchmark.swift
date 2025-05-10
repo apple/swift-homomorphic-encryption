@@ -43,7 +43,7 @@ func getRandomPlaintextData<T: ScalarType>(count: Int, in range: Range<T>) -> [T
 
 struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
     var encryptionParameters: EncryptionParameters<Scheme.Scalar>
-    var context: Context<Scheme>
+    var context: Scheme.Context
 
     let data: [Scheme.Scalar]
     let signedData: [Scheme.SignedScalar]
@@ -69,7 +69,7 @@ struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
                                                                  Scheme.Scalar.self),
                                                              errorStdDev: ErrorStdDev.stdDev32,
                                                              securityLevel: SecurityLevel.quantum128)
-        self.context = try Context(encryptionParameters: encryptionParameters)
+        self.context = try Scheme.Context(encryptionParameters: encryptionParameters)
         self.secretKey = try context.generateSecretKey()
         let columnElement = GaloisElement.swappingRows(degree: polyDegree)
         let rowElement = try GaloisElement.rotatingColumns(by: rotateColumnsStep, degree: polyDegree)
@@ -163,7 +163,7 @@ func contextInitBenchmark<Scheme: HeScheme>(_: Scheme.Type, config: EncryptionPa
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(config: config)
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                try blackHole(_ = Context<Scheme>(encryptionParameters: encryptionParameters))
+                try blackHole(_ = Scheme.Context(encryptionParameters: encryptionParameters))
             }
         }
     }
@@ -279,8 +279,7 @@ func decodeSignedSimdBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                try blackHole(
-                    benchmarkContext.coeffPlaintext.decode(format: .simd) as [Scheme.SignedScalar])
+                try blackHole(benchmarkContext.coeffPlaintext.decode(format: .simd) as [Scheme.SignedScalar])
             }
         }
     }
@@ -292,7 +291,7 @@ func generateSecretKeyBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void 
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                try blackHole(benchmarkContext.context.generateSecretKey())
+                try blackHole(benchmarkContext.context.generateSecretKey() as SecretKey<Scheme>)
             }
         }
     }
@@ -320,8 +319,7 @@ func encryptBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                try blackHole(
-                    benchmarkContext.coeffPlaintext.encrypt(using: benchmarkContext.secretKey))
+                try blackHole(benchmarkContext.coeffPlaintext.encrypt(using: benchmarkContext.secretKey))
             }
         }
     }
@@ -333,9 +331,7 @@ func decryptBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
-                try blackHole(
-                    benchmarkContext.evalCiphertext.decrypt(
-                        using: benchmarkContext.secretKey))
+                try blackHole(benchmarkContext.evalCiphertext.decrypt(using: benchmarkContext.secretKey))
             }
         }
     }

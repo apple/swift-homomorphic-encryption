@@ -88,7 +88,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     @usableFromInline package let plaintexts: [Plaintext<Scheme, Format>]
 
     /// The parameter context.
-    @usableFromInline package var context: Context<Scheme> {
+    @usableFromInline package var context: Scheme.Context {
         precondition(!plaintexts.isEmpty, "Plaintext array cannot be empty")
         return plaintexts[0].context
     }
@@ -153,7 +153,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Throws: Error upon failure to create the plaitnext matrix.
     @inlinable
     public init(
-        context: Context<Scheme>,
+        context: Scheme.Context,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
         signedValues: [Scheme.SignedScalar],
@@ -187,7 +187,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Throws: Error upon failure to create the plaitnext matrix.
     @inlinable
     package init(
-        context: Context<Scheme>,
+        context: Scheme.Context,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
         values: [Scalar],
@@ -272,7 +272,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Returns: The plaintexts for `denseColumn` packing.
     /// - Throws: Error upon plaintext to compute the plaintexts.
     @inlinable
-    static func denseColumnPlaintexts(context: Context<Scheme>, dimensions: MatrixDimensions,
+    static func denseColumnPlaintexts(context: Scheme.Context, dimensions: MatrixDimensions,
                                       values: [Scalar]) throws -> [Scheme.CoeffPlaintext]
     {
         let degree = context.degree
@@ -329,7 +329,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Throws: Error upon failure to compute the plaintexts.
     @inlinable
     static func denseRowPlaintexts(
-        context: Context<Scheme>,
+        context: Scheme.Context,
         dimensions: MatrixDimensions,
         values: [Scalar]) throws -> [Plaintext<Scheme, Coeff>]
     {
@@ -370,7 +370,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
                 packedValues += repeatElement(0, count: simdColumnCount - packedValues.count)
             }
             if packedValues.count + dimensions.columnCount > context.degree {
-                let plaintext: Plaintext<Scheme, Coeff> = try context.encode(values: packedValues, format: .simd)
+                let plaintext = try context.encode(values: packedValues, format: .simd)
                 packedValues.removeAll(keepingCapacity: true)
                 plaintexts.append(plaintext)
             }
@@ -405,7 +405,7 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     /// - Throws: Error upon failure to compute the plaintexts.
     @inlinable
     static func diagonalPlaintexts(
-        context: Context<Scheme>,
+        context: Scheme.Context,
         dimensions: MatrixDimensions,
         packing: MatrixPacking,
         values: [Scalar]) throws -> [Scheme.CoeffPlaintext]

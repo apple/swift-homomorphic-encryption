@@ -243,7 +243,7 @@ struct EncryptionParametersTests {
 
             // check skipLSBsForDecryption
             do {
-                let context = try Context<Bfv<UInt64>>(encryptionParameters: params)
+                let context = try Bfv<UInt64>.Context(encryptionParameters: params)
                 let data = TestUtils.getRandomPlaintextData(count: params.polyDegree, in: 0..<params.plaintextModulus)
                 let plaintext = try context.encode(values: data, format: .coefficient)
                 let secretKey = try context.generateSecretKey()

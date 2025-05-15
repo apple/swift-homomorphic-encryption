@@ -26,8 +26,8 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func decryptEval(_ ciphertext: EvalCiphertext,
-                                   using secretKey: SecretKey<Bfv<T>>) throws -> CoeffPlaintext
+    public static func decryptEval(_ ciphertext: EvalCiphertext, using secretKey: SecretKey<Self>) throws ->
+        CoeffPlaintext
     {
         let t = ciphertext.context.plaintextModulus
         let dotProduct = try Self.dotProduct(ciphertext: ciphertext, with: secretKey)

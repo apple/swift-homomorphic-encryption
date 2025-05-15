@@ -26,7 +26,7 @@ extension PirTestUtils {
             let valueSize = 10
             let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: rowCount, valueSize: valueSize)
             let encryptionParameters: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
-            let testContext: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
+            let testContext = try Scheme.Context(encryptionParameters: encryptionParameters)
 
             let keywordConfig = try KeywordPirConfig(
                 dimensionCount: 2,
@@ -52,7 +52,7 @@ extension PirTestUtils {
             server _: PirServer.Type,
             client _: PirClient.Type) throws where PirServer.IndexPir == PirClient.IndexPir
         {
-            let testContext: Context<PirServer.Scheme> = try Context(encryptionParameters: encryptionParameters)
+            let testContext = try PirServer.Scheme.Context(encryptionParameters: encryptionParameters)
             let valueSize = testContext.bytesPerPlaintext / 2
             let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 100, valueSize: valueSize)
 
@@ -61,9 +61,7 @@ extension PirTestUtils {
                                                                     with: testContext)
             #expect(processed.pirParameter.dimensions.product() > 1, "trivial PIR")
 
-            let server = try KeywordPirServer<PirServer>(
-                context: testContext,
-                processed: processed)
+            let server = try KeywordPirServer<PirServer>(context: testContext, processed: processed)
             let client = KeywordPirClient<PirClient>(
                 keywordParameter: keywordConfig.parameter, pirParameter: processed.pirParameter,
                 context: testContext)
@@ -240,7 +238,7 @@ extension PirTestUtils {
             let rowCount = 100
             let valueSize = 9
             let encryptionParams: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
-            let testContext: Context<Scheme> = try Context(encryptionParameters: encryptionParams)
+            let testContext = try Scheme.Context(encryptionParameters: encryptionParams)
             var rng = TestRng()
 
             let (pirParameter, keywordConfig): (IndexPirParameter, KeywordPirConfig) = try {
@@ -322,7 +320,7 @@ extension PirTestUtils {
             let valueSize = 10
             let rlweParameters = PredefinedRlweParameters.n_4096_logq_27_28_28_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParameters)
-            let testContext: Context<Scheme> = try Context(
+            let testContext = try Scheme.Context(
                 encryptionParameters: encryptionParameters)
             let shardCount = 2
 
@@ -405,7 +403,7 @@ extension PirTestUtils {
             // swiftlint:enable nesting
 
             let rlweParams = PredefinedRlweParameters.n_4096_logq_27_28_28_logt_5
-            let context: Context<PirServer.Scheme> = try Context(encryptionParameters: .init(from: rlweParams))
+            let context = try Scheme.Context(encryptionParameters: .init(from: rlweParams))
             let numberOfEntriesPerResponse = 8
             let hashFunctionCount = 2
             var testRng = TestRng()

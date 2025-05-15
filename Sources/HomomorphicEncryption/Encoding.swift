@@ -17,7 +17,7 @@
 
 import ModularArithmetic
 
-extension Context {
+extension HeContext where Self == Scheme.Context {
     /// Encodes `values` in the given format.
     ///
     /// Encoding will use the top-level ciphertext context with all moduli.
@@ -27,9 +27,7 @@ extension Context {
     /// - Returns: The plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
     @inlinable
-    public func encode(values: some Collection<Scalar>,
-                       format: EncodeFormat) throws -> Plaintext<Scheme, Coeff>
-    {
+    public func encode(values: some Collection<Scalar>, format: EncodeFormat) throws -> Plaintext<Scheme, Coeff> {
         try validDataForEncoding(values: values)
         switch format {
         case .coefficient:
@@ -152,16 +150,14 @@ extension Context {
 }
 
 // functions for coefficient encoding/decoding
-extension Context {
+extension HeContext where Self == Scheme.Context {
     /// Encodes a polynomial element-wise in coefficient format.
     ///
     /// Encodes the polynomial
     /// `f(x) = values_0 + values_1 x + ... values_{N_1} x^{N-1}`, padding
     /// with 0 coefficients if fewer than `N` values are provided.
     @inlinable
-    func encodeCoefficient(values: some Collection<Scalar>) throws
-        -> Plaintext<Scheme, Coeff>
-    {
+    func encodeCoefficient(values: some Collection<Scalar>) throws -> Plaintext<Scheme, Coeff> {
         if values.isEmpty {
             return Plaintext<Scheme, Coeff>(context: self, poly: PolyRq.zero(context: plaintextContext))
         }
@@ -182,13 +178,13 @@ extension Context {
     /// - Parameter plaintext: Plaintext to decode.
     /// - Returns: The decoded plaintext values, each in `[0, t - 1]` for plaintext modulus `t`.
     @inlinable
-    func decodeCoefficient(plaintext: Plaintext<Scheme, Coeff>) -> [Scalar] {
+    func decodeCoefficient<Scheme: HeScheme>(plaintext: Plaintext<Scheme, Coeff>) -> [Scheme.Scalar] {
         plaintext.poly.data.data
     }
 }
 
 // code for SIMD encoding/decoding
-extension Context {
+extension HeContext where Self == Scheme.Context {
     @inlinable
     static func generateEncodingMatrix(encryptionParameters: EncryptionParameters<Scalar>) -> [Int] {
         guard encryptionParameters.plaintextModulus.isNttModulus(for: encryptionParameters.polyDegree) else {
@@ -218,17 +214,17 @@ extension Context {
     func encodeSimd(values: some Collection<Scalar>) throws -> Plaintext<Scheme, Coeff> {
         guard !simdEncodingMatrix.isEmpty else { throw HeError.simdEncodingNotSupported(for: encryptionParameters) }
         let polyDegree = encryptionParameters.polyDegree
-        var array = Array2d<Scalar>.zero(rowCount: 1, columnCount: polyDegree)
+        var array = Array2d<Scheme.Scalar>.zero(rowCount: 1, columnCount: polyDegree)
         for (index, value) in values.enumerated() {
-            array[0, simdEncodingMatrix[index]] = Scalar(value)
+            array[0, simdEncodingMatrix[index]] = Scheme.Scalar(value)
         }
-        let poly = PolyRq<_, Eval>(context: plaintextContext, data: array)
+        let poly = PolyRq<Scheme.Scalar, Eval>(context: plaintextContext, data: array)
         let coeffPoly = try poly.inverseNtt()
         return Plaintext<Scheme, Coeff>(context: self, poly: coeffPoly)
     }
 
     @inlinable
-    func decodeSimd(plaintext: Plaintext<Scheme, Coeff>) throws -> [Scalar] {
+    func decodeSimd<Scheme: HeScheme>(plaintext: Plaintext<Scheme, Coeff>) throws -> [Scheme.Scalar] {
         guard !simdEncodingMatrix.isEmpty else {
             throw HeError.simdEncodingNotSupported(for: encryptionParameters)
         }

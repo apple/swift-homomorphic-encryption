@@ -20,7 +20,7 @@ public enum PirTestUtils {
     /// Creates test parameters.
     public static func getTestParameter<Pir: IndexPirProtocol>(
         pir _: Pir.Type,
-        with context: Context<Pir.Scheme>,
+        with context: Pir.Scheme.Context,
         entryCount: Int,
         entrySizeInBytes: Int,
         keyCompression: PirKeyCompressionStrategy,

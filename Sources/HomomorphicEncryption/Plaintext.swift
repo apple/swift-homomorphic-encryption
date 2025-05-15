@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
     public typealias SignedScalar = Scheme.SignedScalar
 
     /// Context for HE computation.
-    public let context: Context<Scheme>
+    public let context: Scheme.Context
 
     @usableFromInline var poly: PolyRq<Scalar, Format>
 
     @inlinable
-    package init(context: Context<Scheme>, poly: PolyRq<Scalar, Format>) {
+    package init(context: Scheme.Context, poly: PolyRq<Scalar, Format>) {
         self.context = context
         self.poly = poly
     }
@@ -136,7 +136,7 @@ extension Plaintext {
             return plaintext
         }
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count
-        let rnsTool = context.getRnsTool(moduliCount: moduliCount)
+        let rnsTool = try context.getRnsTool(moduliCount: moduliCount)
         let polyContext = try context.ciphertextContext.getContext(moduliCount: moduliCount)
 
         var poly: PolyRq<Scalar, Coeff> = PolyRq.zero(context: polyContext)
@@ -162,7 +162,7 @@ extension Plaintext {
         if let plaintext = self as? Plaintext<Scheme, Coeff> {
             return plaintext
         }
-        let rnsTool = context.getRnsTool(moduliCount: moduli.count)
+        let rnsTool = try context.getRnsTool(moduliCount: moduli.count)
         var plaintextData = try poly.convertToCoeffFormat().data
         for index in plaintextData.rowIndices(row: 0) {
             let condition = plaintextData[index].constantTimeGreaterThanOrEqual(rnsTool.tThreshold)

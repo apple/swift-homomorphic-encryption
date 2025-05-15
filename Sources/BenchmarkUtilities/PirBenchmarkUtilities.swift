@@ -379,8 +379,11 @@ public func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type, entryCount: In
                                                                       using: benchmarkContext.evaluationKey))
             }
             benchmark.measurement(.evaluationKeySize, benchmarkContext.evaluationKeySize)
+            benchmark.measurement(.evaluationKeyCount, benchmarkContext.evaluationKeyCount)
             benchmark.measurement(.querySize, benchmarkContext.querySize)
+            benchmark.measurement(.queryCiphertextCount, benchmarkContext.queryCiphertextCount)
             benchmark.measurement(.responseSize, benchmarkContext.responseSize)
+            benchmark.measurement(.responseCiphertextCount, benchmarkContext.responseCiphertextCount)
             benchmark.measurement(.noiseBudget, benchmarkContext.noiseBudget)
         } setup: {
             try await KeywordPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>(

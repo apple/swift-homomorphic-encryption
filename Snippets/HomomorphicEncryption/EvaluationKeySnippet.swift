@@ -46,7 +46,7 @@ let encryptionParameters =
     try EncryptionParameters<UInt32>(from: .insecure_n_8_logq_5x18_logt_5)
 precondition(encryptionParameters.plaintextModulus == 17)
 // Perform pre-computation for HE computation with these parameters.
-let context = try Context<Bfv<UInt32>>(encryptionParameters: encryptionParameters)
+let context = try Context<UInt32>(encryptionParameters: encryptionParameters)
 
 // We encode N values using SIMD encoding.
 // Each value is a Bfv<UInt32>.Scalar, which is UInt32.
@@ -56,7 +56,7 @@ let plaintext: Bfv<UInt32>.CoeffPlaintext = try context.encode(
     format: .simd)
 
 // We generate a secret key and encrypt the plaintext.
-let secretKey = try context.generateSecretKey()
+let secretKey: SecretKey<Bfv<UInt32>> = try context.generateSecretKey()
 var ciphertext = try plaintext.encrypt(using: secretKey)
 
 // We generate an evaluation key. This is a key used in some HE operations.

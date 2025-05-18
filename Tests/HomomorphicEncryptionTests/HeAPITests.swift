@@ -19,7 +19,7 @@ import Testing
 @Suite
 struct HeAPITests {
     private struct TestEnv<Scheme: HeScheme> {
-        let context: Context<Scheme>
+        let context: Context<Scheme.Scalar>
         let data1: [Scheme.Scalar]
         let data2: [Scheme.Scalar]
         let coeffPlaintext1: Plaintext<Scheme, Coeff>
@@ -33,7 +33,7 @@ struct HeAPITests {
         let evaluationKey: EvaluationKey<Scheme>?
 
         init(
-            context: Context<Scheme>,
+            context: Context<Scheme.Scalar>,
             format: EncodeFormat,
             galoisElements: [Int] = [],
             relinearizationKey: Bool = false) throws
@@ -86,37 +86,37 @@ struct HeAPITests {
 
     @Test
     func testNoOpScheme() async throws {
-        let context: Context<NoOpScheme> = try TestUtils.getTestContext()
-        try HeAPITestHelpers.schemeEncodeDecodeTest(context: context)
-        try HeAPITestHelpers.schemeEncryptDecryptTest(context: context)
-        try HeAPITestHelpers.schemeEncryptZeroDecryptTest(context: context)
-        try HeAPITestHelpers.schemeEncryptZeroAddDecryptTest(context: context)
-        try HeAPITestHelpers.schemeEncryptZeroMultiplyDecryptTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextAddTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextSubtractTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextCiphertextMultiplyTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextPlaintextAddTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextPlaintextSubtractTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplyTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextMultiplyAddTest(context: context)
-        try HeAPITestHelpers.schemeCiphertextMultiplyAddPlainTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextMultiplySubtractTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextMultiplySubtractPlainTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextPlaintextInnerProductTest(context: context)
-        try await HeAPITestHelpers.schemeCiphertextCiphertextInnerProductTest(context: context)
+        let context: Context<NoOpScheme.Scalar> = try TestUtils.getTestContext()
+        try HeAPITestHelpers.schemeEncodeDecodeTest(context: context, scheme: NoOpScheme.self)
+        try HeAPITestHelpers.schemeEncryptDecryptTest(context: context, scheme: NoOpScheme.self)
+        try HeAPITestHelpers.schemeEncryptZeroDecryptTest(context: context, scheme: NoOpScheme.self)
+        try HeAPITestHelpers.schemeEncryptZeroAddDecryptTest(context: context, scheme: NoOpScheme.self)
+        try HeAPITestHelpers.schemeEncryptZeroMultiplyDecryptTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextAddTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextSubtractTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextCiphertextMultiplyTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextPlaintextAddTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextPlaintextSubtractTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplyTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextMultiplyAddTest(context: context, scheme: NoOpScheme.self)
+        try HeAPITestHelpers.schemeCiphertextMultiplyAddPlainTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextMultiplySubtractTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextMultiplySubtractPlainTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextPlaintextInnerProductTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextCiphertextInnerProductTest(context: context, scheme: NoOpScheme.self)
         try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
-        try await HeAPITestHelpers.schemeRotationTest(context: context)
-        try await HeAPITestHelpers.schemeApplyGaloisTest(context: context)
+        try await HeAPITestHelpers.schemeRotationTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeApplyGaloisTest(context: context, scheme: NoOpScheme.self)
     }
 
-    private func bfvTestKeySwitching<T>(context: Context<Bfv<T>>) throws {
+    private func bfvTestKeySwitching<T>(context: Context<T>) throws {
         guard context.supportsEvaluationKey else {
             return
         }
 
-        let testEnv = try TestEnv(context: context, format: .coefficient)
-        let newSecretKey = try context.generateSecretKey()
+        let testEnv = try TestEnv<Bfv<T>>(context: context, format: .coefficient)
+        let newSecretKey: SecretKey<Bfv<T>> = try context.generateSecretKey()
 
         let keySwitchKey = try Bfv<T>.generateKeySwitchKey(context: context,
                                                            currentKey: testEnv.secretKey.poly,
@@ -126,7 +126,7 @@ struct HeAPITests {
             target: testEnv.ciphertext1.polys[1],
             keySwitchingKey: keySwitchKey)
         switchedPolys[0] += testEnv.ciphertext1.polys[0]
-        let switchedCiphertext = Ciphertext(context: context, polys: switchedPolys, correctionFactor: 1)
+        let switchedCiphertext = Bfv<T>.CanonicalCiphertext(context: context, polys: switchedPolys, correctionFactor: 1)
         let plaintext = try switchedCiphertext.decrypt(using: newSecretKey)
         let decrypted: [T] = try plaintext.decode(format: .coefficient)
 
@@ -163,32 +163,32 @@ struct HeAPITests {
             securityLevel: SecurityLevel.unchecked)
 
         for encryptionParameters in predefined + [custom, manyModuli] {
-            let context = try Context<Bfv<T>>(encryptionParameters: encryptionParameters)
-            try HeAPITestHelpers.schemeEncodeDecodeTest(context: context)
-            try HeAPITestHelpers.schemeEncryptDecryptTest(context: context)
-            try HeAPITestHelpers.schemeEncryptZeroDecryptTest(context: context)
-            try HeAPITestHelpers.schemeEncryptZeroAddDecryptTest(context: context)
-            try HeAPITestHelpers.schemeEncryptZeroMultiplyDecryptTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextAddTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextSubtractTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextCiphertextMultiplyTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextPlaintextAddTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextPlaintextSubtractTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplyTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextMultiplyAddTest(context: context)
-            try HeAPITestHelpers.schemeCiphertextMultiplyAddPlainTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextMultiplySubtractTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextMultiplySubtractPlainTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextPlaintextInnerProductTest(context: context)
-            try await HeAPITestHelpers.schemeCiphertextCiphertextInnerProductTest(context: context)
+            let context = try Context<T>(encryptionParameters: encryptionParameters)
+            try HeAPITestHelpers.schemeEncodeDecodeTest(context: context, scheme: Bfv<T>.self)
+            try HeAPITestHelpers.schemeEncryptDecryptTest(context: context, scheme: Bfv<T>.self)
+            try HeAPITestHelpers.schemeEncryptZeroDecryptTest(context: context, scheme: Bfv<T>.self)
+            try HeAPITestHelpers.schemeEncryptZeroAddDecryptTest(context: context, scheme: Bfv<T>.self)
+            try HeAPITestHelpers.schemeEncryptZeroMultiplyDecryptTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextAddTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextSubtractTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextCiphertextMultiplyTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextPlaintextAddTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextPlaintextSubtractTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplyTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextMultiplyAddTest(context: context, scheme: Bfv<T>.self)
+            try HeAPITestHelpers.schemeCiphertextMultiplyAddPlainTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextMultiplySubtractTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextMultiplySubtractPlainTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextPlaintextInnerProductTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextCiphertextInnerProductTest(context: context, scheme: Bfv<T>.self)
             try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
-            try await HeAPITestHelpers.schemeRotationTest(context: context)
-            try await HeAPITestHelpers.schemeApplyGaloisTest(context: context)
+            try await HeAPITestHelpers.schemeRotationTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeApplyGaloisTest(context: context, scheme: Bfv<T>.self)
             try bfvTestKeySwitching(context: context)
-            try HeAPITestHelpers.noiseBudgetTest(context: context)
-            try await HeAPITestHelpers.repeatedAdditionTest(context: context)
-            try await HeAPITestHelpers.multiplyInverseTest(context: context)
+            try HeAPITestHelpers.noiseBudgetTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.repeatedAdditionTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.multiplyInverseTest(context: context, scheme: Bfv<T>.self)
         }
     }
 

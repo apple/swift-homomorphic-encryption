@@ -54,7 +54,7 @@ extension CiphertextMatrix {
     @inlinable
     public init(
         deserialize serialized: SerializedCiphertextMatrix<Scalar>,
-        context: Context<Scheme>,
+        context: Context<Scheme.Scalar>,
         moduliCount: Int? = nil) throws
     {
         let ciphertexts: [Ciphertext<Scheme, Format>] = try serialized.ciphertexts.map { serializedCiphertext in

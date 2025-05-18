@@ -154,7 +154,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     ///   - context: Context for HE computation.
     ///   - processed: Processed database.
     /// - Throws: Error upon failure to initialize the server.
-    public required init(context: Context<Scheme>,
+    public required init(context: Context<Scheme.Scalar>,
                          processed: ProcessedDatabaseWithParameters<Scheme>) throws
     {
         if let keywordPirParameter = processed.keywordPirParameter {
@@ -186,7 +186,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     @inlinable
     public static func process(database: some Collection<KeywordValuePair>,
                                config: KeywordPirConfig,
-                               with context: Context<Scheme>,
+                               with context: Context<Scheme.Scalar>,
                                onEvent: @escaping (ProcessKeywordDatabase.ProcessShardEvent) throws -> Void = { _ in },
                                symmetricPirConfig: SymmetricPirConfig? = nil)
         throws -> ProcessedDatabaseWithParameters<Scheme>
@@ -288,7 +288,7 @@ public final class KeywordPirClient<PirClient: IndexPirClient>: KeywordPirProtoc
     public required init(
         keywordParameter: KeywordPirParameter,
         pirParameter: IndexPirParameter,
-        context: Context<IndexPir.Scheme>)
+        context: Context<IndexPir.Scheme.Scalar>)
     {
         self.keywordParameter = keywordParameter
         self.indexPirClient = PirClient(parameter: pirParameter, context: context)

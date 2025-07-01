@@ -154,9 +154,35 @@ other usecase has 57 shards).
 Some PIR algorithms, such as MulPir, include an optimization which returns multiple keyword-value pairs in the PIR
 response, beyond the keyword-value pair requested by the client. However, this may be undesirable, e.g., if the database
 contains sensitive IP. `Symmetric PIR` is a variant of PIR which protects the unrequested server values from the client,
-in addition to the standard PIR guarantee protecting the client's keyword from the server. A best-effort approach
-towards enabling symmetric PIR is to pad the entries, such that only a limited number of entries are in the server
-response. However, this approach will increase server runtime.
+in addition to the standard PIR guarantee protecting the client's keyword from the server.
+
+There are two approaches to Symmetric PIR in Swift Homomorphic Encryption. The Fully Oblivious Symmetric PIR approach uses additional cryptographic primitives to guarantee that the client learns only the single keyword-value pair it requested, and is oblivious to other entries. The other is a best-effort approach that imposes an upper bound on the number of additional keyword-value pairs the client learns. We describe both these approaches next.
+
+##### Fully Oblivious Symmetric PIR
+
+In this approach, the server encrypts each keyword-value pair with a specific key derived from a single database encryption key. When querying, client first makes an extra call to the server, to learn information which would help it decrypt the entry it is interested in. Thus, this approach requires one additional call to the server.
+
+To process the database for Symmetric PIR, add the following to the configuration file.
+
+```json
+"symmetricPirArguments": {
+    "outputDatabaseEncryptionKeyFilePath": "path/to/output/key-file.txt"
+}
+```
+
+This will generate a fresh database encryption key, write it to `path/to/output/key-file.txt`, and use it for processing the database for Symmetric PIR.
+
+In case you want to use a database encryption key file that was generated earlier, you can specify the path in `databaseEncryptionKeyFilePath` instead, as follows.
+
+```json
+"symmetricPirArguments": {
+    "databaseEncryptionKeyFilePath": "path/to/key-file.txt"
+}
+```
+
+Note that only one of `outputDatabaseEncryptionKeyFilePath` and `databaseEncryptionKeyFilePath` should be present in the configuration.
+
+##### Best-Effort Symmetric PIR
 
 > Warning: This is only a best-effort approach, because HE does not guarantee *circuit privacy*.
 

@@ -145,7 +145,7 @@ struct ProcessCommand: ParsableCommand {
                     throw PirError.invalidOPRFHexSecretKey
                 }
                 try configType.validateEncryptionKey(secretKey)
-                return try SymmetricPirConfig(oprfSecretKey: secretKey, configType: configType)
+                return try SymmetricPirConfig(oprfSecretKey: Secret(value: secretKey), configType: configType)
             } catch {
                 throw PirError.failedToLoadOPRFKey(underlyingError: "\(error)", filePath: filePath)
             }

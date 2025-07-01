@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Foundation
 import ModularArithmetic
 
 extension Sequence where Element: Hashable {
@@ -67,6 +68,13 @@ extension [UInt8] {
         }
 
         self = data
+    }
+}
+
+extension [UInt8] {
+    /// Hexadecimal encoded bytes.
+    public var hexString: String {
+        map { String(format: "%02x", $0) }.joined()
     }
 }
 

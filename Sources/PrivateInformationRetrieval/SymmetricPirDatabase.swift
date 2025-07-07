@@ -94,10 +94,64 @@ public struct SymmetricPirClientConfig: Codable, Hashable, Sendable {
     }
 }
 
+/// A wrapper for secret values.
+public final class Secret: Equatable, Hashable, @unchecked Sendable {
+    /// Secret value bytes.
+    public var value: [UInt8]
+
+    @inlinable
+    public init(value: [UInt8]) {
+        self.value = value
+    }
+
+    public static func == (lhs: Secret, rhs: Secret) -> Bool {
+        lhs.value == rhs.value
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(value)
+    }
+
+    // Sets all bytes to zero.
+    @inlinable
+    public func zeroize() {
+        let zeroizeSize = value.count * MemoryLayout<UInt8>.size
+        value.withUnsafeMutableBytes { dataPointer in
+            // swiftlint:disable:next force_unwrapping
+            HomomorphicEncryption.zeroize(dataPointer.baseAddress!, zeroizeSize)
+        }
+    }
+
+    deinit {
+        zeroize()
+    }
+}
+
+extension Secret: Codable {
+    enum CodingKeys: String, CodingKey {
+        case value
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode("****", forKey: .value)
+    }
+}
+
+extension Secret: CustomStringConvertible, CustomDebugStringConvertible {
+    public var description: String {
+        "Secret(value: ****)"
+    }
+
+    public var debugDescription: String {
+        "Secret(value: ****)"
+    }
+}
+
 /// Configuration for Symmetric PIR.
 public struct SymmetricPirConfig: Codable, Hashable, Sendable {
     /// Secret key for keyword database encryption.
-    public let oprfSecretKey: [UInt8]
+    public let oprfSecretKey: Secret
     /// Symmetric PIR config type.
     public let configType: SymmetricPirConfigType
 
@@ -108,11 +162,11 @@ public struct SymmetricPirConfig: Codable, Hashable, Sendable {
     /// - Throws: Error on invalid key size.
     @inlinable
     public init(
-        oprfSecretKey: [UInt8],
+        oprfSecretKey: Secret,
         configType: SymmetricPirConfigType = .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128) throws
     {
-        guard oprfSecretKey.count == configType.oprfKeySize else {
-            throw PirError.invalidOPRFKeySize(oprfSecretKey.count, expectedSize: Int(configType.oprfKeySize))
+        guard oprfSecretKey.value.count == configType.oprfKeySize else {
+            throw PirError.invalidOPRFKeySize(oprfSecretKey.value.count, expectedSize: Int(configType.oprfKeySize))
         }
         self.oprfSecretKey = oprfSecretKey
         self.configType = configType
@@ -122,7 +176,7 @@ public struct SymmetricPirConfig: Codable, Hashable, Sendable {
     public func clientConfig() throws -> SymmetricPirClientConfig {
         switch configType {
         case .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128:
-            let serverPublicKey = try OprfPrivateKey(rawRepresentation: oprfSecretKey).publicKey
+            let serverPublicKey = try OprfPrivateKey(rawRepresentation: oprfSecretKey.value).publicKey
                 .oprfRepresentation
             return SymmetricPirClientConfig(serverPublicKey: [UInt8](serverPublicKey), configType: configType)
         }
@@ -142,7 +196,7 @@ extension KeywordDatabase {
         guard case .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128 = config.configType else {
             throw PirError.invalidSymmetricPirConfig(symmetricPirConfig: config)
         }
-        let oprfSecretKey = try OprfPrivateKey(rawRepresentation: config.oprfSecretKey)
+        let oprfSecretKey = try OprfPrivateKey(rawRepresentation: config.oprfSecretKey.value)
 
         return try database.map { entry in
             let oprfOutputHash = try [UInt8](oprfSecretKey.evaluate(Data(entry.keyword)))

@@ -25,7 +25,7 @@ extension PirTestUtils {
         public static func generateSymmetricPirConfig() throws -> SymmetricPirConfig {
             let secretKey = [UInt8](OprfPrivateKey().rawRepresentation)
             return try SymmetricPirConfig(
-                oprfSecretKey: secretKey, configType: .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128)
+                oprfSecretKey: Secret(value: secretKey), configType: .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128)
         }
 
         /// Tests symmetric PIR round trip.

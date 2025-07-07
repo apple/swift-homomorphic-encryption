@@ -68,6 +68,13 @@ extension [UInt8] {
     }
 }
 
+extension [UInt8] {
+    /// Hexadecimal encoded bytes.
+    public var hexString: String {
+        map { String(format: "%02x", $0) }.joined()
+    }
+}
+
 extension Array where Element: FixedWidthInteger {
     /// Computes the product of the elements in the array.
     ///

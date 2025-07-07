@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import ArgumentParser
+import Crypto
 import Foundation
 import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
@@ -36,23 +37,58 @@ enum TableSizeOption: Codable, Equatable, Hashable {
 /// The configuration for Symmetric PIR.
 struct SymmetricPirArguments: Codable, Hashable {
     /// File path for key with which database will be encrypted.
-    let databaseEncryptionKeyFilePath: String
+    ///
+    /// Also see ``outputDatabaseEncryptionKeyFilePath``.
+    let databaseEncryptionKeyFilePath: String?
     /// Config type for Symmetric PIR.
-    let configType: SymmetricPirConfigType
+    let configType: SymmetricPirConfigType?
+    /// Path to write newly generated database encryption key.
+    ///
+    /// If this is specified, a new database encryption key will be generated and written to this path.
+    /// This key will be used to encrypt the database for Symmetric PIR.
+    /// Exactly one of ``outputDatabaseEncryptionKeyFilePath`` or ``databaseEncryptionKeyFilePath`` should be present.
+    let outputDatabaseEncryptionKeyFilePath: String?
 
     /// Returns a parsed `SymmetricPirConfig` for given parameters.
     /// - Returns: Symmetric PIR config.
     func resolve() throws -> SymmetricPirConfig {
-        do {
-            let secretKeyString = try String(contentsOfFile: databaseEncryptionKeyFilePath, encoding: .utf8)
-            guard let secretKey = Array(hexEncoded: secretKeyString) else {
-                throw PirError.invalidOPRFHexSecretKey
-            }
-            try configType.validateEncryptionKey(secretKey)
-            return try SymmetricPirConfig(oprfSecretKey: secretKey, configType: configType)
-        } catch {
-            throw PirError.failedToLoadOPRFKey(underlyingError: "\(error)", filePath: databaseEncryptionKeyFilePath)
+        if outputDatabaseEncryptionKeyFilePath != nil, databaseEncryptionKeyFilePath != nil {
+            throw ValidationError(
+                """
+                Both `databaseEncryptionKeyFilePath` and `outputDatabaseEncryptionKeyFilePath` \
+                can not be present in `symmetricPirArguments`.
+                """)
         }
+        let configType = configType ?? .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128
+        if let databaseEncryptionKeyFilePath {
+            do {
+                let secretKeyString = try String(contentsOfFile: databaseEncryptionKeyFilePath, encoding: .utf8)
+                guard let secretKey = Array(hexEncoded: secretKeyString) else {
+                    throw PirError.invalidOPRFHexSecretKey
+                }
+                try configType.validateEncryptionKey(secretKey)
+                return try SymmetricPirConfig(oprfSecretKey: Secret(value: secretKey), configType: configType)
+            } catch {
+                throw PirError.failedToLoadOPRFKey(underlyingError: "\(error)", filePath: databaseEncryptionKeyFilePath)
+            }
+        }
+        if let outputDatabaseEncryptionKeyFilePath {
+            switch configType {
+            case .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128:
+                let secretKey = [UInt8](P384._VOPRF.PrivateKey().rawRepresentation)
+                try secretKey.hexString.write(
+                    toFile: outputDatabaseEncryptionKeyFilePath,
+                    atomically: true,
+                    encoding: .utf8)
+                return try SymmetricPirConfig(
+                    oprfSecretKey: Secret(value: secretKey), configType: .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128)
+            }
+        }
+        throw ValidationError(
+            """
+            One of `databaseEncryptionKeyFilePath` or `outputDatabaseEncryptionKeyFilePath`\
+            should be present in `symmetricPirArguments`.
+            """)
     }
 }
 

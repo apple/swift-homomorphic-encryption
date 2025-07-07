@@ -61,7 +61,7 @@ struct SymmetricPirTests {
             sharding: .shardCount(shardCount),
             symmetricPirConfig: config)
 
-        let oprfSecretKey = try OprfPrivateKey(rawRepresentation: config.oprfSecretKey)
+        let oprfSecretKey = try OprfPrivateKey(rawRepresentation: config.oprfSecretKey.value)
 
         let testIndex = Int.random(in: 0..<rowCount)
         let testKeyword = Data(testDatabase[testIndex].keyword)

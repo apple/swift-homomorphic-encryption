@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,26 @@
 #if canImport(Darwin)
 import Darwin
 
+/// Set bytes to zero.
+/// - Parameters:
+///   - s: Pointer to memory region to be zeroed out.
+///   - n: Number of bytes to be zeroed out.
+@inlinable
 // swiftlint:disable:next implicitly_unwrapped_optional attributes
-@inlinable func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
+public func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
     let exitCode = memset_s(s, n, 0, n)
     precondition(exitCode == 0, "memset_s returned exit code \(exitCode)")
 }
 #else
 import CUtil
 
+/// Set bytes to zero.
+/// - Parameters:
+///   - s: Pointer to memory region to be zeroed out.
+///   - n: Number of bytes to be zeroed out.
+@inlinable
 // swiftlint:disable:next implicitly_unwrapped_optional attributes
-@inlinable func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
+public func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
     c_zeroize(s, n)
 }
 #endif

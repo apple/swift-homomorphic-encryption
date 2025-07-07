@@ -47,7 +47,7 @@ public struct OprfServer {
         guard case .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128 = symmetricPirConfig.configType else {
             throw PirError.invalidSymmetricPirConfig(symmetricPirConfig: symmetricPirConfig)
         }
-        self.oprfPrivateKey = try OprfPrivateKey(rawRepresentation: symmetricPirConfig.oprfSecretKey)
+        self.oprfPrivateKey = try OprfPrivateKey(rawRepresentation: symmetricPirConfig.oprfSecretKey.value)
     }
 
     /// Compute OPRF response.

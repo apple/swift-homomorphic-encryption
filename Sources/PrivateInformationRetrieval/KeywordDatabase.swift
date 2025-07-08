@@ -487,11 +487,10 @@ public enum ProcessKeywordDatabase {
     public static func processShard<Scheme: HeScheme>(shard: KeywordDatabaseShard,
                                                       with arguments: Arguments<Scheme.Scalar>,
                                                       onEvent: @escaping (ProcessShardEvent) throws -> Void = { _ in
-                                                      }) throws
-        -> ProcessedDatabaseWithParameters<Scheme>
+                                                      }) throws -> ProcessedDatabaseWithParameters<Scheme>
     {
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
-        let context = try Context<Scheme>(encryptionParameters: arguments.encryptionParameters)
+        let context = try Scheme.Context(encryptionParameters: arguments.encryptionParameters)
         guard arguments.algorithm == .mulPir else {
             throw PirError.invalidPirAlgorithm(arguments.algorithm)
         }
@@ -515,7 +514,7 @@ public enum ProcessKeywordDatabase {
         shard: ProcessedDatabaseWithParameters<Scheme>,
         row: KeywordValuePair,
         trials: Int,
-        context: Context<Scheme>) throws -> ShardValidationResult<Scheme>
+        context: Scheme.Context) throws -> ShardValidationResult<Scheme>
     {
         guard trials > 0 else {
             throw PirError.validationError("Invalid trialsPerShard: \(trials)")
@@ -596,7 +595,7 @@ public enum ProcessKeywordDatabase {
         var evaluationKeyConfig = EvaluationKeyConfig()
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
 
-        let context = try Context<Scheme>(encryptionParameters: arguments.encryptionParameters)
+        let context = try Scheme.Context(encryptionParameters: arguments.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(
             rows: rows,
             sharding: arguments.databaseConfig.sharding,

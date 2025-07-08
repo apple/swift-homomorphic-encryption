@@ -43,7 +43,7 @@ extension PrivateNearestNeighborSearchUtil {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
@@ -72,7 +72,7 @@ extension PrivateNearestNeighborSearchUtil {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
@@ -109,7 +109,7 @@ extension PrivateNearestNeighborSearchUtil {
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
 
             for rowCount in 1..<(2 * degree) {
                 for columnCount in 1..<degree / 2 {

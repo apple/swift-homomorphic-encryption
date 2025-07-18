@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,16 +24,16 @@ public struct HashBucket: Equatable {
     /// One entry in the HashBucket.
     @usableFromInline
     struct HashBucketEntry: Equatable {
-        /// Hash of the keyword.
-        @usableFromInline let keywordHash: KeywordHash
-        /// Value.
-        @usableFromInline let value: HashBucketValue
-
         /// Maximum size of the value.
         @usableFromInline static var maxValueSize: Int {
             // Constrained by serialization.
             Int(UInt16.max)
         }
+
+        /// Hash of the keyword.
+        @usableFromInline let keywordHash: KeywordHash
+        /// Value.
+        @usableFromInline let value: HashBucketValue
 
         @inlinable
         init(keywordHash: KeywordHash, value: HashBucketValue) {
@@ -71,6 +71,20 @@ public struct HashBucket: Equatable {
             self.value = value
         }
 
+        /// Returns the number of bytes in a serialized ``HashBucket`` with `value`.
+        @inlinable
+        static func serializedSize(value: HashBucketValue) -> Int {
+            serializedSize(valueSize: value.count)
+        }
+
+        @inlinable
+        static func serializedSize(valueSize: Int) -> Int {
+            var size = MemoryLayout<KeywordHash>.size
+            size += MemoryLayout<UInt16>.size // size of value in bytes
+            size += valueSize // value itself
+            return size
+        }
+
         @inlinable
         func serialize() throws -> [UInt8] {
             guard value.count <= Self.maxValueSize else {
@@ -85,20 +99,6 @@ public struct HashBucket: Equatable {
 
             data += value
             return data
-        }
-
-        /// Returns the number of bytes in a serialized ``HashBucket`` with `value`.
-        @inlinable
-        static func serializedSize(value: HashBucketValue) -> Int {
-            serializedSize(valueSize: value.count)
-        }
-
-        @inlinable
-        static func serializedSize(valueSize: Int) -> Int {
-            var size = MemoryLayout<KeywordHash>.size
-            size += MemoryLayout<UInt16>.size // size of value in bytes
-            size += valueSize // value itself
-            return size
         }
     }
 

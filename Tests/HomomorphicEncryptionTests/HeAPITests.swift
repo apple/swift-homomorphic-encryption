@@ -85,7 +85,7 @@ struct HeAPITests {
     }
 
     @Test
-    func testNoOpScheme() async throws {
+    func noOpScheme() async throws {
         let context: Context<NoOpScheme> = try TestUtils.getTestContext()
         try HeAPITestHelpers.schemeEncodeDecodeTest(context: context)
         try HeAPITestHelpers.schemeEncryptDecryptTest(context: context)
@@ -193,12 +193,12 @@ struct HeAPITests {
     }
 
     @Test
-    func testBfvUInt32() async throws {
+    func bfvUInt32() async throws {
         try await runBfvTests(UInt32.self)
     }
 
     @Test
-    func testBfvUInt64() async throws {
+    func bfvUInt64() async throws {
         try await runBfvTests(UInt64.self)
     }
 }

@@ -28,7 +28,7 @@ extension SerializedCiphertext {
     /// from the size.
     func size() throws -> Int {
         let data = try proto().serializedData()
-        return data.filter { byte in byte != 0 }.count
+        return data.count { byte in byte != 0 }
     }
 }
 

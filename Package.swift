@@ -132,7 +132,6 @@ let package = Package(
                 "PrivateNearestNeighborSearch",
                 .product(name: "Numerics", package: "swift-numerics"),
             ],
-            path: "Sources/TestUtilities",
             swiftSettings: librarySettings),
         .executableTarget(
             name: "PIRGenerateDatabase",
@@ -255,7 +254,6 @@ if enableBenchmarking {
                 "PrivateNearestNeighborSearch",
                 "PrivateNearestNeighborSearchProtobuf",
             ],
-            path: "Sources/BenchmarkUtilities",
             swiftSettings: benchmarkSettings),
         .executableTarget(
             name: "PolyBenchmark",

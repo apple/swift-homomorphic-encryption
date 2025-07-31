@@ -19,7 +19,7 @@ import HomomorphicEncryptionProtobuf
 import PrivateNearestNeighborSearch
 import PrivateNearestNeighborSearchProtobuf
 
-@usableFromInline nonisolated(unsafe) let PnnsBenchmarkConfiguration = Benchmark.Configuration(
+@usableFromInline nonisolated(unsafe) let pnnsBenchmarkConfiguration = Benchmark.Configuration(
     metrics: [
         .wallClock,
         .mallocCountTotal,
@@ -34,29 +34,80 @@ import PrivateNearestNeighborSearchProtobuf
     ],
     maxDuration: .seconds(5))
 
-/// process database benchmark.
-public func pnnsProcessBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
-    {
-        let databaseConfig = DatabaseConfig(
-            rowCount: 4096,
-            vectorDimension: 128,
-            metadataCount: 0)
-        let encryptionConfig = PnnsEncryptionParametersConfig(
-            polyDegree: 4096,
-            // use plaintextModulusBits: [16, 17] for plaintext CRT
-            plaintextModulusBits: [17],
-            coefficientModulusBits: [27, 28, 28])
+/// Configuration for PNNS benchmarks.
+public struct PnnsBenchmarkConfig {
+    /// Database configuration.
+    public let databaseConfig: PnnsDatabaseConfig
+    /// Encryption parameters configuration.
+    public let encryptionConfig: EncryptionParametersConfig
+    /// Benchmark configuration.
+    public let benchmarkConfig: Benchmark.Configuration
 
+    /// Creates a new ``PnnsBenchmarkConfig``
+    /// - Parameters:
+    ///   - databaseConfig: Database configuration.
+    ///   - benchmarkConfig: Benchmark configuration.
+    ///   - encryptionConfig: Encryption parameters configuration.
+    public init(databaseConfig: PnnsDatabaseConfig = .init(rowCount: 4096, vectorDimension: 128),
+                benchmarkConfig: Benchmark.Configuration = pnnsBenchmarkConfiguration,
+                encryptionConfig: EncryptionParametersConfig = .defaultPnns) throws
+    {
+        self.databaseConfig = databaseConfig
+        self.encryptionConfig = encryptionConfig
+        self.benchmarkConfig = benchmarkConfig
+    }
+}
+
+/// Configuration for a PNNS database.
+public struct PnnsDatabaseConfig {
+    /// Number of rows in the database.
+    public let rowCount: Int
+    /// Dimension of each embedding vector.
+    public let vectorDimension: Int
+    /// Number of bytes in the metadata of each entry.
+    public let metadataSize: Int
+
+    /// Creates a new ``DatabaseConfig``
+    /// - Parameters:
+    ///   - rowCount: Number of rows in the database.
+    ///   - vectorDimension: Dimension of each embedding vector.
+    ///   - metadataCount: Number of bytes in the metadata of each entry.
+    public init(rowCount: Int, vectorDimension: Int, metadataSize: Int = 0) {
+        self.rowCount = rowCount
+        self.vectorDimension = vectorDimension
+        self.metadataSize = metadataSize
+    }
+}
+
+private func getDatabaseForTesting(config: PnnsDatabaseConfig) -> Database {
+    let rows = (0..<config.rowCount).map { rowIndex in
+        let vector = (0..<config.vectorDimension).map { Float($0 + rowIndex) * (rowIndex.isMultiple(of: 2) ? 1 : -1) }
+        let metadata = Array(repeating: UInt8(rowIndex % Int(UInt8.max)), count: config.metadataSize)
+        return DatabaseRow(
+            entryId: UInt64(rowIndex),
+            entryMetadata: metadata,
+            vector: vector)
+    }
+    return Database(rows: rows)
+}
+
+/// process database benchmark.
+public func pnnsProcessBenchmark<Scheme: HeScheme>(
+    _: Scheme.Type,
+    // swiftlint:disable:next force_try
+    config: PnnsBenchmarkConfig = try! .init()) -> () -> Void
+{
+    {
         let benchmarkName = [
             "Process",
             String(describing: Scheme.self),
-            encryptionConfig.description,
-            "rowCount=\(databaseConfig.rowCount)",
-            "vectorDimension=\(databaseConfig.vectorDimension)",
-            "metadataCount=\(databaseConfig.metadataCount)",
+            config.encryptionConfig.description,
+            "rowCount=\(config.databaseConfig.rowCount)",
+            "vectorDimension=\(config.databaseConfig.vectorDimension)",
+            "metadataSize=\(config.databaseConfig.metadataSize)",
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
-        Benchmark(benchmarkName, configuration: PnnsBenchmarkConfiguration) { (
+        Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
             benchmark,
             benchmarkContext: PnnsProcessBenchmarkContext<Scheme>) in
             for _ in benchmark.scaledIterations {
@@ -67,38 +118,31 @@ public func pnnsProcessBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void
             }
         } setup: {
             try PnnsProcessBenchmarkContext<Scheme>(
-                databaseConfig: databaseConfig,
-                parameterConfig: encryptionConfig)
+                databaseConfig: config.databaseConfig,
+                encryptionConfig: config.encryptionConfig)
         }
         // swiftlint:enable closure_parameter_position
     }
 }
 
 /// cosine similarity benchmark.
-public func cosineSimilarityBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+public func cosineSimilarityBenchmark<Scheme: HeScheme>(_: Scheme.Type,
+                                                        // swiftlint:disable:next force_try
+                                                        config: PnnsBenchmarkConfig = try! .init(),
+                                                        queryCount: Int = 1) -> () -> Void
+{
     {
-        let databaseConfig = DatabaseConfig(
-            rowCount: 4096,
-            vectorDimension: 128,
-            metadataCount: 0)
-        let encryptionConfig = PnnsEncryptionParametersConfig(
-            polyDegree: 4096,
-            // use plaintextModulusBits: [16, 17] for plaintext CRT
-            plaintextModulusBits: [17],
-            coefficientModulusBits: [27, 28, 28])
-        let queryCount = 1
-
         let benchmarkName = [
             "CosineSimilarity",
             String(describing: Scheme.self),
-            encryptionConfig.description,
-            "rowCount=\(databaseConfig.rowCount)",
-            "vectorDimension=\(databaseConfig.vectorDimension)",
-            "metadataCount=\(databaseConfig.metadataCount)",
+            config.encryptionConfig.description,
+            "rowCount=\(config.databaseConfig.rowCount)",
+            "vectorDimension=\(config.databaseConfig.vectorDimension)",
+            "metadataSize=\(config.databaseConfig.metadataSize)",
             "queryCount=\(queryCount)",
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
-        Benchmark(benchmarkName, configuration: PnnsBenchmarkConfiguration) { (
+        Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
             benchmark,
             benchmarkContext: PnnsBenchmarkContext<Scheme>) in
             for _ in benchmark.scaledIterations {
@@ -116,73 +160,18 @@ public func cosineSimilarityBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () ->
             benchmark.measurement(.noiseBudget, benchmarkContext.noiseBudget)
         } setup: {
             try await PnnsBenchmarkContext<Scheme>(
-                databaseConfig: databaseConfig,
-                parameterConfig: encryptionConfig,
+                databaseConfig: config.databaseConfig,
+                encryptionConfig: config.encryptionConfig,
                 queryCount: queryCount)
         }
         // swiftlint:enable closure_parameter_position
     }
 }
 
-struct DatabaseConfig {
-    let rowCount: Int
-    let vectorDimension: Int
-    let metadataCount: Int
-
-    init(rowCount: Int, vectorDimension: Int, metadataCount: Int = 0) {
-        self.rowCount = rowCount
-        self.vectorDimension = vectorDimension
-        self.metadataCount = metadataCount
-    }
-}
-
-private func getDatabaseForTesting(config: DatabaseConfig) -> Database {
-    let rows = (0..<config.rowCount).map { rowIndex in
-        let vector = (0..<config.vectorDimension).map { Float($0 + rowIndex) * (rowIndex.isMultiple(of: 2) ? 1 : -1) }
-        let metadata = Array(repeating: UInt8(rowIndex % Int(UInt8.max)), count: config.metadataCount)
-        return DatabaseRow(
-            entryId: UInt64(rowIndex),
-            entryMetadata: metadata,
-            vector: vector)
-    }
-    return Database(rows: rows)
-}
-
-struct PnnsEncryptionParametersConfig {
-    let polyDegree: Int
-    let plaintextModulusBits: [Int]
-    let coefficientModulusBits: [Int]
-}
-
-extension PnnsEncryptionParametersConfig: CustomStringConvertible {
-    var description: String {
-        "N=\(polyDegree)/logt=\(plaintextModulusBits)/logq=\(coefficientModulusBits.description)"
-    }
-}
-
-extension EncryptionParameters {
-    init(from config: PnnsEncryptionParametersConfig) throws {
-        let plaintextModulus = try Scalar.generatePrimes(
-            significantBitCounts: config.plaintextModulusBits,
-            preferringSmall: true)[0]
-        let coefficientModuli = try Scalar.generatePrimes(
-            significantBitCounts: config.coefficientModulusBits,
-            preferringSmall: false,
-            nttDegree: config.polyDegree)
-        try self.init(
-            polyDegree: config.polyDegree,
-            plaintextModulus: plaintextModulus,
-            coefficientModuli: coefficientModuli,
-            errorStdDev: ErrorStdDev.stdDev32,
-            securityLevel: SecurityLevel.quantum128)
-    }
-}
-
 extension PrivateNearestNeighborSearch.Response {
     func scaledNoiseBudget(using secretKey: Scheme.SecretKey) throws -> Int {
-        try Int(
-            noiseBudget(using: secretKey, variableTime: true) * Double(
-                noiseBudgetScale))
+        try Int(noiseBudget(using: secretKey, variableTime: true) * Double(
+            noiseBudgetScale))
     }
 }
 
@@ -191,20 +180,19 @@ struct PnnsProcessBenchmarkContext<Scheme: HeScheme> {
     let contexts: [Context<Scheme>]
     let serverConfig: ServerConfig<Scheme>
 
-    init(databaseConfig: DatabaseConfig,
-         parameterConfig: PnnsEncryptionParametersConfig) throws
+    init(databaseConfig: PnnsDatabaseConfig,
+         encryptionConfig: EncryptionParametersConfig) throws
     {
         let plaintextModuli = try Scheme.Scalar.generatePrimes(
-            significantBitCounts: parameterConfig.plaintextModulusBits,
+            significantBitCounts: encryptionConfig.plaintextModulusBits,
             preferringSmall: true,
-            nttDegree: parameterConfig.polyDegree)
+            nttDegree: encryptionConfig.polyDegree)
         let coefficientModuli = try Scheme.Scalar.generatePrimes(
-            significantBitCounts: parameterConfig.coefficientModulusBits,
+            significantBitCounts: encryptionConfig.coefficientModulusBits,
             preferringSmall: false,
-            nttDegree: parameterConfig.polyDegree)
-
+            nttDegree: encryptionConfig.polyDegree)
         let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
-            polyDegree: parameterConfig.polyDegree,
+            polyDegree: encryptionConfig.polyDegree,
             plaintextModulus: plaintextModuli[0],
             coefficientModuli: coefficientModuli,
             errorStdDev: ErrorStdDev.stdDev32,
@@ -258,20 +246,20 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
     let responseCiphertextCount: Int
     let noiseBudget: Int
 
-    init(databaseConfig: DatabaseConfig,
-         parameterConfig: PnnsEncryptionParametersConfig,
+    init(databaseConfig: PnnsDatabaseConfig,
+         encryptionConfig: EncryptionParametersConfig,
          queryCount: Int) async throws
     {
         let plaintextModuli = try Scheme.Scalar.generatePrimes(
-            significantBitCounts: parameterConfig.plaintextModulusBits,
+            significantBitCounts: encryptionConfig.plaintextModulusBits,
             preferringSmall: true,
-            nttDegree: parameterConfig.polyDegree)
+            nttDegree: encryptionConfig.polyDegree)
         let coefficientModuli = try Scheme.Scalar.generatePrimes(
-            significantBitCounts: parameterConfig.coefficientModulusBits,
+            significantBitCounts: encryptionConfig.coefficientModulusBits,
             preferringSmall: false,
-            nttDegree: parameterConfig.polyDegree)
+            nttDegree: encryptionConfig.polyDegree)
         let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
-            polyDegree: parameterConfig.polyDegree,
+            polyDegree: encryptionConfig.polyDegree,
             plaintextModulus: plaintextModuli[0],
             coefficientModuli: coefficientModuli,
             errorStdDev: ErrorStdDev.stdDev32,

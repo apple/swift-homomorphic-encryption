@@ -43,33 +43,73 @@ func getDatabaseForTesting(
     }
 }
 
-struct PirEncryptionParametersConfig {
-    let polyDegree: Int
-    let plaintextModulusBits: Int
-    let coefficientModulusBits: [Int]
-}
+/// Configuration for a PIR database.
+public struct PirDatabaseConfig {
+    /// Number of rows in the database.
+    public let entryCount: Int
+    /// Size of each entry in bytes.
+    public let entrySizeInBytes: Int
 
-extension PirEncryptionParametersConfig: CustomStringConvertible {
-    var description: String {
-        "N=\(polyDegree)/logt=\(plaintextModulusBits)/logq=\(coefficientModulusBits.description)"
+    /// Creates a new ``DatabaseConfig``
+    /// - Parameters:
+    ///   - entryCount: Number of rows in the database.
+    ///   - entrySize: Size of each entry in bytes.
+    public init(entryCount: Int, entrySizeInBytes: Int) {
+        self.entryCount = entryCount
+        self.entrySizeInBytes = entrySizeInBytes
+    }
+
+    func generateDatabase() -> [[UInt8]] {
+        (0..<entryCount).map { _ in (0..<entrySizeInBytes)
+            .map { _ in UInt8.random(in: UInt8.min...UInt8.max) }
+        }
     }
 }
 
-extension EncryptionParameters {
-    init(from config: PirEncryptionParametersConfig) throws {
-        let plaintextModulus = try Scalar.generatePrimes(
-            significantBitCounts: [config.plaintextModulusBits],
-            preferringSmall: true)[0]
-        let coefficientModuli = try Scalar.generatePrimes(
-            significantBitCounts: config.coefficientModulusBits,
-            preferringSmall: false,
-            nttDegree: config.polyDegree)
-        try self.init(
-            polyDegree: config.polyDegree,
-            plaintextModulus: plaintextModulus,
-            coefficientModuli: coefficientModuli,
-            errorStdDev: ErrorStdDev.stdDev32,
-            securityLevel: SecurityLevel.quantum128)
+/// Configuration for PIR benchmarks.
+public struct PirBenchmarkConfig<Scalar: ScalarType> {
+    /// Database configuration.
+    public let databaseConfig: PirDatabaseConfig
+    /// Encryption parameters configuration.
+    public let encryptionConfig: EncryptionParametersConfig
+    /// Benchmark configuration.
+    public let benchmarkConfig: Benchmark.Configuration
+    /// Keyword PIR configuration.
+    public let keywordPirConfig: KeywordPirConfig
+    /// Index PIR configuration.
+    public let indexPirConfig: IndexPirConfig
+
+    /// Creates a new ``PirBenchmarkConfig``
+    /// - Parameters:
+    ///   - databaseConfig: Database configuration.
+    ///   - benchmarkConfig: Benchmark configuration.
+    ///   - encryptionConfig: Encryption parameters configuration.
+    public init(databaseConfig: PirDatabaseConfig = .init(entryCount: 1_000_000, entrySizeInBytes: 1),
+                benchmarkConfig: Benchmark.Configuration = pirBenchmarkConfiguration,
+                encryptionConfig: EncryptionParametersConfig = .defaultPir,
+                keywordPirConfig: KeywordPirConfig? = nil) throws
+    {
+        self.databaseConfig = databaseConfig
+        self.encryptionConfig = encryptionConfig
+        self.benchmarkConfig = benchmarkConfig
+
+        if let keywordPirConfig {
+            self.keywordPirConfig = keywordPirConfig
+        } else {
+            let encryptionParams = try EncryptionParameters<Scalar>(from: encryptionConfig)
+            let cuckooTableConfig = CuckooTableConfig
+                .defaultKeywordPir(maxSerializedBucketSize: encryptionParams.bytesPerPlaintext)
+            self.keywordPirConfig = try KeywordPirConfig(dimensionCount: 2, cuckooTableConfig: cuckooTableConfig,
+                                                         unevenDimensions: true,
+                                                         keyCompression: .hybridCompression)
+        }
+        self.indexPirConfig = try IndexPirConfig(
+            entryCount: databaseConfig.entryCount,
+            entrySizeInBytes: databaseConfig.entrySizeInBytes,
+            dimensionCount: self.keywordPirConfig.dimensionCount,
+            batchSize: 1,
+            unevenDimensions: self.keywordPirConfig.unevenDimensions,
+            keyCompression: self.keywordPirConfig.keyCompression)
     }
 }
 
@@ -86,10 +126,10 @@ struct ProcessBenchmarkContext<Server: IndexPirServer> {
     let context: Context<Server.Scheme>
     let parameter: IndexPirParameter
     init(server _: Server.Type, pirConfig: IndexPirConfig,
-         parameterConfig: PirEncryptionParametersConfig) throws
+         encryptionConfig: EncryptionParametersConfig) throws
     {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
-            try EncryptionParameters(from: parameterConfig)
+            try EncryptionParameters(from: encryptionConfig)
         self.database = getDatabaseForTesting(
             numberOfEntries: pirConfig.entryCount,
             entrySizeInBytes: pirConfig.entrySizeInBytes)
@@ -101,26 +141,21 @@ struct ProcessBenchmarkContext<Server: IndexPirServer> {
 /// Pre-processing database benchmark.
 public func pirProcessBenchmark<Scheme: HeScheme>(
     _: Scheme.Type,
-    entryCount: Int = 1_000_000) -> () -> Void
+    // swiftlint:disable:next force_try
+    config: PirBenchmarkConfig<Scheme.Scalar> = try! .init()) -> () -> Void
 {
     {
-        let entrySizeInBytes = 1
-        let encryptionConfig = PirEncryptionParametersConfig(
-            polyDegree: 4096,
-            plaintextModulusBits: 5,
-            coefficientModulusBits: [27, 28, 28])
-        let keyCompression = PirKeyCompressionStrategy.noCompression
-
+        let databaseConfig = config.databaseConfig
         let benchmarkName = [
             "Process",
             String(describing: Scheme.self),
-            encryptionConfig.description,
-            "entryCount=\(entryCount)",
-            "entrySize=\(entrySizeInBytes)",
-            "keyCompression=\(keyCompression)",
+            config.encryptionConfig.description,
+            "entryCount=\(databaseConfig.entryCount)",
+            "entrySize=\(databaseConfig.entrySizeInBytes)",
+            "keyCompression=\(config.keywordPirConfig.keyCompression)",
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
-        Benchmark(benchmarkName, configuration: pirBenchmarkConfiguration) { (
+        Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
             benchmark,
             benchmarkContext: ProcessBenchmarkContext<MulPirServer<Scheme>>) in
             for _ in benchmark.scaledIterations {
@@ -133,14 +168,8 @@ public func pirProcessBenchmark<Scheme: HeScheme>(
         } setup: {
             try ProcessBenchmarkContext(
                 server: MulPirServer<Scheme>.self,
-                pirConfig: IndexPirConfig(
-                    entryCount: entryCount,
-                    entrySizeInBytes: entrySizeInBytes,
-                    dimensionCount: 2,
-                    batchSize: 1,
-                    unevenDimensions: true,
-                    keyCompression: keyCompression),
-                parameterConfig: encryptionConfig)
+                pirConfig: config.indexPirConfig,
+                encryptionConfig: config.encryptionConfig)
         }
         // swiftlint:enable closure_parameter_position
     }
@@ -167,10 +196,10 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
         server _: Server.Type,
         client _: Client.Type,
         pirConfig: IndexPirConfig,
-        parameterConfig: PirEncryptionParametersConfig) throws
+        encryptionConfig: EncryptionParametersConfig) throws
     {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
-            try EncryptionParameters(from: parameterConfig)
+            try EncryptionParameters(from: encryptionConfig)
         let context = try Context<Server.Scheme>(encryptionParameters: encryptParameter)
         let indexPirParameters = Server.generateParameter(config: pirConfig, with: context)
         let database = getDatabaseForTesting(
@@ -206,27 +235,20 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
 /// IndexPIR benchmark.
 public func indexPirBenchmark<Scheme: HeScheme>(
     _: Scheme.Type,
-    entryCount: Int = 1_000_000) -> () -> Void
+    // swiftlint:disable:next force_try
+    config: PirBenchmarkConfig<Scheme.Scalar> = try! .init()) -> () -> Void
 {
-    // swiftlint:disable:next closure_body_length
     {
-        let entrySizeInBytes = 1
-        let encryptionConfig = PirEncryptionParametersConfig(
-            polyDegree: 4096,
-            plaintextModulusBits: 5,
-            coefficientModulusBits: [27, 28, 28])
-        let keyCompression = PirKeyCompressionStrategy.noCompression
-
         let benchmarkName = [
             "IndexPir",
             String(describing: Scheme.self),
-            encryptionConfig.description,
-            "entryCount=\(entryCount)",
-            "entrySize=\(entrySizeInBytes)",
-            "keyCompression=\(keyCompression)",
+            config.encryptionConfig.description,
+            "entryCount=\(config.databaseConfig.entryCount)",
+            "entrySize=\(config.databaseConfig.entrySizeInBytes)",
+            "keyCompression=\(config.indexPirConfig.keyCompression)",
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
-        Benchmark(benchmarkName, configuration: pirBenchmarkConfiguration) { (
+        Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
             benchmark,
             benchmarkContext: IndexPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>) in
             for _ in benchmark.scaledIterations {
@@ -242,20 +264,14 @@ public func indexPirBenchmark<Scheme: HeScheme>(
             benchmark.measurement(.responseCiphertextCount, benchmarkContext.responseCiphertextCount)
             benchmark.measurement(.noiseBudget, benchmarkContext.noiseBudget)
         }
+        // swiftlint:enable closure_parameter_position
         setup: {
             try IndexPirBenchmarkContext(
                 server: MulPirServer<Scheme>.self,
                 client: MulPirClient<Scheme>.self,
-                pirConfig: IndexPirConfig(
-                    entryCount: entryCount,
-                    entrySizeInBytes: entrySizeInBytes,
-                    dimensionCount: 2,
-                    batchSize: 1,
-                    unevenDimensions: true,
-                    keyCompression: keyCompression),
-                parameterConfig: encryptionConfig)
+                pirConfig: config.indexPirConfig,
+                encryptionConfig: config.encryptionConfig)
         }
-        // swiftlint:enable closure_parameter_position
     }
 }
 
@@ -277,27 +293,15 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
     let responseCiphertextCount: Int
     let noiseBudget: Int
 
-    init(
-        dimensionCount: Int,
-        databaseCount: Int,
-        payloadSize: Int,
-        parameterConfig: PirEncryptionParametersConfig,
-        keyCompression: PirKeyCompressionStrategy) async throws
-    {
+    init(config: PirBenchmarkConfig<Server.Scheme.Scalar>) async throws {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
-            try EncryptionParameters(from: parameterConfig)
+            try EncryptionParameters(from: config.encryptionConfig)
         let context = try Context<Server.Scheme>(encryptionParameters: encryptParameter)
-        let rows = (0..<databaseCount).map { index in KeywordValuePair(
+        let rows = (0..<config.databaseConfig.entryCount).map { index in KeywordValuePair(
             keyword: [UInt8](String(index).utf8),
-            value: (0..<payloadSize).map { _ in UInt8.random(in: 0..<UInt8.max) })
+            value: (0..<config.databaseConfig.entrySizeInBytes).map { _ in UInt8.random(in: 0..<UInt8.max) })
         }
-
-        let config = try KeywordPirConfig(
-            dimensionCount: dimensionCount,
-            cuckooTableConfig: CuckooTableConfig
-                .defaultKeywordPir(maxSerializedBucketSize: encryptParameter.bytesPerPlaintext),
-            unevenDimensions: true,
-            keyCompression: keyCompression)
+        let entryCount = config.databaseConfig.entryCount
 
         func logEvent(event: ProcessKeywordDatabase.ProcessShardEvent) throws {
             switch event {
@@ -312,19 +316,24 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
                 print("Finished expanding cuckoo table \(summary)")
             case let .cuckooTableEvent(.insertedKeywordValuePair(index, _)):
                 let reportingPercentage = 10
-                let shardFraction = databaseCount / reportingPercentage
+                let shardFraction = entryCount / reportingPercentage
                 if (index + 1).isMultiple(of: shardFraction) {
                     let percentage = Float(reportingPercentage * (index + 1)) / Float(shardFraction)
-                    print("Inserted \(index + 1) / \(databaseCount) keywords \(percentage)%")
+                    print("Inserted \(index + 1) / \(entryCount) keywords \(percentage)%")
                 }
             }
         }
 
-        let processed = try Server.process(database: rows, config: config, with: context, onEvent: logEvent)
+        let keywordPirConfig = config.keywordPirConfig
+        let processed = try Server.process(
+            database: rows,
+            config: config.keywordPirConfig,
+            with: context,
+            onEvent: logEvent)
 
         self.server = try Server(context: context, processed: processed)
         self.client = Client(
-            keywordParameter: config.parameter,
+            keywordParameter: keywordPirConfig.parameter,
             pirParameter: processed.pirParameter,
             context: context)
         self.secretKey = try context.generateSecretKey()
@@ -332,7 +341,7 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
         self.query = try client.generateQuery(at: [UInt8]("0".utf8), using: secretKey)
 
         // Validate correctness
-        let queryIndex = Int.random(in: 0..<databaseCount)
+        let queryIndex = Int.random(in: 0..<config.databaseConfig.entryCount)
         let query = try client.generateQuery(
             at: [UInt8](String(describing: queryIndex).utf8),
             using: secretKey)
@@ -357,24 +366,21 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
 }
 
 /// keywordPIR benchmark.
-public func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type, entryCount: Int = 10000) -> () -> Void {
+public func keywordPirBenchmark<Scheme: HeScheme>(
+    _: Scheme.Type,
+    // swiftlint:disable:next force_try
+    config: PirBenchmarkConfig<Scheme.Scalar> = try! .init()) -> () -> Void
+{
     {
-        let entrySizeInBytes = 100
-        let encryptionConfig = PirEncryptionParametersConfig(
-            polyDegree: 4096,
-            plaintextModulusBits: 5,
-            coefficientModulusBits: [27, 28, 28])
-        let keyCompression = PirKeyCompressionStrategy.noCompression
-
         let benchmarkName = [
             "KeywordPir",
             String(describing: Scheme.self),
-            encryptionConfig.description,
-            "entryCount=\(entryCount)",
-            "entrySize=\(entrySizeInBytes)",
-            "keyCompression=\(keyCompression)",
+            config.encryptionConfig.description,
+            "entryCount=\(config.databaseConfig.entryCount)",
+            "entrySize=\(config.databaseConfig.entrySizeInBytes)",
+            "keyCompression=\(config.keywordPirConfig.keyCompression)",
         ].joined(separator: "/")
-        Benchmark(benchmarkName, configuration: pirBenchmarkConfiguration) { benchmark, benchmarkContext in
+        Benchmark(benchmarkName, configuration: config.benchmarkConfig) { benchmark, benchmarkContext in
             for _ in benchmark.scaledIterations {
                 try blackHole(benchmarkContext.server.computeResponse(to: benchmarkContext.query,
                                                                       using: benchmarkContext.evaluationKey))
@@ -388,11 +394,7 @@ public func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type, entryCount: In
             benchmark.measurement(.noiseBudget, benchmarkContext.noiseBudget)
         } setup: {
             try await KeywordPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>(
-                dimensionCount: 2,
-                databaseCount: entryCount,
-                payloadSize: entrySizeInBytes,
-                parameterConfig: encryptionConfig,
-                keyCompression: keyCompression)
+                config: config)
         }
     }
 }

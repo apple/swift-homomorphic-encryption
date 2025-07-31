@@ -18,24 +18,24 @@ import HomomorphicEncryption
 /// Configuration for a ``KeywordDatabase``.
 public struct KeywordPirConfig: Hashable, Codable, Sendable {
     /// Number of dimensions in the database.
-    @usableFromInline let dimensionCount: Int
+    public let dimensionCount: Int
 
     /// Configuration for the cuckoo table.
-    @usableFromInline let cuckooTableConfig: CuckooTableConfig
+    public let cuckooTableConfig: CuckooTableConfig
 
     /// Whether to enable the `uneven dimensions` optimization.
-    @usableFromInline let unevenDimensions: Bool
+    public let unevenDimensions: Bool
 
-    /// Strategy for ``EvaluationKey`` compression.
-    @usableFromInline let keyCompression: PirKeyCompressionStrategy
+    /// Strategy for evaluation key compression.
+    public let keyCompression: PirKeyCompressionStrategy
 
     /// When set to true, entry size will be equal to ``CuckooTableConfig/maxSerializedBucketSize``.
     ///
     /// Otherwise the largest serialized bucket size is used instead.
-    @usableFromInline let useMaxSerializedBucketSize: Bool
+    public let useMaxSerializedBucketSize: Bool
 
     /// Sharding function configuration.
-    @usableFromInline let shardingFunction: ShardingFunction
+    public let shardingFunction: ShardingFunction
 
     /// Keyword PIR parameters.
     public var parameter: KeywordPirParameter {

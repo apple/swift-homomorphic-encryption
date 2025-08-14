@@ -50,7 +50,7 @@ extension SecretKey: PolyCollection {
 /// - seealso: ``HeScheme/relinearize(_:using:)`` and ``HeScheme/applyGalois(ciphertext:element:using:)`` for more
 /// details.
 @usableFromInline
-struct KeySwitchKey<Scheme: HeScheme>: Equatable, Sendable {
+package struct KeySwitchKey<Scheme: HeScheme>: Equatable, Sendable {
     /// The context used for key-switching operations.
     @usableFromInline let context: Context<Scheme>
     /// The ciphertexts of the key-switching key.
@@ -73,7 +73,7 @@ extension KeySwitchKey: PolyCollection {
 }
 
 @usableFromInline
-struct RelinearizationKey<Scheme: HeScheme>: Equatable, Sendable {
+package struct RelinearizationKey<Scheme: HeScheme>: Equatable, Sendable {
     @usableFromInline let keySwitchKey: KeySwitchKey<Scheme>
 
     @inlinable
@@ -92,8 +92,8 @@ extension RelinearizationKey: PolyCollection {
 }
 
 @usableFromInline
-struct GaloisKey<Scheme: HeScheme>: Equatable, Sendable {
-    @usableFromInline let keys: [Int: KeySwitchKey<Scheme>]
+package struct GaloisKey<Scheme: HeScheme>: Equatable, Sendable {
+    @usableFromInline package let keys: [Int: KeySwitchKey<Scheme>]
 
     @inlinable
     init(keys: [Int: KeySwitchKey<Scheme>]) {
@@ -118,8 +118,8 @@ extension GaloisKey: PolyCollection {
 ///
 /// Associated with a ``SecretKey``.
 public struct EvaluationKey<Scheme: HeScheme>: Equatable, Sendable {
-    @usableFromInline let galoisKey: GaloisKey<Scheme>?
-    @usableFromInline let relinearizationKey: RelinearizationKey<Scheme>?
+    @usableFromInline package let galoisKey: GaloisKey<Scheme>?
+    @usableFromInline package let relinearizationKey: RelinearizationKey<Scheme>?
 
     /// Returns the configuration for the evaluation key.
     public var config: EvaluationKeyConfig {

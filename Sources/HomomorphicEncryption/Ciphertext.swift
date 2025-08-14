@@ -240,24 +240,6 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
         try Scheme.rotateColumns(of: &self, by: step, using: evaluationKey)
     }
 
-    /// Rotates the columns of the ciphertext by combining multiple rotation steps corresponding to Galois elements
-    /// available in the `evaluationKey`.
-    ///
-    /// - Parameters:
-    ///   - step: Number of slots to rotate. Negative values indicate a left rotation, and positive values indicate a
-    /// right rotation. Must have absolute value in `[1, N / 2 - 1]` where `N` is the RLWE ring dimension, given by
-    /// ``EncryptionParameters/polyDegree``.
-    ///   - evaluationKey: Evaluation key to use in the HE computation. Must contain Galois elements which can be
-    /// combined for the desired rotation step.
-    /// - Throws: Error upon failure to rotate ciphertext's columns.
-    /// - seealso: `HeScheme/rotateColumnsMultiStep(of:by:using:)` for an alternative API and more information.
-    @inlinable
-    package mutating func rotateColumnsMultiStep(by step: Int, using evaluationKey: EvaluationKey<Scheme>) throws
-        where Format == Scheme.CanonicalCiphertextFormat
-    {
-        try Scheme.rotateColumnsMultiStep(of: &self, by: step, using: evaluationKey)
-    }
-
     /// Swaps the rows of a ciphertext.
     ///
     /// A plaintext in ``EncodeFormat/simd`` format can be viewed a `2 x (N / 2)` matrix of coefficients.

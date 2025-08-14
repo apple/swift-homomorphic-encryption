@@ -41,6 +41,9 @@ let package = Package(
             name: "HomomorphicEncryptionProtobuf",
             targets: ["HomomorphicEncryptionProtobuf"]),
         .library(
+            name: "_HomomorphicEncryptionExtras",
+            targets: ["_HomomorphicEncryptionExtras"]),
+        .library(
             name: "PrivateInformationRetrieval",
             targets: ["PrivateInformationRetrieval"]),
         .library(
@@ -97,6 +100,10 @@ let package = Package(
             exclude: ["generated/README.md"],
             swiftSettings: librarySettings),
         .target(
+            name: "_HomomorphicEncryptionExtras",
+            dependencies: ["HomomorphicEncryption"],
+            swiftSettings: librarySettings),
+        .target(
             name: "PrivateInformationRetrieval",
             dependencies: ["HomomorphicEncryption",
                            .product(name: "Numerics", package: "swift-numerics")],
@@ -114,6 +121,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Algorithms", package: "swift-algorithms"),
                 "HomomorphicEncryption",
+                "_HomomorphicEncryptionExtras",
             ],
             swiftSettings: librarySettings),
         .target(
@@ -128,6 +136,7 @@ let package = Package(
             name: "_TestUtilities",
             dependencies: [
                 "HomomorphicEncryption",
+                "_HomomorphicEncryptionExtras",
                 "PrivateInformationRetrieval",
                 "PrivateNearestNeighborSearch",
                 .product(name: "Numerics", package: "swift-numerics"),

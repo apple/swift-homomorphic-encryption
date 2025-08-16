@@ -189,7 +189,7 @@ extension Array2d {
     /// - Parameter k: The number of rows to remove. `k` Must be greater than or equal to zero and must not exceed
     /// `rowCount`.
     @inlinable
-    mutating func removeLastRows(_ k: Int) {
+    package mutating func removeLastRows(_ k: Int) {
         precondition(k >= 0 && k <= rowCount)
         rowCount -= k
         data.removeLast(columnCount * k)

@@ -193,6 +193,11 @@ let package = Package(
                 .product(name: "Numerics", package: "swift-numerics"),
             ], swiftSettings: executableSettings),
         .testTarget(
+            name: "HomomorphicEncryptionExtrasTests",
+            dependencies: [
+                "_HomomorphicEncryptionExtras",
+            ], swiftSettings: executableSettings),
+        .testTarget(
             name: "HomomorphicEncryptionProtobufTests",
             dependencies: [
                 "HomomorphicEncryption",

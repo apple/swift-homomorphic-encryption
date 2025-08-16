@@ -129,7 +129,7 @@ extension HeError {
     }
 
     @inlinable
-    static func invalidPolyContext(_ context: PolyContext<some Any>) -> Self {
+    package static func invalidPolyContext(_ context: PolyContext<some Any>) -> Self {
         .invalidPolyContext(context.description)
     }
 

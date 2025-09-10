@@ -327,9 +327,26 @@ public struct ReduceModulus<T: CoreScalarType>: Equatable, Sendable {
     /// Performs modular reduction of a product with modulus `p`.
     /// - Parameter x: Must be in `[0, p^2)`.
     /// - Returns: `x mod p` for `p`.
+    ///
+    /// Details:
+    /// - "Dhem, J. F. "Modified version of the Barrett algorithm." Technical report, Technical report (1994).
+    /// - See also Algorithm 2 from
+    ///   "Knezevic, Miroslav, Frederik Vercauteren, and Ingrid Verbauwhede.
+    ///   "Speeding up Barrett and Montgomery modular multiplications."
+    ///   IEEE Transactions on Compute 2 (2009).
+    ///   Available at
+    /// https://web.archive.org/web/20170830020846/http://homes.esat.kuleuven.be/~fvercaut/papers/bar_mont.pdf
+    ///
+    ///                  /         / |   x    |  \          / | 2^(n+alpha) | \ \
+    ///                  |   floor | |--------|  |  * floor | |-------------| | |
+    ///                  |         \ |2^n+beta| /           \ |      p      | / |
+    /// x mod p = floor  |------------------------------------------------------|
+    ///                  \            2^{alpha - beta}                         /
+    /// where `x = (x_{n + gamma - 1, ...., x_0)_2``, and modulus `p = (p_{n - 1}, ..., p_0)_2`, `p_{n-1} != 0`, and
+    /// `gamma <= n`.
+    /// For `beta = -2` and `\alpha >= \gamma + 1`, we need just a single conditional subtraction.
     @inlinable
     public func reduceProduct(_ x: T.DoubleWidth) -> T {
-        // Algorithm 2 from https://homes.esat.kuleuven.be/~fvercaut/papers/bar_mont.pdf
         assert(x < T.DoubleWidth(modulus.multipliedFullWidth(by: modulus)))
         let n = modulus.significantBitCount
         let reduceModulusBeta = -2

@@ -3,7 +3,8 @@
 *Swift Homomorphic Encryption* is a Swift implementation of homomorphic encryption (HE) and applications including Private Information Retrieval (PIR).
 
 Applications of Swift Homomorphic Encryption include:
-* [Live Caller ID Lookup](https://github.com/apple/live-caller-id-lookup-example)
+* [Live Caller ID Lookup](https://developer.apple.com/documentation/identitylookup/getting-up-to-date-calling-and-blocking-information-for-your-app) & [Network Extension URL Filter](https://developer.apple.com/documentation/networkextension/url-filters)
+  * See [pir-service-example](https://github.com/apple/pir-service-example) for a sample service
 
 ## Overview
 Swift Homomorphic Encryption is a collection of libraries and executables.

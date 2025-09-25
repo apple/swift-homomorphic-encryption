@@ -65,7 +65,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.10.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-protobuf", from: "1.29.0"), // Keep version in sync with README
+        .package(url: "https://github.com/apple/swift-protobuf", from: "1.31.1"), // Keep version in sync with README
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.1.0"),
     ],
     targets: [

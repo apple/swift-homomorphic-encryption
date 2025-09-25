@@ -215,7 +215,7 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig: S
 }
 
 /// PIR Request.
-public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRRequest: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -303,7 +303,7 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse: Sendable 
 }
 
 /// PIR OPRF Request.
-public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -320,7 +320,7 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest: @unchecke
 }
 
 /// PIR OPRF Response.
-public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -339,7 +339,7 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: @uncheck
 /// Stash of entries.
 ///
 /// Stash is meant to be used as temporary storage until we can update the processed database.
-public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -369,14 +369,7 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.api.pir.
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRShardConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "num_entries"),
-    2: .standard(proto: "entry_size"),
-    3: .same(proto: "dimensions"),
-    4: .standard(proto: "shard_id"),
-    5: .standard(proto: "compress_vectorized_pir_response"),
-    6: .standard(proto: "vectorized_pir_internal_batching_size"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}num_entries\0\u{3}entry_size\0\u{1}dimensions\0\u{3}shard_id\0\u{3}compress_vectorized_pir_response\0\u{3}vectorized_pir_internal_batching_size\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -435,15 +428,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig: SwiftProto
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "encryption_parameters"),
-    2: .standard(proto: "shard_configs"),
-    3: .standard(proto: "keyword_pir_params"),
-    4: .same(proto: "algorithm"),
-    5: .standard(proto: "batch_size"),
-    6: .standard(proto: "evaluation_key_config_hash"),
-    10: .standard(proto: "pir_shard_configs"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}shard_configs\0\u{3}keyword_pir_params\0\u{1}algorithm\0\u{3}batch_size\0\u{3}evaluation_key_config_hash\0\u{4}\u{4}pir_shard_configs\0\u{c}\u{7}\u{1}\u{c}\u{8}\u{1}\u{c}\u{9}\u{1}")
 
   fileprivate class _StorageClass {
     var _encryptionParameters: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters? = nil
@@ -454,15 +439,11 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
     var _evaluationKeyConfigHash: Data = Data()
     var _pirShardConfigs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs? = nil
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 
@@ -559,9 +540,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRShardConfigs"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "repeated_shard_config"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}repeated_shard_config\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -607,10 +586,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs: SwiftProt
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRFixedShardConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "shard_config"),
-    2: .standard(proto: "shard_count"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}shard_config\0\u{3}shard_count\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -649,14 +625,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRFixedShardConfig: Swift
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "shard_index"),
-    2: .same(proto: "query"),
-    3: .standard(proto: "evaluation_key_metadata"),
-    4: .standard(proto: "configuration_hash"),
-    5: .standard(proto: "shard_id"),
-    6: .standard(proto: "evaluation_key"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}shard_index\0\u{1}query\0\u{3}evaluation_key_metadata\0\u{3}configuration_hash\0\u{3}shard_id\0\u{3}evaluation_key\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -715,10 +684,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRRequest: SwiftProtobuf.
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRResponse"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "replies"),
-    2: .same(proto: "stash"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}replies\0\u{1}stash\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -757,10 +723,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse: SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OPRFRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "query_element"),
-    2: .standard(proto: "config_id"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}query_element\0\u{3}config_id\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -795,10 +758,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest: SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OPRFResponse"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "evaluated_element"),
-    2: .same(proto: "proof"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}evaluated_element\0\u{1}proof\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -833,11 +793,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: SwiftProtobu
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_StashOfEntries: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".StashOfEntries"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "hashed_keywords"),
-    2: .same(proto: "values"),
-    3: .standard(proto: "removed_hashed_keywords"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}hashed_keywords\0\u{1}values\0\u{3}removed_hashed_keywords\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

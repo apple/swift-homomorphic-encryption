@@ -156,7 +156,7 @@ Developing Swift Homomorphic Encryption requires:
 * [Nick Lockwood SwiftFormat](https://github.com/nicklockwood/SwiftFormat), 0.55.5
 * [pre-commit](https://pre-commit.com)
 * [swift-format](https://github.com/swiftlang/swift-format), 600.0.0
-* [swift-protobuf](https://github.com/apple/swift-protobuf), 1.29.0
+* [swift-protobuf](https://github.com/apple/swift-protobuf), 1.31.1
 * [SwiftLint](https://github.com/realm/SwiftLint), 0.58.2
 
 ### Building

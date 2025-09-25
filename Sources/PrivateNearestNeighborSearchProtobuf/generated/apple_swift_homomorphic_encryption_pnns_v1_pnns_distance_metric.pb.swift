@@ -70,7 +70,5 @@ public enum Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric: SwiftProtob
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "DISTANCE_METRIC_COSINE_SIMILARITY"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DISTANCE_METRIC_COSINE_SIMILARITY\0")
 }

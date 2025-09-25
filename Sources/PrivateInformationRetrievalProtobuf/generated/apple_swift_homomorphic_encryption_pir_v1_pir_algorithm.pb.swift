@@ -80,8 +80,5 @@ public enum Apple_SwiftHomomorphicEncryption_Pir_V1_PirAlgorithm: SwiftProtobuf.
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirAlgorithm: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "PIR_ALGORITHM_ACLS_PIR"),
-    1: .same(proto: "PIR_ALGORITHM_MUL_PIR"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0PIR_ALGORITHM_ACLS_PIR\0\u{1}PIR_ALGORITHM_MUL_PIR\0")
 }

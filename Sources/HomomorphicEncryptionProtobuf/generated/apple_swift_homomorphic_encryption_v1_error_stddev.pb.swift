@@ -73,7 +73,5 @@ public enum Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev: SwiftProtobuf.Enum,
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ERROR_STD_DEV_STDDEV32"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ERROR_STD_DEV_STDDEV32\0")
 }

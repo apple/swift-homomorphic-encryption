@@ -38,7 +38,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Evaluation key metadata.
-public struct Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKeyMetadata: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKeyMetadata: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -134,10 +134,7 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.api.shar
 
 extension Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKeyMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EvaluationKeyMetadata"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "timestamp"),
-    2: .same(proto: "identifier"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}timestamp\0\u{1}identifier\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -172,10 +169,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKeyMetadata: 
 
 extension Apple_SwiftHomomorphicEncryption_Api_Shared_V1_KeyStatus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".KeyStatus"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "timestamp"),
-    2: .standard(proto: "key_config"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}timestamp\0\u{3}key_config\0\u{c}\u{3}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -214,9 +208,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Shared_V1_KeyStatus: SwiftProtobu
 
 extension Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKeys: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EvaluationKeys"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "keys"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}keys\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -246,10 +238,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKeys: SwiftPr
 
 extension Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EvaluationKey"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "metadata"),
-    2: .standard(proto: "evaluation_key"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}metadata\0\u{3}evaluation_key\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

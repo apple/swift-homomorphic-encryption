@@ -73,24 +73,17 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.pnns.v1"
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_ServerConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ServerConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "client_config"),
-    2: .standard(proto: "database_packing"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_config\0\u{3}database_packing\0\u{c}\u{3}\u{1}\u{c}\u{4}\u{1}")
 
   fileprivate class _StorageClass {
     var _clientConfig: Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig? = nil
     var _databasePacking: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking? = nil
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 

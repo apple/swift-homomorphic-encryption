@@ -180,11 +180,7 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.pnns.v1"
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_BabyStepGiantStep: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BabyStepGiantStep"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "vector_dimension"),
-    2: .standard(proto: "baby_step"),
-    3: .standard(proto: "giant_step"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}vector_dimension\0\u{3}baby_step\0\u{3}giant_step\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -224,11 +220,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_BabyStepGiantStep: SwiftProto
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MatrixPacking"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "dense_row"),
-    2: .same(proto: "diagonal"),
-    3: .standard(proto: "dense_column"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}dense_row\0\u{1}diagonal\0\u{3}dense_column\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -331,9 +323,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDenseRow: SwiftP
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPackingDiagonal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MatrixPackingDiagonal"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .standard(proto: "baby_step_giant_step"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{4}\u{2}baby_step_giant_step\0\u{c}\u{1}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

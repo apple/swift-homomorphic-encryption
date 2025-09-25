@@ -36,7 +36,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Serialized pre-processed nearest neighbor database.
-public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -73,12 +73,7 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.pnns.v1"
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedProcessedDatabase"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "plaintext_matrices"),
-    2: .standard(proto: "entry_ids"),
-    3: .standard(proto: "entry_metadatas"),
-    4: .standard(proto: "server_config"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}plaintext_matrices\0\u{3}entry_ids\0\u{3}entry_metadatas\0\u{3}server_config\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

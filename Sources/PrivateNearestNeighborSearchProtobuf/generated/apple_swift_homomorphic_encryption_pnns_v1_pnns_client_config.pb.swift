@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -92,15 +92,7 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.pnns.v1"
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ClientConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "encryption_parameters"),
-    2: .standard(proto: "scaling_factor"),
-    3: .standard(proto: "query_packing"),
-    4: .standard(proto: "vector_dimension"),
-    5: .standard(proto: "galois_elements"),
-    6: .standard(proto: "distance_metric"),
-    7: .standard(proto: "extra_plaintext_moduli"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}scaling_factor\0\u{3}query_packing\0\u{3}vector_dimension\0\u{3}galois_elements\0\u{3}distance_metric\0\u{3}extra_plaintext_moduli\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

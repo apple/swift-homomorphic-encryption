@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Configuration for one PNNS usecase.
-public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -87,19 +87,19 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: @unchecke
   fileprivate var _queryPacking: Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking? = nil
 }
 
-/// PNNS Request
-public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: @unchecked Sendable {
+/// PNNS Request.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// optionally, the shard indices where this request should be routed
+  /// Optionally, the shard indices where this request should be routed.
   public var shardIndices: [UInt32] = []
 
-  /// Encrypted query, one per plaintext CRT component
+  /// Encrypted query, one per plaintext CRT component.
   public var query: [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] = []
 
-  /// Key metadata
+  /// Key metadata.
   public var evaluationKeyMetadata: Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKeyMetadata {
     get {return _evaluationKeyMetadata ?? Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKeyMetadata()}
     set {_evaluationKeyMetadata = newValue}
@@ -109,10 +109,10 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: @uncheck
   /// Clears the value of `evaluationKeyMetadata`. Subsequent reads from it will return its default value.
   public mutating func clearEvaluationKeyMetadata() {self._evaluationKeyMetadata = nil}
 
-  /// Identifier for the PNNSConfig used to construct the query
+  /// Identifier for the PNNSConfig used to construct the query.
   public var configID: Data = Data()
 
-  /// If set, evaluation key to query with. Will override evaluation key stored server-side
+  /// If set, evaluation key to query with. Will override evaluation key stored server-side.
   public var evaluationKey: Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKey {
     get {return _evaluationKey ?? Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKey()}
     set {_evaluationKey = newValue}
@@ -122,6 +122,10 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: @uncheck
   /// Clears the value of `evaluationKey`. Subsequent reads from it will return its default value.
   public mutating func clearEvaluationKey() {self._evaluationKey = nil}
 
+  /// Optionally, the shard identifiers where this request should be routed.
+  /// If set, will override `shard_indices`.
+  public var shardIds: [String] = []
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -130,19 +134,19 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: @uncheck
   fileprivate var _evaluationKey: Apple_SwiftHomomorphicEncryption_Api_Shared_V1_EvaluationKey? = nil
 }
 
-/// PNNS Shard Response
-public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse: @unchecked Sendable {
+/// PNNS Shard Response.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Encrypted reply, one per plaintext CRT component
+  /// Encrypted reply, one per plaintext CRT component.
   public var reply: [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] = []
 
-  /// A list of entry identifiers the server computed similarities for
+  /// A list of entry identifiers the server computed similarities for.
   public var entryIds: [UInt64] = []
 
-  /// Metadata for each entry in the database
+  /// Metadata for each entry in the database.
   public var entryMetadatas: [Data] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -150,13 +154,13 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse: @u
   public init() {}
 }
 
-/// PNNS Response
+/// PNNS Response.
 public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// PNNS responses from shards
+  /// PNNS responses from shards.
   public var shardResponses: [Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -170,15 +174,7 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.api.pnns
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PNNSConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "encryption_parameters"),
-    2: .standard(proto: "scaling_factor"),
-    3: .standard(proto: "query_packing"),
-    4: .standard(proto: "vector_dimension"),
-    5: .standard(proto: "distance_metric"),
-    6: .standard(proto: "evaluation_key_config_hash"),
-    7: .standard(proto: "extra_plaintext_moduli"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}scaling_factor\0\u{3}query_packing\0\u{3}vector_dimension\0\u{3}distance_metric\0\u{3}evaluation_key_config_hash\0\u{3}extra_plaintext_moduli\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -242,13 +238,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig: SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PNNSRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "shard_indices"),
-    2: .same(proto: "query"),
-    3: .standard(proto: "evaluation_key_metadata"),
-    4: .standard(proto: "config_id"),
-    5: .standard(proto: "evaluation_key"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}shard_indices\0\u{1}query\0\u{3}evaluation_key_metadata\0\u{3}config_id\0\u{3}evaluation_key\0\u{3}shard_ids\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -261,6 +251,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: SwiftProtobu
       case 3: try { try decoder.decodeSingularMessageField(value: &self._evaluationKeyMetadata) }()
       case 4: try { try decoder.decodeSingularBytesField(value: &self.configID) }()
       case 5: try { try decoder.decodeSingularMessageField(value: &self._evaluationKey) }()
+      case 6: try { try decoder.decodeRepeatedStringField(value: &self.shardIds) }()
       default: break
       }
     }
@@ -286,6 +277,9 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: SwiftProtobu
     try { if let v = self._evaluationKey {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     } }()
+    if !self.shardIds.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.shardIds, fieldNumber: 6)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -295,6 +289,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: SwiftProtobu
     if lhs._evaluationKeyMetadata != rhs._evaluationKeyMetadata {return false}
     if lhs.configID != rhs.configID {return false}
     if lhs._evaluationKey != rhs._evaluationKey {return false}
+    if lhs.shardIds != rhs.shardIds {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -302,11 +297,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest: SwiftProtobu
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PNNSShardResponse"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "reply"),
-    2: .standard(proto: "entry_ids"),
-    3: .standard(proto: "entry_metadatas"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}reply\0\u{3}entry_ids\0\u{3}entry_metadatas\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -346,9 +337,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse: SwiftP
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PNNSResponse"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "shard_responses"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}shard_responses\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

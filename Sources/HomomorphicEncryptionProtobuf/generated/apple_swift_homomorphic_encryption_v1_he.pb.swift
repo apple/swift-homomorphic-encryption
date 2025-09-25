@@ -120,7 +120,7 @@ public enum Apple_SwiftHomomorphicEncryption_V1_HeScheme: SwiftProtobuf.Enum, Sw
 }
 
 /// A serialized `Plaintext`.
-public struct Apple_SwiftHomomorphicEncryption_V1_SerializedPlaintext: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_V1_SerializedPlaintext: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -189,7 +189,7 @@ public struct Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertext: Sendable
 }
 
 /// A serialized `Ciphertext` using a seed in place of the second polynomial.
-public struct Apple_SwiftHomomorphicEncryption_V1_SerializedSeededCiphertext: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_V1_SerializedSeededCiphertext: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -206,7 +206,7 @@ public struct Apple_SwiftHomomorphicEncryption_V1_SerializedSeededCiphertext: @u
 }
 
 /// A serialized `Ciphertext` with all polynomials expanded.
-public struct Apple_SwiftHomomorphicEncryption_V1_SerializedFullCiphertext: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_V1_SerializedFullCiphertext: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -292,7 +292,7 @@ public struct Apple_SwiftHomomorphicEncryption_V1_SerializedRelinKey: Sendable {
 }
 
 /// A serialized `SecretKey`.
-public struct Apple_SwiftHomomorphicEncryption_V1_SerializedSecretKey: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_V1_SerializedSecretKey: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -405,25 +405,16 @@ public struct Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters: Sendable
 fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.v1"
 
 extension Apple_SwiftHomomorphicEncryption_V1_SecurityLevel: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SECURITY_LEVEL_UNSPECIFIED"),
-    1: .same(proto: "SECURITY_LEVEL_QUANTUM128"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SECURITY_LEVEL_UNSPECIFIED\0\u{1}SECURITY_LEVEL_QUANTUM128\0")
 }
 
 extension Apple_SwiftHomomorphicEncryption_V1_HeScheme: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "HE_SCHEME_UNSPECIFIED"),
-    1: .same(proto: "HE_SCHEME_BFV"),
-    2: .same(proto: "HE_SCHEME_BGV"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0HE_SCHEME_UNSPECIFIED\0\u{1}HE_SCHEME_BFV\0\u{1}HE_SCHEME_BGV\0")
 }
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedPlaintext: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedPlaintext"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "poly"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}poly\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -453,9 +444,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedPlaintext: SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertextVec: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedCiphertextVec"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "ciphertexts"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}ciphertexts\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -485,10 +474,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertextVec: SwiftProt
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertext: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedCiphertext"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "seeded"),
-    2: .same(proto: "full"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}seeded\0\u{1}full\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -555,10 +541,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertext: SwiftProtobu
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedSeededCiphertext: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedSeededCiphertext"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "poly0"),
-    2: .same(proto: "seed"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}poly0\0\u{1}seed\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -593,11 +576,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedSeededCiphertext: SwiftP
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedFullCiphertext: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedFullCiphertext"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "polys"),
-    2: .standard(proto: "skip_lsbs"),
-    3: .standard(proto: "correction_factor"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}polys\0\u{3}skip_lsbs\0\u{3}correction_factor\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -637,9 +616,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedFullCiphertext: SwiftPro
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedKeySwitchKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedKeySwitchKey"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "key_switch_key"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}key_switch_key\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -673,9 +650,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedKeySwitchKey: SwiftProto
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedGaloisKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedGaloisKey"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "key_switch_keys"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}key_switch_keys\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -705,9 +680,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedGaloisKey: SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedRelinKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedRelinKey"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "relin_key"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}relin_key\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -741,9 +714,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedRelinKey: SwiftProtobuf.
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedSecretKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedSecretKey"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "polys"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}polys\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -773,10 +744,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedSecretKey: SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedEvaluationKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedEvaluationKey"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "galois_key"),
-    2: .standard(proto: "relin_key"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}galois_key\0\u{3}relin_key\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -815,11 +783,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedEvaluationKey: SwiftProt
 
 extension Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EvaluationKeyConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "encryption_parameters"),
-    2: .standard(proto: "galois_elements"),
-    3: .standard(proto: "has_relin_key"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}galois_elements\0\u{3}has_relin_key\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -863,14 +827,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig: SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EncryptionParameters"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "polynomial_degree"),
-    2: .standard(proto: "plaintext_modulus"),
-    3: .standard(proto: "coefficient_moduli"),
-    4: .standard(proto: "error_std_dev"),
-    5: .standard(proto: "security_level"),
-    6: .standard(proto: "he_scheme"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}polynomial_degree\0\u{3}plaintext_modulus\0\u{3}coefficient_moduli\0\u{3}error_std_dev\0\u{3}security_level\0\u{3}he_scheme\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

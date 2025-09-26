@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -107,12 +107,7 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.pnns.v1"
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedCiphertextMatrix"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "num_rows"),
-    2: .standard(proto: "num_columns"),
-    3: .same(proto: "ciphertexts"),
-    4: .same(proto: "packing"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}num_rows\0\u{3}num_columns\0\u{1}ciphertexts\0\u{1}packing\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -161,12 +156,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix: S
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedPlaintextMatrix: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SerializedPlaintextMatrix"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "num_rows"),
-    2: .standard(proto: "num_columns"),
-    3: .same(proto: "plaintexts"),
-    4: .same(proto: "packing"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}num_rows\0\u{3}num_columns\0\u{1}plaintexts\0\u{1}packing\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

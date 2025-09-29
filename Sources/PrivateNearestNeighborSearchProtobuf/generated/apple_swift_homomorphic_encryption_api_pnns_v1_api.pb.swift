@@ -36,7 +36,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Request for server side configurations.
-public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -54,7 +54,7 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: @unche
 }
 
 /// Usecase configuration.
-public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -327,10 +327,7 @@ fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.api.pnns
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ConfigRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "usecases"),
-    2: .standard(proto: "existing_config_ids"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}usecases\0\u{3}existing_config_ids\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -365,11 +362,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigRequest: SwiftProto
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Config"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .standard(proto: "pnns_config"),
-    3: .standard(proto: "config_id"),
-    4: .standard(proto: "reuse_existing_config"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{4}\u{2}pnns_config\0\u{3}config_id\0\u{3}reuse_existing_config\0\u{c}\u{1}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -425,10 +418,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Config: SwiftProtobuf.Mes
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ConfigResponse"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "configs"),
-    2: .standard(proto: "key_info"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}configs\0\u{3}key_info\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -463,9 +453,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_ConfigResponse: SwiftProt
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Requests: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Requests"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "requests"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}requests\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -495,9 +483,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Requests: SwiftProtobuf.M
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Responses: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Responses"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "responses"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}responses\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -527,10 +513,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Responses: SwiftProtobuf.
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Request: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Request"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "usecase"),
-    3: .standard(proto: "pnns_request"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}usecase\0\u{4}\u{2}pnns_request\0\u{c}\u{2}\u{1}\u{c}\u{4}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -581,9 +564,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Request: SwiftProtobuf.Me
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Response: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Response"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .standard(proto: "pnns_response"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{4}\u{2}pnns_response\0\u{c}\u{1}\u{1}\u{c}\u{3}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -629,12 +610,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Response: SwiftProtobuf.M
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Error: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Error"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "config_version_not_found"),
-    2: .standard(proto: "evaluation_key_not_found"),
-    3: .standard(proto: "invalid_request"),
-    4: .standard(proto: "internal_error"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}config_version_not_found\0\u{3}evaluation_key_not_found\0\u{3}invalid_request\0\u{3}internal_error\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -735,9 +711,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Error: SwiftProtobuf.Mess
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Error.ConfigVersionNotFound: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_Error.protoMessageName + ".ConfigVersionNotFound"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "config_response"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}config_response\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

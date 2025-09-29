@@ -328,7 +328,7 @@ public struct Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices: Sendable
 }
 
 /// Client specific PIR configuration for Symmetric PIR
-public struct Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig: @unchecked Sendable {
+public struct Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -349,33 +349,16 @@ public struct Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig: 
 fileprivate let _protobuf_package = "apple.swift_homomorphic_encryption.pir.v1"
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "KEY_COMPRESSION_STRATEGY_UNSPECIFIED"),
-    1: .same(proto: "KEY_COMPRESSION_STRATEGY_MAXIMUM_COMPRESSION"),
-    2: .same(proto: "KEY_COMPRESSION_STRATEGY_HYBRID_COMPRESSION"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0KEY_COMPRESSION_STRATEGY_UNSPECIFIED\0\u{1}KEY_COMPRESSION_STRATEGY_MAXIMUM_COMPRESSION\0\u{1}KEY_COMPRESSION_STRATEGY_HYBRID_COMPRESSION\0")
 }
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SYMMETRIC_PIR_CONFIG_TYPE_UNSPECIFIED"),
-    1: .same(proto: "SYMMETRIC_PIR_CONFIG_TYPE_OPRF_P384_AES_GCM_192_NONCE_96_TAG_128"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SYMMETRIC_PIR_CONFIG_TYPE_UNSPECIFIED\0\u{1}SYMMETRIC_PIR_CONFIG_TYPE_OPRF_P384_AES_GCM_192_NONCE_96_TAG_128\0")
 }
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PirParameters"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "encryption_parameters"),
-    2: .standard(proto: "num_entries"),
-    3: .standard(proto: "entry_size"),
-    4: .same(proto: "dimensions"),
-    5: .standard(proto: "keyword_pir_params"),
-    6: .same(proto: "algorithm"),
-    7: .standard(proto: "batch_size"),
-    8: .standard(proto: "evaluation_key_config"),
-    9: .standard(proto: "key_compression_strategy"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}num_entries\0\u{3}entry_size\0\u{1}dimensions\0\u{3}keyword_pir_params\0\u{1}algorithm\0\u{3}batch_size\0\u{3}evaluation_key_config\0\u{3}key_compression_strategy\0\u{c}\u{a}\u{1}\u{c}\u{b}\u{1}\u{c}\u{c}\u{1}")
 
   fileprivate class _StorageClass {
     var _encryptionParameters: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters? = nil
@@ -388,15 +371,11 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.M
     var _evaluationKeyConfig: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig? = nil
     var _keyCompressionStrategy: Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy = .unspecified
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 
@@ -505,11 +484,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.M
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".KeywordPirParameters"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "num_hash_functions"),
-    3: .standard(proto: "symmetric_pir_client_config"),
-    4: .standard(proto: "sharding_function"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}num_hash_functions\0\u{4}\u{2}symmetric_pir_client_config\0\u{3}sharding_function\0\u{c}\u{2}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -553,10 +528,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordPirParameters: SwiftPro
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRShardingFunction"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "sha256"),
-    2: .standard(proto: "double_mod"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}sha256\0\u{3}double_mod\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -642,9 +614,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionSHA256: Swi
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRShardingFunctionDoubleMod"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "other_shard_count"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}other_shard_count\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -674,10 +644,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PIRShardingFunctionDoubleMod: 
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EncryptedIndices"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "ciphertexts"),
-    2: .standard(proto: "num_pir_calls"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}ciphertexts\0\u{3}num_pir_calls\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -712,10 +679,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices: SwiftProtobu
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirClientConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SymmetricPirClientConfig"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "server_public_key"),
-    2: .standard(proto: "config_type"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}server_public_key\0\u{3}config_type\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

@@ -1,7 +1,7 @@
 // Example for serialization.
 
 // snippet.hide
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ extension SerializedCiphertext {
     /// from the size.
     func size() throws -> Int {
         let data = try proto().serializedData()
-        return data.filter { byte in byte != 0 }.count
+        return data.count { byte in byte != 0 }
     }
 }
 

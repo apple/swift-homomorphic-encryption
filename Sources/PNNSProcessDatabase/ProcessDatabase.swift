@@ -12,26 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
-////
-//// Licensed under the Apache License, Version 2.0 (the "License");
-//// you may not use this file except in compliance with the License.
-//// You may obtain a copy of the License at
-////
-////     http://www.apache.org/licenses/LICENSE-2.0
-////
-//// Unless required by applicable law or agreed to in writing, software
-//// distributed under the License is distributed on an "AS IS" BASIS,
-//// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//// See the License for the specific language governing permissions and
-//// limitations under the License.
-//
+import ApplicationProtobuf
 import ArgumentParser
 import Foundation
 import HomomorphicEncryption
 import Logging
 import PrivateNearestNeighborSearch
-import PrivateNearestNeighborSearchProtobuf
 
 /// Creates a new `Database` from a given path.
 /// - Parameter path: The path to the `Database` file.
@@ -306,8 +292,7 @@ extension ValidationResult {
         descriptionDict["evaluation key size"] = try sizeString(
             byteCount: evaluationKey.size(),
             count: evaluationKey.config.keyCount,
-            label: "keys"
-        )
+            label: "keys")
 
         let responseCount: Int = response.ciphertextMatrices.map { matrix in matrix.ciphertexts.count }.sum()
         descriptionDict["response size"] = try sizeString(byteCount: response.size(), count: responseCount,

@@ -47,7 +47,7 @@ Supported values are:
 
 ##### Configuration size
 Generally, increasing the `shardCount` will yield faster server runtime.
-However, since the client needs to know information about each shard, increasing `shardCount` also increases the size of the [PIR configuration](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_api_pir_v1_pirconfig).
+However, since the client needs to know information about each shard, increasing `shardCount` also increases the size of the [PIR configuration](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/applicationprotobuf/apple_swifthomomorphicencryption_api_pir_v1_pirconfig).
 One way to reduce the PIR configuration size is to process each shard with the same configuration (see <doc:ReusingPirParameters>).
 Then, the PIR configuration will be highly compressible, yielding a smaller configuration size when transmitting over a network (that supports compression).
 

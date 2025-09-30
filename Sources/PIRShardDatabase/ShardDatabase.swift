@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import ApplicationProtobuf
 import ArgumentParser
 import HomomorphicEncryption
 import PrivateInformationRetrieval
-import PrivateInformationRetrievalProtobuf
 
 extension KeywordDatabaseShard {
     func save(to path: String) throws {

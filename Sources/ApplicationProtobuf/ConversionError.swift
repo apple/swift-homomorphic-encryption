@@ -15,16 +15,33 @@
 import Foundation
 import SwiftProtobuf
 
-enum ConversionError: Error {
+/// Error type when converting between protobuf and native objects.
+public enum ConversionError: Error {
     case unrecognizedEnumValue(enum: any Enum.Type, value: Int)
+    case unsetField(field: String, message: any Message.Type)
+    case unsetOneof(oneof: any Message.Type, field: String)
     case unspecifiedEnumValue(enum: any Enum.Type)
+}
+
+extension ConversionError {
+    static func unsetOneof(oneof: any Message.Type, field: AnyKeyPath) -> Self {
+        .unsetOneof(oneof: oneof, field: String(reflecting: field))
+    }
+
+    static func unsetField(_ field: AnyKeyPath, in message: any Message.Type) -> Self {
+        .unsetField(field: String(reflecting: field), message: message)
+    }
 }
 
 extension ConversionError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case let .unrecognizedEnumValue(enum: enumeration, value: value):
+        case let .unrecognizedEnumValue(enum: enumeration, value):
             "Unrecognized value \(value) in enum \(enumeration)"
+        case let .unsetField(field, message):
+            "Unset field \(field) in message \(message)"
+        case let .unsetOneof(oneof, field):
+            "Unset oneof in message \(oneof) for field \(field)"
         case let .unspecifiedEnumValue(enum: enumeration):
             "Unspecified value for enum \(enumeration)"
         }

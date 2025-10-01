@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import ApplicationProtobuf
 import ArgumentParser
 import Crypto
 import Foundation
@@ -19,7 +20,6 @@ import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import Logging
 import PrivateInformationRetrieval
-import PrivateInformationRetrievalProtobuf
 
 /// The different table sizes that can be used for the PIR database.
 enum TableSizeOption: Codable, Equatable, Hashable {
@@ -561,8 +561,7 @@ extension ProcessKeywordDatabase.ShardValidationResult {
         descriptionDict["evaluation key size"] = try sizeString(
             byteCount: evaluationKey.size(),
             count: evaluationKey.config.keyCount,
-            label: "keys"
-        )
+            label: "keys")
         descriptionDict["response size"] = try sizeString(byteCount: response.size(),
                                                           count: response.ciphertexts.flatMap(\.self).count,
                                                           label: "ciphertexts")

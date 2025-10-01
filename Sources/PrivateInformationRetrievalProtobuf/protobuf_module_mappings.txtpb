@@ -1,4 +1,0 @@
-mapping {
-  module_name: "HomomorphicEncryptionProtobuf"
-  proto_file_path: "apple/swift_homomorphic_encryption/v1/he.proto"
-}

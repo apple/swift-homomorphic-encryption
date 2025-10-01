@@ -2,6 +2,7 @@ version: 1
 builder:
   configs:
     - documentation_targets:
+        - ApplicationProtobuf
         - HomomorphicEncryption
         - HomomorphicEncryptionProtobuf
         - PIRGenerateDatabase
@@ -10,7 +11,5 @@ builder:
         - PNNSGenerateDatabase
         - PNNSProcessDatabase
         - PrivateInformationRetrieval
-        - PrivateInformationRetrievalProtobuf
         - PrivateNearestNeighborSearch
-        - PrivateNearestNeighborSearchProtobuf
       swift_version: 6.0

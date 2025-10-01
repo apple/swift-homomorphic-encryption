@@ -16,7 +16,7 @@ To encode as fast as possible, one could have multiple nodes that shard slices o
 nodes will collect the rows from the sharding nodes. Once the whole dataset has been divided into shards, each node
 holding a completed shard worth of rows can start processing them. Each node will upload the processed shard & the
 resulting PIR parameters to shared storage. A post-processing job can merge all the PIR parameters to construct a
-[PIRConfig](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/privateinformationretrievalprotobuf/apple_swifthomomorphicencryption_api_v1_pirconfig)
+[PIRConfig](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/applicationprotobuf/apple_swifthomomorphicencryption_api_v1_pirconfig)
 protobuf message that contains a shared evaluation key configuration and configuration for every shard.
 
 ## Sharding function

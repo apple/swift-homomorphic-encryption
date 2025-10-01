@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import ApplicationProtobuf
 import ArgumentParser
 import Foundation
 import HomomorphicEncryption
 import PrivateNearestNeighborSearch
-import PrivateNearestNeighborSearchProtobuf
 
 enum VectorTypeArguments: String, CaseIterable, ExpressibleByArgument {
     /// Each vector's entry is uniform random from `[-1.0, 1.0]`

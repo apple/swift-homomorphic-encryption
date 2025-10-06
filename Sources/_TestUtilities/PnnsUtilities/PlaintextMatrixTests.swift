@@ -50,13 +50,15 @@ extension PrivateNearestNeighborSearchUtil {
                 #expect(throws: Never.self) { try PlaintextMatrix<Scheme, Coeff>(
                     dimensions: dims,
                     packing: packing,
-                    plaintexts: [plaintext, plaintext]) }
+                    plaintexts: [plaintext, plaintext])
+                }
 
                 // Not enough plaintexts
                 #expect(throws: (any Error).self) { try PlaintextMatrix<Scheme, Coeff>(
                     dimensions: dims,
                     packing: packing,
-                    plaintexts: []) }
+                    plaintexts: [])
+                }
                 // Plaintexts from different contexts
                 do {
                     let diffRlweParams = rlweParams == PredefinedRlweParameters
@@ -73,7 +75,8 @@ extension PrivateNearestNeighborSearchUtil {
                     #expect(throws: (any Error).self) { try PlaintextMatrix<Scheme, Coeff>(
                         dimensions: dims,
                         packing: packing,
-                        plaintexts: [plaintext, diffPlaintext]) }
+                        plaintexts: [plaintext, diffPlaintext])
+                    }
                 }
             }
             for rlweParams in PredefinedRlweParameters.allCases where rlweParams.supportsScalar(Scheme.Scalar.self) {
@@ -101,7 +104,8 @@ extension PrivateNearestNeighborSearchUtil {
                     context: context,
                     dimensions: wrongDims,
                     packing: packing,
-                    values: values) }
+                    values: values)
+                }
             }
             // Too many columns
             do {
@@ -110,7 +114,8 @@ extension PrivateNearestNeighborSearchUtil {
                     context: context,
                     dimensions: dims,
                     packing: packing,
-                    values: values) }
+                    values: values)
+                }
             }
         }
 

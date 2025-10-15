@@ -89,7 +89,7 @@ public struct SimdEncodingDimensions: Codable, Equatable, Hashable, Sendable {
 ///
 /// The protocol should be implemented when adding a new HE scheme.
 /// However, several functions have an alternative API which is more ergonomic and should be preferred.
-public protocol HeScheme {
+public protocol HeScheme: Sendable {
     /// Coefficient type for each polynomial.
     associatedtype Scalar: ScalarType
     /// Coefficient type for signed encoding/decoding.

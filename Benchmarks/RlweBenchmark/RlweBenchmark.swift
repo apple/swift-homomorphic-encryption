@@ -548,6 +548,37 @@ func ciphertextSwapRowsBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void
     }
 }
 
+func ciphertextPlaintextInnerProductBenchmark<Scheme: HeScheme>(_: Scheme.Type, vectorCount: Int) -> () -> Void {
+    {
+        benchmark("CiphertextPlaintextInnerProduct", Scheme.self) { benchmark in
+            let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
+            let ciphertexts = Array(repeating: benchmarkContext.evalCiphertext, count: vectorCount)
+            let plaintexts = Array(repeating: benchmarkContext.evalPlaintext, count: vectorCount)
+            benchmark.configuration.scalingFactor = .kilo
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(Scheme.innerProduct(ciphertexts: ciphertexts, plaintexts: plaintexts))
+            }
+        }
+    }
+}
+
+func ciphertextCiphertextInnerProductBenchmark<Scheme: HeScheme>(_: Scheme.Type, vectorCount: Int) -> () -> Void {
+    {
+        benchmark("CiphertextCiphertextInnerProduct", Scheme.self) { benchmark in
+            let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
+            let ciphertext = benchmarkContext.ciphertext
+            let ciphertexts1 = Array(repeating: ciphertext, count: vectorCount)
+            let ciphertexts2 = Array(repeating: ciphertext, count: vectorCount)
+            benchmark.configuration.scalingFactor = .kilo
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(Scheme.innerProduct(ciphertexts1, ciphertexts2))
+            }
+        }
+    }
+}
+
 // MARK: Serialization
 
 func coeffPlaintextSerializeBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
@@ -769,6 +800,12 @@ nonisolated(unsafe) let benchmarks: () -> Void = {
 
     ciphertextSwapRowsBenchmark(Bfv<UInt32>.self)()
     ciphertextSwapRowsBenchmark(Bfv<UInt64>.self)()
+
+    ciphertextPlaintextInnerProductBenchmark(Bfv<UInt32>.self, vectorCount: 32)()
+    ciphertextPlaintextInnerProductBenchmark(Bfv<UInt64>.self, vectorCount: 32)()
+
+    ciphertextCiphertextInnerProductBenchmark(Bfv<UInt32>.self, vectorCount: 8)()
+    ciphertextCiphertextInnerProductBenchmark(Bfv<UInt64>.self, vectorCount: 8)()
 
     // Serialization
     coeffPlaintextSerializeBenchmark(Bfv<UInt32>.self)()

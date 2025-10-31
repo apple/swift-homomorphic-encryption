@@ -246,9 +246,9 @@ The documentation can be built from Xcode via `Product -> Build Documentation`.
 ## Command line
 The documentation can be built from command line by running
 ```sh
-swift package generate-documentation
+SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_DOCCPLUGIN=1 swift package generate-documentation
 ```
 and previewed by running
 ```sh
-swift package --disable-sandbox preview-documentation --target HomomorphicEncryption
+SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_DOCCPLUGIN=1 swift package --disable-sandbox preview-documentation --target HomomorphicEncryption
 ```

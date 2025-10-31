@@ -64,7 +64,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-protobuf", from: "1.31.1"), // Keep version in sync with README
-        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.1.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -297,6 +296,22 @@ if enableBenchmarking {
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
             ]),
+    ]
+}
+
+// MARK: - DoCC plugin
+
+var enableDocCPlugin: Bool {
+    let benchmarkFlags = "SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_DOCCPLUGIN"
+    if let flag = ProcessInfo.processInfo.environment[benchmarkFlags], flag == "1" {
+        return true
+    }
+    return false
+}
+
+if enableDocCPlugin {
+    package.dependencies += [
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.1.0"),
     ]
 }
 

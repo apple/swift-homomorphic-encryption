@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 // Remember to update CI if changing
 
@@ -318,6 +318,6 @@ if enableDocCPlugin {
 // Set the minimum macOS version for the package
 #if canImport(Darwin)
 package.platforms = [
-    .macOS(.v15), // Constrained by UInt128 support
+    .macOS(.v26), // Constrained by UInt128 support
 ]
 #endif

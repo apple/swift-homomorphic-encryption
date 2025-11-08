@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,10 +99,9 @@ struct RnsBaseConverter<T: ScalarType>: Sendable {
         assert(poly.context == inputContext)
         for (rnsIndex, puncturedProduct) in inversePuncturedProducts.enumerated() {
             let indices = poly.polyIndices(rnsIndex: rnsIndex)
-            poly.data.data.withUnsafeMutableBufferPointer { dataPtr in
-                for index in indices {
-                    dataPtr[index] = puncturedProduct.multiplyMod(dataPtr[index])
-                }
+            var dataSpan = poly.data.data.mutableSpan
+            for index in indices {
+                dataSpan[index] = puncturedProduct.multiplyMod(dataSpan[index])
             }
         }
     }
@@ -118,26 +117,25 @@ struct RnsBaseConverter<T: ScalarType>: Sendable {
     @inlinable
     func convertApproximate(using products: PolyRq<T, Coeff>) -> PolyRq<T, Coeff> {
         var result = PolyRq<T, Coeff>.zero(context: outputContext)
-        result.data.data.withUnsafeMutableBufferPointer { resultPtr in
-            for (rnsOutIndex, tj) in outputContext.reduceModuli.enumerated() {
-                let puncturedProductColumnIndices = puncturedProducts.rowIndices(row: rnsOutIndex)
-                var sums = Array(repeating: T.DoubleWidth(0), count: outputContext.degree)
-                var productsIndex = 0
-                for (rnsInIndex, puncturedProdIdx) in puncturedProductColumnIndices.enumerated() {
-                    let puncturedProd = puncturedProducts[puncturedProdIdx]
-                    if rnsInIndex == inputContext.moduli.count &- 1 {
-                        for (coeffIndex, outIndex) in products.polyIndices(rnsIndex: rnsOutIndex).enumerated() {
-                            sums[coeffIndex] &+=
-                                T.DoubleWidth(products.data[productsIndex].multipliedFullWidth(by: puncturedProd))
-                            resultPtr[outIndex] = tj.reduce(sums[coeffIndex])
-                            productsIndex &+= 1
-                        }
-                    } else {
-                        for coeffIndex in 0..<outputContext.degree {
-                            sums[coeffIndex] &+=
-                                T.DoubleWidth(products.data[productsIndex].multipliedFullWidth(by: puncturedProd))
-                            productsIndex &+= 1
-                        }
+        var resultSpan = result.data.data.mutableSpan
+        for (rnsOutIndex, tj) in outputContext.reduceModuli.enumerated() {
+            let puncturedProductColumnIndices = puncturedProducts.rowIndices(row: rnsOutIndex)
+            var sums = Array(repeating: T.DoubleWidth(0), count: outputContext.degree)
+            var productsIndex = 0
+            for (rnsInIndex, puncturedProdIdx) in puncturedProductColumnIndices.enumerated() {
+                let puncturedProd = puncturedProducts[puncturedProdIdx]
+                if rnsInIndex == inputContext.moduli.count &- 1 {
+                    for (coeffIndex, outIndex) in products.polyIndices(rnsIndex: rnsOutIndex).enumerated() {
+                        sums[coeffIndex] &+=
+                            T.DoubleWidth(products.data[productsIndex].multipliedFullWidth(by: puncturedProd))
+                        resultSpan[outIndex] = tj.reduce(sums[coeffIndex])
+                        productsIndex &+= 1
+                    }
+                } else {
+                    for coeffIndex in 0..<outputContext.degree {
+                        sums[coeffIndex] &+=
+                            T.DoubleWidth(products.data[productsIndex].multipliedFullWidth(by: puncturedProd))
+                        productsIndex &+= 1
                     }
                 }
             }

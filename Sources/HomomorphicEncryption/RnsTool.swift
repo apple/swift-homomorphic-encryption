@@ -383,17 +383,15 @@ package struct RnsTool<T: ScalarType>: Sendable {
         var polyModQ = poly
         try polyModQ.dropContext(to: inputContext)
         var output = try rnsConvertQToBSk.convertApproximate(poly: polyModQ)
-        polyModBSk.withUnsafeBufferPointer { polyModBSkPtr in
-            for (rnsIndex, inverseQModBSk) in inverseQModBSk.enumerated() {
-                let bSk = rnsConvertQToBSk.outputContext.moduli[rnsIndex]
-                let outputIndices = output.polyIndices(rnsIndex: rnsIndex)
-                output.data.data.withUnsafeMutableBufferPointer { outputPtr in
-                    for polyIndex in outputIndices {
-                        let inputCoeff = polyModBSkPtr[polyIndex]
-                        let outputCoeff = outputPtr[polyIndex]
-                        outputPtr[polyIndex] = inverseQModBSk.multiplyMod(inputCoeff &+ bSk &- outputCoeff)
-                    }
-                }
+        let polyModBSkSpan = polyModBSk.span
+        for (rnsIndex, inverseQModBSk) in inverseQModBSk.enumerated() {
+            let bSk = rnsConvertQToBSk.outputContext.moduli[rnsIndex]
+            let outputIndices = output.polyIndices(rnsIndex: rnsIndex)
+            var outputSpan = output.data.data.mutableSpan
+            for polyIndex in outputIndices {
+                let inputCoeff = polyModBSkSpan[polyIndex]
+                let outputCoeff = outputSpan[polyIndex]
+                outputSpan[polyIndex] = inverseQModBSk.multiplyMod(inputCoeff &+ bSk &- outputCoeff)
             }
         }
         return output
@@ -422,34 +420,29 @@ package struct RnsTool<T: ScalarType>: Sendable {
         let coeffIndices = alphaSk.coeffIndices
         var alphaExceedsThreshold = [T]()
         alphaExceedsThreshold.reserveCapacity(coeffIndices.count)
-        alphaSk.data.data.withUnsafeMutableBufferPointer { alphaSkPtr in
-            for coeffIndex in coeffIndices {
-                let polyModMSkCoeff = polyModMSk[coeffIndex]
-                var alphaSk = alphaSkPtr[coeffIndex]
-                alphaSk = inverseBModMSk
-                    .multiplyMod(alphaSk &+ inverseBModMSk.modulus &- polyModMSkCoeff)
-                alphaSkPtr[coeffIndex] = alphaSk
-                alphaExceedsThreshold.append(alphaSk.constantTimeGreaterThan(mSkThreshold))
-            }
+        var alphaSkSpan = alphaSk.data.data.mutableSpan
+        for coeffIndex in coeffIndices {
+            let polyModMSkCoeff = polyModMSk[coeffIndex]
+            var alphaSk = alphaSkSpan[coeffIndex]
+            alphaSk = inverseBModMSk
+                .multiplyMod(alphaSk &+ inverseBModMSk.modulus &- polyModMSkCoeff)
+            alphaSkSpan[coeffIndex] = alphaSk
+            alphaExceedsThreshold.append(alphaSk.constantTimeGreaterThan(mSkThreshold))
         }
 
         var output = rnsConvertBtoQ.convertApproximate(using: polyModB)
-        output.data.data.withUnsafeMutableBufferPointer { outputPtr in
-            alphaSk.data.data.withUnsafeBufferPointer { alphaSkPtr in
-                alphaExceedsThreshold.withUnsafeBufferPointer { alphaExceedsThresholdPtr in
-                    for (rnsIndex, (qi, (bModQi, negBModQi))) in zip(inputContext.moduli, zip(bModQ, negBModQ))
-                        .enumerated()
-                    {
-                        for (coeffIndex, outputIndex) in polyModB.polyIndices(rnsIndex: rnsIndex).enumerated() {
-                            // Center alphaSk before Shenoy-Kumeresan conversion
-                            let adjust = T.constantTimeSelect(
-                                if: alphaExceedsThresholdPtr[coeffIndex],
-                                then: bModQi.multiplyMod(mSk &- alphaSkPtr[coeffIndex]),
-                                else: negBModQi.multiplyMod(alphaSkPtr[coeffIndex]))
-                            outputPtr[outputIndex] = outputPtr[outputIndex].addMod(adjust, modulus: qi)
-                        }
-                    }
-                }
+        var outputSpan = output.data.data.mutableSpan
+        let alphaExceedsThresholdSpan = alphaExceedsThreshold.span
+        for (rnsIndex, (qi, (bModQi, negBModQi))) in zip(inputContext.moduli, zip(bModQ, negBModQ))
+            .enumerated()
+        {
+            for (coeffIndex, outputIndex) in polyModB.polyIndices(rnsIndex: rnsIndex).enumerated() {
+                // Center alphaSk before Shenoy-Kumeresan conversion
+                let adjust = T.constantTimeSelect(
+                    if: alphaExceedsThresholdSpan[coeffIndex],
+                    then: bModQi.multiplyMod(mSk &- alphaSkSpan[coeffIndex]),
+                    else: negBModQi.multiplyMod(alphaSkSpan[coeffIndex]))
+                outputSpan[outputIndex] = outputSpan[outputIndex].addMod(adjust, modulus: qi)
             }
         }
 

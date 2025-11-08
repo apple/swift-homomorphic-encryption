@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -178,25 +178,23 @@ extension Bfv {
                 for (index, poly) in keyCiphers[decomposeIndex].polys.enumerated() {
                     let accIndex = poly.data.index(row: index, column: 0)
                     let polyIndex = poly.data.index(row: keyIndex, column: 0)
-                    poly.data.data.withUnsafeBufferPointer { polyPtr in
-                        for columnIndex in 0..<degree {
-                            let prod = bufferSlice[columnIndex]
-                                .multipliedFullWidth(by: polyPtr[polyIndex &+ columnIndex])
-                            // Overflow avoided by `maxLazyProductAccumulationCount()` check during context
-                            // initialization
-                            accumulator[accIndex &+ columnIndex] &+= T.DoubleWidth(prod)
-                        }
+                    let polySpan = poly.data.data.span
+                    for columnIndex in 0..<degree {
+                        let prod = bufferSlice[columnIndex]
+                            .multipliedFullWidth(by: polySpan[polyIndex &+ columnIndex])
+                        // Overflow avoided by `maxLazyProductAccumulationCount()` check during context
+                        // initialization
+                        accumulator[accIndex &+ columnIndex] &+= T.DoubleWidth(prod)
                     }
                 }
             }
             let prodIndex = ciphertextProd.polys[0].data.index(row: rnsIndex, column: 0)
             for rowIndex in ciphertextProd.polys.indices {
                 let accIndex = accumulator.index(row: rowIndex, column: 0)
-                ciphertextProd.polys[rowIndex].data.data.withUnsafeMutableBufferPointer { ciphertextProdPtr in
-                    for columnIndex in 0..<degree {
-                        ciphertextProdPtr[prodIndex &+ columnIndex] = keyModulus
-                            .reduce(accumulator[accIndex &+ columnIndex])
-                    }
+                var ciphertextProdSpan = ciphertextProd.polys[rowIndex].data.data.mutableSpan
+                for columnIndex in 0..<degree {
+                    ciphertextProdSpan[prodIndex &+ columnIndex] = keyModulus
+                        .reduce(accumulator[accIndex &+ columnIndex])
                 }
             }
         }

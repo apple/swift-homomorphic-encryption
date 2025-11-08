@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -121,19 +121,17 @@ extension PolyRq where F == Coeff {
             func outputIndex(column: Int) -> Int {
                 data.index(row: rnsIndex, column: column)
             }
-            data.data.withUnsafeBufferPointer { dataPtr in
-                output.data.data.withUnsafeMutableBufferPointer { outputPtr in
-                    for dataIndex in dataIndices {
-                        guard let (negate, outIndex) = iterator.next() else {
-                            preconditionFailure("GaloisCoeffIterator goes out of index")
-                        }
-                        if negate {
-                            outputPtr[outputIndex(column: outIndex)] = dataPtr[dataIndex]
-                                .negateMod(modulus: modulus)
-                        } else {
-                            outputPtr[outputIndex(column: outIndex)] = dataPtr[dataIndex]
-                        }
-                    }
+            let dataSpan = data.data.span
+            var outputSpan = output.data.data.mutableSpan
+            for dataIndex in dataIndices {
+                guard let (negate, outIndex) = iterator.next() else {
+                    preconditionFailure("GaloisCoeffIterator goes out of index")
+                }
+                if negate {
+                    outputSpan[outputIndex(column: outIndex)] = dataSpan[dataIndex]
+                        .negateMod(modulus: modulus)
+                } else {
+                    outputSpan[outputIndex(column: outIndex)] = dataSpan[dataIndex]
                 }
             }
         }

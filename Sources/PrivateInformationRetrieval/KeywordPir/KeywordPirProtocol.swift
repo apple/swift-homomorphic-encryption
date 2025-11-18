@@ -154,7 +154,7 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     ///   - context: Context for HE computation.
     ///   - processed: Processed database.
     /// - Throws: Error upon failure to initialize the server.
-    public required init(context: Context<Scheme>,
+    public required init(context: Scheme.Context,
                          processed: ProcessedDatabaseWithParameters<Scheme>) throws
     {
         if let keywordPirParameter = processed.keywordPirParameter {
@@ -186,10 +186,10 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     @inlinable
     public static func process(database: some Collection<KeywordValuePair>,
                                config: KeywordPirConfig,
-                               with context: Context<Scheme>,
+                               with context: Scheme.Context,
                                onEvent: @escaping (ProcessKeywordDatabase.ProcessShardEvent) throws -> Void = { _ in },
                                symmetricPirConfig: SymmetricPirConfig? = nil)
-        throws -> ProcessedDatabaseWithParameters<Scheme>
+        async throws -> ProcessedDatabaseWithParameters<Scheme>
     {
         func onCuckooEvent(event: CuckooTable.Event) throws {
             try onEvent(ProcessKeywordDatabase.ProcessShardEvent.cuckooTableEvent(event))
@@ -221,16 +221,16 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
             unevenDimensions: config.unevenDimensions,
             keyCompression: config.keyCompression)
         let indexPirParameter = PirServer.generateParameter(config: indexPirConfig, with: context)
-
-        let processedDb = try PirServer.Database(plaintexts: stride(
-            from: 0,
-            to: entryTable.count,
-            by: cuckooTable.bucketsPerTable).flatMap { startIndex in
-            try PirServer.process(
+        var plaintexts: [Plaintext<Scheme, Eval>?] = []
+        let indices = Array(stride(from: 0, to: entryTable.count, by: cuckooTable.bucketsPerTable))
+        for startIndex in indices {
+            let temp = try await PirServer.process(
                 database: entryTable[startIndex..<startIndex + cuckooTable.bucketsPerTable],
                 with: context,
                 using: indexPirParameter).plaintexts
-        })
+            plaintexts.append(contentsOf: temp)
+        }
+        let processedDb = PirServer.Database(plaintexts: plaintexts)
         let evaluationKeyConfig = indexPirParameter.evaluationKeyConfig
 
         return ProcessedDatabaseWithParameters(
@@ -250,9 +250,9 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     /// - Throws: Error upon failure to compute a response.
     @inlinable
     public func computeResponse(to query: Query,
-                                using evaluationKey: EvaluationKey<Scheme>) throws -> Response
+                                using evaluationKey: EvaluationKey<Scheme>) async throws -> Response
     {
-        try indexPirServer.computeResponse(to: query, using: evaluationKey)
+        try await indexPirServer.computeResponse(to: query, using: evaluationKey)
     }
 }
 
@@ -288,7 +288,7 @@ public final class KeywordPirClient<PirClient: IndexPirClient>: KeywordPirProtoc
     public required init(
         keywordParameter: KeywordPirParameter,
         pirParameter: IndexPirParameter,
-        context: Context<IndexPir.Scheme>)
+        context: Scheme.Context)
     {
         self.keywordParameter = keywordParameter
         self.indexPirClient = PirClient(parameter: pirParameter, context: context)

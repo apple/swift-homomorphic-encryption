@@ -16,33 +16,33 @@
 ///
 /// HE operations are typically only supported between objects, such as ``Ciphertext``, ``Plaintext``,
 /// ``EvaluationKey``, ``SecretKey``,  with the same context.
-public final class Context<Scheme: HeScheme>: Equatable, Sendable {
+public final class Context<Scheme: HeScheme>: HeContext, Equatable, Sendable {
     public typealias Scalar = Scheme.Scalar
 
     /// Encryption parameters.
     public let encryptionParameters: EncryptionParameters<Scalar>
 
     /// Plaintext context, with modulus `t`, the plaintext modulus.
-    @usableFromInline let plaintextContext: PolyContext<Scalar>
+    public let plaintextContext: PolyContext<Scalar>
 
     /// Encoding matrix for ``Encoding.simd`` encoding.
-    @usableFromInline let simdEncodingMatrix: [Int]
+    public let simdEncodingMatrix: [Int]
 
     /// Context for the secret key.
-    @usableFromInline let secretKeyContext: PolyContext<Scalar>
+    public let secretKeyContext: PolyContext<Scalar>
 
     /// Top-level ciphertext context.
-    @usableFromInline package let ciphertextContext: PolyContext<Scalar>
+    public let ciphertextContext: PolyContext<Scalar>
 
     /// Contexts for key-switching keys.
     ///
     /// The i'th context contains `q_0, ..., q_i, q_{L-1}`, and has next context dropping `q_{L-1}`
     /// E.g., `keySwitchingContexts[0].context.moduli = [q_0, q_1, q_L]`, and
     /// `keySwitchingContexts[0].next.moduli = [q_0, q_1]`
-    @usableFromInline let keySwitchingContexts: [PolyContext<Scalar>]
+    public let keySwitchingContexts: [PolyContext<Scalar>]
 
     /// The rns tools for each level of ciphertexts, with number of moduli in descending order.
-    @usableFromInline let rnsTools: [RnsTool<Scalar>]
+    public let _rnsTools: [_RnsTool<Scalar>]
 
     /// The plaintext modulus,`t`.
     public var plaintextModulus: Scalar { encryptionParameters.plaintextModulus }
@@ -85,7 +85,7 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
         } else {
             nil
         }
-        var rnsTools = [RnsTool<Scalar>]()
+        var rnsTools = [_RnsTool<Scalar>]()
         rnsTools.reserveCapacity(ciphertextModuli.count)
         let ciphertextContext = try PolyContext<Scalar>(
             degree: encryptionParameters.polyDegree,
@@ -110,16 +110,16 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
             degree: encryptionParameters.polyDegree,
             moduli: [encryptionParameters.plaintextModulus])
 
-        let rnsToolContext = try RnsTool.RnsToolContext(
+        let rnsToolContext = try _RnsTool.RnsToolContext(
             inputContext: ciphertextContext,
             outputContext: plaintextContext)
         var rnsToolsCiphertextContext = ciphertextContext
-        try rnsTools.append(RnsTool(from: ciphertextContext, to: plaintextContext, rnsToolContext: rnsToolContext))
+        try rnsTools.append(_RnsTool(from: ciphertextContext, to: plaintextContext, rnsToolContext: rnsToolContext))
         while let nextContext = rnsToolsCiphertextContext.next {
-            try rnsTools.append(RnsTool(from: nextContext, to: plaintextContext, rnsToolContext: rnsToolContext))
+            try rnsTools.append(_RnsTool(from: nextContext, to: plaintextContext, rnsToolContext: rnsToolContext))
             rnsToolsCiphertextContext = nextContext
         }
-        self.rnsTools = rnsTools
+        self._rnsTools = rnsTools
     }
 
     /// Returns a boolean value indicating whether two contexts are equal.
@@ -133,9 +133,9 @@ public final class Context<Scheme: HeScheme>: Equatable, Sendable {
     }
 
     @inlinable
-    func getRnsTool(moduliCount: Int) -> RnsTool<Scalar> {
-        precondition(moduliCount <= rnsTools.count && moduliCount > 0, "Invalid number of moduli")
-        return rnsTools[rnsTools.count - moduliCount]
+    public func getRnsTool(moduliCount: Int) -> _RnsTool<Scalar> {
+        precondition(moduliCount <= _rnsTools.count && moduliCount > 0, "Invalid number of moduli")
+        return _rnsTools[_rnsTools.count - moduliCount]
     }
 }
 

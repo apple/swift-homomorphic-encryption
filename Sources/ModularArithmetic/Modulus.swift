@@ -417,9 +417,12 @@ public struct MultiplyConstantModulus<T: CoreScalarType>: Equatable, Sendable {
 
 /// A modulus for multiplication by an array of constants.
 public struct MultiplyConstantArrayModulus<T: CoreScalarType>: Equatable, Sendable {
-    @usableFromInline let multiplicands: [T]
-    @usableFromInline let factors: [T]
-    @usableFromInline let modulus: T
+    /// Array of numbers to be used as multiplicands.
+    public let multiplicands: [T]
+    /// Array of Barrett factors.
+    public let factors: [T]
+    /// Associated modulus.
+    public let modulus: T
 
     @inlinable
     public init(multiplicands: [T], factors: [T], modulus: T) {

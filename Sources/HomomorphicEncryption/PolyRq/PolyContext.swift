@@ -24,15 +24,15 @@ public final class PolyContext<T: ScalarType>: Sendable {
     /// The modulus `Q = product_{i=0}^{L-1} q_i`, if representable by a `Width32<T>`
     @usableFromInline let modulus: Width32<T>?
     /// Next context, typically formed by dropping `q_{L-1}`.
-    @usableFromInline package let next: PolyContext<T>?
+    public let next: PolyContext<T>?
     /// Operations mod `q_0` up to `q_{L-1}`.
-    @usableFromInline let reduceModuli: [Modulus<T>]
+    public let reduceModuli: [Modulus<T>]
     /// Operations mod `UInt64(q_0), ..., UInt64(q_{L-1})`.
-    @usableFromInline let reduceModuliUInt64: [Modulus<UInt64>]
+    public let reduceModuliUInt64: [Modulus<UInt64>]
     /// Multiply by `q_{L-1}^{-1} mod q_i`, `mod q_i`.
-    @usableFromInline let inverseQLast: [MultiplyConstantModulus<T>]
+    public let inverseQLast: [MultiplyConstantModulus<T>]
     /// Precomputation for the NTT, for modulus `q_{L-1}`.
-    @usableFromInline let nttContext: NttContext<T>?
+    public let nttContext: _NttContext<T>?
 
     /// Initializes a ``PolyContext``.
     /// - Parameters:
@@ -42,7 +42,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
     ///   - nttContext: The NTT context for the last modulus `q_{L-1}`.
     /// - Throws: Error upon failure to initialize the context.
     @inlinable
-    required init(degree: Int, moduli: [T], next: PolyContext<T>?, nttContext: NttContext<T>? = nil) throws {
+    required init(degree: Int, moduli: [T], next: PolyContext<T>?, nttContext: _NttContext<T>? = nil) throws {
         guard degree.isPowerOfTwo else {
             throw HeError.invalidDegree(degree)
         }
@@ -110,12 +110,12 @@ public final class PolyContext<T: ScalarType>: Sendable {
             return MultiplyConstantModulus(multiplicand: inverse, modulus: modulus, variableTime: true)
         }
         if let nttContext {
-            precondition(nttContext.degree == degree, "Wrong degree in NttContext")
-            precondition(nttContext.modulus == qLast, "Wrong modulus in NttContext")
+            precondition(nttContext.degree == degree, "Wrong degree in _NttContext")
+            precondition(nttContext.modulus == qLast, "Wrong modulus in _NttContext")
             self.nttContext = nttContext
         } else {
             if !qLast.isPowerOfTwo, qLast.isNttModulus(for: degree) {
-                self.nttContext = try NttContext(degree: degree, modulus: qLast)
+                self.nttContext = try _NttContext(degree: degree, modulus: qLast)
             } else {
                 self.nttContext = nil
             }
@@ -148,7 +148,7 @@ public final class PolyContext<T: ScalarType>: Sendable {
     ///   - nttContexts: Maps moduli to their corresponding NTT context.
     /// - Throws: Error upon failure to initialize the context.
     @inlinable
-    convenience init(degree: Int, moduli: [T], child: PolyContext<T>?, nttContexts: [T: NttContext<T>] = [:]) throws {
+    convenience init(degree: Int, moduli: [T], child: PolyContext<T>?, nttContexts: [T: _NttContext<T>] = [:]) throws {
         guard let qLast = moduli.last else {
             throw HeError.emptyModulus
         }
@@ -217,6 +217,12 @@ public final class PolyContext<T: ScalarType>: Sendable {
     @inlinable
     func isParentOfOrEqual(to context: PolyContext<T>) -> Bool {
         self == context || isParent(of: context)
+    }
+
+    /// Returns the context with the right amount of moduli.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public func _getContext(moduliCount: Int) throws -> PolyContext<T> {
+        try getContext(moduliCount: moduliCount)
     }
 
     @inlinable

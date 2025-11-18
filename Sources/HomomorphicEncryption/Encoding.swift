@@ -17,7 +17,7 @@
 
 import ModularArithmetic
 
-extension Context {
+extension HeContext {
     /// Encodes `values` in the given format.
     ///
     /// Encoding will use the top-level ciphertext context with all moduli.
@@ -29,6 +29,7 @@ extension Context {
     @inlinable
     public func encode(values: some Collection<Scalar>,
                        format: EncodeFormat) throws -> Plaintext<Scheme, Coeff>
+        where Scheme.Context == Self
     {
         try validDataForEncoding(values: values)
         switch format {
@@ -48,8 +49,9 @@ extension Context {
     /// - Returns: The plaintext encoding `signedValues`.
     /// - Throws: Error upon failure to encode.
     @inlinable
-    public func encode(signedValues: some Collection<Scheme.SignedScalar>,
-                       format: EncodeFormat) throws -> Plaintext<Scheme, Coeff>
+    public func encode<Scheme: HeScheme>(signedValues: some Collection<Scheme.SignedScalar>,
+                                         format: EncodeFormat) throws -> Plaintext<Scheme, Coeff>
+        where Scheme.Context == Self
     {
         let signedModulus = Scheme.SignedScalar(plaintextModulus)
         let bounds = -(signedModulus >> 1)...((signedModulus - 1) >> 1)
@@ -71,10 +73,9 @@ extension Context {
     /// - Returns: The plaintext encoding `values`.
     /// - Throws: Error upon failure to encode.
     @inlinable
-    public func encode(
-        values: some Collection<Scalar>,
-        format: EncodeFormat,
-        moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
+    public func encode(values: some Collection<Scalar>, format: EncodeFormat,
+                       moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
+        where Scheme.Context == Self
     {
         try Scheme.encode(context: self, values: values, format: format, moduliCount: moduliCount)
     }
@@ -88,8 +89,9 @@ extension Context {
     /// - Returns: The plaintext encoding `signedValues`.
     /// - Throws: Error upon failure to encode.
     @inlinable
-    public func encode(signedValues: some Collection<Scheme.SignedScalar>, format: EncodeFormat,
-                       moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
+    public func encode<Scheme: HeScheme>(signedValues: some Collection<Scheme.SignedScalar>, format: EncodeFormat,
+                                         moduliCount: Int? = nil) throws -> Plaintext<Scheme, Eval>
+        where Scheme.Context == Self
     {
         try Scheme.encode(context: self, signedValues: signedValues, format: format, moduliCount: moduliCount)
     }
@@ -134,7 +136,10 @@ extension Context {
     /// - Returns: The decoded signed values.
     /// - Throws: Error upon failure to decode.
     @inlinable
-    func decode(plaintext: Plaintext<Scheme, Eval>, format: EncodeFormat) throws -> [Scheme.SignedScalar] {
+    func decode<Scheme: HeScheme>(plaintext: Plaintext<Scheme, Eval>,
+                                  format: EncodeFormat) throws -> [Scheme.SignedScalar] where Scheme.Scalar == Scalar,
+        Context<Scheme> == Self
+    {
         try Scheme.decodeEval(plaintext: plaintext, format: format)
     }
 
@@ -152,7 +157,7 @@ extension Context {
 }
 
 // functions for coefficient encoding/decoding
-extension Context {
+extension HeContext {
     /// Encodes a polynomial element-wise in coefficient format.
     ///
     /// Encodes the polynomial
@@ -161,18 +166,17 @@ extension Context {
     @inlinable
     func encodeCoefficient(values: some Collection<Scalar>) throws
         -> Plaintext<Scheme, Coeff>
+        where Scheme.Context == Self
     {
         if values.isEmpty {
-            return Plaintext<Scheme, Coeff>(context: self, poly: PolyRq.zero(context: plaintextContext))
+            return try Plaintext<Scheme, Coeff>(context: self, poly: PolyRq.zero(context: plaintextContext))
         }
         var valuesArray = Array(values)
         if valuesArray.count < degree {
             valuesArray.append(contentsOf: repeatElement(0, count: degree - valuesArray.count))
         }
         let array: Array2d<Scalar> = Array2d(data: valuesArray, rowCount: 1, columnCount: valuesArray.count)
-        return Plaintext<Scheme, Coeff>(
-            context: self,
-            poly: PolyRq(context: plaintextContext, data: array))
+        return try Plaintext<Scheme, Coeff>(context: self, poly: PolyRq(context: plaintextContext, data: array))
     }
 
     /// Decodes a polynomial element-wise in coefficient format.
@@ -188,7 +192,7 @@ extension Context {
 }
 
 // code for SIMD encoding/decoding
-extension Context {
+extension HeContext {
     @inlinable
     static func generateEncodingMatrix(encryptionParameters: EncryptionParameters<Scalar>) -> [Int] {
         guard encryptionParameters.plaintextModulus.isNttModulus(for: encryptionParameters.polyDegree) else {
@@ -215,7 +219,9 @@ extension Context {
     }
 
     @inlinable
-    func encodeSimd(values: some Collection<Scalar>) throws -> Plaintext<Scheme, Coeff> {
+    func encodeSimd(values: some Collection<Scalar>) throws -> Plaintext<Scheme, Coeff>
+        where Scheme.Context == Self
+    {
         guard !simdEncodingMatrix.isEmpty else { throw HeError.simdEncodingNotSupported(for: encryptionParameters) }
         let polyDegree = encryptionParameters.polyDegree
         var array = Array2d<Scalar>.zero(rowCount: 1, columnCount: polyDegree)
@@ -224,7 +230,7 @@ extension Context {
         }
         let poly = PolyRq<_, Eval>(context: plaintextContext, data: array)
         let coeffPoly = try poly.inverseNtt()
-        return Plaintext<Scheme, Coeff>(context: self, poly: coeffPoly)
+        return try Plaintext<Scheme, Coeff>(context: self, poly: coeffPoly)
     }
 
     @inlinable

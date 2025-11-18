@@ -27,19 +27,19 @@ extension HeScheme {
             return
         }
 
-        guard let galoisKey = evaluationKey.galoisKey else {
+        guard let galoisKey = evaluationKey._galoisKey else {
             throw HeError.missingGaloisKey
         }
 
         // Short-circuit to single rotation if possible.
         let degree = ciphertext.degree
         let galoisElement = try GaloisElement.rotatingColumns(by: step, degree: degree)
-        if galoisKey.keys.keys.contains(galoisElement) {
+        if galoisKey._keys.keys.contains(galoisElement) {
             try await rotateColumnsAsync(of: &ciphertext, by: step, using: evaluationKey)
             return
         }
 
-        let galoisElements = Array(galoisKey.keys.keys)
+        let galoisElements = Array(galoisKey._keys.keys)
         let steps = GaloisElement.stepsFor(elements: galoisElements, degree: degree).values.compactMap(\.self)
 
         let positiveStep = if step < 0 {
@@ -48,7 +48,7 @@ extension HeScheme {
             step
         }
 
-        let plan = try GaloisElement.planMultiStep(supportedSteps: steps, step: positiveStep, degree: degree)
+        let plan = try GaloisElement._planMultiStep(supportedSteps: steps, step: positiveStep, degree: degree)
         guard let plan else {
             throw HeError.invalidRotationStep(step: step, degree: degree)
         }
@@ -71,19 +71,19 @@ extension HeScheme {
             return
         }
 
-        guard let galoisKey = evaluationKey.galoisKey else {
+        guard let galoisKey = evaluationKey._galoisKey else {
             throw HeError.missingGaloisKey
         }
 
         // Short-circuit to single rotation if possible.
         let degree = ciphertext.degree
         let galoisElement = try GaloisElement.rotatingColumns(by: step, degree: degree)
-        if galoisKey.keys.keys.contains(galoisElement) {
+        if galoisKey._keys.keys.contains(galoisElement) {
             try ciphertext.rotateColumns(by: step, using: evaluationKey)
             return
         }
 
-        let galoisElements = Array(galoisKey.keys.keys)
+        let galoisElements = Array(galoisKey._keys.keys)
         let steps = GaloisElement.stepsFor(elements: galoisElements, degree: degree).values.compactMap(\.self)
 
         let positiveStep = if step < 0 {
@@ -92,7 +92,7 @@ extension HeScheme {
             step
         }
 
-        let plan = try GaloisElement.planMultiStep(supportedSteps: steps, step: positiveStep, degree: degree)
+        let plan = try GaloisElement._planMultiStep(supportedSteps: steps, step: positiveStep, degree: degree)
         guard let plan else {
             throw HeError.invalidRotationStep(step: step, degree: degree)
         }

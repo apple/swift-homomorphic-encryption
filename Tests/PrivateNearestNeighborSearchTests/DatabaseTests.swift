@@ -19,9 +19,9 @@ import Testing
 @Suite
 struct DatabaseTests {
     @Test
-    func serializedProcessedDatabase() throws {
-        try PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: NoOpScheme.self)
-        try PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: Bfv<UInt32>.self)
-        try PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: Bfv<UInt64>.self)
+    func serializedProcessedDatabase() async throws {
+        try await PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: NoOpScheme.self)
+        try await PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.DatabaseTests.serializedProcessedDatabase(for: Bfv<UInt64>.self)
     }
 }

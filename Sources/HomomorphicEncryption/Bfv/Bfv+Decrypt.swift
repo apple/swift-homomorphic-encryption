@@ -35,7 +35,7 @@ extension Bfv {
         let rnsTool = ciphertext.context.getRnsTool(moduliCount: dotProduct.moduli.count)
         let plaintext = try rnsTool.scaleAndRound(poly: dotProduct, scalingFactor: scalingFactor)
 
-        return CoeffPlaintext(context: ciphertext.context, poly: plaintext)
+        return try CoeffPlaintext(context: ciphertext.context, poly: plaintext)
     }
 
     /// Calculates the number of least significant bits (LSBs) per polynomial that can be excluded

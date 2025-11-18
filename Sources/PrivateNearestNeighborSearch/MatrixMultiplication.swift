@@ -14,6 +14,7 @@
 
 import _HomomorphicEncryptionExtras
 import Algorithms
+import AsyncAlgorithms
 import Foundation
 import HomomorphicEncryption
 import ModularArithmetic
@@ -55,13 +56,14 @@ public struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
 
 /// Utilities for matrix multiplication.
 public enum MatrixMultiplication {
+    // swiftformat:disable unusedArguments
     /// Computes the evaluation key configuration for matrix multiplication.
     /// - Parameters:
     ///   - plaintextMatrixDimensions: Dimensions of the plaintext matrix.
-    ///   - maxQueryCount: Maximum number of queries in one batch. The returned`EvaluationKeyConfig` will support all
     ///   - encryptionParameters: Encryption paramterss
+    ///   - maxQueryCount: Maximum number of queries in one batch. The returned`EvaluationKeyConfig` will support
+    /// all batch sizes up to and including `maxQueryCount`.
     ///   - scheme: The metatype of the generic parameter `Scheme`.
-    /// batch sizes up to and including `maxQueryCount`.
     /// - Returns: The evaluation key configuration.
     /// - Throws: Error upon failure to compute the configuration.
     @inlinable
@@ -122,7 +124,7 @@ extension PlaintextMatrix {
     @inlinable
     package func mulTranspose(
         vector ciphertextVector: CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>,
-        using evaluationKey: EvaluationKey<Scheme>) throws -> [Scheme.CanonicalCiphertext]
+        using evaluationKey: EvaluationKey<Scheme>) async throws -> [Scheme.CanonicalCiphertext]
     {
         guard case .diagonal = packing else {
             let expectedBsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
@@ -167,47 +169,57 @@ extension PlaintextMatrix {
         let babyStepGiantStep = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
 
         // 1) Compute v_j = theta^j(v)
-        var rotatedCiphertexts: [Scheme.EvalCiphertext] = []
-        rotatedCiphertexts.reserveCapacity(babyStepGiantStep.babyStep)
+        var rotatedStates: [Scheme.CanonicalCiphertext] = []
+        rotatedStates.reserveCapacity(babyStepGiantStep.babyStep)
+
         var state = ciphertextVector.ciphertexts[0]
         for step in 0..<babyStepGiantStep.babyStep {
-            try rotatedCiphertexts.append(state.convertToEvalFormat())
+            rotatedStates.append(state)
             if step != babyStepGiantStep.babyStep - 1 {
-                try state.rotateColumns(by: -1, using: evaluationKey)
+                try await Scheme.rotateColumnsAsync(of: &state, by: -1, using: evaluationKey)
             }
         }
+        let rotatedCiphertexts: [Scheme.EvalCiphertext] = try await .init(
+            rotatedStates.async.map { state in
+                try await state.convertToEvalFormat()
+            })
 
         let resultCiphertextCount = dimensions.rowCount.dividingCeil(context.degree, variableTime: true)
-        let zeroCiphertext: Scheme.CanonicalCiphertext = try Ciphertext.zero(context: context)
-        var resultCiphertexts: [Scheme.CanonicalCiphertext] = Array(
-            repeating: zeroCiphertext,
-            count: resultCiphertextCount)
 
-        for resultCiphertextIndex in 0..<resultCiphertextCount {
-            for giantStepIndex in (0..<babyStepGiantStep.giantStep).reversed() {
+        let generateInnerProduct: @Sendable (Int, Int) async throws
+            -> Scheme.CanonicalCiphertext = { giantStepIndex, resultCiphertextIndex in
                 let plaintextCount = min(
                     rotatedCiphertexts.count,
                     babyStepGiantStep.vectorDimension - babyStepGiantStep.babyStep * giantStepIndex)
-                let plaintextRows = try (0..<plaintextCount).map { j in
-                    j + babyStepGiantStep.babyStep * giantStepIndex
-                }.map { i in
-                    let index = resultCiphertextCount * i + resultCiphertextIndex
-                    return try plaintexts[index].convertToEvalFormat()
+                let plaintextRowIndices = (0..<plaintextCount).map { j in
+                    resultCiphertextCount * (j + babyStepGiantStep.babyStep * giantStepIndex) + resultCiphertextIndex
                 }
+                let plaintextRows: [Plaintext<Scheme, Eval>] = try await .init(plaintextRowIndices.async.map { index in
+                    try plaintexts[index].convertToEvalFormat()
+                })
+
                 let ciphertexts = rotatedCiphertexts[0..<plaintextRows.count]
 
                 // 2) Compute w_k
-                let innerProduct = try Scheme.innerProduct(ciphertexts: ciphertexts, plaintexts: plaintextRows)
-                    .convertToCanonicalFormat()
+                let innerProduct =
+                    try await Scheme.innerProductAsync(
+                        ciphertexts: ciphertexts,
+                        plaintexts: plaintextRows)
+                return try await innerProduct.convertToCanonicalFormat()
+            }
 
-                // 3) Compute w incrementally
-                try resultCiphertexts[resultCiphertextIndex].rotateColumns(
+        return try await .init((0..<resultCiphertextCount).async
+            .map { resultCiphertextIndex in
+                let giantStepIndices = (0..<babyStepGiantStep.giantStep)
+                let innerProductsToAdd: [Scheme.CanonicalCiphertext] = try await .init(giantStepIndices.async
+                    .map { giantStepIndex in
+                        try await generateInnerProduct(giantStepIndex, resultCiphertextIndex)
+                    })
+                return try await Scheme.rotateColumnsAndSumAsync(
+                    innerProductsToAdd,
                     by: -babyStepGiantStep.babyStep,
                     using: evaluationKey)
-                try resultCiphertexts[resultCiphertextIndex] += innerProduct
-            }
-        }
-        return resultCiphertexts
+            })
     }
 
     /// Computes matrix product between the `PlaintextMatrix` and transpose of row vectors encrypted in `matrix`.
@@ -220,7 +232,7 @@ extension PlaintextMatrix {
     @inlinable
     package func mulTranspose(
         matrix ciphertextMatrix: CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>,
-        using evaluationKey: EvaluationKey<Scheme>) throws
+        using evaluationKey: EvaluationKey<Scheme>) async throws
         -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
     {
         guard dimensions.columnCount == ciphertextMatrix.dimensions.columnCount else {
@@ -240,34 +252,37 @@ extension PlaintextMatrix {
             throw PnnsError.incorrectSimdRowsCount(got: simdDimensions.rowCount, expected: 2)
         }
 
-        var innerProducts: [Scheme.CanonicalCiphertext] = try (0..<ciphertextMatrix.rowCount).map { rowIndex in
-            let ciphertextRow = try ciphertextMatrix.extractDenseRow(rowIndex: rowIndex, evaluationKey: evaluationKey)
-            return try mulTranspose(vector: ciphertextRow, using: evaluationKey)
-        }.flatMap(\.self)
+        let innerProductsChunked: [[Scheme.CanonicalCiphertext]] = try await .init((0..<ciphertextMatrix.rowCount).async
+            .map { rowIndex in
+                let ciphertextRow = try await ciphertextMatrix.extractDenseRow(
+                    rowIndex: rowIndex,
+                    evaluationKey: evaluationKey)
+                return try await mulTranspose(vector: ciphertextRow, using: evaluationKey)
+            })
+        var innerProducts: [Scheme.CanonicalCiphertext] = innerProductsChunked.flatMap(\.self)
 
         // Pack resulting ciphertexts such that no two result ciphertexts span multiple simd rows.
         let columnsPerSimdRowCount = simdColumnCount / dimensions.rowCount
         if columnsPerSimdRowCount > 0 {
             let columnsPerCiphertextCount = simdRowCount * columnsPerSimdRowCount
-            let packedCiphertexts = try innerProducts.chunks(ofCount: columnsPerCiphertextCount)
+            let packedCiphertexts: [Scheme.CanonicalCiphertext] = try await .init(innerProducts
+                .chunks(ofCount: columnsPerCiphertextCount).async
                 .map { columnsForCiphertext in
-                    var packedRows: [Scheme.CanonicalCiphertext] = try columnsForCiphertext
-                        .chunks(ofCount: columnsPerSimdRowCount).map { columnsForRow in
-                            guard var packedRow = columnsForRow.last else {
-                                throw PnnsError.emptyCiphertextArray
-                            }
-                            for column in columnsForRow.dropLast().reversed() {
-                                try packedRow.rotateColumnsMultiStep(by: dimensions.rowCount, using: evaluationKey)
-                                try packedRow += column
-                            }
-                            return packedRow
-                        }
+                    let packedRows: [Scheme.CanonicalCiphertext] = try await .init(columnsForCiphertext
+                        .chunks(ofCount: columnsPerSimdRowCount).async.map { columnsForRow in
+                            try await Scheme.rotateColumnsAndSumAsync(
+                                Array(columnsForRow),
+                                by: dimensions.rowCount,
+                                using: evaluationKey)
+                        })
                     if columnsForCiphertext.count > columnsPerSimdRowCount {
-                        try packedRows[1].swapRows(using: evaluationKey)
-                        return try packedRows[0] + packedRows[1]
+                        return try await Scheme.swapRowsAndAddAsync(
+                            swapping: packedRows[1],
+                            addingTo: packedRows[0],
+                            using: evaluationKey)
                     }
                     return packedRows[0]
-                }
+                })
             innerProducts = packedCiphertexts
         }
         let resultMatrixDimensions = try MatrixDimensions(

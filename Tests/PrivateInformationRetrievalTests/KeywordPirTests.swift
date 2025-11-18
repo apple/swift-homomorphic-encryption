@@ -20,79 +20,79 @@ import Testing
 @Suite
 struct KeywordPirTests {
     @Test
-    func processedDatabaseSerialization() throws {
-        try PirTestUtils.KeywordPirTests.processedDatabaseSerialization(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.processedDatabaseSerialization(Bfv<UInt64>.self)
+    func processedDatabaseSerialization() async throws {
+        try await PirTestUtils.KeywordPirTests.processedDatabaseSerialization(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.processedDatabaseSerialization(Bfv<UInt64>.self)
     }
 
     @Test
-    func keywordPirMulPir1HashFunction() throws {
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir1HashFunction(NoOpScheme.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir1HashFunction(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir1HashFunction(Bfv<UInt64>.self)
+    func keywordPirMulPir1HashFunction() async throws {
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir1HashFunction(NoOpScheme.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir1HashFunction(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir1HashFunction(Bfv<UInt64>.self)
     }
 
     @Test
-    func keywordPirMulPir3HashFunctions() throws {
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir3HashFunctions(NoOpScheme.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir3HashFunctions(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir3HashFunctions(Bfv<UInt64>.self)
+    func keywordPirMulPir3HashFunctions() async throws {
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir3HashFunctions(NoOpScheme.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir3HashFunctions(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir3HashFunctions(Bfv<UInt64>.self)
     }
 
     @Test
-    func keywordPirMulPir1Dimension() throws {
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir1Dimension(NoOpScheme.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir1Dimension(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir1Dimension(Bfv<UInt64>.self)
+    func keywordPirMulPir1Dimension() async throws {
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir1Dimension(NoOpScheme.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir1Dimension(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir1Dimension(Bfv<UInt64>.self)
     }
 
     @Test
-    func keywordPirMulPir2Dimensions() throws {
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir2Dimensions(NoOpScheme.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir2Dimensions(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPir2Dimensions(Bfv<UInt64>.self)
+    func keywordPirMulPir2Dimensions() async throws {
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir2Dimensions(NoOpScheme.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir2Dimensions(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPir2Dimensions(Bfv<UInt64>.self)
     }
 
     @Test
-    func keywordPirMulPirHybridKeyCompression() throws {
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirHybridKeyCompression(NoOpScheme.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirHybridKeyCompression(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirHybridKeyCompression(Bfv<UInt64>.self)
+    func keywordPirMulPirHybridKeyCompression() async throws {
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirHybridKeyCompression(NoOpScheme.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirHybridKeyCompression(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirHybridKeyCompression(Bfv<UInt64>.self)
     }
 
     @Test
-    func keywordPirMulPirMaxKeyCompression() throws {
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirMaxKeyCompression(NoOpScheme.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirMaxKeyCompression(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirMaxKeyCompression(Bfv<UInt64>.self)
+    func keywordPirMulPirMaxKeyCompression() async throws {
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirMaxKeyCompression(NoOpScheme.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirMaxKeyCompression(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirMaxKeyCompression(Bfv<UInt64>.self)
     }
 
     @Test
-    func keywordPirMulPirLargeParameters() throws {
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirLargeParameters(NoOpScheme.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirLargeParameters(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.keywordPirMulPirLargeParameters(Bfv<UInt64>.self)
+    func keywordPirMulPirLargeParameters() async throws {
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirLargeParameters(NoOpScheme.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirLargeParameters(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirMulPirLargeParameters(Bfv<UInt64>.self)
     }
 
     @Test
-    func keywordPirFixedConfig() throws {
-        try PirTestUtils.KeywordPirTests.keywordPirFixedConfig(NoOpScheme.self)
-        try PirTestUtils.KeywordPirTests.keywordPirFixedConfig(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.keywordPirFixedConfig(Bfv<UInt64>.self)
+    func keywordPirFixedConfig() async throws {
+        try await PirTestUtils.KeywordPirTests.keywordPirFixedConfig(NoOpScheme.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirFixedConfig(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.keywordPirFixedConfig(Bfv<UInt64>.self)
     }
 
     @Test
-    func sharding() throws {
+    func sharding() async throws {
         // TODO: make compatible with NoOpScheme
-        try PirTestUtils.KeywordPirTests.sharding(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.sharding(Bfv<UInt64>.self)
+        try await PirTestUtils.KeywordPirTests.sharding(PirUtil<Bfv<UInt32>>.self)
+        try await PirTestUtils.KeywordPirTests.sharding(PirUtil<Bfv<UInt64>>.self)
     }
 
     @Test
-    func limitEntriesPerResponse() throws {
+    func limitEntriesPerResponse() async throws {
         // TODO: make compatible with NoOpScheme.
-        try PirTestUtils.KeywordPirTests.limitEntriesPerResponse(Bfv<UInt32>.self)
-        try PirTestUtils.KeywordPirTests.limitEntriesPerResponse(Bfv<UInt64>.self)
+        try await PirTestUtils.KeywordPirTests.limitEntriesPerResponse(Bfv<UInt32>.self)
+        try await PirTestUtils.KeywordPirTests.limitEntriesPerResponse(Bfv<UInt64>.self)
     }
 
     @Test

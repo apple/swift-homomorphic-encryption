@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,17 +16,16 @@ import ModularArithmetic
 
 /// Enables base conversion from an input RNS basis `q = q_0, ..., q_{L-1}` to an
 /// output RNS basis `t = t_0, ..., t_{M-1}`.
-@usableFromInline
-struct RnsBaseConverter<T: ScalarType>: Sendable {
+public struct _RnsBaseConverter<T: ScalarType>: Sendable {
     /// `q_0, ..., q_{L-1}`.
-    @usableFromInline let inputContext: PolyContext<T>
+    public let inputContext: PolyContext<T>
     /// `t_0, ..., t_{M-1}``.
-    @usableFromInline let outputContext: PolyContext<T>
+    public let outputContext: PolyContext<T>
     /// (i, j)'th entry stores `(q / q_i) % t_j`.
-    @usableFromInline let puncturedProducts: Array2d<T>
+    public let puncturedProducts: Array2d<T>
 
     /// Composes polynomials with `inputContext`.
-    @usableFromInline let crtComposer: CrtComposer<T>
+    public let crtComposer: _CrtComposer<T>
 
     /// i'th entry stores `(q_i / q) % q_i`.
     @usableFromInline var inversePuncturedProducts: [MultiplyConstantModulus<T>] {

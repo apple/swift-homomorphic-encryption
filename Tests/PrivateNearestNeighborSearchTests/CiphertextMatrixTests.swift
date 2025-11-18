@@ -19,23 +19,23 @@ import Testing
 @Suite
 struct CiphertextMatrixTests {
     @Test
-    func encryptDecryptRoundTrip() throws {
-        try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.encryptDecryptRoundTrip(for: NoOpScheme.self)
-        try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.encryptDecryptRoundTrip(for: Bfv<UInt32>.self)
-        try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.encryptDecryptRoundTrip(for: Bfv<UInt64>.self)
+    func encryptDecryptRoundTrip() async throws {
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.encryptDecryptRoundTrip(for: NoOpScheme.self)
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.encryptDecryptRoundTrip(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.encryptDecryptRoundTrip(for: Bfv<UInt64>.self)
     }
 
     @Test
-    func convertFormatRoundTrip() throws {
+    func convertFormatRoundTrip() async throws {
         try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.convertFormatRoundTrip(for: NoOpScheme.self)
         try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.convertFormatRoundTrip(for: Bfv<UInt32>.self)
         try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.convertFormatRoundTrip(for: Bfv<UInt64>.self)
     }
 
     @Test
-    func extractDenseRow() throws {
-        try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: NoOpScheme.self)
-        try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: Bfv<UInt32>.self)
-        try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: Bfv<UInt64>.self)
+    func extractDenseRow() async throws {
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: NoOpScheme.self)
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: Bfv<UInt64>.self)
     }
 }

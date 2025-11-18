@@ -27,6 +27,22 @@ let executableSettings: [SwiftSetting] =
 
 let benchmarkSettings: [SwiftSetting] = [.unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))]
 
+let enableFlags = "SWIFT_HOMOMORPHIC_ENCRYPTION_MODULAR_ARITHMETIC_EXTRA_SWIFT_FLAGS"
+func shouldEnableFlags() -> Bool {
+    if let flag = ProcessInfo.processInfo.environment[enableFlags], flag != "0", flag != "false" {
+        return true
+    }
+    return false
+}
+
+var flags: [SwiftSetting] = []
+let enableFlagsBool = shouldEnableFlags()
+if enableFlagsBool {
+    print("Building with additional flags. To disable, unset \(enableFlags) in your environment.")
+    let flagsAsString = (ProcessInfo.processInfo.environment[enableFlags] ?? "") as String
+    flags += [.unsafeFlags(flagsAsString.components(separatedBy: ","))]
+}
+
 let package = Package(
     name: "swift-homomorphic-encryption",
     products: [
@@ -60,6 +76,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.2"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.10.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
@@ -71,7 +88,7 @@ let package = Package(
         .target(
             name: "ModularArithmetic",
             dependencies: [],
-            swiftSettings: librarySettings),
+            swiftSettings: librarySettings + flags),
         .target(
             name: "CUtil",
             dependencies: [],
@@ -100,12 +117,14 @@ let package = Package(
         .target(
             name: "PrivateInformationRetrieval",
             dependencies: ["HomomorphicEncryption",
+                           .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                            .product(name: "Numerics", package: "swift-numerics")],
             swiftSettings: librarySettings),
         .target(
             name: "PrivateNearestNeighborSearch",
             dependencies: [
                 .product(name: "Algorithms", package: "swift-algorithms"),
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 "HomomorphicEncryption",
                 "_HomomorphicEncryptionExtras",
             ],

@@ -30,7 +30,7 @@ extension SecretKey {
     ///   - serialized: Serialized secret key.
     ///   - context: Context to associate with the secret key.
     /// - Throws: ``HeError`` upon failure to deserialize.
-    public convenience init(deserialize serialized: SerializedSecretKey, context: Context<Scheme>) throws {
+    public convenience init(deserialize serialized: SerializedSecretKey, context: Scheme.Context) throws {
         let polys: [PolyRq<Scalar, Eval>] = try Serialize.deserializePolys(
             from: serialized.polys,
             context: context.secretKeyContext)
@@ -50,20 +50,20 @@ extension SecretKey {
     }
 }
 
-extension KeySwitchKey {
+extension HeKeySwitchKey {
     @inlinable
-    init(deserialize ciphertexts: [SerializedCiphertext<Scalar>], context: Context<Scheme>) throws {
-        self.context = context
-        self.ciphers = try ciphertexts.map { serializedCiphertext in
-            try Ciphertext(
+    init(deserialize ciphertexts: [SerializedCiphertext<Scheme.Scalar>], context: Scheme.Context) throws {
+        let ciphertexts = try ciphertexts.map { serializedCiphertext in
+            try Ciphertext<Scheme, Eval>(
                 deserialize: serializedCiphertext,
                 context: context,
                 moduliCount: context.secretKeyContext.moduli.count)
         }
+        try self.init(_context: context, _ciphertexts: ciphertexts)
     }
 
-    func serialize() -> [SerializedCiphertext<Scalar>] {
-        ciphers.map { $0.serialize() }
+    func serialize() -> [SerializedCiphertext<Scheme.Scalar>] {
+        ciphertexts.map { $0.serialize() }
     }
 }
 
@@ -79,15 +79,16 @@ public struct SerializedGaloisKey<Scalar: ScalarType>: Hashable, Codable, Sendab
     }
 }
 
-extension GaloisKey {
+extension HeGaloisKey {
     @inlinable
-    init(deserialize serialized: SerializedGaloisKey<Scalar>, context: Context<Scheme>) throws {
-        self.keys = try serialized.galoisKey.mapValues { serializedKeySwitchKey in
-            try KeySwitchKey(deserialize: serializedKeySwitchKey, context: context)
+    init(deserialize serialized: SerializedGaloisKey<Scheme.Scalar>, context: Scheme.Context) throws {
+        let keys = try serialized.galoisKey.mapValues { serializedKeySwitchKey in
+            try Scheme.KeySwitchKey(deserialize: serializedKeySwitchKey, context: context)
         }
+        try self.init(_keys: keys)
     }
 
-    func serialize() -> SerializedGaloisKey<Scalar> {
+    func serialize() -> SerializedGaloisKey<Scheme.Scalar> {
         SerializedGaloisKey(galoisKey: keys.mapValues { $0.serialize() })
     }
 }
@@ -104,10 +105,10 @@ public struct SerializedRelinearizationKey<Scalar: ScalarType>: Hashable, Codabl
     }
 }
 
-extension RelinearizationKey {
+extension _RelinearizationKey {
     @inlinable
-    init(deserialize serialized: SerializedRelinearizationKey<Scalar>, context: Context<Scheme>) throws {
-        self.keySwitchKey = try KeySwitchKey(deserialize: serialized.relinKey, context: context)
+    init(deserialize serialized: SerializedRelinearizationKey<Scalar>, context: Scheme.Context) throws {
+        self.keySwitchKey = try Scheme.KeySwitchKey(deserialize: serialized.relinKey, context: context)
     }
 
     func serialize() -> SerializedRelinearizationKey<Scalar> {
@@ -139,12 +140,14 @@ extension EvaluationKey {
     ///   - context: Context to associate with the evaluation key.
     /// - Throws: ``HeError`` upon failure to deserialize.
     @inlinable
-    public init(deserialize serialized: SerializedEvaluationKey<Scheme.Scalar>, context: Context<Scheme>) throws {
+    public init(deserialize serialized: SerializedEvaluationKey<Scheme.Scalar>,
+                context: Scheme.Context) throws
+    {
         self.galoisKey = try serialized.galoisKey.map { serialized in
-            try GaloisKey(deserialize: serialized, context: context)
+            try _GaloisKey<Scheme>(deserialize: serialized, context: context)
         }
         self.relinearizationKey = try serialized.relinearizationKey.map { serialized in
-            try RelinearizationKey(deserialize: serialized, context: context)
+            try _RelinearizationKey(deserialize: serialized, context: context)
         }
     }
 

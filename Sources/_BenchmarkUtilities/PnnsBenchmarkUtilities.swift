@@ -111,7 +111,7 @@ public func pnnsProcessBenchmark<Scheme: HeScheme>(
             benchmark,
             benchmarkContext: PnnsProcessBenchmarkContext<Scheme>) in
             for _ in benchmark.scaledIterations {
-                try blackHole(benchmarkContext.database
+                try await blackHole(benchmarkContext.database
                     .process(
                         config: benchmarkContext.serverConfig,
                         contexts: benchmarkContext.contexts))
@@ -146,7 +146,7 @@ public func cosineSimilarityBenchmark<Scheme: HeScheme>(_: Scheme.Type,
             benchmark,
             benchmarkContext: PnnsBenchmarkContext<Scheme>) in
             for _ in benchmark.scaledIterations {
-                try blackHole(
+                try await blackHole(
                     benchmarkContext.server.computeResponse(
                         to: benchmarkContext.query,
                         using: benchmarkContext.evaluationKey))
@@ -177,7 +177,7 @@ extension PrivateNearestNeighborSearch.Response {
 
 struct PnnsProcessBenchmarkContext<Scheme: HeScheme> {
     let database: Database
-    let contexts: [Context<Scheme>]
+    let contexts: [Scheme.Context]
     let serverConfig: ServerConfig<Scheme>
 
     init(databaseConfig: PnnsDatabaseConfig,
@@ -191,6 +191,7 @@ struct PnnsProcessBenchmarkContext<Scheme: HeScheme> {
             significantBitCounts: encryptionConfig.coefficientModulusBits,
             preferringSmall: false,
             nttDegree: encryptionConfig.polyDegree)
+
         let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(
             polyDegree: encryptionConfig.polyDegree,
             plaintextModulus: plaintextModuli[0],
@@ -226,7 +227,7 @@ struct PnnsProcessBenchmarkContext<Scheme: HeScheme> {
 
         self.database = getDatabaseForTesting(config: databaseConfig)
         self.contexts = try serverConfig.encryptionParameters.map { encryptionParameters in
-            try Context(encryptionParameters: encryptionParameters)
+            try Scheme.Context(encryptionParameters: encryptionParameters)
         }
     }
 }
@@ -293,8 +294,8 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
 
         let database = getDatabaseForTesting(config: databaseConfig)
         let contexts = try clientConfig.encryptionParameters
-            .map { encryptionParameters in try Context<Scheme>(encryptionParameters: encryptionParameters) }
-        self.processedDatabase = try database.process(config: serverConfig, contexts: contexts)
+            .map { encryptionParameters in try Scheme.Context(encryptionParameters: encryptionParameters) }
+        self.processedDatabase = try await database.process(config: serverConfig, contexts: contexts)
         self.client = try Client(config: clientConfig, contexts: contexts)
         self.server = try Server(database: processedDatabase)
         self.secretKey = try client.generateSecretKey()
@@ -305,7 +306,7 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
         let queryVectors = Array2d(data: database.rows.prefix(queryCount).map { row in row.vector })
         self.query = try client.generateQuery(for: queryVectors, using: secretKey)
 
-        let response = try server.computeResponse(to: query, using: evaluationKey)
+        let response = try await server.computeResponse(to: query, using: evaluationKey)
         let decrypted = try client.decrypt(response: response, using: secretKey)
 
         // Validate correctness

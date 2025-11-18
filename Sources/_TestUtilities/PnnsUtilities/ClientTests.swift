@@ -120,7 +120,7 @@ extension PrivateNearestNeighborSearchUtil {
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let vectorDimension = 32
             let queryDimensions = try MatrixDimensions(rowCount: 1, columnCount: vectorDimension)
 
@@ -169,12 +169,12 @@ extension PrivateNearestNeighborSearchUtil {
 
         /// Testing client-server round-trip functionality.
         @inlinable
-        public static func clientServer<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func clientServer<Scheme: HeScheme>(for _: Scheme.Type) async throws {
             func runSingleTest(
                 encryptionParameters: EncryptionParameters<Scheme.Scalar>,
                 dimensions: MatrixDimensions,
                 plaintextModuli: [Scheme.Scalar],
-                queryCount: Int) throws
+                queryCount: Int) async throws
             {
                 let vectorDimension = dimensions.columnCount
                 let scalingFactor = ClientConfig<Scheme>.maxScalingFactor(
@@ -201,7 +201,7 @@ extension PrivateNearestNeighborSearchUtil {
                 let database = PrivateNearestNeighborSearchUtil.getDatabaseForTesting(config: DatabaseConfig(
                     rowCount: dimensions.rowCount,
                     vectorDimension: dimensions.columnCount))
-                let processed = try database.process(config: serverConfig)
+                let processed = try await database.process(config: serverConfig)
 
                 let client = try Client(config: clientConfig, contexts: processed.contexts)
                 let server = try Server(database: processed)
@@ -212,7 +212,7 @@ extension PrivateNearestNeighborSearchUtil {
                 let query = try client.generateQuery(for: queryVectors, using: secretKey)
                 let evaluationKey = try client.generateEvaluationKey(using: secretKey)
 
-                let response = try server.computeResponse(to: query, using: evaluationKey)
+                let response = try await server.computeResponse(to: query, using: evaluationKey)
                 let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
                 #expect(noiseBudget > 0)
                 let decrypted = try client.decrypt(response: response, using: secretKey)
@@ -253,7 +253,7 @@ extension PrivateNearestNeighborSearchUtil {
             for rowCount in [degree / 2, degree, degree + 1, 3 * degree] {
                 for dimensions in try [MatrixDimensions(rowCount: rowCount, columnCount: 16)] {
                     for plaintextModuliCount in 1...maxPlaintextModuliCount {
-                        try runSingleTest(
+                        try await runSingleTest(
                             encryptionParameters: encryptionParameters,
                             dimensions: dimensions,
                             plaintextModuli: Array(plaintextModuli.prefix(plaintextModuliCount)),

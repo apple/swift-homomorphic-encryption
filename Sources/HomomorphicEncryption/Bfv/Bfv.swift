@@ -16,9 +16,19 @@ import ModularArithmetic
 
 /// Brakerski-Fan-Vercauteren cryptosystem.
 public enum Bfv<T: ScalarType>: HeScheme {
+    public typealias CiphertextAuxiliaryData = EmptyAuxiliary<Self>
+    public typealias PlaintextAuxiliaryData = EmptyAuxiliary<Self>
+
+    public typealias Context = HomomorphicEncryption.Context<Self>
+    public typealias KeySwitchKey = HomomorphicEncryption._KeySwitchKey<Self>
+    public typealias GaloisKey = HomomorphicEncryption._GaloisKey<Self>
+
     public typealias Scalar = T
+    public typealias SignedScalar = T.SignedScalar
 
     public typealias CanonicalCiphertextFormat = Coeff
+
+    public static var cryptosystem: HeCryptoSystem { .bfv }
 
     public static var freshCiphertextPolyCount: Int {
         2
@@ -174,7 +184,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
         }
         ciphertext.polys[0] = ciphertext.polys[0].applyGalois(element: element)
         let tempC1 = ciphertext.polys[1].applyGalois(element: element)
-        let update = try Self.computeKeySwitchingUpdate(
+        let update = try Self._computeKeySwitchingUpdate(
             context: ciphertext.context,
             target: tempC1,
             keySwitchingKey: keySwitchingKey)
@@ -194,7 +204,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
         guard let relinearizationKey = key.relinearizationKey else {
             throw HeError.missingRelinearizationKey
         }
-        let update = try Self.computeKeySwitchingUpdate(
+        let update = try Self._computeKeySwitchingUpdate(
             context: ciphertext.context,
             target: poly2,
             keySwitchingKey: relinearizationKey.keySwitchKey)
@@ -251,7 +261,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
                 reduceInPlace(accumulator: &accumulator, polyContext: rnsTool.qBskContext)
             }
         }
-        var sum = EvalCiphertext(
+        var sum = try EvalCiphertext(
             context: firstCiphertext.context,
             polys: Array(repeating: .zero(context: rnsTool.qBskContext), count: 3),
             correctionFactor: 1)
@@ -341,20 +351,30 @@ public enum Bfv<T: ScalarType>: HeScheme {
     }
 
     @inlinable
-    public static func forwardNtt(_ ciphertext: CoeffCiphertext) throws -> EvalCiphertext {
+    public static func forwardNtt(_ ciphertext: inout CoeffCiphertext) throws -> EvalCiphertext {
         let polys = try ciphertext.polys.map { try $0.forwardNtt() }
-        return Ciphertext<Bfv<T>, Eval>(context: ciphertext.context,
-                                        polys: polys,
-                                        correctionFactor: ciphertext.correctionFactor,
-                                        seed: ciphertext.seed)
+        return try Ciphertext<Bfv<T>, Eval>(context: ciphertext.context,
+                                            polys: polys,
+                                            correctionFactor: ciphertext.correctionFactor,
+                                            seed: ciphertext.seed)
     }
 
     @inlinable
-    public static func inverseNtt(_ ciphertext: EvalCiphertext) throws -> CoeffCiphertext {
+    public static func inverseNtt(_ ciphertext: inout EvalCiphertext) throws -> CoeffCiphertext {
         let polys = try ciphertext.polys.map { try $0.inverseNtt() }
-        return Ciphertext<Bfv<T>, Coeff>(context: ciphertext.context,
-                                         polys: polys,
-                                         correctionFactor: ciphertext.correctionFactor,
-                                         seed: ciphertext.seed)
+        return try Ciphertext<Bfv<T>, Coeff>(context: ciphertext.context,
+                                             polys: polys,
+                                             correctionFactor: ciphertext.correctionFactor,
+                                             seed: ciphertext.seed)
+    }
+
+    /// Returns the dimension counts for ``EncodeFormat/simd`` encoding, or `nil` if the HE scheme does
+    /// not support SIMD encoding for the given parameters.
+    @inlinable
+    public static func simdDimensions(for encryptionParameter: EncryptionParameters<T>) -> SimdEncodingDimensions? {
+        guard encryptionParameter.supportsSimdEncoding else {
+            return nil
+        }
+        return SimdEncodingDimensions(rowCount: 2, columnCount: encryptionParameter.polyDegree / 2)
     }
 }

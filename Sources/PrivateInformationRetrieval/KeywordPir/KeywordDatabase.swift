@@ -484,21 +484,24 @@ public enum ProcessKeywordDatabase {
     /// - Returns: The processed database.
     /// - Throws: Error upon failure to process the shard.
     @inlinable
-    public static func processShard<Scheme: HeScheme>(shard: KeywordDatabaseShard,
-                                                      with arguments: Arguments<Scheme.Scalar>,
-                                                      onEvent: @escaping (ProcessShardEvent) throws -> Void = { _ in
-                                                      }) throws
-        -> ProcessedDatabaseWithParameters<Scheme>
+    public static func processShard<PirUtil: PirUtilProtocol>(shard: KeywordDatabaseShard,
+                                                              with arguments: Arguments<PirUtil.Scheme.Scalar>,
+                                                              using _: PirUtil.Type,
+                                                              onEvent: @escaping (ProcessShardEvent) throws
+                                                                  -> Void = { _ in
+                                                                  }) async throws
+        -> ProcessedDatabaseWithParameters<PirUtil.Scheme>
     {
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
-        let context = try Context<Scheme>(encryptionParameters: arguments.encryptionParameters)
+        let context = try PirUtil.Scheme.Context(encryptionParameters: arguments.encryptionParameters)
         guard arguments.algorithm == .mulPir else {
             throw PirError.invalidPirAlgorithm(arguments.algorithm)
         }
-        return try KeywordPirServer<MulPirServer<Scheme>>.process(database: shard,
-                                                                  config: keywordConfig,
-                                                                  with: context, onEvent: onEvent,
-                                                                  symmetricPirConfig: arguments.symmetricPirConfig)
+        return try await KeywordPirServer<MulPirServer<PirUtil>>.process(database: shard,
+                                                                         config: keywordConfig,
+                                                                         with: context, onEvent: onEvent,
+                                                                         symmetricPirConfig: arguments
+                                                                             .symmetricPirConfig)
     }
 
     /// Validates the correctness of processing on a shard.
@@ -511,11 +514,12 @@ public enum ProcessKeywordDatabase {
     /// - Throws: Error upon failure to validate the sharding.
     /// - seealso: ``ProcessKeywordDatabase/processShard(shard:with:onEvent:)`` to process a shard before validation.
     @inlinable
-    public static func validateShard<Scheme: HeScheme>(
-        shard: ProcessedDatabaseWithParameters<Scheme>,
+    public static func validateShard<PirUtil: PirUtilProtocol>(
+        shard: ProcessedDatabaseWithParameters<PirUtil.Scheme>,
         row: KeywordValuePair,
         trials: Int,
-        context: Context<Scheme>) throws -> ShardValidationResult<Scheme>
+        context: PirUtil.Scheme.Context,
+        using _: PirUtil.Type) async throws -> ShardValidationResult<PirUtil.Scheme>
     {
         guard trials > 0 else {
             throw PirError.validationError("Invalid trialsPerShard: \(trials)")
@@ -524,25 +528,26 @@ public enum ProcessKeywordDatabase {
             throw PirError.validationError("Shard missing keywordPirParameter")
         }
 
-        let server = try KeywordPirServer<MulPirServer<Scheme>>(
+        let server = try KeywordPirServer<MulPirServer<PirUtil>>(
             context: context,
             processed: shard)
 
-        let client = KeywordPirClient<MulPirClient<Scheme>>(
+        let client = KeywordPirClient<MulPirClient<PirUtil>>(
             keywordParameter: keywordPirParameter,
             pirParameter: shard.pirParameter,
             context: context)
-        var evaluationKey: EvaluationKey<Scheme>?
-        var query: Query<Scheme>?
-        var response = Response<Scheme>(ciphertexts: [[]])
+        var evaluationKey: EvaluationKey<PirUtil.Scheme>?
+        var query: Query<PirUtil.Scheme>?
+        var response = Response<PirUtil.Scheme>(ciphertexts: [[]])
         let clock = ContinuousClock()
         var minNoiseBudget = Double.infinity
-        let results = try (0..<trials).map { trial in
+        var results: [(Duration, Int)] = Array(repeating: (.seconds(0), 0), count: trials)
+        for trial in 0..<trials {
             let secretKey = try context.generateSecretKey()
             let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
             let trialQuery = try client.generateQuery(at: row.keyword, using: secretKey)
-            let computeTime = try clock.measure {
-                response = try server.computeResponse(to: trialQuery, using: trialEvaluationKey)
+            let computeTime = try await clock.measure {
+                response = try await server.computeResponse(to: trialQuery, using: trialEvaluationKey)
             }
             let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
             minNoiseBudget = min(minNoiseBudget, noiseBudget)
@@ -552,7 +557,7 @@ public enum ProcessKeywordDatabase {
                 using: secretKey)
             guard decryptedResponse == row.value else {
                 let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
-                guard noiseBudget >= Scheme.minNoiseBudget else {
+                guard noiseBudget >= PirUtil.Scheme.minNoiseBudget else {
                     throw PirError.validationError("Insufficient noise budget \(noiseBudget)")
                 }
                 throw PirError.validationError("Incorrect PIR response")
@@ -564,7 +569,7 @@ public enum ProcessKeywordDatabase {
                 evaluationKey = trialEvaluationKey
                 query = trialQuery
             }
-            return (computeTime, entryCount)
+            results[trial] = (computeTime, entryCount)
         }
         guard let evaluationKey, let query else {
             throw PirError.validationError("Empty evaluation key or query")
@@ -589,27 +594,28 @@ public enum ProcessKeywordDatabase {
     /// - Returns: The processed database.
     /// - Throws: Error upon failure to process the database.
     @inlinable
-    public static func process<Scheme: HeScheme>(
+    public static func process<PirUtil: PirUtilProtocol>(
         rows: some Collection<KeywordValuePair>,
-        with arguments: Arguments<Scheme.Scalar>) throws -> Processed<Scheme>
+        with arguments: Arguments<PirUtil.Scheme.Scalar>,
+        using _: PirUtil.Type) async throws -> Processed<PirUtil.Scheme>
     {
         var evaluationKeyConfig = EvaluationKeyConfig()
         let keywordConfig = arguments.databaseConfig.keywordPirConfig
 
-        let context = try Context<Scheme>(encryptionParameters: arguments.encryptionParameters)
+        let context = try PirUtil.Scheme.Context(encryptionParameters: arguments.encryptionParameters)
         let keywordDatabase = try KeywordDatabase(
             rows: rows,
             sharding: arguments.databaseConfig.sharding,
             shardingFunction: keywordConfig.shardingFunction,
             symmetricPirConfig: arguments.symmetricPirConfig)
-        var processedShards = [String: ProcessedDatabaseWithParameters<Scheme>]()
+        var processedShards = [String: ProcessedDatabaseWithParameters<PirUtil.Scheme>]()
         for (shardID, shardedDatabase) in keywordDatabase.shards where !shardedDatabase.isEmpty {
             guard arguments.algorithm == .mulPir else {
                 throw PirError.invalidPirAlgorithm(arguments.algorithm)
             }
-            let processed = try KeywordPirServer<MulPirServer<Scheme>>.process(database: shardedDatabase,
-                                                                               config: keywordConfig,
-                                                                               with: context)
+            let processed = try await KeywordPirServer<MulPirServer<PirUtil>>.process(database: shardedDatabase,
+                                                                                      config: keywordConfig,
+                                                                                      with: context)
             evaluationKeyConfig = [evaluationKeyConfig, processed.pirParameter.evaluationKeyConfig]
                 .union()
 

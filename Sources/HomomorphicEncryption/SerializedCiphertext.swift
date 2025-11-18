@@ -43,7 +43,7 @@ extension Ciphertext {
     @inlinable
     public init(
         deserialize serialized: SerializedCiphertext<Scalar>,
-        context: Context<Scheme>,
+        context: Scheme.Context,
         moduliCount: Int? = nil) throws
     {
         self.context = context
@@ -51,9 +51,9 @@ extension Ciphertext {
         let polyContext = try context.secretKeyContext.getContext(moduliCount: moduliCount)
         switch serialized {
         case let .seeded(poly0: poly0, seed: seed):
-            let poly = try PolyRq<_, Format>(deserialize: poly0, context: polyContext)
+            let poly = try PolyRq<Scheme.Scalar, Format>(deserialize: poly0, context: polyContext)
             var rng = try NistAes128Ctr(seed: seed)
-            let a = PolyRq<_, Eval>.random(context: polyContext, using: &rng)
+            let a = PolyRq<Scheme.Scalar, Eval>.random(context: polyContext, using: &rng)
             let poly1: PolyRq<Scalar, Format> = try a.convertFormat()
             self.polys = [poly, poly1]
             self.correctionFactor = 1
@@ -62,6 +62,11 @@ extension Ciphertext {
             self.polys = try Serialize.deserializePolys(from: polys, context: polyContext, skipLSBs: skipLSBs)
             self.correctionFactor = correctionFactor
         }
+        self.auxiliaryData = try Scheme.CiphertextAuxiliaryData(
+            context: context,
+            polys: polys,
+            correctionFactor: correctionFactor,
+            seed: seed)
     }
 
     /// Serializes a ciphertext, retaining decryption correctness only at the given indices.

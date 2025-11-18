@@ -39,11 +39,11 @@ extension PrivateNearestNeighborSearchUtil {
     public enum CiphertextMatrixTests {
         /// Testing encryption/decryption round-trip.
         @inlinable
-        public static func encryptDecryptRoundTrip<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func encryptDecryptRoundTrip<Scheme: HeScheme>(for _: Scheme.Type) async throws {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
@@ -60,7 +60,7 @@ extension PrivateNearestNeighborSearchUtil {
 
             // modSwitchDownToSingle
             do {
-                try ciphertextMatrix.modSwitchDownToSingle()
+                try await ciphertextMatrix.modSwitchDownToSingle()
                 let plaintextMatrixRoundTrip = try ciphertextMatrix.decrypt(using: secretKey)
                 #expect(plaintextMatrixRoundTrip == plaintextMatrix)
             }
@@ -72,7 +72,7 @@ extension PrivateNearestNeighborSearchUtil {
             let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
             let encodeValues: [[Scheme.Scalar]] = increasingData(
                 dimensions: dimensions,
@@ -92,7 +92,7 @@ extension PrivateNearestNeighborSearchUtil {
 
         /// Testing `extractDenseRow`.
         @inlinable
-        public static func extractDenseRow<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func extractDenseRow<Scheme: HeScheme>(for _: Scheme.Type) async throws {
             let degree = 16
             let plaintextModulus = try Scheme.Scalar.generatePrimes(
                 significantBitCounts: [9],
@@ -109,7 +109,7 @@ extension PrivateNearestNeighborSearchUtil {
                 errorStdDev: .stdDev32,
                 securityLevel: .unchecked)
             #expect(encryptionParameters.supportsSimdEncoding)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
 
             for rowCount in 1..<(2 * degree) {
                 for columnCount in 1..<degree / 2 {
@@ -134,7 +134,7 @@ extension PrivateNearestNeighborSearchUtil {
                         using: secretKey)
 
                     for rowIndex in 0..<rowCount {
-                        let extractedRow = try ciphertextMatrix.extractDenseRow(
+                        let extractedRow = try await ciphertextMatrix.extractDenseRow(
                             rowIndex: rowIndex,
                             evaluationKey: evaluationKey)
 

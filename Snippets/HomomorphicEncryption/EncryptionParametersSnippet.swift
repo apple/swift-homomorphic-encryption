@@ -85,7 +85,7 @@ func summarize<Scheme: HeScheme>(
     parameters: EncryptionParameters<Scheme.Scalar>, _: Scheme.Type) throws
 {
     let values = (0..<8).map { Scheme.Scalar($0) }
-    let context = try Context<Scheme>(encryptionParameters: parameters)
+    let context = try Scheme.Context(encryptionParameters: parameters)
     let plaintext: Scheme.CoeffPlaintext = try context.encode(
         values: values,
         format: .coefficient)

@@ -14,14 +14,16 @@
 
 import ModularArithmetic
 
-/// Performs Chinese remainder theorem (CRT) composition of coefficients.
 @usableFromInline
-package struct CrtComposer<T: ScalarType>: Sendable {
+package typealias CrtComposer = _CrtComposer
+
+/// Performs Chinese remainder theorem (CRT) composition of coefficients.
+public struct _CrtComposer<T: ScalarType>: Sendable { // swiftlint:disable:this type_name
     /// Context for the CRT moduli `q_i`.
-    @usableFromInline let polyContext: PolyContext<T>
+    public let polyContext: PolyContext<T>
 
     /// i'th entry stores `(q_i / q) % q_i`.
-    @usableFromInline let inversePuncturedProducts: [MultiplyConstantModulus<T>]
+    public let inversePuncturedProducts: [MultiplyConstantModulus<T>]
 
     /// Creates a new ``CrtComposer``.
     /// - Parameter polyContext: Context for the CRT moduli.

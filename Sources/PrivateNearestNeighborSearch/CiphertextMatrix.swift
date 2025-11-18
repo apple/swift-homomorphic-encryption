@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AsyncAlgorithms
 import HomomorphicEncryption
 import ModularArithmetic
 
@@ -32,7 +33,7 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
     @usableFromInline package var ciphertexts: [Ciphertext<Scheme, Format>]
 
     /// The parameter context.
-    @usableFromInline var context: Context<Scheme> {
+    @usableFromInline var context: Scheme.Context {
         precondition(!ciphertexts.isEmpty, "Ciphertext array cannot be empty")
         return ciphertexts[0].context
     }
@@ -114,6 +115,22 @@ extension CiphertextMatrix {
             ciphertexts: evalCiphertexts)
     }
 
+    /// Async version of ``convertToEvalFormat``.
+    @inlinable
+    public func convertToEvalFormat() async throws -> CiphertextMatrix<Scheme, Eval> {
+        if Format.self == Eval.self {
+            // swiftlint:disable:next force_cast
+            return self as! CiphertextMatrix<Scheme, Eval>
+        }
+        let evalCiphertexts: [Ciphertext<Scheme, Eval>] = try await .init(ciphertexts.async.map { ciphertext in
+            try await ciphertext.convertToEvalFormat()
+        })
+        return try CiphertextMatrix<Scheme, Eval>(
+            dimensions: dimensions,
+            packing: packing,
+            ciphertexts: evalCiphertexts)
+    }
+
     /// Converts the ciphertext matrix to `Coeff` format.
     /// - Returns: The converted ciphertext matrix.
     /// - Throws: Error upon failure to convert the ciphertext matrix.
@@ -124,6 +141,22 @@ extension CiphertextMatrix {
             return self as! CiphertextMatrix<Scheme, Coeff>
         }
         let coeffCiphertexts = try ciphertexts.map { ciphertexts in try ciphertexts.convertToCoeffFormat() }
+        return try CiphertextMatrix<Scheme, Coeff>(
+            dimensions: dimensions,
+            packing: packing,
+            ciphertexts: coeffCiphertexts)
+    }
+
+    /// Async version of ``convertToCoeffFormat``.
+    @inlinable
+    public func convertToCoeffFormat() async throws -> CiphertextMatrix<Scheme, Coeff> {
+        if Format.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            return self as! CiphertextMatrix<Scheme, Coeff>
+        }
+        let coeffCiphertexts: [Ciphertext<Scheme, Coeff>] = try await .init(ciphertexts.async.map { ciphertext in
+            try ciphertext.convertToCoeffFormat()
+        })
         return try CiphertextMatrix<Scheme, Coeff>(
             dimensions: dimensions,
             packing: packing,
@@ -146,14 +179,28 @@ extension CiphertextMatrix {
         fatalError("Unsupported Format \(Format.description)")
     }
 
+    /// Async version of ``convertToCanonicalFormat``.
+    @inlinable
+    public func convertToCanonicalFormat() async throws -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat> {
+        if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            return try await convertToCoeffFormat() as! CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
+        }
+        if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+            // swiftlint:disable:next force_cast
+            return try await convertToEvalFormat() as! CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>
+        }
+        fatalError("Unsupported Format \(Format.description)")
+    }
+
     /// Performs modulus switching to a single modulus.
     ///
     /// If the ciphertexts already have a single modulus, this is a no-op.
     /// - Throws: Error upon failure to modulus switch.
     @inlinable
-    public mutating func modSwitchDownToSingle() throws where Format == Scheme.CanonicalCiphertextFormat {
+    public mutating func modSwitchDownToSingle() async throws where Format == Scheme.CanonicalCiphertextFormat {
         for index in 0..<ciphertexts.count {
-            try ciphertexts[index].modSwitchDownToSingle()
+            try await Scheme.modSwitchDownToSingleAsync(&ciphertexts[index])
         }
     }
 }
@@ -192,7 +239,7 @@ extension CiphertextMatrix {
     /// - Returns: A ciphertext matrix in `.denseRow` format with 1 row
     /// - Throws: Error upon failure to extract the row.
     @inlinable
-    package func extractDenseRow(rowIndex: Int, evaluationKey: EvaluationKey<Scheme>) throws -> Self
+    package func extractDenseRow(rowIndex: Int, evaluationKey: EvaluationKey<Scheme>) async throws -> Self
         where Format == Scheme.CanonicalCiphertextFormat
     {
         precondition((0..<dimensions.rowCount).contains(rowIndex))
@@ -279,9 +326,9 @@ extension CiphertextMatrix {
             return (plaintext, repeatCountInMask)
         }()
 
-        var ciphertextEval = try ciphertexts[ciphertextIndex].convertToEvalFormat()
-        try ciphertextEval *= plaintextMask
-        var ciphertext = try ciphertextEval.convertToCanonicalFormat()
+        var ciphertextEval = try await ciphertexts[ciphertextIndex].convertToEvalFormat()
+        try await Scheme.mulAssignAsync(&ciphertextEval, plaintextMask)
+        var ciphertext = try await ciphertextEval.convertToCanonicalFormat()
         // e.g., `ciphertext` now encrypts
         // [[0, 0, 3, 4, 0, 0, 3, 4],
         //  [0, 0, 0, 0, 0, 0, 0, 0]]
@@ -289,9 +336,12 @@ extension CiphertextMatrix {
         // Replicate the values across one SIMD row by rotating and adding.
         let rotateCount = simdColumnCount / (copiesInMask * columnCountPowerOfTwo) - 1
         var ciphertextCopyRight = ciphertext
-        for _ in 0..<rotateCount {
-            try ciphertextCopyRight.rotateColumns(by: columnCountPowerOfTwo, using: evaluationKey)
-            try ciphertext += ciphertextCopyRight
+        for await _ in (0..<rotateCount).async {
+            try await Scheme.rotateColumnsAsync(
+                of: &ciphertextCopyRight,
+                by: columnCountPowerOfTwo,
+                using: evaluationKey)
+            try await Scheme.addAssignAsync(&ciphertext, ciphertextCopyRight)
         }
         // e.g., `ciphertext` now encrypts
         // [[3, 4, 3, 4, 3, 4, 3, 4],
@@ -299,8 +349,8 @@ extension CiphertextMatrix {
 
         // Duplicate values to both SIMD rows
         var ciphertextCopy = ciphertext
-        try ciphertextCopy.swapRows(using: evaluationKey)
-        try ciphertext += ciphertextCopy
+        try await Scheme.swapRowsAsync(of: &ciphertextCopy, using: evaluationKey)
+        try await Scheme.addAssignAsync(&ciphertext, ciphertextCopy)
         // e.g., `ciphertext` now encrypts
         // [[3, 4, 3, 4, 3, 4, 3, 4],
         //  [3, 4, 3, 4, 3, 4, 3, 4]]

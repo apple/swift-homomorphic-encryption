@@ -19,21 +19,25 @@ import Testing
 @Suite
 struct MatrixMultiplicationTests {
     @Test
-    func mulVector() throws {
-        try PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests.mulVector(for: Bfv<UInt32>.self)
-        try PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests.mulVector(for: Bfv<UInt64>.self)
+    func mulVector() async throws {
+        try await PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests.mulVector(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests.mulVector(for: Bfv<UInt64>.self)
     }
 
     @Test
-    func matrixMulSmallDimensions() throws {
-        try PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests.matrixMulSmallDimensions(for: Bfv<UInt32>.self)
-        try PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests.matrixMulSmallDimensions(for: Bfv<UInt64>.self)
+    func matrixMulSmallDimensions() async throws {
+        try await PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests
+            .matrixMulSmallDimensions(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests
+            .matrixMulSmallDimensions(for: Bfv<UInt64>.self)
     }
 
     @Test
-    func matrixMulLargeDimensions() throws {
-        try PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests.matrixMulLargeDimensions(for: Bfv<UInt32>.self)
-        try PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests.matrixMulLargeDimensions(for: Bfv<UInt64>.self)
+    func matrixMulLargeDimensions() async throws {
+        try await PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests
+            .matrixMulLargeDimensions(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.MatrixMultiplicationTests
+            .matrixMulLargeDimensions(for: Bfv<UInt64>.self)
     }
 
     @Test

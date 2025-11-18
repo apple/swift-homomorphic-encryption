@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AsyncAlgorithms
+import DequeModule
 import Foundation
 import HomomorphicEncryption
 import ModularArithmetic
@@ -30,7 +32,9 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
 
     public static var algorithm: PirAlgorithm { .mulPir }
 
-    public static func generateParameter(config: IndexPirConfig, with context: Context<Scheme>) -> IndexPirParameter {
+    public static func generateParameter(config: IndexPirConfig,
+                                         with context: Scheme.Context) -> IndexPirParameter
+    {
         let entrySizeInBytes = config.entrySizeInBytes
         let perChunkPlaintextCount = if entrySizeInBytes <= context.bytesPerPlaintext {
             config.entryCount.dividingCeil(context.bytesPerPlaintext / entrySizeInBytes, variableTime: true)
@@ -47,7 +51,7 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
                 break
             }
         }
-        if config.unevenDimensions, config.dimensionCount == 2, Scheme.self == Bfv<Scheme.Scalar>.self {
+        if config.unevenDimensions, config.dimensionCount == 2, Scheme.cryptosystem == .bfv {
             // BFV ciphertext-ciphertext multiply is a runtime bottleneck.
             // To improve runtime, we reduce the second dimension and
             // increase the first dimension while keeping the total expansion length
@@ -108,9 +112,10 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
 }
 
 /// Client which can compute queries and decrypt responses using the ``PirAlgorithm/mulPir`` algorithm.
-public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
+public final class MulPirClient<PirUtil: PirUtilProtocol>: IndexPirClient {
     @usableFromInline typealias Scalar = Scheme.Scalar
-
+    /// Underlying HE scheme
+    public typealias Scheme = PirUtil.Scheme
     /// IndexPir protocol type.
     public typealias IndexPir = MulPir<Scheme>
     /// Encrypted query type.
@@ -121,7 +126,7 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
     public let parameter: IndexPirParameter
 
     /// Context for HE computation.
-    public let context: HomomorphicEncryption.Context<Scheme>
+    public let context: Scheme.Context
 
     public var evaluationKeyConfig: EvaluationKeyConfig {
         parameter.evaluationKeyConfig
@@ -140,7 +145,7 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
         IndexPir.computePerChunkPlaintextCount(for: parameter)
     }
 
-    public init(parameter: IndexPirParameter, context: Context<Scheme>) {
+    public init(parameter: IndexPirParameter, context: Scheme.Context) {
         self.parameter = parameter
         self.context = context
     }
@@ -151,10 +156,8 @@ public final class MulPirClient<Scheme: HeScheme>: IndexPirClient {
     /// - Throws: Error upon failure to generate an evaluation key.
     /// - Warning: The evaluation key is only valid for use with the given `secretKey`.
     public func generateEvaluationKey(using secretKey: SecretKey<Scheme>) throws -> EvaluationKey<Scheme> {
-        try Scheme.generateEvaluationKey(
-            context: context,
-            config: evaluationKeyConfig,
-            using: secretKey)
+        try context.generateEvaluationKey(config: evaluationKeyConfig,
+                                          using: secretKey)
     }
 }
 
@@ -194,15 +197,15 @@ extension MulPirClient {
                 return coordinate
             }
         }
-        return try Query(ciphertexts: PirUtil.compressInputs(
+        return try Query(ciphertexts: PirUtil.compressBinaryInputs(
             totalInputCount: parameter.expandedQueryCount * indices.count,
-            nonZeroInputs: nonZeroPositions,
+            oneIndices: nonZeroPositions,
             context: context,
             using: secretKey), indicesCount: indices.count)
     }
 
     @inlinable
-    func plaintextIndex(entryIndex: Int) -> Int {
+    package func plaintextIndex(entryIndex: Int) -> Int {
         entryIndex / entryChunksPerPlaintext
     }
 }
@@ -264,7 +267,9 @@ extension MulPirClient {
 }
 
 /// Server which can compute responses using the ``PirAlgorithm/mulPir`` algorithm.
-public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
+public final class MulPirServer<PirUtil: PirUtilProtocol>: IndexPirServer {
+    /// Underlying HE scheme
+    public typealias Scheme = PirUtil.Scheme
     /// Index PIR type backing the keyword PIR computation.
     public typealias IndexPir = MulPir<Scheme>
     /// Encrypted query type.
@@ -285,8 +290,7 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     /// Context for HE computation.
     ///
     /// Must be the same between client and server.
-    public let context: HomomorphicEncryption.Context<Scheme>
-
+    public let context: Scheme.Context
     /// Evaluation key configuration.
     public var evaluationKeyConfig: EvaluationKeyConfig {
         parameter.evaluationKeyConfig
@@ -317,7 +321,7 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     ///   - context: Context for HE computation.
     ///   - databases: Databases, each compatible with the given `parameter`.
     /// - Throws: Error upon failure to initialize the server.
-    public init(parameter: IndexPirParameter, context: Context<Scheme>, databases: [Database]) throws {
+    public init(parameter: IndexPirParameter, context: Scheme.Context, databases: [Database]) throws {
         self.parameter = parameter
         self.context = context
         self.databases = databases
@@ -331,17 +335,18 @@ public final class MulPirServer<Scheme: HeScheme>: IndexPirServer {
     }
 
     @inlinable
-    package static func chunkCount(parameter: IndexPirParameter, context: Context<Scheme>) -> Int {
+    package static func chunkCount(parameter: IndexPirParameter, context: Scheme.Context) -> Int {
         parameter.entrySizeInBytes.dividingCeil(context.bytesPerPlaintext, variableTime: true)
     }
 }
 
 extension MulPirServer {
     @inlinable
-    func computeResponseForOneChunk<ExpandedQueries, DataChunk>(expandedDim0Query: [Ciphertext<Scheme, Eval>],
-                                                                expandedRemainingQuery: ExpandedQueries,
-                                                                dataChunk: DataChunk,
-                                                                using evaluationKey: EvaluationKey<Scheme>) throws
+    func computeResponseForOneChunk<ExpandedQueries: Sendable, DataChunk: Sendable>(
+        expandedDim0Query: [Ciphertext<Scheme, Eval>],
+        expandedRemainingQuery: ExpandedQueries,
+        dataChunk: DataChunk,
+        using evaluationKey: EvaluationKey<Scheme>) async throws
         -> Ciphertext<Scheme, Coeff>
         where ExpandedQueries: Collection<CanonicalCiphertext>, DataChunk: Collection<Plaintext<Scheme, Eval>?>,
         ExpandedQueries.Index == Int, DataChunk.Index == Int
@@ -349,72 +354,78 @@ extension MulPirServer {
         let databaseColumnsCount = perChunkPlaintextCount / parameter.dimensions[0]
         precondition(databaseColumnsCount == 1 || databaseColumnsCount == expandedRemainingQuery.count)
 
-        var startIndex = dataChunk.startIndex
-        var intermediateResults: [CanonicalCiphertext] = try (0..<databaseColumnsCount).map { _ in
-            let endIndex = min(startIndex + expandedDim0Query.count, dataChunk.endIndex)
-            let plaintexts = dataChunk[startIndex..<endIndex]
-            startIndex += expandedDim0Query.count
-            return try expandedDim0Query.innerProduct(plaintexts: plaintexts)
-                .convertToCanonicalFormat()
-        }
+        var intermediateResults: [Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>] =
+            try await .init((0..<databaseColumnsCount).async.map { columnIndex in
+                let startIndex = dataChunk.startIndex + expandedDim0Query.count * columnIndex
+                let endIndex = min(startIndex + expandedDim0Query.count, dataChunk.endIndex)
+                let plaintexts = dataChunk[startIndex..<endIndex]
+                return try await Scheme.innerProductAsync(
+                    ciphertexts: expandedDim0Query,
+                    plaintexts: plaintexts)
+                    .convertToCanonicalFormat()
+            })
+
         var queryStartingIndex = expandedRemainingQuery.startIndex
-        for dimensionSize in parameter.dimensions.dropFirst() {
-            intermediateResults = try stride(from: 0, to: intermediateResults.count, by: dimensionSize)
-                .map { startIndex in
-                    var product = try expandedRemainingQuery[queryStartingIndex..<queryStartingIndex + dimensionSize]
-                        .innerProduct(ciphertexts: intermediateResults[startIndex..<startIndex + dimensionSize])
-                    try product.relinearize(using: evaluationKey)
+        for await dimensionSize in parameter.dimensions.dropFirst().async {
+            let currentIndex = queryStartingIndex
+            let currentResults = intermediateResults
+            intermediateResults = try await .init(stride(from: 0, to: intermediateResults.count, by: dimensionSize)
+                .async.map { startIndex in
+                    let vector0 = expandedRemainingQuery[currentIndex..<currentIndex + dimensionSize]
+                    let vector1 = currentResults[startIndex..<startIndex + dimensionSize]
+                    var product = try await Scheme.innerProductAsync(vector0, vector1)
+                    try await Scheme.relinearizeAsync(&product, using: evaluationKey)
                     return product
-                }
+                })
             queryStartingIndex += dimensionSize
         }
+
         precondition(
             intermediateResults.count == 1,
             "There should be only 1 ciphertext in the final result for each chunk")
-        try intermediateResults[0].modSwitchDownToSingle()
-        return try intermediateResults[0].convertToCoeffFormat()
+        try await Scheme.modSwitchDownToSingleAsync(&intermediateResults[0])
+        return try await intermediateResults[0].convertToCoeffFormat()
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
     public func computeResponse(to query: Query,
-                                using evaluationKey: EvaluationKey<Scheme>) throws -> Response
+                                using evaluationKey: EvaluationKey<Scheme>) async throws -> Response
 
     {
         guard databases.count == 1 || databases.count >= query.indicesCount else {
             throw PirError.invalidBatchSize(queryCount: query.indicesCount, databaseCount: databases.count)
         }
-        let expandedQueries = try PirUtil.expandCiphertexts(
+        let expandedQueries = try await PirUtil.expand(ciphertexts:
             query.ciphertexts,
             outputCount: parameter.expandedQueryCount * query.indicesCount,
             using: evaluationKey)
+        // This is a deque where remove first is a constant time op.
+        var ciphertextForEachQuery = expandedQueries.chunk(by: parameter.expandedQueryCount)
+        var responseCiphertexts: [[Scheme.CoeffCiphertext]] = []
 
-        // Note that `parameter.expandedQueryCount` is the sum of all dimension sizes. We process the expanded
-        // queries in chunks of `parameter.expandedQueryCount`. In each chunk, we firstly convert the first
-        // `parameter.dimensions[0]` ciphertexts into eval format as they will multiply with plaintexts. The rest are
-        // queries for the remaining dimensions, multiplying with ciphertexts, thus can stay in canonical format. Then
-        // we simply use these queries to process every chunk of the database. The first iteration is looping over each
-        // PIR call. The second iteration is looping over chunks of entries.
-        return try Response(ciphertexts: (0..<query.indicesCount).map { queryIndex in
+        for queryIndex in 0..<query.indicesCount {
             let database = databases[databases.count == 1 ? 0 : queryIndex]
-            let startingQueryIndex = queryIndex * parameter.expandedQueryCount
-            let firstDimensionQueries =
-                try expandedQueries[startingQueryIndex..<startingQueryIndex + parameter.dimensions[0]]
-                    .map { ciphertext in try ciphertext.convertToEvalFormat() }
-            let remainingQueries =
-                expandedQueries[startingQueryIndex + parameter.dimensions[0]..<startingQueryIndex + parameter
-                    .expandedQueryCount]
+            var queryCiphertexts = ciphertextForEachQuery.removeFirst()
+            var firstDimensionQueries: [Scheme.EvalCiphertext] = []
+            firstDimensionQueries.reserveCapacity(parameter.dimensions[0])
+            for _ in 0..<parameter.dimensions[0] {
+                try await firstDimensionQueries.append(queryCiphertexts.removeFirst().convertToEvalFormat())
+            }
             let perChunkPlaintextCount = database.count / chunkCount
-            return try stride(from: 0, to: database.count, by: perChunkPlaintextCount)
-                .map { startIndex in
-                    try computeResponseForOneChunk(
-                        expandedDim0Query: firstDimensionQueries,
-                        expandedRemainingQuery: remainingQueries,
-                        dataChunk: database
-                            .plaintexts[startIndex..<startIndex + perChunkPlaintextCount],
-                        using: evaluationKey)
-                }
-        })
+
+            try await responseCiphertexts
+                .append(.init(stride(from: 0, to: database.count, by: perChunkPlaintextCount).async
+                        .map { startIndex in
+                            try await self.computeResponseForOneChunk(
+                                expandedDim0Query: firstDimensionQueries,
+                                expandedRemainingQuery: queryCiphertexts,
+                                dataChunk: database
+                                    .plaintexts[startIndex..<startIndex + perChunkPlaintextCount],
+                                using: evaluationKey)
+                        }))
+        }
+        return Response(ciphertexts: responseCiphertexts)
     }
 }
 
@@ -423,8 +434,8 @@ extension MulPirServer {
 extension MulPirServer {
     @inlinable
     // swiftlint:disable:next attributes missing_docs
-    public static func process(database: some Collection<[UInt8]>, with context: Context<Scheme>,
-                               using parameter: IndexPirParameter) throws -> Database
+    public static func process(database: some Collection<[UInt8]>, with context: Scheme.Context,
+                               using parameter: IndexPirParameter) async throws -> Database
     {
         guard database.count == parameter.entryCount else {
             throw PirError
@@ -437,36 +448,37 @@ extension MulPirServer {
         }
         let chunkCount = parameter.entrySizeInBytes.dividingCeil(context.bytesPerPlaintext, variableTime: true)
         if chunkCount > 1 {
-            return try processSplitLargeEntries(database: database, with: context, using: parameter)
+            return try await processSplitLargeEntries(database: database, with: context, using: parameter)
         }
-        return try processPackEntries(database: database, with: context, using: parameter)
+        return try await processPackEntries(database: database, with: context, using: parameter)
     }
 
     @inlinable
     static func processSplitLargeEntries(
         database: some Collection<[UInt8]>,
-        with context: Context<Scheme>,
-        using parameter: IndexPirParameter) throws -> Database
+        with context: Scheme.Context,
+        using parameter: IndexPirParameter) async throws -> Database
     {
         let chunkCount = Self.chunkCount(parameter: parameter, context: context)
-        var plaintexts: [[Plaintext<Scheme, Eval>?]] = try database.map { entry in
-            try stride(from: 0, to: parameter.entrySizeInBytes, by: context.bytesPerPlaintext).map { startIndex in
-                let endIndex = min(startIndex + context.bytesPerPlaintext, entry.count)
-                // Avoid computing on padding plaintexts
-                guard startIndex < endIndex else {
-                    return nil
-                }
-                let bytes = Array(entry[startIndex..<endIndex])
-                let coefficients: [Scalar] = try CoefficientPacking.bytesToCoefficients(
-                    bytes: bytes,
-                    bitsPerCoeff: context.plaintextModulus.log2,
-                    decode: false)
-                if coefficients.allSatisfy({ $0 == 0 }) {
-                    return nil
-                }
-                return try context.encode(values: coefficients, format: .coefficient)
-            }
-        }
+        var plaintexts: [[Plaintext<Scheme, Eval>?]] = try await .init(database.async.map { entry in
+            try await .init(stride(from: 0, to: parameter.entrySizeInBytes, by: context.bytesPerPlaintext).async
+                .map { startIndex in
+                    let endIndex = min(startIndex + context.bytesPerPlaintext, entry.count)
+                    // Avoid computing on padding plaintexts
+                    guard startIndex < endIndex else {
+                        return nil
+                    }
+                    let bytes = Array(entry[startIndex..<endIndex])
+                    let coefficients: [Scheme.Scalar] = try CoefficientPacking.bytesToCoefficients(
+                        bytes: bytes,
+                        bitsPerCoeff: context.plaintextModulus.log2,
+                        decode: false)
+                    if coefficients.allSatisfy({ $0 == 0 }) {
+                        return nil
+                    }
+                    return try context.encode(values: coefficients, format: .coefficient)
+                })
+        })
 
         let perChunkPlaintextCount = IndexPir.computePerChunkPlaintextCount(for: parameter)
         let zeroChunk: [Plaintext<Scheme, Eval>?] = Array(repeatElement(nil, count: chunkCount))
@@ -490,8 +502,8 @@ extension MulPirServer {
     @inlinable
     static func processPackEntries(
         database: some Collection<[UInt8]>,
-        with context: Context<Scheme>,
-        using parameter: IndexPirParameter) throws -> Database
+        with context: Scheme.Context,
+        using parameter: IndexPirParameter) async throws -> Database
     {
         assert(database.count == parameter.entryCount)
         let flatDatabase: [UInt8] = database.flatMap { entry in
@@ -502,7 +514,8 @@ extension MulPirServer {
         }
         let entriesPerPlaintext = context.bytesPerPlaintext / parameter.entrySizeInBytes
         let bytesPerPlaintext = entriesPerPlaintext * parameter.entrySizeInBytes
-        var plaintexts: [Plaintext<Scheme, Eval>?] = try stride(from: 0, to: flatDatabase.count, by: bytesPerPlaintext)
+        let plaintextIndices = stride(from: 0, to: flatDatabase.count, by: bytesPerPlaintext)
+        var plaintexts: [Plaintext<Scheme, Eval>?] = try await .init(plaintextIndices.async
             .map { startIndex in
                 let endIndex = min(startIndex + bytesPerPlaintext, flatDatabase.count)
                 let values = Array(flatDatabase[startIndex..<endIndex])
@@ -514,7 +527,8 @@ extension MulPirServer {
                     return nil
                 }
                 return try context.encode(values: plaintextCoefficients, format: .coefficient)
-            }
+            })
+
         let perChunkPlaintextCount = IndexPir.computePerChunkPlaintextCount(for: parameter)
         while plaintexts.count < perChunkPlaintextCount {
             plaintexts.append(nil)
@@ -529,5 +543,14 @@ extension MulPirServer {
             }
         }
         return Database(plaintexts: reorderedPlaintexts)
+    }
+}
+
+extension Array {
+    @inlinable
+    consuming func chunk(by step: Int) -> Deque<Deque<Element>> {
+        precondition(count.isMultiple(of: step))
+        let shares = count / step
+        return Deque((0..<shares).map { index in Deque(self[index * step..<(index + 1) * step]) })
     }
 }

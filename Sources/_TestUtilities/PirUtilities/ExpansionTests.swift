@@ -24,7 +24,7 @@ extension PirTestUtils {
         @inlinable
         public static func expandCiphertextForOneStep<Scheme: HeScheme>(
             scheme _: Scheme.Type,
-            _ keyCompression: PirKeyCompressionStrategy) throws
+            _ keyCompression: PirKeyCompressionStrategy) async throws
         {
             let degree = 32
             let significantBitCounts = Array(repeating: Scheme.Scalar.bitWidth - 4, count: 4)
@@ -39,7 +39,7 @@ extension PirTestUtils {
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
 
-            let context: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let plaintextModulus = context.plaintextModulus
             let logDegree = degree.log2
             for logStep in 1...logDegree {
@@ -59,7 +59,7 @@ extension PirTestUtils {
                 let evaluationKey = try context.generateEvaluationKey(
                     config: EvaluationKeyConfig, using: secretKey)
                 let ciphertext = try plaintext.encrypt(using: secretKey)
-                let expandedCiphertexts = try PirUtil.expandCiphertextForOneStep(
+                let expandedCiphertexts = try await PirUtil.expandCiphertextForOneStep(
                     ciphertext,
                     logStep: logStep,
                     using: evaluationKey)
@@ -78,22 +78,22 @@ extension PirTestUtils {
 
         /// Tests compressInputsForOneCiphertext and expandCiphertexts roundtrip.
         @inlinable
-        public static func oneCiphertextRoundtrip<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+        public static func oneCiphertextRoundtrip<Scheme: HeScheme>(scheme _: Scheme.Type) async throws {
+            let context: Scheme.Context = try TestUtils.getTestContext()
             let degree = context.degree
             let logDegree = degree.log2
             for inputCount in 1...degree {
                 let data: [Scheme.Scalar] = (0..<inputCount).map { _ in Scheme.Scalar(Int.random(in: 0...1)) }
-                let nonZeroInputs = data.enumerated().compactMap { $0.element == 0 ? nil : $0.offset }
+                let oneIndices = data.enumerated().compactMap { $0.element == 0 ? nil : $0.offset }
                 let plaintext: Plaintext<Scheme, Coeff> = try PirUtil.compressInputsForOneCiphertext(
                     totalInputCount: inputCount,
-                    nonZeroInputs: nonZeroInputs,
+                    oneIndices: oneIndices,
                     context: context)
                 let secretKey = try context.generateSecretKey()
                 let evaluationKeyConfig = EvaluationKeyConfig(galoisElements: (1...logDegree).map { (1 << $0) + 1 })
                 let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
                 let ciphertext = try plaintext.encrypt(using: secretKey)
-                let expandedCiphertexts = try PirUtil.expandCiphertext(
+                let expandedCiphertexts = try await PirUtil.expandCiphertext(
                     ciphertext,
                     outputCount: inputCount,
                     logStep: 1,
@@ -111,32 +111,34 @@ extension PirTestUtils {
             }
         }
 
-        /// Tests compressInputs and expandCiphertexts roundtrip with multiple ciphertexts.
+        /// Tests compressBinaryInputs and expandCiphertexts roundtrip with multiple ciphertexts.
         @inlinable
-        public static func multipleCiphertextsRoundtrip<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+        public static func multipleCiphertextsRoundtrip<PirUtil: PirUtilProtocol>(pirUtil _: PirUtil
+            .Type) async throws
+        {
+            let context: PirUtil.Scheme.Context = try TestUtils.getTestContext()
             let degree = TestUtils.testPolyDegree
             let logDegree = degree.log2
             for inputCount in 1...degree * 2 {
                 let data: [Int] = (0..<inputCount).map { _ in Int.random(in: 0...1) }
-                let nonZeroInputs = data.enumerated().compactMap { $0.element == 0 ? nil : $0.offset }
+                let oneIndices = data.enumerated().compactMap { $0.element == 0 ? nil : $0.offset }
                 let secretKey = try context.generateSecretKey()
-                let ciphertexts = try PirUtil.compressInputs(
+                let ciphertexts = try PirUtil.compressBinaryInputs(
                     totalInputCount: inputCount,
-                    nonZeroInputs: nonZeroInputs,
+                    oneIndices: oneIndices,
                     context: context,
                     using: secretKey)
                 let evaluationKeyConfig = EvaluationKeyConfig(galoisElements: (1...logDegree).map { (1 << $0) + 1 })
                 let evaluationKey = try context.generateEvaluationKey(
                     config: evaluationKeyConfig,
                     using: secretKey)
-                let expandedCiphertexts = try PirUtil.expandCiphertexts(
+                let expandedCiphertexts = try await PirUtil.expand(ciphertexts:
                     ciphertexts,
                     outputCount: inputCount,
                     using: evaluationKey)
                 #expect(expandedCiphertexts.count == inputCount)
                 for index in 0..<inputCount {
-                    let decodedData: [Scheme.Scalar] = try expandedCiphertexts[index].decrypt(using: secretKey)
+                    let decodedData: [PirUtil.Scheme.Scalar] = try expandedCiphertexts[index].decrypt(using: secretKey)
                         .decode(format: .coefficient)
                     #expect(Int(decodedData[0]) == data[index])
                     for coeff in decodedData.dropFirst() {

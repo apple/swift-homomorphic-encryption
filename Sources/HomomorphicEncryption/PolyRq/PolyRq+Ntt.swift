@@ -105,16 +105,14 @@ extension ScalarType {
     }
 }
 
-@usableFromInline
-struct NttContext<T: ScalarType>: Sendable {
-    @usableFromInline let rootOfUnityPowers: MultiplyConstantArrayModulus<T>
-    @usableFromInline let inverseRootOfUnityPowers: MultiplyConstantArrayModulus<T>
-    /// `degree^{-1} mod modulus`.
-    @usableFromInline let inverseDegree: MultiplyConstantModulus<T>
-    /// `(degree)^{-1} * w^{-N} mod modulus` for `w` a root of unity mod modulus.
-    @usableFromInline let inverseDegreeRootOfUnity: MultiplyConstantModulus<T>
-    @usableFromInline let degree: Int
-    @usableFromInline let modulus: T
+public struct _NttContext<T: ScalarType>: Sendable {
+    public let rootOfUnityPowers: MultiplyConstantArrayModulus<T>
+    public let inverseRootOfUnityPowers: MultiplyConstantArrayModulus<T>
+    public let inverseDegree: MultiplyConstantModulus<T> // degree^{-1} mod modulus
+    // (degree)^{-1} * w^{-N} mod modulus for `w` a root of unity mod modulus
+    public let inverseDegreeRootOfUnity: MultiplyConstantModulus<T>
+    public let degree: Int
+    public let modulus: T
 
     @inlinable
     init(degree: Int, modulus: T) throws {
@@ -137,7 +135,6 @@ struct NttContext<T: ScalarType>: Sendable {
                 inverseRootOfUnityPowers[previousIdx])
             previousIdx = reverseIdx
         }
-
         self.degree = degree
         self.modulus = modulus
         self.rootOfUnityPowers = MultiplyConstantArrayModulus(
@@ -203,46 +200,42 @@ func forwardButterfly<T: ScalarType>(
     return (xOut, yOut)
 }
 
+extension PolyContext {
+    /// Performs the forward number-theoretic transform (NTT) in this context.
+    /// - Parameter poly: the polynomial to run forward NTT on.
+    /// - Returns: The ``Eval`` representation of the polynomial.
+    /// - Throws: Error upon failure to compute the forward NTT.
+    @inlinable
+    func forwardNtt(poly: consuming PolyRq<T, Coeff>) throws -> PolyRq<T, Eval> {
+        assert(self === poly.context || self == poly.context)
+        try validateNttModuli()
+        var currentContext: PolyContext<T>? = self
+        while let context = currentContext, let modulus = context.moduli.last {
+            let rowOffset = poly.data.index(row: context.moduli.count - 1, column: 0)
+            try poly.data.data.withUnsafeMutableBufferPointer { dataPtr in
+                // swiftlint:disable:next force_unwrapping
+                try context.forwardNtt(dataPtr: dataPtr.baseAddress! + rowOffset, modulus: modulus)
+            }
+            currentContext = context.next
+        }
+        return PolyRq<T, Eval>(context: self, data: poly.data)
+    }
+}
+
 extension PolyRq where F == Coeff {
     /// Performs the forward number-theoretic transform (NTT).
     /// - Returns: The ``Eval`` representation of the polynomial.
     /// - Throws: Error upon failure to compute the forward NTT.
     @inlinable
     public consuming func forwardNtt() throws -> PolyRq<T, Eval> {
-        try context.validateNttModuli()
-        var currentContext: PolyContext<T>? = context
-        while let context = currentContext, let modulus = context.moduli.last {
-            let rowOffset = data.index(row: context.moduli.count - 1, column: 0)
-            try data.data.withUnsafeMutableBufferPointer { dataPtr in
-                // swiftlint:disable:next force_unwrapping
-                try context.forwardNtt(dataPtr: dataPtr.baseAddress! + rowOffset, modulus: modulus)
-            }
-            currentContext = context.next
-        }
-        return PolyRq<T, Eval>(context: context, data: data)
+        try context.forwardNtt(poly: self)
     }
 }
 
-extension PolyContext {
-    /// Performs the forward number-theoretic transform (NTT) on a single modulus.
-    /// - Parameters:
-    ///   - dataPtr: Pointer to the coefficients mod `modulus`.
-    ///   - modulus: Modulus.
-    /// - Throws: Error upon failure to compute the forward NTT.
+extension _NttContext {
     @inlinable
-    func forwardNtt(dataPtr: UnsafeMutablePointer<T>, modulus: T) throws {
-        // We modify Harvey's approach <https://arxiv.org/pdf/1205.2926> with delayed modular reduction.
-        var context = self
-        while modulus != context.moduli.last, let nextContext = context.next {
-            context = nextContext
-        }
-        guard modulus == context.moduli.last else {
-            throw HeError.invalidPolyContext(context)
-        }
-        guard let nttContext = context.nttContext, let modulusReduceFactor = context.reduceModuli.last
-        else {
-            throw HeError.invalidPolyContext(context)
-        }
+    func forwardNtt(dataPtr: UnsafeMutablePointer<T>, modulus: T, modulusReduceFactor: Modulus<T>, degree: Int) throws {
+        let nttContext = self
 
         let n = degree
         let twiceModulus = modulus << 1
@@ -326,6 +319,34 @@ extension PolyContext {
     }
 }
 
+extension PolyContext {
+    /// Performs the forward number-theoretic transform (NTT) on a single modulus.
+    /// - Parameters:
+    ///   - dataPtr: Pointer to the coefficients mod `modulus`.
+    ///   - modulus: Modulus.
+    /// - Throws: Error upon failure to compute the forward NTT.
+    @inlinable
+    func forwardNtt(dataPtr: UnsafeMutablePointer<T>, modulus: T) throws {
+        // We modify Harvey's approach <https://arxiv.org/pdf/1205.2926> with delayed modular reduction.
+        var context = self
+        while modulus != context.moduli.last, let nextContext = context.next {
+            context = nextContext
+        }
+        guard modulus == context.moduli.last else {
+            throw HeError.invalidPolyContext(context)
+        }
+        guard let nttContext = context.nttContext, let modulusReduceFactor = context.reduceModuli.last
+        else {
+            throw HeError.invalidPolyContext(context)
+        }
+        try nttContext.forwardNtt(
+            dataPtr: dataPtr,
+            modulus: modulus,
+            modulusReduceFactor: modulusReduceFactor,
+            degree: degree)
+    }
+}
+
 /// Computes a lazy inverse NTT butterfly.
 /// - Parameters:
 ///   - x: In `[0, kModulus)`.
@@ -353,142 +374,169 @@ func inverseButterfly<T: ScalarType>(
     return (x, y)
 }
 
-extension PolyRq where F == Eval {
-    /// Performs the inverse number-theoretic transform (NTT).
-    /// - Returns: The ``Coeff`` representation of the polynomial.
-    /// - Throws: Error upon failure to compute the inverse NTT.
+extension _NttContext {
     @inlinable
-    public consuming func inverseNtt() throws -> PolyRq<T, Coeff> {
-        try context.validateNttModuli()
-        var currentContext: PolyContext<T>? = context
-        while let context = currentContext {
-            try inverseNtt(using: context)
-            currentContext = context.next
-        }
-        return PolyRq<T, Coeff>(context: context, data: data)
-    }
-
-    /// Computes the inverse number-theoretic transform (NTT) on the last modulus in the context.
-    /// - Parameter context: Context whose last modulus to use for the NTT.
-    /// - Throws: Error upon failure to compute the inverse NTT.
-    @inlinable
-    mutating func inverseNtt(using context: PolyContext<T>) throws {
-        // We modify Harvey's approach <https://arxiv.org/pdf/1205.2926> with delayed modular reduction.
-        let moduli = context.moduli
-        guard let modulus = moduli.last else {
-            throw HeError.emptyModulus
-        }
-        let rnsIndex = moduli.count &- 1
-        let n = degree
-
-        let rowOffset = data.rowIndices(row: rnsIndex).first
-        guard let rowOffset, let nttContext = context.nttContext
-        else {
-            throw HeError.invalidPolyContext(context)
-        }
-        let inverseRootOfUnityPowers = nttContext.inverseRootOfUnityPowers
-        let inverseDegree = nttContext.inverseDegree
-        let inverseDegreeRootOfUnity = nttContext.inverseDegreeRootOfUnity
-
+    func inverseNtt(
+        dataPtr: UnsafeMutablePointer<T>,
+        modulus: T,
+        reduceModulus: Modulus<T>,
+        degree: Int,
+        rowOffset: Int)
+    {
         let modulusMultiplesCount = min(degree.log2 &+ 1, modulus.leadingZeroBitCount)
-        let reduceModulus = context.reduceModuli[rnsIndex]
-
         var rootIdx = 1
         var lazyReductionCounter = -1
-        let nDiv2 = n &>> 1
-        // swiftlint:disable:next closure_body_length
-        data.data.withUnsafeMutableBufferPointer { dataPtr in
-            // swiftlint:disable:next force_unwrapping
-            let dataPtr = dataPtr.baseAddress! + rowOffset
+        let nDiv2 = degree &>> 1
 
-            for log2m in (0..<n.log2).reversed() {
-                let m = 1 &<< log2m
-                let t = n &>> (log2m &+ 1)
-                lazyReductionCounter &+= 1
-                let timeToReduce = lazyReductionCounter == modulusMultiplesCount
-                if timeToReduce {
-                    if m == 1 {
-                        lazyReductionCounter &-= 1
-                    } else {
-                        lazyReductionCounter = 0
+        let dataPtr = dataPtr + rowOffset
+
+        for log2m in (0..<degree.log2).reversed() {
+            let m = 1 &<< log2m
+            let t = degree &>> (log2m &+ 1)
+            lazyReductionCounter &+= 1
+            let timeToReduce = lazyReductionCounter == modulusMultiplesCount
+            if timeToReduce {
+                if m == 1 {
+                    lazyReductionCounter &-= 1
+                } else {
+                    lazyReductionCounter = 0
+                }
+            }
+            let kTimesModulus = modulus &<< lazyReductionCounter
+
+            if m == 1 {
+                // Final stage, folding in multiplication by n^{-1} and modular reduction
+                func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
+                    for xIdx in 0..<nDiv2 {
+                        let yIdx = xIdx &+ nDiv2
+                        var x = dataPtr[xIdx]
+                        var y = dataPtr[yIdx]
+                        op(&x, &y)
+                        let tx = x &+ y
+                        let ty = x &+ kTimesModulus &- y
+                        dataPtr[xIdx] = inverseDegree.multiplyMod(tx)
+                        dataPtr[yIdx] = inverseDegreeRootOfUnity.multiplyMod(ty)
                     }
                 }
-                let kTimesModulus = modulus &<< lazyReductionCounter
 
-                if m == 1 {
-                    // Final stage, folding in multiplication by n^{-1} and modular reduction
-                    func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
-                        for xIdx in 0..<nDiv2 {
-                            let yIdx = xIdx &+ nDiv2
-                            var x = dataPtr[xIdx]
-                            var y = dataPtr[yIdx]
-                            op(&x, &y)
-                            let tx = x &+ y
-                            let ty = x &+ kTimesModulus &- y
-                            dataPtr[xIdx] = inverseDegree.multiplyMod(tx)
-                            dataPtr[yIdx] = inverseDegreeRootOfUnity.multiplyMod(ty)
-                        }
+                if timeToReduce {
+                    applyOp { x, y in
+                        x = x.subtractIfExceeds(kTimesModulus)
+                        y = y.subtractIfExceeds(kTimesModulus)
                     }
-
-                    if timeToReduce {
-                        applyOp { x, y in
-                            x = x.subtractIfExceeds(kTimesModulus)
-                            y = y.subtractIfExceeds(kTimesModulus)
-                        }
-                    } else {
-                        applyOp { _, _ in }
+                } else {
+                    applyOp { _, _ in }
+                }
+            } else if t == 1 {
+                func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
+                    for i in 0..<m {
+                        let inverseRootOfUnity = inverseRootOfUnityPowers[rootIdx &+ i]
+                        let j1 = 2 &* i &* t
+                        var x = dataPtr[j1]
+                        var y = dataPtr[j1 &+ t]
+                        op(&x, &y)
+                        (dataPtr[j1], dataPtr[j1 &+ t]) = inverseButterfly(
+                            x: x,
+                            y: y,
+                            inverseRootOfUnity: inverseRootOfUnity,
+                            kModulus: kTimesModulus)
                     }
-                } else if t == 1 {
-                    func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
-                        for i in 0..<m {
-                            let inverseRootOfUnity = inverseRootOfUnityPowers[rootIdx &+ i]
-                            let j1 = 2 &* i &* t
-                            var x = dataPtr[j1]
-                            var y = dataPtr[j1 &+ t]
+                }
+                if timeToReduce {
+                    applyOp { x, y in
+                        x = reduceModulus.reduce(x)
+                        y = reduceModulus.reduce(y)
+                    }
+                } else {
+                    applyOp { _, _ in }
+                }
+            } else {
+                func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
+                    for i in 0..<m {
+                        let inverseRootOfUnity = inverseRootOfUnityPowers[rootIdx &+ i]
+                        let j1 = 2 &* i &* t
+                        for j in j1..<(j1 &+ t) {
+                            var x = dataPtr[j]
+                            var y = dataPtr[j &+ t]
                             op(&x, &y)
-                            (dataPtr[j1], dataPtr[j1 &+ t]) = inverseButterfly(
+                            (dataPtr[j], dataPtr[j &+ t]) = inverseButterfly(
                                 x: x,
                                 y: y,
                                 inverseRootOfUnity: inverseRootOfUnity,
                                 kModulus: kTimesModulus)
                         }
                     }
-                    if timeToReduce {
-                        applyOp { x, y in
-                            x = reduceModulus.reduce(x)
-                            y = reduceModulus.reduce(y)
-                        }
-                    } else {
-                        applyOp { _, _ in }
+                }
+                if timeToReduce {
+                    applyOp { x, y in
+                        x = reduceModulus.reduce(x)
+                        y = reduceModulus.reduce(y)
                     }
                 } else {
-                    func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
-                        for i in 0..<m {
-                            let inverseRootOfUnity = inverseRootOfUnityPowers[rootIdx &+ i]
-                            let j1 = 2 &* i &* t
-                            for j in j1..<(j1 &+ t) {
-                                var x = dataPtr[j]
-                                var y = dataPtr[j &+ t]
-                                op(&x, &y)
-                                (dataPtr[j], dataPtr[j &+ t]) = inverseButterfly(
-                                    x: x,
-                                    y: y,
-                                    inverseRootOfUnity: inverseRootOfUnity,
-                                    kModulus: kTimesModulus)
-                            }
-                        }
-                    }
-                    if timeToReduce {
-                        applyOp { x, y in
-                            x = reduceModulus.reduce(x)
-                            y = reduceModulus.reduce(y)
-                        }
-                    } else {
-                        applyOp { _, _ in }
-                    }
+                    applyOp { _, _ in }
                 }
-                rootIdx &+= m
             }
+            rootIdx &+= m
         }
+    }
+}
+
+extension PolyContext {
+    /// Computes the inverse number-theoretic transform (NTT) on the last modulus in this context.
+    /// - Parameter data:  the raw poly data to run NTT with.
+    /// - Throws: Error upon failure to compute the inverse NTT.
+    @inlinable
+    func inverseNtt(data: inout Array2d<T>) throws {
+        // We modify Harvey's approach <https://arxiv.org/pdf/1205.2926> with delayed modular reduction.
+        guard let modulus = moduli.last else {
+            throw HeError.emptyModulus
+        }
+        let rnsIndex = moduli.count &- 1
+        let n = data.columnCount
+
+        let rowOffset = data.rowIndices(row: rnsIndex).first
+        guard let rowOffset, let nttContext
+        else {
+            throw HeError.invalidPolyContext(self)
+        }
+
+        let reduceModulus = reduceModuli[rnsIndex]
+
+        data.data.withUnsafeMutableBufferPointer { dataPtr in
+            // swiftlint:disable:next force_unwrapping
+            let dataPtr = dataPtr.baseAddress!
+            nttContext.inverseNtt(
+                dataPtr: dataPtr,
+                modulus: modulus,
+                reduceModulus: reduceModulus,
+                degree: n,
+                rowOffset: rowOffset)
+        }
+    }
+
+    /// Performs the inverse number-theoretic transform (NTT) in this context.
+    /// - Parameter poly: the polynomial to run inverse NTT on.
+    /// - Returns: The ``Coeff`` representation of the polynomial.
+    /// - Throws: Error upon failure to compute the inverse NTT.
+    @inlinable
+    func inverseNtt(poly: consuming PolyRq<T, Eval>) throws -> PolyRq<T, Coeff> {
+        assert(self === poly.context || self == poly.context)
+        try validateNttModuli()
+        var currentContext: PolyContext<T>? = self
+        while let context = currentContext {
+            try context.inverseNtt(data: &poly.data)
+            currentContext = context.next
+        }
+        return PolyRq<T, Coeff>(context: self, data: poly.data)
+    }
+}
+
+extension PolyRq where F == Eval {
+    /// Performs the inverse number-theoretic transform (NTT).
+    /// - Returns: The ``Coeff`` representation of the polynomial.
+    /// - Throws: Error upon failure to compute the inverse NTT.
+    @inlinable
+    public consuming func inverseNtt() throws -> PolyRq<T, Coeff> {
+        try context.inverseNtt(poly: self)
     }
 }

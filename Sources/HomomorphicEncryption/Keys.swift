@@ -21,6 +21,18 @@ public final class SecretKey<Scheme: HeScheme>: Equatable, @unchecked Sendable {
 
     @usableFromInline var poly: PolyRq<Scalar, Eval>
 
+    /// public access to poly.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public var _poly: PolyRq<Scheme.Scalar, Eval> { poly }
+
+    /// Create a secret key by providing its content.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    /// - Parameter _poly: the polynomial for the secret key.
+    @inlinable
+    public convenience init(_poly: consuming PolyRq<Scheme.Scalar, Eval>) {
+        self.init(poly: _poly)
+    }
+
     @inlinable
     init(poly: consuming PolyRq<Scalar, Eval>) {
         self.poly = poly
@@ -49,65 +61,103 @@ extension SecretKey: PolyCollection {
 /// Key-switching operations include relinearization and Galois transformations.
 /// - seealso: ``HeScheme/relinearize(_:using:)`` and ``HeScheme/applyGalois(ciphertext:element:using:)`` for more
 /// details.
-@usableFromInline
-package struct KeySwitchKey<Scheme: HeScheme>: Equatable, Sendable {
+public struct _KeySwitchKey<Scheme: HeScheme>: HeKeySwitchKey { // swiftlint:disable:this type_name
     /// The context used for key-switching operations.
-    @usableFromInline let context: Context<Scheme>
+    @usableFromInline let context: Scheme.Context
     /// The ciphertexts of the key-switching key.
-    @usableFromInline let ciphers: [Ciphertext<Scheme, Eval>]
+    @usableFromInline let ciphertexts: [Ciphertext<Scheme, Eval>]
+
+    /// public access to context.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public var _context: Scheme.Context { context }
+    /// public access to ciphertexts.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public var _ciphertexts: [Ciphertext<Scheme, Eval>] { ciphertexts }
+
+    /// Create a key-switching key by providing its ontent.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    /// - Parameters:
+    ///   - _context: the context of key switching key.
+    ///   - _ciphertexts: the ciphertexts of key switching key.
+    @inlinable
+    public init(_context: Scheme.Context, _ciphertexts: [Ciphertext<Scheme, Eval>]) {
+        self.init(context: _context, ciphertexts: _ciphertexts)
+    }
 
     @inlinable
-    init(context: Context<Scheme>, ciphers: [Ciphertext<Scheme, Eval>]) {
+    init(context: Scheme.Context, ciphertexts: [Ciphertext<Scheme, Eval>]) {
         self.context = context
-        self.ciphers = ciphers
+        self.ciphertexts = ciphertexts
     }
 }
 
-extension KeySwitchKey: PolyCollection {
+extension _KeySwitchKey: PolyCollection {
     public typealias Scalar = Scheme.Scalar
 
     @inlinable
     public func polyContext() -> PolyContext<Scalar> {
-        ciphers[0].polyContext()
+        ciphertexts[0].polyContext()
     }
 }
 
-@usableFromInline
-package struct RelinearizationKey<Scheme: HeScheme>: Equatable, Sendable {
-    @usableFromInline let keySwitchKey: KeySwitchKey<Scheme>
+/// A cryptographic key used for relinearization operations.
+public struct _RelinearizationKey<Scheme: HeScheme>: Equatable, Sendable { // swiftlint:disable:this type_name
+    @usableFromInline let keySwitchKey: Scheme.KeySwitchKey
+    /// public access to key-switching key.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public var _keySwitchKey: Scheme.KeySwitchKey { keySwitchKey }
+
+    /// Create a relinearization key by providing its content.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    /// - Parameter _keySwitchKey:  the key-switching key for relinearization key.
+    @inlinable
+    public init(_keySwitchKey: Scheme.KeySwitchKey) {
+        self.init(keySwitchKey: _keySwitchKey)
+    }
 
     @inlinable
-    init(keySwitchKey: KeySwitchKey<Scheme>) {
+    init(keySwitchKey: Scheme.KeySwitchKey) {
         self.keySwitchKey = keySwitchKey
     }
 }
 
-extension RelinearizationKey: PolyCollection {
+extension _RelinearizationKey: PolyCollection {
     public typealias Scalar = Scheme.Scalar
 
     @inlinable
     public func polyContext() -> PolyContext<Scalar> {
-        keySwitchKey.ciphers[0].polyContext()
+        keySwitchKey.ciphertexts[0].polyContext()
     }
 }
 
-@usableFromInline
-package struct GaloisKey<Scheme: HeScheme>: Equatable, Sendable {
-    @usableFromInline package let keys: [Int: KeySwitchKey<Scheme>]
+/// A cryptographic key used for ciphertext rotation operation.
+public struct _GaloisKey<Scheme: HeScheme>: HeGaloisKey { // swiftlint:disable:this type_name
+    @usableFromInline let keys: [Int: Scheme.KeySwitchKey]
+    /// public access to key-switching keys.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public var _keys: [Int: Scheme.KeySwitchKey] { keys }
+
+    /// Create a Galois key by providing its content.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    /// - Parameter _keys:  the key-switching keys of Galois key.
+    @inlinable
+    public init(_keys: [Int: Scheme.KeySwitchKey]) {
+        self.init(keys: _keys)
+    }
 
     @inlinable
-    init(keys: [Int: KeySwitchKey<Scheme>]) {
+    init(keys: [Int: Scheme.KeySwitchKey]) {
         self.keys = keys
     }
 }
 
-extension GaloisKey: PolyCollection {
+extension _GaloisKey: PolyCollection {
     public typealias Scalar = Scheme.Scalar
 
     @inlinable
     public func polyContext() -> PolyContext<Scalar> {
         if let firstKey = keys.values.first {
-            firstKey.ciphers[0].polyContext()
+            firstKey.ciphertexts[0].polyContext()
         } else {
             preconditionFailure("Empty Galois key")
         }
@@ -118,8 +168,15 @@ extension GaloisKey: PolyCollection {
 ///
 /// Associated with a ``SecretKey``.
 public struct EvaluationKey<Scheme: HeScheme>: Equatable, Sendable {
-    @usableFromInline package let galoisKey: GaloisKey<Scheme>?
-    @usableFromInline package let relinearizationKey: RelinearizationKey<Scheme>?
+    @usableFromInline package let galoisKey: _GaloisKey<Scheme>?
+    @usableFromInline package let relinearizationKey: _RelinearizationKey<Scheme>?
+
+    /// public access to Galois key.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public var _galoisKey: _GaloisKey<Scheme>? { galoisKey }
+    /// public access to relineraization key.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public var _relinearizationKey: _RelinearizationKey<Scheme>? { relinearizationKey }
 
     /// Returns the configuration for the evaluation key.
     public var config: EvaluationKeyConfig {
@@ -128,11 +185,18 @@ public struct EvaluationKey<Scheme: HeScheme>: Equatable, Sendable {
             hasRelinearizationKey: relinearizationKey != nil)
     }
 
+    /// Create a evaluation key by providing its content.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    /// - Parameters:
+    ///   - _galoisKey: the Galois key of the evaluation key.
+    ///   - _relinearizationKey:  the relinearization key of the evaluation key.
     @inlinable
-    init(
-        galoisKey: GaloisKey<Scheme>?,
-        relinearizationKey: RelinearizationKey<Scheme>?)
-    {
+    public init(_galoisKey: _GaloisKey<Scheme>?, _relinearizationKey: _RelinearizationKey<Scheme>?) {
+        self.init(galoisKey: _galoisKey, relinearizationKey: _relinearizationKey)
+    }
+
+    @inlinable
+    init(galoisKey: _GaloisKey<Scheme>?, relinearizationKey: _RelinearizationKey<Scheme>?) {
         self.galoisKey = galoisKey
         self.relinearizationKey = relinearizationKey
     }

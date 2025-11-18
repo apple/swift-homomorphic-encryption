@@ -23,7 +23,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse {
     /// - Parameter contexts: Contexts to associate with the native type; one context per plaintext modulus.
     /// - Returns: The converted native type.
     /// - Throws: Error upon invalid protobuf object.
-    public func native<Scheme: HeScheme>(contexts: [Context<Scheme>]) throws -> Response<Scheme> {
+    public func native<Scheme: HeScheme>(contexts: [Scheme.Context]) throws -> Response<Scheme> {
         precondition(contexts.count == reply.count)
         let matrices: [CiphertextMatrix<Scheme, Coeff>] = try zip(reply, contexts).map { matrix, context in
             let serialized: SerializedCiphertextMatrix<Scheme.Scalar> = try matrix.native()

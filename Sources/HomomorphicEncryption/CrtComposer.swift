@@ -18,7 +18,7 @@ import ModularArithmetic
 package typealias CrtComposer = _CrtComposer
 
 /// Performs Chinese remainder theorem (CRT) composition of coefficients.
-public struct _CrtComposer<T: ScalarType>: Sendable { // swiftlint:disable:this type_name
+public struct _CrtComposer<T: ScalarType>: Sendable {
     /// Context for the CRT moduli `q_i`.
     public let polyContext: PolyContext<T>
 

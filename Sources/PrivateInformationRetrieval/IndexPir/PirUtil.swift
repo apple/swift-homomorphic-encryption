@@ -18,10 +18,11 @@ import ModularArithmetic
 
 /// A protocol  outlining the auxiliary functionalities used in PIR.
 public protocol PirUtilProtocol {
-    /// The underlying HE scheme
+    /// The underlying HE scheme.
     associatedtype Scheme: HeScheme
+    /// The Scalar type used by the HE scheme.
     associatedtype Scalar where Scalar == Scheme.Scalar
-    /// HE ciphertext in canonical format
+    /// HE ciphertext in canonical format.
     typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
 
     /// Expand a small number of ciphertexts to a large number of ciphertexts.

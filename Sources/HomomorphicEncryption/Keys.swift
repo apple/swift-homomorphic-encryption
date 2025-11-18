@@ -61,7 +61,7 @@ extension SecretKey: PolyCollection {
 /// Key-switching operations include relinearization and Galois transformations.
 /// - seealso: ``HeScheme/relinearize(_:using:)`` and ``HeScheme/applyGalois(ciphertext:element:using:)`` for more
 /// details.
-public struct _KeySwitchKey<Scheme: HeScheme>: HeKeySwitchKey { // swiftlint:disable:this type_name
+public struct _KeySwitchKey<Scheme: HeScheme>: HeKeySwitchKey {
     /// The context used for key-switching operations.
     @usableFromInline let context: Scheme.Context
     /// The ciphertexts of the key-switching key.
@@ -101,7 +101,7 @@ extension _KeySwitchKey: PolyCollection {
 }
 
 /// A cryptographic key used for relinearization operations.
-public struct _RelinearizationKey<Scheme: HeScheme>: Equatable, Sendable { // swiftlint:disable:this type_name
+public struct _RelinearizationKey<Scheme: HeScheme>: Equatable, Sendable {
     @usableFromInline let keySwitchKey: Scheme.KeySwitchKey
     /// public access to key-switching key.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
@@ -131,7 +131,7 @@ extension _RelinearizationKey: PolyCollection {
 }
 
 /// A cryptographic key used for ciphertext rotation operation.
-public struct _GaloisKey<Scheme: HeScheme>: HeGaloisKey { // swiftlint:disable:this type_name
+public struct _GaloisKey<Scheme: HeScheme>: HeGaloisKey {
     @usableFromInline let keys: [Int: Scheme.KeySwitchKey]
     /// public access to key-switching keys.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.

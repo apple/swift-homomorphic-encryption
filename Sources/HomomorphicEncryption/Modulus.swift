@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,8 +96,8 @@ public struct Modulus<T: ScalarType>: Equatable, Sendable {
     /// - Returns: `x * y mod p`.
     @inlinable
     public func multiplyMod(_ x: T, _ y: T) -> T {
-        precondition(x < modulus)
-        precondition(y < modulus)
+        assert(x < modulus)
+        assert(y < modulus)
         let product = x.multipliedFullWidth(by: y)
         return reduceProduct(T.DoubleWidth(product))
     }
@@ -383,8 +383,8 @@ struct ReduceModulus<T: ScalarType>: Equatable, Sendable {
     /// - Returns: `x * y mod p`.
     @inlinable
     func multiplyMod(_ x: T, _ y: T) -> T {
-        precondition(x < modulus)
-        precondition(y < modulus)
+        assert(x < modulus)
+        assert(y < modulus)
         let product = x.multipliedFullWidth(by: y)
         return reduceProduct(T.DoubleWidth(product))
     }

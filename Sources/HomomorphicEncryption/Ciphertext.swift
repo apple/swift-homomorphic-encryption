@@ -605,10 +605,9 @@ extension Ciphertext {
     /// to convert it to coefficient format.
     ///
     /// - Returns: A ciphertext in coefficient format (``Ciphertext<Scheme, Coeff>``).
-    /// - Throws: ``HeError/errorCastingPolyFormat(from:to:)`` if the format conversion fails.
-    /// - SeeAlso: The asynchronous version of ``convertToCoeffFormat()``.
-    /// - SeeAlso: ``convertToEvalFormat()`` to convert to evaluation format.
-    /// - SeeAlso: ``convertToCanonicalFormat()`` to convert to the scheme's canonical format.
+    /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
+    /// - SeeAlso: ``convertToEvalFormat()-9jgqm`` to convert to evaluation format.
+    /// - SeeAlso: ``convertToCanonicalFormat()-wgss`` to convert to the scheme's canonical format.
     @inlinable
     public consuming func convertToCoeffFormat() async throws -> Ciphertext<Scheme, Coeff> {
         if Format.self == Eval.self {
@@ -631,9 +630,9 @@ extension Ciphertext {
     /// to convert it to evaluation format.
     ///
     /// - Returns: A ciphertext in evaluation format (``Ciphertext<Scheme, Eval>``).
-    /// - Throws: ``HeError/errorCastingPolyFormat(from:to:)`` if the format conversion fails.
-    /// - SeeAlso: ``convertToCoeffFormat()`` to convert to coefficient format.
-    /// - SeeAlso: ``convertToCanonicalFormat()`` to convert to the scheme's canonical format.
+    /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
+    /// - SeeAlso: ``convertToCoeffFormat()-a2ay`` to convert to coefficient format.
+    /// - SeeAlso: ``convertToCanonicalFormat()-wgss`` to convert to the scheme's canonical format.
     @inlinable
     public consuming func convertToEvalFormat() async throws -> Ciphertext<Scheme, Eval> {
         if Format.self == Coeff.self {
@@ -656,9 +655,9 @@ extension Ciphertext {
     /// - Inverse NTT if converting from evaluation to coefficient format
     ///
     /// - Returns: A ciphertext in the canonical format (``Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>``).
-    /// - Throws: ``HeError/errorCastingPolyFormat(from:to:)`` if the format conversion fails.
-    /// - SeeAlso: ``convertToCoeffFormat()`` to convert to coefficient format.
-    /// - seeAlso: ``convertToEvalFormat()`` to convert to evaluation format.
+    /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
+    /// - SeeAlso: ``convertToCoeffFormat()-a2ay`` to convert to coefficient format.
+    /// - seeAlso: ``convertToEvalFormat()-9jgqm`` to convert to evaluation format.
     @inlinable
     public consuming func convertToCanonicalFormat() async throws
         -> Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>

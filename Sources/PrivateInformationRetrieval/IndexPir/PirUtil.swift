@@ -99,7 +99,7 @@ extension PirUtilProtocol {
         var difference = ciphertext
         try await Scheme.subAssignAsync(&difference, c1)
         var differenceCoeff = try await difference.convertToCoeffFormat()
-        try await Scheme.multiplyInversePowerOfXAsync(&differenceCoeff, power: shiftingPower)
+        try await Scheme.multiplyPowerOfXAsync(&differenceCoeff, power: -shiftingPower)
         let differenceCanonical = try await differenceCoeff.convertToCanonicalFormat()
         try await Scheme.addAssignAsync(&c1, ciphertext)
         return (c1, differenceCanonical)

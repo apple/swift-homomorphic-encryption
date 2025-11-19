@@ -183,17 +183,27 @@ extension Array2d {
 }
 
 extension Array2d {
-    // rotate every `range` elements left by `step` elements
+    /// Rotate columns.
+    /// - Parameter step: Negative step indicates a left rotation. Positive step indicates a right rotation.
+    /// - Warning: L:eaks `step` through timing.
     @inlinable
-    mutating func rotate(range: Int, step: Int) throws {
-        guard columnCount.isMultiple(of: range) else {
-            throw HeError.invalidRotationParameter(range: range, columnCount: data.count)
+    mutating func rotateColumns(by step: Int) throws {
+        let effectiveStep = step.toRemainder(columnCount, variableTime: true)
+        if effectiveStep == 0 {
+            return
         }
-
-        let effectiveStep = step.toRemainder(range, variableTime: true)
-        for index in stride(from: 0, to: data.count, by: range) {
-            let replacement = data[index + effectiveStep..<index + range] + data[index..<index + effectiveStep]
-            data.replaceSubrange(index..<index + range, with: replacement)
+        if effectiveStep < 0 {
+            for index in stride(from: 0, to: data.count, by: columnCount) {
+                let replacement = data[index - effectiveStep..<index + columnCount] +
+                    data[index..<index - effectiveStep]
+                data.replaceSubrange(index..<index + columnCount, with: replacement)
+            }
+        } else {
+            for index in stride(from: 0, to: data.count, by: columnCount) {
+                let cutoff = index + columnCount - effectiveStep
+                let replacement = data[cutoff..<index + columnCount] + data[index..<cutoff]
+                data.replaceSubrange(index..<index + columnCount, with: replacement)
+            }
         }
     }
 

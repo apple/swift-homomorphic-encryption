@@ -201,7 +201,7 @@ struct HeAPITests {
             try bfvTestKeySwitching(context: context)
             try HeAPITestHelpers.noiseBudgetTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.repeatedAdditionTest(context: context, scheme: Bfv<T>.self)
-            try await HeAPITestHelpers.multiplyInverseTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.multiplyPowerOfXTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeTestNtt(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeTestFormats(context: context, scheme: Bfv<T>.self)
         }

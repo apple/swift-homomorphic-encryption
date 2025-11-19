@@ -408,22 +408,28 @@ extension PolyRq where F == Coeff {
 
 extension PolyRq where F == Coeff {
     @inlinable
-    mutating func multiplyInversePowerOfX(_ power: Int) throws {
-        precondition(power >= 0)
-        let effectiveStep = power % (degree &<< 1)
-        if effectiveStep == 0 {
-            return
+    mutating func multiplyPowerOfX(_ power: Int) throws {
+        // Calculate effective step once, handling both positive and negative powers
+        let twiceDegree = degree &<< 1
+        let absEffectiveStep = abs(power) % twiceDegree
+
+        if absEffectiveStep == 0 {
+            return // No change needed for powers that are multiples of 2*degree
         }
-        try data.rotate(range: degree, step: effectiveStep)
+
+        // Determine rotation direction and effective step based on power sign
+        let rotationStep = power < 0 ? -absEffectiveStep : absEffectiveStep
+        try data.rotateColumns(by: rotationStep % degree)
+
+        let negateColumns = switch (power < 0, absEffectiveStep < degree) {
+        case (true, true): (degree &- absEffectiveStep)..<degree
+        case (true, false): 0..<(twiceDegree &- absEffectiveStep)
+        case (false, true): 0..<absEffectiveStep
+        case (false, false): (absEffectiveStep &- degree)..<degree
+        }
         for (rowIndex, modulus) in moduli.enumerated() {
-            if effectiveStep < degree {
-                for columnIndex in degree &- effectiveStep..<degree {
-                    data[rowIndex, columnIndex] = data[rowIndex, columnIndex].negateMod(modulus: modulus)
-                }
-            } else {
-                for columnIndex in 0..<(degree &<< 1) &- effectiveStep {
-                    data[rowIndex, columnIndex] = data[rowIndex, columnIndex].negateMod(modulus: modulus)
-                }
+            for columnIndex in negateColumns {
+                data[rowIndex, columnIndex] = data[rowIndex, columnIndex].negateMod(modulus: modulus)
             }
         }
     }

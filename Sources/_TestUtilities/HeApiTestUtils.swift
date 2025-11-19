@@ -1376,34 +1376,68 @@ public enum HeAPITestHelpers {
 
     /// Testing multiply inverse power of x.
     @inlinable
-    public static func multiplyInverseTest<Scheme: HeScheme>(
+    public static func multiplyPowerOfXTest<Scheme: HeScheme>(
         context: Scheme.Context,
         scheme _: Scheme.Type) async throws
     {
         let testEnv = try HeAPITestHelpers.TestEnv<Scheme>(context: context, format: .coefficient)
 
-        var coeffCiphertext1 = try await testEnv.ciphertext1.convertToCoeffFormat()
-        var coeffCiphertext2 = coeffCiphertext1
-        var coeffCiphertext3 = coeffCiphertext1
-        var coeffCiphertext4 = coeffCiphertext1
+        var coeffCiphertext = try await testEnv.ciphertext1.convertToCoeffFormat()
+        var coeffCiphertexts = Array(repeating: coeffCiphertext, count: 8)
         let degree = context.degree
         let plaintextModulus = context.plaintextModulus
-        let power1 = Int.random(in: 0..<degree)
-        let power2 = Int.random(in: degree..<(degree << 1))
-        try Scheme.multiplyInversePowerOfX(&coeffCiphertext1, power: power1)
-        try Scheme.multiplyInversePowerOfX(&coeffCiphertext2, power: power2)
-        try await Scheme.multiplyInversePowerOfXAsync(&coeffCiphertext3, power: power1)
-        try await Scheme.multiplyInversePowerOfXAsync(&coeffCiphertext4, power: power2)
 
-        let expectedData1 = Array(testEnv.data1[power1..<degree] + testEnv.data1[0..<power1]
+        try Scheme.multiplyPowerOfX(&coeffCiphertext, power: 0)
+        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: testEnv.data1)
+
+        let power1 = Int.random(in: 0..<degree)
+        try Scheme.multiplyPowerOfX(&coeffCiphertexts[0], power: power1)
+        try await Scheme.multiplyPowerOfXAsync(&coeffCiphertexts[1], power: power1)
+
+        try Scheme.multiplyPowerOfX(&coeffCiphertexts[2], power: -power1)
+        try await Scheme.multiplyPowerOfXAsync(&coeffCiphertexts[3], power: -power1)
+
+        let power2 = Int.random(in: degree..<(degree << 1))
+
+        try Scheme.multiplyPowerOfX(&coeffCiphertexts[4], power: power2)
+        try await Scheme.multiplyPowerOfXAsync(&coeffCiphertexts[5], power: power2)
+
+        try Scheme.multiplyPowerOfX(&coeffCiphertexts[6], power: -power2)
+        try await Scheme.multiplyPowerOfXAsync(&coeffCiphertexts[7], power: -power2)
+
+        let expectedData1 = Array(testEnv.data1[degree - power1..<degree]
+            .map { $0.negateMod(modulus: plaintextModulus) } +
+            testEnv.data1[0..<degree - power1])
+
+        let expectedDataNeg1 = Array(testEnv.data1[power1..<degree] + testEnv.data1[0..<power1]
             .map { $0.negateMod(modulus: plaintextModulus) })
-        let expectedData2 = Array(testEnv.data1[(power2 - degree)..<degree]
+
+        let expectedData2 = Array(testEnv.data1[(2 * degree - power2)..<degree] +
+            testEnv.data1[0..<(2 * degree - power2)].map { $0.negateMod(modulus: plaintextModulus) })
+
+        let expectedDataNeg2 = Array(testEnv.data1[(power2 - degree)..<degree]
             .map { $0.negateMod(modulus: plaintextModulus) } + testEnv.data1[0..<(power2 - degree)])
 
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext1, format: .coefficient, expected: expectedData1)
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext2, format: .coefficient, expected: expectedData2)
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext3, format: .coefficient, expected: expectedData1)
-        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext4, format: .coefficient, expected: expectedData2)
+        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertexts[0], format: .coefficient, expected: expectedData1)
+        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertexts[1], format: .coefficient, expected: expectedData1)
+        try testEnv.checkDecryptsDecodes(
+            ciphertext: coeffCiphertexts[2],
+            format: .coefficient,
+            expected: expectedDataNeg1)
+        try testEnv.checkDecryptsDecodes(
+            ciphertext: coeffCiphertexts[3],
+            format: .coefficient,
+            expected: expectedDataNeg1)
+        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertexts[4], format: .coefficient, expected: expectedData2)
+        try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertexts[5], format: .coefficient, expected: expectedData2)
+        try testEnv.checkDecryptsDecodes(
+            ciphertext: coeffCiphertexts[6],
+            format: .coefficient,
+            expected: expectedDataNeg2)
+        try testEnv.checkDecryptsDecodes(
+            ciphertext: coeffCiphertexts[7],
+            format: .coefficient,
+            expected: expectedDataNeg2)
     }
 
     /// Testing ntt and intt on ciphertexts.

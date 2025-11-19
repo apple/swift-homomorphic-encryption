@@ -221,8 +221,8 @@ extension HeScheme {
     }
 
     @inlinable
-    public static func multiplyInversePowerOfXAsync(_ ciphertext: inout CoeffCiphertext, power: Int) async throws {
-        try multiplyInversePowerOfX(&ciphertext, power: power)
+    public static func multiplyPowerOfXAsync(_ ciphertext: inout CoeffCiphertext, power: Int) async throws {
+        try multiplyPowerOfX(&ciphertext, power: power)
     }
     // swiftlint:enable missing_docs
 }

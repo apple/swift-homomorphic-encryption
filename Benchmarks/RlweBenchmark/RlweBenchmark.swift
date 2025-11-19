@@ -398,14 +398,14 @@ func ciphertextMultiplyBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void
     }
 }
 
-func ciphertextMultiplyInversePowerOfXBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+func ciphertextMultiplyPowerOfXBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
     {
-        benchmark("CiphertextMultiplyInversePowerOfX", Scheme.self) { benchmark in
+        benchmark("CiphertextMultiplyPowerOfX", Scheme.self) { benchmark in
             let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
             benchmark.startMeasurement()
             var ciphertext = try benchmarkContext.ciphertext.convertToCoeffFormat()
             for _ in benchmark.scaledIterations {
-                try blackHole(ciphertext.multiplyInversePowerOfX(power: ciphertext.context.degree / 2))
+                try blackHole(ciphertext.multiplyPowerOfX(power: -ciphertext.context.degree / 2))
             }
         }
     }
@@ -765,8 +765,8 @@ nonisolated(unsafe) let benchmarks: () -> Void = {
     ciphertextSubtractBenchmark(Bfv<UInt32>.self)()
     ciphertextSubtractBenchmark(Bfv<UInt64>.self)()
 
-    ciphertextMultiplyInversePowerOfXBenchmark(Bfv<UInt32>.self)()
-    ciphertextMultiplyInversePowerOfXBenchmark(Bfv<UInt64>.self)()
+    ciphertextMultiplyPowerOfXBenchmark(Bfv<UInt32>.self)()
+    ciphertextMultiplyPowerOfXBenchmark(Bfv<UInt64>.self)()
 
     ciphertextMultiplyBenchmark(Bfv<UInt32>.self)()
     ciphertextMultiplyBenchmark(Bfv<UInt64>.self)()

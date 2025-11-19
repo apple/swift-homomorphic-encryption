@@ -38,8 +38,8 @@ struct ClientTests {
     }
 
     @Test
-    func clientServer() throws {
-        try PrivateNearestNeighborSearchUtil.ClientTests.clientServer(for: Bfv<UInt32>.self)
-        try PrivateNearestNeighborSearchUtil.ClientTests.clientServer(for: Bfv<UInt64>.self)
+    func clientServer() async throws {
+        try await PrivateNearestNeighborSearchUtil.ClientTests.clientServer(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.ClientTests.clientServer(for: Bfv<UInt64>.self)
     }
 }

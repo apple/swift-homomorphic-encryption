@@ -127,7 +127,7 @@ struct GaloisTests {
             // No plan found.
             let supportedSteps = [2, 4, 8]
             for step in [1, 3, 5, 7, 9, 11, 13, 15] {
-                let plan = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
+                let plan = try GaloisElement._planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
                 #expect(plan == nil)
             }
         }
@@ -162,7 +162,10 @@ struct GaloisTests {
             ]
 
             for (step, counts) in knownAnswers {
-                var result = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
+                var result = try GaloisElement._planMultiStep(
+                    supportedSteps: supportedSteps,
+                    step: step,
+                    degree: degree)
                 #expect(result == counts)
 
                 // Negative steps yields same plan, just with negative rotations.
@@ -171,7 +174,7 @@ struct GaloisTests {
                     (transformNegative(step), count)
                 })
 
-                result = try GaloisElement.planMultiStep(
+                result = try GaloisElement._planMultiStep(
                     supportedSteps: negativeSteps,
                     step: negativeStep,
                     degree: degree)
@@ -188,7 +191,10 @@ struct GaloisTests {
             ]
 
             for (step, counts) in knownAnswers {
-                let result = try GaloisElement.planMultiStep(supportedSteps: supportedSteps, step: step, degree: degree)
+                let result = try GaloisElement._planMultiStep(
+                    supportedSteps: supportedSteps,
+                    step: step,
+                    degree: degree)
                 #expect(result == counts)
             }
         }
@@ -212,7 +218,7 @@ struct GaloisTests {
             (transformPositive(-192), [transformPositive(-16): 12]),
         ]
         for (step, counts) in knownAnswers {
-            let result = try GaloisElement.planMultiStep(supportedSteps: steps, step: step, degree: degree)
+            let result = try GaloisElement._planMultiStep(supportedSteps: steps, step: step, degree: degree)
             #expect(result == counts)
         }
     }

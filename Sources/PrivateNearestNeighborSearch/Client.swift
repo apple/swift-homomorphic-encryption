@@ -24,7 +24,7 @@ public struct Client<Scheme: HeScheme> {
     public let config: ClientConfig<Scheme>
 
     /// One context per plaintext modulus.
-    public let contexts: [Context<Scheme>]
+    public let contexts: [Scheme.Context]
 
     /// Performs composition of the plaintext CRT responses.
     @usableFromInline let crtComposer: CrtComposer<Scalar>
@@ -43,7 +43,7 @@ public struct Client<Scheme: HeScheme> {
     ///   - contexts: Contexts for HE computation, one per plaintext modulus.
     /// - Throws: Error upon failure to create the client.
     @inlinable
-    public init(config: ClientConfig<Scheme>, contexts: [Context<Scheme>] = []) throws {
+    public init(config: ClientConfig<Scheme>, contexts: [Scheme.Context] = []) throws {
         guard config.distanceMetric == .cosineSimilarity else {
             throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)
         }
@@ -52,7 +52,7 @@ public struct Client<Scheme: HeScheme> {
         var contexts = contexts
         if contexts.isEmpty {
             contexts = try config.encryptionParameters.map { encryptionParameters in
-                try Context(encryptionParameters: encryptionParameters)
+                try Scheme.Context(encryptionParameters: encryptionParameters)
             }
         }
         try config.validateContexts(contexts: contexts)
@@ -79,7 +79,7 @@ public struct Client<Scheme: HeScheme> {
         let matrices = try contexts.map { context in
             // For a single plaintext modulus, reduction isn't necessary
             let shouldReduce = contexts.count > 1
-            let plaintextMatrix = try PlaintextMatrix(
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                 context: context,
                 dimensions: MatrixDimensions(vectors.shape),
                 packing: config.queryPacking,

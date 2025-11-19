@@ -14,14 +14,14 @@
 
 import ModularArithmetic
 
-@usableFromInline
-package struct RnsTool<T: ScalarType>: Sendable {
+/// Helpers for operation under RNS.
+public struct _RnsTool<T: ScalarType>: Sendable {
     @usableFromInline
     struct RnsToolContext {
         @usableFromInline let inputContext: PolyContext<T>
         @usableFromInline let bSkMTildeContext: PolyContext<T>
         @usableFromInline let mSkContext: PolyContext<T>
-        @usableFromInline let nttContexts: [T: NttContext<T>]
+        @usableFromInline let nttContexts: [T: _NttContext<T>]
         @usableFromInline let tGammaContext: PolyContext<T>
 
         @inlinable
@@ -42,7 +42,7 @@ package struct RnsTool<T: ScalarType>: Sendable {
                 throw HeError.emptyModulus
             }
 
-            var nttContexts = [T: NttContext<T>]()
+            var nttContexts = [T: _NttContext<T>]()
             for moduliCount in 1..<bSkMTildeContext.moduli.count {
                 if let nttContext = try bSkMTildeContext.getContext(moduliCount: moduliCount).nttContext {
                     nttContexts[nttContext.modulus] = nttContext
@@ -65,60 +65,60 @@ package struct RnsTool<T: ScalarType>: Sendable {
                 moduli: [outputContext.moduli[0], T.rnsCorrectionFactor], child: outputContext)
         }
 
-        func getbSkMTildeNttContext(moduliCount: Int) throws -> NttContext<T>? {
+        func getbSkMTilde_NttContext(moduliCount: Int) throws -> _NttContext<T>? {
             try bSkMTildeContext.getContext(moduliCount: moduliCount).nttContext
         }
     }
 
     /// `Q = q_0, ..., q_{L-1}`.
-    @usableFromInline let inputContext: PolyContext<T>
+    public let inputContext: PolyContext<T>
     /// `t_0, ..., t_{M-1}`.
-    @usableFromInline let outputContext: PolyContext<T>
+    public let outputContext: PolyContext<T>
     /// `[q, B_sk]`.
-    @usableFromInline let qBskContext: PolyContext<T>
+    public let qBskContext: PolyContext<T>
     /// `Q mod t_0`.
-    @usableFromInline let qModT: T
+    public let qModT: T
     /// reduction by `t_0`.
-    @usableFromInline let t: Modulus<T>
+    public let t: Modulus<T>
     /// Multiplication by `gamma^{-1}` mod `t`, mod `t`.
-    @usableFromInline let inverseGammaModT: MultiplyConstantModulus<T>
+    public let inverseGammaModT: MultiplyConstantModulus<T>
     /// Multiplication by  `-(Q^{-1})` mod `m_tilde`, mod `t`.
-    @usableFromInline let negInverseQModMTilde: MultiplyConstantModulus<T>
+    public let negInverseQModMTilde: MultiplyConstantModulus<T>
     /// Multiplication by `B^{-1} mod m_sk`, mod `m_sk`.
-    @usableFromInline let inverseBModMSk: MultiplyConstantModulus<T>
+    public let inverseBModMSk: MultiplyConstantModulus<T>
     /// i'th entry stores `q_i - t_0`.
-    @usableFromInline let tIncrement: [T]
+    public let tIncrement: [T]
     /// i'th entry stores `\tilde{m} mod qi`.
-    @usableFromInline let mTildeModQ: [T]
+    public let mTildeModQ: [T]
     /// `-(Q^{-1}) mod {t, gamma}`.
-    @usableFromInline let negInverseQModTGamma: [T]
+    public let negInverseQModTGamma: [T]
     /// `|gamma * t|_qi`.
-    @usableFromInline let prodGammaTModQ: [T]
+    public let prodGammaTModQ: [T]
     /// Multiplication by `m_tilde^{-1} mod B_sk`, mod `B_sk`.
-    @usableFromInline let inverseMTildeModBSk: [MultiplyConstantModulus<T>]
+    public let inverseMTildeModBSk: [MultiplyConstantModulus<T>]
     /// Multiplication by `Q^{-1} mod B_sk`, mod `B_sk`.
-    @usableFromInline let inverseQModBSk: [MultiplyConstantModulus<T>]
+    public let inverseQModBSk: [MultiplyConstantModulus<T>]
     /// i'th entry stores modulus for multiplication by `floor(Q / t_0) % q_i`, mod `q_i`
     /// Also called `delta` in the literature.
-    @usableFromInline let qDivT: [MultiplyConstantModulus<T>]
+    public let qDivT: [MultiplyConstantModulus<T>]
     /// Multiplication by `Q mod B_sk`, mod `B_sk`.
-    @usableFromInline let qModBSk: [MultiplyConstantModulus<T>]
+    public let qModBSk: [MultiplyConstantModulus<T>]
     /// Multiplication by `-B mod q_i`, mod `q_i`.
-    @usableFromInline let negBModQ: [MultiplyConstantModulus<T>]
+    public let negBModQ: [MultiplyConstantModulus<T>]
     /// Multiplication by `B mod q_i`, mod `q_i`.
-    @usableFromInline let bModQ: [MultiplyConstantModulus<T>]
+    public let bModQ: [MultiplyConstantModulus<T>]
     /// Base conversion from `Q` to `B_sk`.
-    @usableFromInline let rnsConvertQToBSk: RnsBaseConverter<T>
+    public let rnsConvertQToBSk: _RnsBaseConverter<T>
     /// Base conversion from `B` to `M_sk`.
-    @usableFromInline let rnsConvertBtoMSk: RnsBaseConverter<T>
+    public let rnsConvertBtoMSk: _RnsBaseConverter<T>
     /// Base conversion from `B` to `Q`.
-    @usableFromInline let rnsConvertBtoQ: RnsBaseConverter<T>
+    public let rnsConvertBtoQ: _RnsBaseConverter<T>
     /// Base conversion matrix from `Q` to `[B_sk, m_tilde]`, where
     /// `B` is an auxiliary base, `m_sk` is an extra modulus, and the
     /// `B_sk = [B, m_sk]` is an extended base.
-    @usableFromInline let rnsConvertQToBSkMTilde: RnsBaseConverter<T>
+    public let rnsConvertQToBSkMTilde: _RnsBaseConverter<T>
     /// Base conversion from `Q` to `[t, gamma]`.
-    @usableFromInline let rnsConvertQToTGamma: RnsBaseConverter<T>
+    public let rnsConvertQToTGamma: _RnsBaseConverter<T>
 
     @inlinable var tThreshold: T {
         (outputContext.moduli[0] + 1) / 2
@@ -150,7 +150,7 @@ package struct RnsTool<T: ScalarType>: Sendable {
             variableTime: true)
 
         let tGammaContext = rnsToolContext.tGammaContext
-        self.rnsConvertQToTGamma = try RnsBaseConverter(from: inputContext, to: tGammaContext)
+        self.rnsConvertQToTGamma = try _RnsBaseConverter(from: inputContext, to: tGammaContext)
         self.negInverseQModTGamma = try tGammaContext.reduceModuli.map { modulus in
             let qMod = inputContext.qRemainder(dividingBy: modulus)
             return try qMod.inverseMod(modulus: modulus.modulus, variableTime: true).negateMod(modulus: modulus.modulus)
@@ -244,17 +244,17 @@ package struct RnsTool<T: ScalarType>: Sendable {
             let multiplicand = try bModMSk.inverseMod(modulus: mSk, variableTime: true)
             return MultiplyConstantModulus(multiplicand: multiplicand, modulus: mSk, variableTime: true)
         }()
-        self.rnsConvertQToBSk = try RnsBaseConverter(from: inputContext, to: bSkContext)
-        self.rnsConvertQToBSkMTilde = try RnsBaseConverter(from: inputContext, to: bSkMTildeContext)
-        self.rnsConvertBtoMSk = try RnsBaseConverter(from: bContext, to: mSkContext)
-        self.rnsConvertBtoQ = try RnsBaseConverter(from: bContext, to: inputContext)
+        self.rnsConvertQToBSk = try _RnsBaseConverter(from: inputContext, to: bSkContext)
+        self.rnsConvertQToBSkMTilde = try _RnsBaseConverter(from: inputContext, to: bSkMTildeContext)
+        self.rnsConvertBtoMSk = try _RnsBaseConverter(from: bContext, to: mSkContext)
+        self.rnsConvertBtoQ = try _RnsBaseConverter(from: bContext, to: inputContext)
     }
 
     @inlinable
     init(from inputContext: PolyContext<T>,
          to outputContext: PolyContext<T>) throws
     {
-        let rnsToolContext = try RnsTool.RnsToolContext(inputContext: inputContext, outputContext: outputContext)
+        let rnsToolContext = try _RnsTool.RnsToolContext(inputContext: inputContext, outputContext: outputContext)
         try self.init(from: inputContext, to: outputContext, rnsToolContext: rnsToolContext)
     }
 

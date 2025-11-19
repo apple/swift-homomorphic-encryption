@@ -12,16 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import AsyncAlgorithms
 import HomomorphicEncryption
 import ModularArithmetic
 
-@usableFromInline
-package enum PirUtil<Scheme: HeScheme> {
-    @usableFromInline typealias Scalar = Scheme.Scalar
-    @usableFromInline package typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
-    typealias CoeffCiphertext = Scheme.CoeffCiphertext
-    typealias EvalCiphertext = Scheme.EvalCiphertext
+/// A protocol  outlining the auxiliary functionalities used in PIR.
+public protocol PirUtilProtocol {
+    /// The underlying HE scheme.
+    associatedtype Scheme: HeScheme
+    /// The Scalar type used by the HE scheme.
+    associatedtype Scalar where Scalar == Scheme.Scalar
+    /// HE ciphertext in canonical format.
+    typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
 
+    /// Expand a small number of ciphertexts to a large number of ciphertexts.
+    ///
+    /// Each output will be the encryption of a constant poly, where the constant of i-th output is the i-th coefficient
+    /// in the inputs.
+    /// - Parameters:
+    ///   - ciphertexts: ciphertexts to expand
+    ///   - outputCount: how many outputs are expected
+    ///   - evaluationKey: evaluation key used for rotation and apply galois
+    /// - Returns: the expanded ciphertext
+    static func expand(
+        ciphertexts: consuming [CanonicalCiphertext],
+        outputCount: Int,
+        using evaluationKey: EvaluationKey<Scheme>) async throws -> [CanonicalCiphertext]
+
+    /// Compress an binary array into ciphertexts such that the expanded ciphertexts is the original array.
+    ///
+    /// - Parameters:
+    ///        - totalInputCount: the length of the binary array
+    ///        - oneIndices: the position of 1s
+    ///        - context: the context for HE
+    ///        - secretKey: the secret key for encryption.
+    static func compressBinaryInputs(
+        totalInputCount: Int,
+        oneIndices: [Int],
+        context: Scheme.Context,
+        using secretKey: SecretKey<Scheme>) throws -> [CanonicalCiphertext]
+}
+
+extension PirUtilProtocol {
     /// Convert one encrypted polynomial `c` to two encrypted polynomials, `p` and `q`.
     ///
     /// It is guaranteed that:
@@ -41,7 +73,7 @@ package enum PirUtil<Scheme: HeScheme> {
     package static func expandCiphertextForOneStep(
         _ ciphertext: CanonicalCiphertext,
         logStep: Int,
-        using evaluationKey: EvaluationKey<Scheme>) throws -> (CanonicalCiphertext, CanonicalCiphertext)
+        using evaluationKey: EvaluationKey<Scheme>) async throws -> (CanonicalCiphertext, CanonicalCiphertext)
     {
         let degree = ciphertext.degree
         precondition(logStep <= degree.log2)
@@ -57,16 +89,20 @@ package enum PirUtil<Scheme: HeScheme> {
         }
         let applyGaloisCount = 1 << ((targetElement - 1).log2 - (galoisElement - 1).log2)
         var currElement = 1
-        for _ in 0..<applyGaloisCount {
-            try c1.applyGalois(element: galoisElement, using: evaluationKey)
+        for await _ in (0..<applyGaloisCount).async {
+            try await Scheme.applyGaloisAsync(ciphertext: &c1, element: galoisElement, using: evaluationKey)
             currElement *= galoisElement
             currElement %= (2 * degree)
         }
         precondition(currElement == targetElement)
 
-        var difference = try (ciphertext - c1).convertToCoeffFormat()
-        try difference.multiplyInversePowerOfX(power: shiftingPower)
-        return try (ciphertext + c1, difference.convertToCanonicalFormat())
+        var difference = ciphertext
+        try await Scheme.subAssignAsync(&difference, c1)
+        var differenceCoeff = try await difference.convertToCoeffFormat()
+        try await Scheme.multiplyInversePowerOfXAsync(&differenceCoeff, power: shiftingPower)
+        let differenceCanonical = try await differenceCoeff.convertToCanonicalFormat()
+        try await Scheme.addAssignAsync(&c1, ciphertext)
+        return (c1, differenceCanonical)
     }
 
     /// Expand one ciphertext into given number of encrypted constant polynomials.
@@ -85,29 +121,31 @@ package enum PirUtil<Scheme: HeScheme> {
         outputCount: Int,
         logStep: Int,
         expectedHeight: Int,
-        using evaluationKey: EvaluationKey<Scheme>) throws -> [CanonicalCiphertext]
+        using evaluationKey: EvaluationKey<Scheme>) async throws -> [CanonicalCiphertext]
     {
         precondition(outputCount >= 0 && outputCount <= ciphertext.degree)
+        var output = ciphertext
         if outputCount == 1 {
             if logStep > expectedHeight {
                 return [ciphertext]
             }
-            return try [ciphertext + ciphertext]
+            try await Scheme.addAssignAsync(&output, ciphertext)
+            return [output]
         }
         let secondHalfCount = outputCount >> 1
         let firstHalfCount = outputCount - secondHalfCount
 
-        let (p0, p1) = try expandCiphertextForOneStep(
+        let (p0, p1) = try await expandCiphertextForOneStep(
             ciphertext,
             logStep: logStep,
             using: evaluationKey)
-        let firstHalf = try expandCiphertext(
+        let firstHalf = try await expandCiphertext(
             p0,
             outputCount: firstHalfCount,
             logStep: logStep + 1,
             expectedHeight: expectedHeight,
             using: evaluationKey)
-        let secondHalf = try expandCiphertext(
+        let secondHalf = try await expandCiphertext(
             p1,
             outputCount: secondHalfCount,
             logStep: logStep + 1,
@@ -119,32 +157,36 @@ package enum PirUtil<Scheme: HeScheme> {
 
     /// Expand a ciphertext array into given number of encrypted constant polynomials.
     @inlinable
-    package static func expandCiphertexts(
-        _ ciphertexts: [CanonicalCiphertext],
-        outputCount: Int,
-        using evaluationKey: EvaluationKey<Scheme>) throws -> [CanonicalCiphertext]
+    public static func expand(ciphertexts: consuming [CanonicalCiphertext],
+                              outputCount: Int,
+                              using evaluationKey: EvaluationKey<Scheme>) async throws -> [CanonicalCiphertext]
     {
         precondition((ciphertexts.count - 1) * ciphertexts[0].degree < outputCount)
         precondition(ciphertexts.count * ciphertexts[0].degree >= outputCount)
         var remainingOutputs = outputCount
-        return try ciphertexts.flatMap { ciphertext in
+        let lengths: [Int] = ciphertexts.compactMap { ciphertext in
             let outputToGenerate = min(remainingOutputs, ciphertext.degree)
             remainingOutputs -= outputToGenerate
-            return try expandCiphertext(
-                ciphertext,
+            return outputToGenerate
+        }
+        let expanded: [[CanonicalCiphertext]] = try await .init((0..<ciphertexts.count).async.map { ciphertextIndex in
+            let outputToGenerate = lengths[ciphertextIndex]
+            return try await expandCiphertext(
+                ciphertexts[ciphertextIndex],
                 outputCount: outputToGenerate,
                 logStep: 1,
                 expectedHeight: outputToGenerate.ceilLog2,
                 using: evaluationKey)
-        }
+        })
+        return expanded.flatMap(\.self)
     }
 
     /// Convert the MulPir indices into a plaintext.
     ///
     /// The MulPir indices are the indices of non-zero results after expansion
     @inlinable
-    package static func compressInputsForOneCiphertext(totalInputCount: Int, nonZeroInputs: [Int],
-                                                       context: Context<Scheme>) throws -> Plaintext<Scheme, Coeff>
+    package static func compressInputsForOneCiphertext(totalInputCount: Int, oneIndices: [Int],
+                                                       context: Scheme.Context) throws -> Plaintext<Scheme, Coeff>
     {
         precondition(totalInputCount <= context.degree)
         var rawData: [Scalar] = Array(repeating: 0, count: context.degree)
@@ -155,7 +197,7 @@ package enum PirUtil<Scheme: HeScheme> {
             modulus: context.plaintextModulus,
             variableTime: true).inverseMod(modulus: context.plaintextModulus, variableTime: true)
 
-        for index in nonZeroInputs {
+        for index in oneIndices {
             rawData[index] = inverseInputCountCeilLog
         }
         return try context.encode(values: rawData, format: .coefficient)
@@ -163,10 +205,10 @@ package enum PirUtil<Scheme: HeScheme> {
 
     /// Generate the ciphertext based on the given non-zero positions.
     @inlinable
-    package static func compressInputs(
+    public static func compressBinaryInputs(
         totalInputCount: Int,
-        nonZeroInputs: [Int],
-        context: Context<Scheme>,
+        oneIndices: [Int],
+        context: Scheme.Context,
         using secretKey: SecretKey<Scheme>) throws -> [CanonicalCiphertext]
     {
         var remainingInputs = totalInputCount
@@ -175,24 +217,18 @@ package enum PirUtil<Scheme: HeScheme> {
 
         while remainingInputs > 0 {
             let numberOfInputsToProcess = min(remainingInputs, context.degree)
-            let inputs = nonZeroInputs.filter { x in
+            let inputs = oneIndices.filter { x in
                 (processedInputCount..<(processedInputCount + numberOfInputsToProcess)).contains(x)
             }.map { $0 - processedInputCount }
             try plaintexts.append(compressInputsForOneCiphertext(
                 totalInputCount: numberOfInputsToProcess,
-                nonZeroInputs: inputs,
+                oneIndices: inputs,
                 context: context))
             processedInputCount += numberOfInputsToProcess
             remainingInputs -= numberOfInputsToProcess
         }
         return try plaintexts.map { plaintext in try plaintext.encrypt(using: secretKey) }
     }
-
-    static func encodeDatabase<Scalar: ScalarType>(database: [[UInt8]], plaintextModulus: Scalar) throws -> [[Scalar]] {
-        try database.map { entry in
-            try CoefficientPacking.bytesToCoefficients(bytes: entry,
-                                                       bitsPerCoeff: plaintextModulus.log2,
-                                                       decode: false)
-        }
-    }
 }
+
+public enum PirUtil<Scheme: HeScheme>: PirUtilProtocol {}

@@ -18,14 +18,15 @@
 
 import _BenchmarkUtilities
 import HomomorphicEncryption
+import PrivateInformationRetrieval
 
 nonisolated(unsafe) let benchmarks: () -> Void = {
-    pirProcessBenchmark(Bfv<UInt32>.self)()
-    pirProcessBenchmark(Bfv<UInt64>.self)()
+    pirProcessBenchmark(PirUtil<Bfv<UInt32>>.self)()
+    pirProcessBenchmark(PirUtil<Bfv<UInt64>>.self)()
 
-    indexPirBenchmark(Bfv<UInt32>.self)()
-    indexPirBenchmark(Bfv<UInt64>.self)()
+    indexPirBenchmark(PirUtil<Bfv<UInt32>>.self)()
+    indexPirBenchmark(PirUtil<Bfv<UInt64>>.self)()
 
-    keywordPirBenchmark(Bfv<UInt32>.self)()
-    keywordPirBenchmark(Bfv<UInt64>.self)()
+    keywordPirBenchmark(PirUtil<Bfv<UInt32>>.self)()
+    keywordPirBenchmark(PirUtil<Bfv<UInt64>>.self)()
 }

@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import ModularArithmetic
 extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func generateSecretKey(context: Context<Self>) throws -> SecretKey<Bfv<T>> {
+    public static func generateSecretKey(context: Context) throws -> SecretKey<Bfv<T>> {
         var s = PolyRq<Scalar, Coeff>.zero(context: context.secretKeyContext)
         var rng = SystemRandomNumberGenerator()
         s.randomizeTernary(using: &rng)
@@ -28,26 +28,26 @@ extension Bfv {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
     public static func generateEvaluationKey(
-        context: Context<Bfv<T>>,
+        context: Context,
         config: EvaluationKeyConfig,
         using secretKey: borrowing SecretKey<Bfv<T>>) throws -> EvaluationKey<Bfv<T>>
     {
         guard context.supportsEvaluationKey else {
             throw HeError.unsupportedHeOperation()
         }
-        var galoisKeys: [Int: KeySwitchKey<Self>] = [:]
+        var galoisKeys: [Int: Self.KeySwitchKey] = [:]
         for element in config.galoisElements where !galoisKeys.keys.contains(element) {
             let switchedKey = try secretKey.poly.applyGalois(element: element)
-            galoisKeys[element] = try generateKeySwitchKey(
+            galoisKeys[element] = try _generateKeySwitchKey(
                 context: context,
                 currentKey: switchedKey,
                 targetKey: secretKey)
         }
-        var galoisKey: GaloisKey<Self>?
+        var galoisKey: GaloisKey?
         if !galoisKeys.isEmpty {
             galoisKey = GaloisKey(keys: galoisKeys)
         }
-        var relinearizationKey: RelinearizationKey<Self>?
+        var relinearizationKey: _RelinearizationKey<Self>?
         if config.hasRelinearizationKey {
             relinearizationKey = try Self.generateRelinearizationKey(context: context, secretKey: secretKey)
         }
@@ -55,19 +55,20 @@ extension Bfv {
     }
 
     @inlinable
-    static func generateRelinearizationKey(context: Context<Self>,
+    static func generateRelinearizationKey(context: Context,
                                            secretKey: borrowing SecretKey<Self>) throws
-        -> RelinearizationKey<Self>
+        -> _RelinearizationKey<Self>
     {
         let s2 = secretKey.poly * secretKey.poly
-        let keySwitchingKey = try generateKeySwitchKey(context: context, currentKey: s2, targetKey: secretKey)
-        return RelinearizationKey(keySwitchKey: keySwitchingKey)
+        let keySwitchingKey = try _generateKeySwitchKey(context: context, currentKey: s2, targetKey: secretKey)
+        return _RelinearizationKey(keySwitchKey: keySwitchingKey)
     }
 
+    ///  Generate the key switching key from current key to target key.
     @inlinable
-    static func generateKeySwitchKey(context: Context<Bfv<T>>,
-                                     currentKey: consuming PolyRq<T, Eval>,
-                                     targetKey: borrowing SecretKey<Bfv<T>>) throws -> KeySwitchKey<Bfv<T>>
+    public static func _generateKeySwitchKey(context: Context,
+                                             currentKey: consuming PolyRq<T, Eval>,
+                                             targetKey: borrowing SecretKey<Bfv<T>>) throws -> _KeySwitchKey<Bfv<T>>
     {
         guard let keyModulus = context.coefficientModuli.last else {
             throw HeError.invalidEncryptionParameters(context.encryptionParameters)
@@ -98,7 +99,7 @@ extension Bfv {
         currentKey.zeroize()
         _ = consume currentKey
 
-        return KeySwitchKey(context: context, ciphers: ciphers)
+        return KeySwitchKey(context: context, ciphertexts: ciphers)
     }
 
     /// Computes the key-switching update of a target polynomial.
@@ -119,10 +120,10 @@ extension Bfv {
     /// - Throws: Error upon failure to compute key-switching update.
     /// - seealso: ``Bfv/generateEvaluationKey(context:config:using:)``.
     @inlinable
-    static func computeKeySwitchingUpdate(
-        context: Context<Bfv<T>>,
+    public static func _computeKeySwitchingUpdate(
+        context: Context,
         target: PolyRq<Scalar, CanonicalCiphertextFormat>,
-        keySwitchingKey: KeySwitchKey<Self>) throws -> [PolyRq<Scalar, CanonicalCiphertextFormat>]
+        keySwitchingKey: Self.KeySwitchKey) throws -> [PolyRq<Scalar, CanonicalCiphertextFormat>]
     {
         //  The implementation loosely follows the outline on page 36 of <https://eprint.iacr.org/2021/204.pdf>.
         // The inner product is computed in an extended base `q_0, q_1, ..., q_l, q_{ks}`, where `q_{ks}` is the special
@@ -138,16 +139,16 @@ extension Bfv {
         }
         let keySwitchingModuli = keySwitchingContext.reduceModuli
 
-        let keyComponentCount = keySwitchingKey.ciphers[0].polys.count
+        let keyComponentCount = keySwitchingKey.ciphertexts[0].polys.count
         let polys = [PolyRq<Scalar, Eval>](
             repeating: PolyRq.zero(context: keySwitchingContext),
             count: keyComponentCount)
-        var ciphertextProd: EvalCiphertext = Ciphertext(context: context,
-                                                        polys: polys,
-                                                        correctionFactor: 1)
+        var ciphertextProd: EvalCiphertext = try Ciphertext(context: context,
+                                                            polys: polys,
+                                                            correctionFactor: 1)
         let targetCoeff = try target.convertToCoeffFormat()
 
-        let keyCiphers = keySwitchingKey.ciphers
+        let keyCiphers = keySwitchingKey.ciphertexts
         for rnsIndex in 0..<rnsModuliCount {
             let keyIndex = rnsIndex == rnsModuliCount &- 1 ? topKeySwitchingContext.moduli.count &- 1 : rnsIndex
             let keyModulus = keySwitchingModuli[rnsIndex]

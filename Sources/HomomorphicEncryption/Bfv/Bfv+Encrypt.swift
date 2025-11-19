@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,24 +23,24 @@ extension Bfv {
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func zeroCiphertextCoeff(context: Context<Self>, moduliCount: Int?) throws -> CoeffCiphertext {
+    public static func zeroCiphertextCoeff(context: Context, moduliCount: Int?) throws -> CoeffCiphertext {
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count
         let zeroPoly = try PolyRq<Scalar, Coeff>.zero(
             context: context.ciphertextContext
                 .getContext(moduliCount: moduliCount))
         let polys = [PolyRq<Scalar, Coeff>](repeating: zeroPoly, count: Bfv.freshCiphertextPolyCount)
-        return Bfv.CoeffCiphertext(context: context, polys: polys, correctionFactor: 1)
+        return try Bfv.CoeffCiphertext(context: context, polys: polys, correctionFactor: 1)
     }
 
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func zeroCiphertextEval(context: Context<Self>, moduliCount: Int?) throws -> EvalCiphertext {
+    public static func zeroCiphertextEval(context: Context, moduliCount: Int?) throws -> EvalCiphertext {
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count
         let zeroPoly = try PolyRq<Scalar, Eval>.zero(
             context: context.ciphertextContext
                 .getContext(moduliCount: moduliCount))
         let polys = [PolyRq<Scalar, Eval>](repeating: zeroPoly, count: Bfv.freshCiphertextPolyCount)
-        return Bfv.EvalCiphertext(context: context, polys: polys, correctionFactor: 1)
+        return try Bfv.EvalCiphertext(context: context, polys: polys, correctionFactor: 1)
     }
 
     @inlinable
@@ -143,7 +143,7 @@ extension Bfv {
     }
 
     @inlinable
-    static func encryptZero(for context: Context<Bfv<T>>,
+    static func encryptZero(for context: Context,
                             using secretKey: SecretKey<Bfv<T>>) throws -> CanonicalCiphertext
     {
         let ciphertextContext = context.ciphertextContext
@@ -151,7 +151,7 @@ extension Bfv {
     }
 
     @inlinable
-    static func encryptZero(for context: Context<Bfv<T>>,
+    static func encryptZero(for context: Context,
                             using secretKey: SecretKey<Bfv<T>>,
                             with ciphertextContext: PolyContext<T>) throws -> CanonicalCiphertext
     {
@@ -177,7 +177,7 @@ extension Bfv {
         errorPoly.zeroize()
 
         let aCoeff = try a.inverseNtt()
-        return CanonicalCiphertext(
+        return try CanonicalCiphertext(
             context: context,
             polys: [-c0, aCoeff],
             correctionFactor: 1,

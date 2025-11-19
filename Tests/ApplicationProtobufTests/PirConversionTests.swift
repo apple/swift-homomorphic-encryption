@@ -41,7 +41,7 @@ struct PirConversionTests {
     }
 
     @Test
-    func processedDatabaseWithParameters() throws {
+    func processedDatabaseWithParameters() async throws {
         let rows = (0..<10).map { KeywordValuePair(keyword: Array(String($0).utf8), value: Array(String($0).utf8)) }
         let context: Context<Bfv<UInt32>> = try .init(encryptionParameters: .init(from: .n_4096_logq_27_28_28_logt_13))
         let config = try KeywordPirConfig(
@@ -49,7 +49,7 @@ struct PirConversionTests {
             cuckooTableConfig: .defaultKeywordPir(maxSerializedBucketSize: context.bytesPerPlaintext),
             unevenDimensions: true,
             keyCompression: .noCompression)
-        let processedDatabaseWithParameters = try KeywordPirServer<MulPirServer<Bfv<UInt32>>>.process(
+        let processedDatabaseWithParameters = try await KeywordPirServer<MulPirServer<PirUtil<Bfv<UInt32>>>>.process(
             database: rows,
             config: config,
             with: context)

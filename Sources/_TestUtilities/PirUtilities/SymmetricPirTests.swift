@@ -30,10 +30,10 @@ extension PirTestUtils {
 
         /// Tests symmetric PIR round trip.
         @inlinable
-        public static func roundTrip<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func roundTrip<Scheme: HeScheme>(_: Scheme.Type) async throws {
             // swiftlint:disable nesting
-            typealias PirClient = MulPirClient<Scheme>
-            typealias PirServer = MulPirServer<Scheme>
+            typealias PirClient = MulPirClient<PirUtil<Scheme>>
+            typealias PirServer = MulPirServer<PirUtil<Scheme>>
             // swiftlint:enable nesting
 
             let symmetricPirConfig = try Self.generateSymmetricPirConfig()
@@ -45,16 +45,16 @@ extension PirTestUtils {
                 symmetricPirClientConfig: symmetricPirConfig.clientConfig())
 
             let encryptionParameters: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
-            let context: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             let valueSize = context.bytesPerPlaintext / 2
             let plainDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 100, valueSize: valueSize)
             let encryptedDatabase = try KeywordDatabase.symmetricPIRProcess(
                 database: plainDatabase,
                 config: symmetricPirConfig)
-            let processed = try KeywordPirServer<PirServer>.process(database: encryptedDatabase,
-                                                                    config: keywordConfig,
-                                                                    with: context,
-                                                                    symmetricPirConfig: symmetricPirConfig)
+            let processed = try await KeywordPirServer<PirServer>.process(database: encryptedDatabase,
+                                                                          config: keywordConfig,
+                                                                          with: context,
+                                                                          symmetricPirConfig: symmetricPirConfig)
             let server = try KeywordPirServer<PirServer>(
                 context: context,
                 processed: processed)
@@ -75,7 +75,7 @@ extension PirTestUtils {
                 let parsedOprfOutput = try oprfClient.parse(oprfResponse: oprfResponse, with: oprfQueryContext)
                 // Keyword PIR
                 let query = try client.generateQuery(at: parsedOprfOutput.obliviousKeyword, using: secretKey)
-                let response = try server.computeResponse(to: query, using: evaluationKey)
+                let response = try await server.computeResponse(to: query, using: evaluationKey)
                 #expect(!response.isTransparent())
                 let result = try client.decrypt(
                     response: response,

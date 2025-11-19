@@ -17,10 +17,12 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     public typealias Scalar = Scheme.Scalar
 
     /// Context for HE computation.
-    public let context: Context<Scheme>
-    @usableFromInline package var polys: [PolyRq<Scalar, Format>]
-    @usableFromInline var correctionFactor: Scalar
-    @usableFromInline var seed: [UInt8] = []
+    public let context: Scheme.Context
+    public var polys: [PolyRq<Scalar, Format>]
+    public var correctionFactor: Scalar
+    public var seed: [UInt8] = []
+
+    public var auxiliaryData: Scheme.CiphertextAuxiliaryData
 
     /// The number of polynomials in the ciphertext.
     ///
@@ -33,15 +35,50 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
 
     @inlinable
     init(
-        context: Context<Scheme>,
+        context: Scheme.Context,
         polys: [PolyRq<Scalar, Format>],
         correctionFactor: Scalar,
-        seed: [UInt8] = [])
+        seed: [UInt8] = []) throws
+    {
+        try self.init(
+            _context: context,
+            _polys: polys,
+            _correctionFactor: correctionFactor,
+            _auxiliaryData: nil,
+            _seed: seed)
+    }
+
+    /// Create a ciphertext with the given content.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    /// - Parameters:
+    ///   - _context:  context of the ciphertext.
+    ///   - _polys:  polys of the ciphertext.
+    ///   - _correctionFactor:  correction factor of the ciphertext.
+    ///   - _seed:  seed of the ciphertext.
+    ///   - _auxiliaryData: optionally provided auxiliary ciphertext data, but explicitly put `nil` if one should be
+    /// created.
+    /// - Throws: error occurred when creating the auxiliary data.
+    @inlinable
+    public init(
+        _context context: Scheme.Context,
+        _polys polys: [PolyRq<Scalar, Format>],
+        _correctionFactor correctionFactor: Scheme.Scalar,
+        _auxiliaryData auxiliaryData: Scheme.CiphertextAuxiliaryData?,
+        _seed seed: [UInt8] = []) throws
     {
         self.context = context
         self.polys = polys
         self.correctionFactor = correctionFactor
         self.seed = seed
+        if let auxData = auxiliaryData {
+            self.auxiliaryData = auxData
+        } else {
+            self.auxiliaryData = try Scheme.CiphertextAuxiliaryData(
+                context: context,
+                polys: polys,
+                correctionFactor: correctionFactor,
+                seed: seed)
+        }
     }
 
     /// Generates a ciphertext of zeros.
@@ -64,7 +101,9 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// ```
     /// - seelaso: ``Ciphertext/isTransparent()``
     @inlinable
-    public static func zero(context: Context<Scheme>, moduliCount: Int? = nil) throws -> Ciphertext<Scheme, Format> {
+    public static func zero(context: Scheme.Context,
+                            moduliCount: Int? = nil) throws -> Ciphertext<Scheme, Format>
+    {
         try Scheme.zero(context: context, moduliCount: moduliCount)
     }
 
@@ -163,23 +202,23 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     }
 
     @inlinable
-    package func forwardNtt() throws -> Ciphertext<Scheme, Eval> where Format == Coeff {
-        try Scheme.forwardNtt(self)
+    package consuming func forwardNtt() throws -> Ciphertext<Scheme, Eval> where Format == Coeff {
+        try Scheme.forwardNtt(&self)
     }
 
     @inlinable
-    package func inverseNtt() throws -> Ciphertext<Scheme, Coeff> where Format == Eval {
-        try Scheme.inverseNtt(self)
+    package consuming func inverseNtt() throws -> Ciphertext<Scheme, Coeff> where Format == Eval {
+        try Scheme.inverseNtt(&self)
     }
 
     /// Converts the ciphertext to a ``HeScheme/CoeffCiphertext``.
     /// - Returns: The converted ciphertext.
     /// - Throws: Error upon failure to convert the ciphertext.
     @inlinable
-    public func convertToCoeffFormat() throws -> Ciphertext<Scheme, Coeff> {
+    public consuming func convertToCoeffFormat() throws -> Ciphertext<Scheme, Coeff> {
         if Format.self == Eval.self {
-            if let ciphertext = self as? Ciphertext<Scheme, Eval> {
-                return try ciphertext.inverseNtt()
+            if var ciphertext = self as? Ciphertext<Scheme, Eval> {
+                return try Scheme.inverseNtt(&ciphertext)
             }
             throw HeError.errorCastingPolyFormat(from: Format.self, to: Eval.self)
         }
@@ -193,10 +232,10 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - Returns: The converted ciphertext.
     /// - Throws: Error upon failure to convert the ciphertext.
     @inlinable
-    public func convertToEvalFormat() throws -> Ciphertext<Scheme, Eval> {
+    public consuming func convertToEvalFormat() throws -> Ciphertext<Scheme, Eval> {
         if Format.self == Coeff.self {
-            if let ciphertext = self as? Ciphertext<Scheme, Coeff> {
-                return try ciphertext.forwardNtt()
+            if var ciphertext = self as? Ciphertext<Scheme, Coeff> {
+                return try Scheme.forwardNtt(&ciphertext)
             }
             throw HeError.errorCastingPolyFormat(from: Format.self, to: Coeff.self)
         }
@@ -210,7 +249,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - Returns: The converted ciphertext.
     /// - Throws: Error upon failure to convert the ciphertext.
     @inlinable
-    public func convertToCanonicalFormat() throws -> Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
+    public consuming func convertToCanonicalFormat() throws -> Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
         if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
             // swiftlint:disable:next force_cast
             return try convertToCoeffFormat() as! Scheme.CanonicalCiphertext
@@ -463,6 +502,7 @@ extension Ciphertext where Format == Coeff {
     /// - Throws: Error upon failure to compute the inverse.
     @inlinable
     public mutating func multiplyInversePowerOfX(power: Int) throws {
+        precondition(power >= 0)
         try Scheme.multiplyInversePowerOfX(&self, power: power)
     }
 }
@@ -552,5 +592,84 @@ extension Collection {
         where Element == Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>
     {
         try Scheme.innerProduct(self, ciphertexts)
+    }
+}
+
+/// Async ciphertext functions.
+extension Ciphertext {
+    /// Converts the ciphertext to coefficient format asynchronously.
+    ///
+    /// This method performs an asynchronous conversion of the ciphertext to ``Coeff`` format.
+    /// If the ciphertext is already in coefficient format, it returns the ciphertext unchanged.
+    /// If the ciphertext is in evaluation (``Eval``) format, it performs an inverse NTT (Number Theoretic Transform)
+    /// to convert it to coefficient format.
+    ///
+    /// - Returns: A ciphertext in coefficient format.
+    /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
+    /// - SeeAlso: ``convertToEvalFormat()-9jgqm`` to convert to evaluation format.
+    /// - SeeAlso: ``convertToCanonicalFormat()-wgss`` to convert to the scheme's canonical format.
+    @inlinable
+    public consuming func convertToCoeffFormat() async throws -> Ciphertext<Scheme, Coeff> {
+        if Format.self == Eval.self {
+            if var ciphertext = self as? Ciphertext<Scheme, Eval> {
+                return try await Scheme.inverseNttAsync(&ciphertext)
+            }
+            throw HeError.errorCastingPolyFormat(from: Format.self, to: Eval.self)
+        }
+        if let ciphertext = self as? Ciphertext<Scheme, Coeff> {
+            return ciphertext
+        }
+        throw HeError.errorCastingPolyFormat(from: Format.self, to: Coeff.self)
+    }
+
+    /// Converts the ciphertext to evaluation format asynchronously.
+    ///
+    /// This method performs an asynchronous conversion of the ciphertext to ``Eval`` format.
+    /// If the ciphertext is already in evaluation format, it returns the ciphertext unchanged.
+    /// If the ciphertext is in coefficient (``Coeff``) format, it performs a forward NTT (Number Theoretic Transform)
+    /// to convert it to evaluation format.
+    ///
+    /// - Returns: A ciphertext in evaluation format.
+    /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
+    /// - SeeAlso: ``convertToCoeffFormat()-a2ay`` to convert to coefficient format.
+    /// - SeeAlso: ``convertToCanonicalFormat()-wgss`` to convert to the scheme's canonical format.
+    @inlinable
+    public consuming func convertToEvalFormat() async throws -> Ciphertext<Scheme, Eval> {
+        if Format.self == Coeff.self {
+            if var ciphertext = self as? Ciphertext<Scheme, Coeff> {
+                return try await Scheme.forwardNttAsync(&ciphertext)
+            }
+            throw HeError.errorCastingPolyFormat(from: Format.self, to: Coeff.self)
+        }
+        if let ciphertext = self as? Ciphertext<Scheme, Eval> {
+            return ciphertext
+        }
+        throw HeError.errorCastingPolyFormat(from: Format.self, to: Eval.self)
+    }
+
+    /// Converts the ciphertext to the scheme's canonical format.
+    ///
+    /// If the ciphertext is already in the canonical format, it returns the ciphertext unchanged.
+    /// Otherwise, it performs the necessary Number Theoretic Transform (NTT) conversion:
+    /// - Forward NTT if converting from coefficient to evaluation format
+    /// - Inverse NTT if converting from evaluation to coefficient format
+    ///
+    /// - Returns: A ciphertext in the canonical format.
+    /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
+    /// - SeeAlso: ``convertToCoeffFormat()-a2ay`` to convert to coefficient format.
+    /// - seeAlso: ``convertToEvalFormat()-9jgqm`` to convert to evaluation format.
+    @inlinable
+    public consuming func convertToCanonicalFormat() async throws
+        -> Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>
+    {
+        if Scheme.CanonicalCiphertextFormat.self == Coeff.self {
+            // swiftlint:disable:next force_cast
+            return try await convertToCoeffFormat() as! Scheme.CanonicalCiphertext
+        }
+        if Scheme.CanonicalCiphertextFormat.self == Eval.self {
+            // swiftlint:disable:next force_cast
+            return try await convertToEvalFormat() as! Scheme.CanonicalCiphertext
+        }
+        throw HeError.errorCastingPolyFormat(from: Format.self, to: Scheme.CanonicalCiphertextFormat.self)
     }
 }

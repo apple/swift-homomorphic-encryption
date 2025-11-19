@@ -17,7 +17,7 @@ import _TestUtilities
 import Crypto
 import Foundation
 import HomomorphicEncryption
-@testable import PrivateInformationRetrieval
+import PrivateInformationRetrieval
 import Testing
 
 @Suite
@@ -97,8 +97,8 @@ struct SymmetricPirTests {
     }
 
     @Test
-    func roundTrip() throws {
-        try PirTestUtils.SymmetricPirTests.roundTrip(Bfv<UInt32>.self)
-        try PirTestUtils.SymmetricPirTests.roundTrip(Bfv<UInt64>.self)
+    func roundTrip() async throws {
+        try await PirTestUtils.SymmetricPirTests.roundTrip(Bfv<UInt32>.self)
+        try await PirTestUtils.SymmetricPirTests.roundTrip(Bfv<UInt64>.self)
     }
 }

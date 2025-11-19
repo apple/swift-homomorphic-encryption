@@ -47,15 +47,15 @@ extension PrivateNearestNeighborSearchUtil {
     public enum MatrixMultiplicationTests {
         /// Testing matrix-vector multiplication.
         @inlinable
-        public static func mulVector<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func mulVector<Scheme: HeScheme>(for _: Scheme.Type) async throws {
             func checkProduct(
                 _: Scheme.Type,
                 _ plaintextRows: [[Scheme.Scalar]],
                 _ plaintextMatrixDimensions: MatrixDimensions,
-                _ queryValues: [Scheme.Scalar]) throws
+                _ queryValues: [Scheme.Scalar]) async throws
             {
                 let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .n_4096_logq_27_28_28_logt_16)
-                let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+                let context = try Scheme.Context(encryptionParameters: encryptionParameters)
                 let secretKey = try context.generateSecretKey()
 
                 var expected: [Scheme.Scalar] = try plaintextRows.mul(
@@ -68,7 +68,7 @@ extension PrivateNearestNeighborSearchUtil {
                 }
 
                 let babyStepGiantStep = BabyStepGiantStep(vectorDimension: queryValues.count)
-                let plaintextMatrix = try PlaintextMatrix(
+                let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                     context: context,
                     dimensions: plaintextMatrixDimensions,
                     packing: .diagonal(babyStepGiantStep: babyStepGiantStep),
@@ -95,7 +95,7 @@ extension PrivateNearestNeighborSearchUtil {
                     packing: .denseRow,
                     values: queryValues).encrypt(using: secretKey)
 
-                let dotProduct = try plaintextMatrix.mulTranspose(vector: ciphertextVector, using: evaluationKey)
+                let dotProduct = try await plaintextMatrix.mulTranspose(vector: ciphertextVector, using: evaluationKey)
                 let expectedCiphertextsCount = plaintextMatrixDimensions.rowCount.dividingCeil(
                     encryptionParameters.polyDegree,
                     variableTime: true)
@@ -116,33 +116,34 @@ extension PrivateNearestNeighborSearchUtil {
             }
             var dimensions = try MatrixDimensions(rowCount: 6, columnCount: 6)
             var queryValues: [Scheme.Scalar] = Array(repeating: 2, count: 6)
-            try checkProduct(Scheme.self, values, dimensions, queryValues)
+            try await checkProduct(Scheme.self, values, dimensions, queryValues)
 
             // Tall - 64x16
             dimensions = try MatrixDimensions(rowCount: 64, columnCount: 16)
             values = increasingData(dimensions: dimensions, modulus: Scheme.Scalar(17))
             queryValues = Array(1...16)
-            try checkProduct(Scheme.self, values, dimensions, queryValues)
+            try await checkProduct(Scheme.self, values, dimensions, queryValues)
 
             // Broad - 16x64
             dimensions = try MatrixDimensions(rowCount: 16, columnCount: 64)
             values = increasingData(dimensions: dimensions, modulus: Scheme.Scalar(70))
             queryValues = Array(1...64)
             queryValues.reverse()
-            try checkProduct(Scheme.self, values, dimensions, queryValues)
+            try await checkProduct(Scheme.self, values, dimensions, queryValues)
 
             // Multiple result ciphertexts. 10240x4
             dimensions = try MatrixDimensions(rowCount: 10240, columnCount: 4)
             values = increasingData(dimensions: dimensions, modulus: Scheme.Scalar(17))
             queryValues = Array(1...4)
-            try checkProduct(Scheme.self, values, dimensions, queryValues)
+            try await checkProduct(Scheme.self, values, dimensions, queryValues)
         }
 
         @inlinable
         package static func matrixMulRunner<Scheme: HeScheme>(
-            context: Context<Scheme>,
+            scheme _: Scheme.Type,
+            context: Scheme.Context,
             plaintextValues: [[Scheme.Scalar]],
-            queryValues: [[Scheme.Scalar]]) throws
+            queryValues: [[Scheme.Scalar]]) async throws
         {
             let encryptionParameters = context.encryptionParameters
             let secretKey = try context.generateSecretKey()
@@ -159,7 +160,7 @@ extension PrivateNearestNeighborSearchUtil {
             let plaintextDimensions = try MatrixDimensions(
                 rowCount: plaintextValues.count,
                 columnCount: plaintextValues[0].count)
-            let plaintextMatrix = try PlaintextMatrix(
+            let plaintextMatrix = try PlaintextMatrix<Scheme, Coeff>(
                 context: context,
                 dimensions: plaintextDimensions,
                 packing: .diagonal(babyStepGiantStep: babyStepGiantStep),
@@ -171,7 +172,7 @@ extension PrivateNearestNeighborSearchUtil {
                 encryptionParameters: encryptionParameters,
                 scheme: Scheme.self)
             let evaluationKey = try context.generateEvaluationKey(config: evaluationKeyConfig, using: secretKey)
-            let decryptedValues: [Scheme.Scalar] = try plaintextMatrix.mulTranspose(
+            let decryptedValues: [Scheme.Scalar] = try await plaintextMatrix.mulTranspose(
                 matrix: ciphertextMatrix,
                 using: evaluationKey)
                 .decrypt(using: secretKey).unpack()
@@ -181,12 +182,12 @@ extension PrivateNearestNeighborSearchUtil {
 
         /// Testing matrix multiplication for large dimensions.
         @inlinable
-        public static func matrixMulLargeDimensions<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func matrixMulLargeDimensions<Scheme: HeScheme>(for _: Scheme.Type) async throws {
             func testOnRandomData(
                 plaintextRows: Int,
                 plaintextCols: Int,
                 ciphertextRows: Int,
-                context: Context<Scheme>) throws
+                context: Scheme.Context) async throws
             {
                 let plaintextMatrixDimensions = try MatrixDimensions(
                     rowCount: plaintextRows,
@@ -200,7 +201,8 @@ extension PrivateNearestNeighborSearchUtil {
                 let queryValues: [[Scheme.Scalar]] = randomData(
                     dimensions: ciphertextMatrixDimensions,
                     modulus: context.encryptionParameters.plaintextModulus)
-                try Self.matrixMulRunner(
+                try await Self.matrixMulRunner(
+                    scheme: Scheme.self,
                     context: context,
                     plaintextValues: plaintextValues,
                     queryValues: queryValues)
@@ -221,76 +223,96 @@ extension PrivateNearestNeighborSearchUtil {
                 errorStdDev: ErrorStdDev.stdDev32,
                 securityLevel: SecurityLevel.unchecked)
 
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             do {
                 // Tall
-                try testOnRandomData(plaintextRows: degree / 2, plaintextCols: 128, ciphertextRows: 3, context: context)
-                try testOnRandomData(plaintextRows: degree / 2, plaintextCols: 384, ciphertextRows: 3, context: context)
-                try testOnRandomData(
+                try await testOnRandomData(
+                    plaintextRows: degree / 2,
+                    plaintextCols: 128,
+                    ciphertextRows: 3,
+                    context: context)
+                try await testOnRandomData(
+                    plaintextRows: degree / 2,
+                    plaintextCols: 384,
+                    ciphertextRows: 3,
+                    context: context)
+                try await testOnRandomData(
                     plaintextRows: 3 * degree / 4,
                     plaintextCols: 128,
                     ciphertextRows: 3,
                     context: context)
-                try testOnRandomData(plaintextRows: degree, plaintextCols: 128, ciphertextRows: 1, context: context)
-                try testOnRandomData(plaintextRows: 2 * degree, plaintextCols: 128, ciphertextRows: 2, context: context)
-                try testOnRandomData(plaintextRows: 3 * degree, plaintextCols: 128, ciphertextRows: 3, context: context)
+                try await testOnRandomData(
+                    plaintextRows: degree,
+                    plaintextCols: 128,
+                    ciphertextRows: 1,
+                    context: context)
+                try await testOnRandomData(
+                    plaintextRows: 2 * degree,
+                    plaintextCols: 128,
+                    ciphertextRows: 2,
+                    context: context)
+                try await testOnRandomData(
+                    plaintextRows: 3 * degree,
+                    plaintextCols: 128,
+                    ciphertextRows: 3,
+                    context: context)
             }
 
             do {
                 // Short, power-of-two ncols
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 1, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 2, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 16, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 32, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 1, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 2, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 16, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 32, context: context)
             }
 
             do {
                 // Short, non-power-of-two ncols
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 384, ciphertextRows: 1, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 384, ciphertextRows: 2, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 384, ciphertextRows: 16, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 384, ciphertextRows: 32, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 384, ciphertextRows: 1, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 384, ciphertextRows: 2, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 384, ciphertextRows: 16, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 384, ciphertextRows: 32, context: context)
             }
 
             do {
                 // Short, power-of-two ncols
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 1, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 2, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 16, context: context)
-                try testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 32, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 1, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 2, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 16, context: context)
+                try await testOnRandomData(plaintextRows: 160, plaintextCols: 128, ciphertextRows: 32, context: context)
             }
 
             do {
                 // Wide columns
                 var columnCount = degree / 4
-                try testOnRandomData(
+                try await testOnRandomData(
                     plaintextRows: 512,
                     plaintextCols: columnCount,
                     ciphertextRows: 1,
                     context: context)
-                try testOnRandomData(
+                try await testOnRandomData(
                     plaintextRows: 512,
                     plaintextCols: columnCount,
                     ciphertextRows: 2,
                     context: context)
-                try testOnRandomData(
+                try await testOnRandomData(
                     plaintextRows: 512,
                     plaintextCols: columnCount,
                     ciphertextRows: 5,
                     context: context)
 
                 columnCount = degree / 2
-                try testOnRandomData(
+                try await testOnRandomData(
                     plaintextRows: 512,
                     plaintextCols: columnCount,
                     ciphertextRows: 1,
                     context: context)
-                try testOnRandomData(
+                try await testOnRandomData(
                     plaintextRows: 512,
                     plaintextCols: columnCount,
                     ciphertextRows: 2,
                     context: context)
-                try testOnRandomData(
+                try await testOnRandomData(
                     plaintextRows: 512,
                     plaintextCols: columnCount,
                     ciphertextRows: 5,
@@ -300,11 +322,11 @@ extension PrivateNearestNeighborSearchUtil {
 
         /// Testing matrix multiplication for small dimensions
         @inlinable
-        public static func matrixMulSmallDimensions<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func matrixMulSmallDimensions<Scheme: HeScheme>(for _: Scheme.Type) async throws {
             func testOnIncreasingData(
                 plaintextDimensions: MatrixDimensions,
                 queryDimensions: MatrixDimensions,
-                context: Context<Scheme>) throws
+                context: Scheme.Context) async throws
             {
                 let plaintextModulus = context.encryptionParameters.plaintextModulus
                 let plaintextValues: [[Scheme.Scalar]] = increasingData(
@@ -313,19 +335,20 @@ extension PrivateNearestNeighborSearchUtil {
                 let queryValues: [[Scheme.Scalar]] = increasingData(
                     dimensions: queryDimensions,
                     modulus: plaintextModulus)
-                try Self.matrixMulRunner(
+                try await Self.matrixMulRunner(
+                    scheme: Scheme.self,
                     context: context,
                     plaintextValues: plaintextValues,
                     queryValues: queryValues)
             }
 
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
-            let context = try Context<Scheme>(encryptionParameters: encryptionParameters)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
             do {
                 // 8x4x2
                 let plaintextDimensions = try MatrixDimensions(rowCount: 8, columnCount: 4)
                 let queryDimensions = try MatrixDimensions(rowCount: 2, columnCount: 4)
-                try testOnIncreasingData(
+                try await testOnIncreasingData(
                     plaintextDimensions: plaintextDimensions,
                     queryDimensions: queryDimensions,
                     context: context)
@@ -334,7 +357,7 @@ extension PrivateNearestNeighborSearchUtil {
                 // 7x2x4
                 let plaintextDimensions = try MatrixDimensions(rowCount: 7, columnCount: 2)
                 let queryDimensions = try MatrixDimensions(rowCount: 4, columnCount: 2)
-                try testOnIncreasingData(
+                try await testOnIncreasingData(
                     plaintextDimensions: plaintextDimensions,
                     queryDimensions: queryDimensions,
                     context: context)
@@ -343,7 +366,7 @@ extension PrivateNearestNeighborSearchUtil {
                 // 6x1x2
                 let plaintextDimensions = try MatrixDimensions(rowCount: 6, columnCount: 1)
                 let queryDimensions = try MatrixDimensions(rowCount: 2, columnCount: 1)
-                try testOnIncreasingData(
+                try await testOnIncreasingData(
                     plaintextDimensions: plaintextDimensions,
                     queryDimensions: queryDimensions,
                     context: context)
@@ -353,7 +376,7 @@ extension PrivateNearestNeighborSearchUtil {
                 // Non-power of 2 ncols
                 let plaintextDimensions = try MatrixDimensions(rowCount: 5, columnCount: 3)
                 let queryDimensions = try MatrixDimensions(rowCount: 2, columnCount: 3)
-                try testOnIncreasingData(
+                try await testOnIncreasingData(
                     plaintextDimensions: plaintextDimensions,
                     queryDimensions: queryDimensions,
                     context: context)
@@ -362,7 +385,7 @@ extension PrivateNearestNeighborSearchUtil {
                 // Tall, plaintext rows in [N/4, N/2]
                 let plaintextDimensions = try MatrixDimensions(rowCount: 200, columnCount: 4)
                 let queryDimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
-                try testOnIncreasingData(
+                try await testOnIncreasingData(
                     plaintextDimensions: plaintextDimensions,
                     queryDimensions: queryDimensions,
                     context: context)
@@ -371,7 +394,7 @@ extension PrivateNearestNeighborSearchUtil {
                 // Tall, plaintext rows > N
                 let plaintextDimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
                 let queryDimensions = try MatrixDimensions(rowCount: 5, columnCount: 4)
-                try testOnIncreasingData(
+                try await testOnIncreasingData(
                     plaintextDimensions: plaintextDimensions,
                     queryDimensions: queryDimensions,
                     context: context)

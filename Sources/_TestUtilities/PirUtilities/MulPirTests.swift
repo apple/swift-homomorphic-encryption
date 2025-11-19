@@ -71,20 +71,20 @@ extension PirTestUtils {
 
         /// Tests query generation.
         @inlinable
-        public static func queryGenerationTest<Scheme: HeScheme>(
-            scheme _: Scheme.Type,
-            _ keyCompression: PirKeyCompressionStrategy) throws
+        public static func queryGenerationTest<PirUtil: PirUtilProtocol>(
+            pirUtil _: PirUtil.Type,
+            _ keyCompression: PirKeyCompressionStrategy) async throws
         {
             let entryCount = 200
             let entrySizeInBytes = 16
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+            let context: PirUtil.Scheme.Context = try TestUtils.getTestContext()
             let secretKey = try context.generateSecretKey()
             let parameter = try PirTestUtils.getTestParameter(
-                pir: MulPir<Scheme>.self,
+                pir: MulPir<PirUtil.Scheme>.self,
                 with: context,
                 entryCount: entryCount,
                 entrySizeInBytes: entrySizeInBytes, keyCompression: keyCompression)
-            let client = MulPirClient(parameter: parameter, context: context)
+            let client = MulPirClient<PirUtil>(parameter: parameter, context: context)
 
             let evaluationKey = try client.generateEvaluationKey(using: secretKey)
             for _ in 0..<3 {
@@ -94,11 +94,11 @@ extension PirTestUtils {
                 let queryIndices = Array(indices.prefix(batchSize))
                 let query = try client.generateQuery(at: queryIndices, using: secretKey)
                 let outputCount = parameter.expandedQueryCount * batchSize
-                let expandedQuery: [Scheme.CanonicalCiphertext] = try PirUtil.expandCiphertexts(
+                let expandedQuery: [PirUtil.Scheme.CanonicalCiphertext] = try await PirUtil.expand(ciphertexts:
                     query.ciphertexts,
                     outputCount: outputCount,
                     using: evaluationKey)
-                let decodedQuery: [[Scheme.Scalar]] = try expandedQuery.map { ciphertext in
+                let decodedQuery: [[PirUtil.Scheme.Scalar]] = try expandedQuery.map { ciphertext in
                     try ciphertext.decrypt(using: secretKey).decode(format: .coefficient)
                 }
 
@@ -127,8 +127,8 @@ extension PirTestUtils {
 
         /// Tests client computing query coordinates.
         @inlinable
-        public static func computeCoordinates<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-            let context: Context<Scheme> = try TestUtils.getTestContext()
+        public static func computeCoordinates<PirUtil: PirUtilProtocol>(pirUtil _: PirUtil.Type) throws {
+            let context: PirUtil.Scheme.Context = try TestUtils.getTestContext()
             let evalKeyConfig = EvaluationKeyConfig()
             // two dimensional case
             do {
@@ -138,7 +138,7 @@ extension PirTestUtils {
                     dimensions: [10, 10],
                     batchSize: 1,
                     evaluationKeyConfig: evalKeyConfig)
-                let client = MulPirClient(parameter: parameter, context: context)
+                let client = MulPirClient<PirUtil>(parameter: parameter, context: context)
 
                 let vectors = [
                     (0, [0, 0]),
@@ -163,7 +163,7 @@ extension PirTestUtils {
                     dimensions: [5, 3, 2],
                     batchSize: 1,
                     evaluationKeyConfig: evalKeyConfig)
-                let client = MulPirClient(parameter: parameter, context: context)
+                let client = MulPirClient<PirUtil>(parameter: parameter, context: context)
 
                 let vectors = [
                     (0, [0, 0, 0]),

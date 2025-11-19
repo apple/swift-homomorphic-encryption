@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,8 +99,8 @@ struct GaloisEvalIterator: IteratorProtocol {
 }
 
 extension FixedWidthInteger {
-    @inlinable
-    func isValidGaloisElement(for degree: Int) -> Bool {
+    /// Check if `self` is a valid Galois element for a group of `degree`.
+    public func isValidGaloisElement(for degree: Int) -> Bool {
         degree.isPowerOfTwo && !isMultiple(of: 2) && (self < (degree &<< 1)) && (self > 1)
     }
 }
@@ -167,8 +167,8 @@ extension PolyRq where F == Eval {
     }
 }
 
-@usableFromInline
-enum GaloisElementGenerator {
+/// The generator for Galois group.
+public enum GaloisElementGenerator {
     @usableFromInline static let value: UInt32 = 3
 }
 
@@ -238,7 +238,7 @@ public enum GaloisElement {
     /// ``EncryptionParameters/polyDegree``.
     /// - Returns: Dictionary mapping Galois elements to their corresponding rotation steps.
     @inlinable
-    package static func stepsFor(elements: [Int], degree: Int) -> [Int: Int?] {
+    public static func stepsFor(elements: [Int], degree: Int) -> [Int: Int?] {
         var result: [Int: Int?] = Dictionary(elements.map { ($0, nil) }) { first, _ in
             first
         }
@@ -271,7 +271,7 @@ public enum GaloisElement {
     /// - Returns: Dictionary mapping rotation steps to their counts, and `nil` if no plan was found.
     /// - Throws: Error upon invalid step or degree.
     @inlinable
-    package static func planMultiStep(supportedSteps: [Int], step: Int, degree: Int) throws -> [Int: Int]? {
+    public static func _planMultiStep(supportedSteps: [Int], step: Int, degree: Int) throws -> [Int: Int]? {
         guard abs(step) < degree else {
             throw HeError.invalidRotationStep(step: step, degree: degree)
         }

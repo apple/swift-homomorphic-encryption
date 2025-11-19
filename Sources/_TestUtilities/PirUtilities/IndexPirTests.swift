@@ -24,13 +24,13 @@ extension PirTestUtils {
             server _: Server.Type,
             client _: Client.Type,
             for parameter: IndexPirParameter,
-            with context: Context<Server.Scheme>) throws
+            with context: Server.Scheme.Context) async throws
             where Server.IndexPir == Client.IndexPir
         {
             let database = PirTestUtils.randomIndexPirDatabase(
                 entryCount: parameter.entryCount,
                 entrySizeInBytes: parameter.entrySizeInBytes)
-            let processedDb = try Server.process(database: database, with: context, using: parameter)
+            let processedDb = try await Server.process(database: database, with: context, using: parameter)
 
             let server = try Server(parameter: parameter, context: context, database: processedDb)
             let client = Client(parameter: parameter, context: context)
@@ -44,7 +44,7 @@ extension PirTestUtils {
                 let batchSize = Int.random(in: 1...parameter.batchSize)
                 let queryIndices = Array(indices.prefix(batchSize))
                 let query = try client.generateQuery(at: queryIndices, using: secretKey)
-                let response = try server.computeResponse(to: query, using: evaluationKey)
+                let response = try await server.computeResponse(to: query, using: evaluationKey)
                 if Server.Scheme.self != NoOpScheme.self {
                     #expect(!response.isTransparent())
                 }
@@ -57,7 +57,7 @@ extension PirTestUtils {
 
         @inlinable
         static func indexPirTest<Server: IndexPirServer, Client: IndexPirClient>(server: Server.Type,
-                                                                                 client: Client.Type) throws
+                                                                                 client: Client.Type) async throws
             where Server.IndexPir == Client.IndexPir
         {
             let configs = try [
@@ -99,117 +99,119 @@ extension PirTestUtils {
                                keyCompression: .maxCompression),
             ]
 
-            let context: Context<Server.Scheme> = try TestUtils.getTestContext()
+            let context: Server.Scheme.Context = try TestUtils.getTestContext()
             for config in configs {
                 let parameter = Server.generateParameter(config: config, with: context)
-                try indexPirTestForParameter(server: server, client: client, for: parameter, with: context)
+                try await indexPirTestForParameter(server: server, client: client, for: parameter, with: context)
             }
         }
 
         /// Testing indexPir.
         @inlinable
-        public static func indexPir<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
-            try indexPirTest(server: MulPirServer<Scheme>.self, client: MulPirClient<Scheme>.self)
+        public static func indexPir<Scheme: HeScheme>(scheme _: Scheme.Type) async throws {
+            try await indexPirTest(
+                server: MulPirServer<PirUtil<Scheme>>.self,
+                client: MulPirClient<PirUtil<Scheme>>.self)
         }
+    }
 
-        /// Testing client configuration.
-        @inlinable
-        func generateParameter() throws {
-            let context: Context<Bfv<UInt64>> = try TestUtils.getTestContext()
-            // unevenDimensions: false
-            do {
-                let config = try IndexPirConfig(entryCount: 16,
-                                                entrySizeInBytes: context.bytesPerPlaintext,
-                                                dimensionCount: 2,
-                                                batchSize: 1,
-                                                unevenDimensions: false,
-                                                keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
-                #expect(parameter.dimensions == [4, 4])
-            }
-            do {
-                let config = try IndexPirConfig(entryCount: 10,
-                                                entrySizeInBytes: context.bytesPerPlaintext,
-                                                dimensionCount: 2,
-                                                batchSize: 2,
-                                                unevenDimensions: false,
-                                                keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
-                #expect(parameter.dimensions == [4, 3])
-            }
-            // unevenDimensions: true
-            do {
-                let config = try IndexPirConfig(entryCount: 15,
-                                                entrySizeInBytes: context.bytesPerPlaintext,
-                                                dimensionCount: 2,
-                                                batchSize: 1,
-                                                unevenDimensions: true,
-                                                keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
-                #expect(parameter.dimensions == [5, 3])
-            }
-            do {
-                let config = try IndexPirConfig(entryCount: 15,
-                                                entrySizeInBytes: context.bytesPerPlaintext,
-                                                dimensionCount: 2,
-                                                batchSize: 2,
-                                                unevenDimensions: true,
-                                                keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
-                #expect(parameter.dimensions == [5, 3])
-            }
-            do {
-                let config = try IndexPirConfig(entryCount: 17,
-                                                entrySizeInBytes: context.bytesPerPlaintext,
-                                                dimensionCount: 2,
-                                                batchSize: 2,
-                                                unevenDimensions: true,
-                                                keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
-                #expect(parameter.dimensions == [9, 2])
-            }
-            // no key compression
-            do {
-                let config = try IndexPirConfig(entryCount: 100,
-                                                entrySizeInBytes: context.bytesPerPlaintext,
-                                                dimensionCount: 2,
-                                                batchSize: 2,
-                                                unevenDimensions: true,
-                                                keyCompression: .noCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
-                let evalKeyConfig = EvaluationKeyConfig(
-                    galoisElements: [3, 5, 9, 17],
-                    hasRelinearizationKey: true)
-                #expect(parameter.evaluationKeyConfig == evalKeyConfig)
-            }
-            // hybrid key compression
-            do {
-                let config = try IndexPirConfig(entryCount: 100,
-                                                entrySizeInBytes: context.bytesPerPlaintext,
-                                                dimensionCount: 2,
-                                                batchSize: 2,
-                                                unevenDimensions: true,
-                                                keyCompression: .hybridCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
-                let evalKeyConfig = EvaluationKeyConfig(
-                    galoisElements: [3, 5, 9, 17],
-                    hasRelinearizationKey: true)
-                #expect(parameter.evaluationKeyConfig == evalKeyConfig)
-            }
-            // max key compression
-            do {
-                let config = try IndexPirConfig(entryCount: 100,
-                                                entrySizeInBytes: context.bytesPerPlaintext,
-                                                dimensionCount: 2,
-                                                batchSize: 2,
-                                                unevenDimensions: true,
-                                                keyCompression: .maxCompression)
-                let parameter = MulPir.generateParameter(config: config, with: context)
-                let evalKeyConfig = EvaluationKeyConfig(
-                    galoisElements: [3, 5, 9],
-                    hasRelinearizationKey: true)
-                #expect(parameter.evaluationKeyConfig == evalKeyConfig)
-            }
+    /// Testing client configuration.
+    @inlinable
+    func generateParameter() throws {
+        let context: Context<Bfv<UInt64>> = try TestUtils.getTestContext()
+        // unevenDimensions: false
+        do {
+            let config = try IndexPirConfig(entryCount: 16,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 1,
+                                            unevenDimensions: false,
+                                            keyCompression: .noCompression)
+            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            #expect(parameter.dimensions == [4, 4])
+        }
+        do {
+            let config = try IndexPirConfig(entryCount: 10,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: false,
+                                            keyCompression: .noCompression)
+            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            #expect(parameter.dimensions == [4, 3])
+        }
+        // unevenDimensions: true
+        do {
+            let config = try IndexPirConfig(entryCount: 15,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 1,
+                                            unevenDimensions: true,
+                                            keyCompression: .noCompression)
+            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            #expect(parameter.dimensions == [5, 3])
+        }
+        do {
+            let config = try IndexPirConfig(entryCount: 15,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .noCompression)
+            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            #expect(parameter.dimensions == [5, 3])
+        }
+        do {
+            let config = try IndexPirConfig(entryCount: 17,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .noCompression)
+            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            #expect(parameter.dimensions == [9, 2])
+        }
+        // no key compression
+        do {
+            let config = try IndexPirConfig(entryCount: 100,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .noCompression)
+            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let evalKeyConfig = EvaluationKeyConfig(
+                galoisElements: [3, 5, 9, 17],
+                hasRelinearizationKey: true)
+            #expect(parameter.evaluationKeyConfig == evalKeyConfig)
+        }
+        // hybrid key compression
+        do {
+            let config = try IndexPirConfig(entryCount: 100,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .hybridCompression)
+            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let evalKeyConfig = EvaluationKeyConfig(
+                galoisElements: [3, 5, 9, 17],
+                hasRelinearizationKey: true)
+            #expect(parameter.evaluationKeyConfig == evalKeyConfig)
+        }
+        // max key compression
+        do {
+            let config = try IndexPirConfig(entryCount: 100,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .maxCompression)
+            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let evalKeyConfig = EvaluationKeyConfig(
+                galoisElements: [3, 5, 9],
+                hasRelinearizationKey: true)
+            #expect(parameter.evaluationKeyConfig == evalKeyConfig)
         }
     }
 }

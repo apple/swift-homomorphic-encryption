@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,14 +19,27 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
     public typealias SignedScalar = Scheme.SignedScalar
 
     /// Context for HE computation.
-    public let context: Context<Scheme>
+    public let context: Scheme.Context
 
     @usableFromInline var poly: PolyRq<Scalar, Format>
 
+    /// Public access to poly.
+    /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
+    public var _poly: PolyRq<Scalar, Format> { poly }
+
+    /// The auxiliary data is scheme-specific.
+    public var auxiliaryData: Scheme.PlaintextAuxiliaryData
+
     @inlinable
-    package init(context: Context<Scheme>, poly: PolyRq<Scalar, Format>) {
+    public init(_context: Scheme.Context, _poly: PolyRq<Scalar, Format>) throws {
+        try self.init(context: _context, poly: _poly)
+    }
+
+    @inlinable
+    package init(context: Scheme.Context, poly: PolyRq<Scalar, Format>) throws {
         self.context = context
         self.poly = poly
+        self.auxiliaryData = try Scheme.PlaintextAuxiliaryData(context: context, poly: poly)
     }
 
     /// In-place plaintext addition: `lhs += rhs`.
@@ -62,7 +75,7 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
     @inlinable
     public func forwardNtt() throws -> Plaintext<Scheme, Eval> where Format == Coeff {
         let poly = try poly.forwardNtt()
-        return Plaintext<Scheme, Eval>(context: context, poly: poly)
+        return try Plaintext<Scheme, Eval>(context: context, poly: poly)
     }
 
     /// Computes the inverse number-theoretic transform (NTT) on the plaintext.
@@ -72,7 +85,7 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
     @inlinable
     public func inverseNtt() throws -> Plaintext<Scheme, Coeff> where Format == Eval {
         let poly = try poly.inverseNtt()
-        return Plaintext<Scheme, Coeff>(context: context, poly: poly)
+        return try Plaintext<Scheme, Coeff>(context: context, poly: poly)
     }
 
     @inlinable
@@ -136,7 +149,7 @@ extension Plaintext {
             return plaintext
         }
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count
-        let rnsTool = context.getRnsTool(moduliCount: moduliCount)
+        let rnsTool = try context.getRnsTool(moduliCount: moduliCount)
         let polyContext = try context.ciphertextContext.getContext(moduliCount: moduliCount)
 
         var poly: PolyRq<Scalar, Coeff> = PolyRq.zero(context: polyContext)
@@ -162,7 +175,7 @@ extension Plaintext {
         if let plaintext = self as? Plaintext<Scheme, Coeff> {
             return plaintext
         }
-        let rnsTool = context.getRnsTool(moduliCount: moduli.count)
+        let rnsTool = try context.getRnsTool(moduliCount: moduli.count)
         var plaintextData = try poly.convertToCoeffFormat().data
         for index in plaintextData.rowIndices(row: 0) {
             let condition = plaintextData[index].constantTimeGreaterThanOrEqual(rnsTool.tThreshold)
@@ -175,7 +188,7 @@ extension Plaintext {
         let coeffPoly: PolyRq<Scalar, Coeff> = PolyRq(
             context: context.plaintextContext,
             data: Array2d(array: plaintextData))
-        return Plaintext<Scheme, Coeff>(context: context, poly: coeffPoly)
+        return try Plaintext<Scheme, Coeff>(context: context, poly: coeffPoly)
     }
 
     /// Decodes a plaintext.

@@ -17,7 +17,7 @@ import _TestUtilities
 import Testing
 
 @Suite
-struct RnsBaseConverterTests {
+struct _RnsBaseConverterTests {
     @Test
     func convertApproximate() throws {
         func runTestConvertApproximate<T: ScalarType>(
@@ -35,7 +35,7 @@ struct RnsBaseConverterTests {
             let inputContext = try PolyContext<T>(degree: degree, moduli: inputModuli)
             let outputContext = try PolyContext<T>(degree: degree, moduli: [t])
             let referenceX = (0..<degree).map { _ in T.DoubleWidth.random(in: 0..<q) }
-            let rnsBaseConverter = try RnsBaseConverter<T>(from: inputContext, to: outputContext)
+            let rnsBaseConverter = try _RnsBaseConverter<T>(from: inputContext, to: outputContext)
             let data = referenceX.map { bigInt in TestUtils.crtDecompose(value: bigInt, moduli: inputContext.moduli) }
             let inputData = Array2d(data: data).transposed()
 
@@ -81,7 +81,7 @@ struct RnsBaseConverterTests {
             let outputContext = try PolyContext<T>(degree: degree, moduli: [T(2)]) // Arbitrary
             let poly: PolyRq<T, Coeff> = PolyRq.random(context: inputContext)
 
-            let rnsBaseConverter = try RnsBaseConverter<T>(from: inputContext, to: outputContext)
+            let rnsBaseConverter = try _RnsBaseConverter<T>(from: inputContext, to: outputContext)
             let composed: [QuadWidth<T>] = try rnsBaseConverter.crtCompose(poly: poly)
 
             for (coeffIndex, composed) in composed.enumerated() {

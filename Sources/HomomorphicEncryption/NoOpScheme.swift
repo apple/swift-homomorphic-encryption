@@ -12,13 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public struct EmptyAuxiliary<Scheme: HeScheme>: CiphertextAuxiliary, PlaintextAuxiliary {
+    public init(
+        context _: Scheme.Context,
+        polys _: [PolyRq<Scheme.Scalar, some PolyFormat & PolyFormat>],
+        correctionFactor _: Scheme.Scalar,
+        seed _: [UInt8]) throws {}
+
+    public init(
+        context _: Scheme.Context,
+        poly _: PolyRq<Scheme.Scalar, some PolyFormat>) {}
+
+    public static func == (_: EmptyAuxiliary<Scheme>, _: EmptyAuxiliary<Scheme>) -> Bool {
+        true
+    }
+}
+
 /// This is a no-op scheme for development and testing.
 ///
 /// The scheme simply takes the plaintext as a "ciphertext" and
 /// ignores any ciphertext coefficient moduli.
 public enum NoOpScheme: HeScheme {
+    public typealias CiphertextAuxiliaryData = EmptyAuxiliary<Self>
+    public typealias PlaintextAuxiliaryData = EmptyAuxiliary<Self>
+
+    public typealias Context = HomomorphicEncryption.Context<Self>
+    public typealias KeySwitchKey = HomomorphicEncryption._KeySwitchKey<NoOpScheme>
+    public typealias GaloisKey = HomomorphicEncryption._GaloisKey<NoOpScheme>
+
     public typealias Scalar = UInt64
     public typealias CanonicalCiphertextFormat = Coeff
+
+    public static var cryptosystem: HeCryptoSystem { .noOpScheme }
 
     public static var freshCiphertextPolyCount: Int {
         1
@@ -28,22 +53,22 @@ public enum NoOpScheme: HeScheme {
         0
     }
 
-    public static func generateSecretKey(context: Context<NoOpScheme>) -> SecretKey<NoOpScheme> {
+    public static func generateSecretKey(context: Context) -> SecretKey<NoOpScheme> {
         let poly = PolyRq<Scalar, Eval>.zero(context: context.secretKeyContext)
         return SecretKey(poly: poly)
     }
 
     public static func generateEvaluationKey(
-        context: Context<NoOpScheme>,
+        context: Context,
         config: EvaluationKeyConfig, using _: SecretKey<NoOpScheme>) throws -> EvaluationKey<NoOpScheme>
     {
-        let keySwitchKey = KeySwitchKey(context: context, ciphers: [])
-        let galoisKeys = [Int: KeySwitchKey<NoOpScheme>](
+        let keySwitchKey = KeySwitchKey(context: context, ciphertexts: [])
+        let galoisKeys = [Int: KeySwitchKey](
             config.galoisElements
                 .map { g in (g, keySwitchKey) }) { first, _ in first }
         return EvaluationKey(
             galoisKey: GaloisKey(keys: galoisKeys),
-            relinearizationKey: RelinearizationKey(keySwitchKey: keySwitchKey))
+            relinearizationKey: _RelinearizationKey(keySwitchKey: keySwitchKey))
     }
 
     @inlinable
@@ -56,19 +81,19 @@ public enum NoOpScheme: HeScheme {
         return SimdEncodingDimensions(rowCount: 2, columnCount: parameters.polyDegree / 2)
     }
 
-    public static func encode(context: Context<NoOpScheme>, values: some Collection<Scalar>,
+    public static func encode(context: Context, values: some Collection<Scalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(values: values, format: format)
     }
 
-    public static func encode(context: Context<NoOpScheme>, signedValues: some Collection<SignedScalar>,
+    public static func encode(context: Context, signedValues: some Collection<SignedScalar>,
                               format: EncodeFormat) throws -> CoeffPlaintext
     {
         try context.encode(signedValues: signedValues, format: format)
     }
 
-    public static func encode(context: Context<NoOpScheme>, values: some Collection<Scalar>,
+    public static func encode(context: Context, values: some Collection<Scalar>,
                               format: EncodeFormat, moduliCount _: Int?) throws -> EvalPlaintext
     {
         let coeffPlaintext = try Self.encode(context: context, values: values, format: format)
@@ -76,7 +101,7 @@ public enum NoOpScheme: HeScheme {
     }
 
     public static func encode(
-        context: Context<NoOpScheme>,
+        context: Context,
         signedValues: some Collection<SignedScalar>,
         format: EncodeFormat,
         moduliCount _: Int?) throws -> EvalPlaintext
@@ -101,16 +126,20 @@ public enum NoOpScheme: HeScheme {
         try plaintext.inverseNtt().decode(format: format)
     }
 
-    public static func zeroCiphertextCoeff(context: Context<Self>, moduliCount _: Int?) throws -> CoeffCiphertext {
-        NoOpScheme
+    public static func skipLSBsForDecryption(for _: EncryptionParameters<Scalar>) -> [Int] {
+        Array(repeating: 0, count: freshCiphertextPolyCount)
+    }
+
+    public static func zeroCiphertextCoeff(context: Context, moduliCount _: Int?) throws -> CoeffCiphertext {
+        try NoOpScheme
             .CoeffCiphertext(
                 context: context,
                 polys: [PolyRq.zero(context: context.plaintextContext)],
                 correctionFactor: 1)
     }
 
-    public static func zeroCiphertextEval(context: Context<Self>, moduliCount _: Int?) throws -> EvalCiphertext {
-        NoOpScheme
+    public static func zeroCiphertextEval(context: Context, moduliCount _: Int?) throws -> EvalCiphertext {
+        try NoOpScheme
             .EvalCiphertext(
                 context: context,
                 polys: [PolyRq.zero(context: context.plaintextContext)],
@@ -130,7 +159,7 @@ public enum NoOpScheme: HeScheme {
     public static func encrypt(_ plaintext: CoeffPlaintext,
                                using _: SecretKey<NoOpScheme>) throws -> CanonicalCiphertext
     {
-        NoOpScheme.CanonicalCiphertext(
+        try NoOpScheme.CanonicalCiphertext(
             context: plaintext.context,
             polys: [plaintext.poly], correctionFactor: 1)
     }
@@ -138,7 +167,7 @@ public enum NoOpScheme: HeScheme {
     public static func decryptCoeff(_ ciphertext: CoeffCiphertext,
                                     using _: SecretKey<NoOpScheme>) throws -> CoeffPlaintext
     {
-        NoOpScheme.CoeffPlaintext(
+        try NoOpScheme.CoeffPlaintext(
             context: ciphertext.context,
             poly: ciphertext.polys[0])
     }
@@ -303,19 +332,31 @@ public enum NoOpScheme: HeScheme {
         minNoiseBudget
     }
 
-    public static func forwardNtt(_ ciphertext: CoeffCiphertext) throws -> EvalCiphertext {
+    public static func forwardNtt(_ ciphertext: inout CoeffCiphertext) throws -> EvalCiphertext {
         let polys = try ciphertext.polys.map { try $0.forwardNtt() }
-        return Ciphertext<NoOpScheme, Eval>(context: ciphertext.context,
-                                            polys: polys,
-                                            correctionFactor: ciphertext.correctionFactor,
-                                            seed: ciphertext.seed)
+        return try Ciphertext<NoOpScheme, Eval>(context: ciphertext.context,
+                                                polys: polys,
+                                                correctionFactor: ciphertext.correctionFactor,
+                                                seed: ciphertext.seed)
     }
 
-    public static func inverseNtt(_ ciphertext: EvalCiphertext) throws -> CoeffCiphertext {
+    public static func inverseNtt(_ ciphertext: inout EvalCiphertext) throws -> CoeffCiphertext {
         let polys = try ciphertext.polys.map { try $0.inverseNtt() }
-        return Ciphertext<NoOpScheme, Coeff>(context: ciphertext.context,
-                                             polys: polys,
-                                             correctionFactor: ciphertext.correctionFactor,
-                                             seed: ciphertext.seed)
+        return try Ciphertext<NoOpScheme, Coeff>(context: ciphertext.context,
+                                                 polys: polys,
+                                                 correctionFactor: ciphertext.correctionFactor,
+                                                 seed: ciphertext.seed)
+    }
+
+    /// Returns the dimension counts for ``EncodeFormat/simd`` encoding, or `nil` if the HE scheme does
+    /// not support SIMD encoding for the given parameters.
+    @inlinable
+    public static func simdDimensions(for encryptionParameter: EncryptionParameters<UInt64>)
+        -> SimdEncodingDimensions?
+    {
+        guard encryptionParameter.supportsSimdEncoding else {
+            return nil
+        }
+        return SimdEncodingDimensions(rowCount: 2, columnCount: encryptionParameter.polyDegree / 2)
     }
 }

@@ -397,11 +397,12 @@ struct ProcessDatabase: AsyncParsableCommand {
     ///   - scheme: The HE scheme.
     /// - Throws: Error upon processing the database.
     @inlinable
-    mutating func process<Scheme: HeScheme>(config: Arguments, scheme: Scheme.Type) async throws {
+    mutating func process<PirUtil: PirUtilProtocol>(config: Arguments, pirUtil _: PirUtil.Type) async throws {
+        typealias Scalar = PirUtil.Scheme.Scalar
         let database: [KeywordValuePair] =
             try Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase(from: config.inputDatabase).native()
 
-        let config = try config.resolve(for: database, scheme: scheme)
+        let config = try config.resolve(for: database, scheme: PirUtil.Scheme.self)
         ProcessDatabase.logger.info("Processing database with configuration: \(config)")
         let keywordConfig = try KeywordPirConfig(dimensionCount: 2,
                                                  cuckooTableConfig: config.cuckooTableConfig,
@@ -414,15 +415,15 @@ struct ProcessDatabase: AsyncParsableCommand {
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
 
-        let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: config.rlweParameters)
-        let processArgs = try ProcessKeywordDatabase.Arguments<Scheme.Scalar>(
-            databaseConfig: databaseConfig,
-            encryptionParameters: encryptionParameters,
-            algorithm: config.algorithm,
-            keyCompression: config.keyCompression,
-            trialsPerShard: config.trialsPerShard,
-            symmetricPirConfig: config.symmetricPirConfig)
-        let context = try Context<Scheme>(encryptionParameters: processArgs.encryptionParameters)
+        let encryptionParameters = try EncryptionParameters<Scalar>(from: config.rlweParameters)
+        let processArgs = try ProcessKeywordDatabase.Arguments<Scalar>(databaseConfig: databaseConfig,
+                                                                       encryptionParameters: encryptionParameters,
+                                                                       algorithm: config.algorithm,
+                                                                       keyCompression: config.keyCompression,
+                                                                       trialsPerShard: config.trialsPerShard,
+                                                                       symmetricPirConfig: config.symmetricPirConfig)
+        let context = try PirUtil.Scheme.Context(encryptionParameters: processArgs.encryptionParameters)
+
         let keywordDatabase = try KeywordDatabase(
             rows: database,
             sharding: processArgs.databaseConfig.sharding,
@@ -441,7 +442,8 @@ struct ProcessDatabase: AsyncParsableCommand {
                             shard: shard,
                             config: config,
                             context: context,
-                            processArgs: processArgs)
+                            processArgs: processArgs,
+                            pirUtil: PirUtil.self)
                     }
                 }
 
@@ -455,7 +457,8 @@ struct ProcessDatabase: AsyncParsableCommand {
                     shardID: shardID,
                     shard: shard, config:
                     config, context: context,
-                    processArgs: processArgs)
+                    processArgs: processArgs,
+                    pirUtil: PirUtil.self)
                 evaluationKeyConfig = [evaluationKeyConfig, processedEvaluationKeyConfig].union()
             }
         }
@@ -463,18 +466,20 @@ struct ProcessDatabase: AsyncParsableCommand {
         if let evaluationKeyConfigFile = config.outputEvaluationKeyConfig {
             let protoEvaluationKeyConfig = try evaluationKeyConfig.proto(
                 encryptionParameters: encryptionParameters,
-                scheme: Scheme.self)
+                scheme: PirUtil.Scheme.self)
             try protoEvaluationKeyConfig.save(to: evaluationKeyConfigFile)
             ProcessDatabase.logger.info("Saved evaluation key configuration to \(evaluationKeyConfigFile)")
         }
     }
 
-    private func processShard<Scheme: HeScheme>(
+    // swiftlint:disable:next function_parameter_count
+    private func processShard<PirUtil: PirUtilProtocol>(
         shardID: String,
         shard: KeywordDatabaseShard,
         config: ResolvedArguments,
-        context: Context<Scheme>,
-        processArgs: ProcessKeywordDatabase.Arguments<Scheme.Scalar>) async throws -> EvaluationKeyConfig
+        context: PirUtil.Scheme.Context,
+        processArgs: ProcessKeywordDatabase.Arguments<PirUtil.Scheme.Scalar>,
+        pirUtil _: PirUtil.Type) async throws -> EvaluationKeyConfig
     {
         var logger = ProcessDatabase.logger
         logger[metadataKey: "shardID"] = .string(shardID)
@@ -501,9 +506,10 @@ struct ProcessDatabase: AsyncParsableCommand {
         }
 
         logger.info("Processing shard with \(shard.rows.count) rows")
-        let processed: ProcessedDatabaseWithParameters<Scheme> = try ProcessKeywordDatabase.processShard(
+        let processed: ProcessedDatabaseWithParameters<PirUtil.Scheme> = try await ProcessKeywordDatabase.processShard(
             shard: shard,
             with: processArgs,
+            using: PirUtil.self,
             onEvent: logEvent)
 
         if config.trialsPerShard > 0 {
@@ -511,10 +517,10 @@ struct ProcessDatabase: AsyncParsableCommand {
                 throw PirError.emptyDatabase
             }
             logger.info("Validating shard")
-            let validationResults = try ProcessKeywordDatabase
+            let validationResults = try await ProcessKeywordDatabase
                 .validateShard(shard: processed,
                                row: KeywordValuePair(keyword: row.key, value: row.value),
-                               trials: config.trialsPerShard, context: context)
+                               trials: config.trialsPerShard, context: context, using: PirUtil.self)
             let description = try validationResults.description()
             logger.info("ValidationResults \(description)")
         }
@@ -540,9 +546,9 @@ struct ProcessDatabase: AsyncParsableCommand {
         let configData = try Data(contentsOf: configURL)
         let config = try JSONDecoder().decode(Arguments.self, from: configData)
         if config.rlweParameters.supportsScalar(UInt32.self) {
-            try await process(config: config, scheme: Bfv<UInt32>.self)
+            try await process(config: config, pirUtil: PirUtil<Bfv<UInt32>>.self)
         } else {
-            try await process(config: config, scheme: Bfv<UInt64>.self)
+            try await process(config: config, pirUtil: PirUtil<Bfv<UInt64>>.self)
         }
     }
 }

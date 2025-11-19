@@ -75,6 +75,38 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
             rowCount: rowCount,
             columnCount: columnCount)
     }
+
+    /// Provides scoped access to the underlying buffer storing the array's data.
+    ///
+    /// Use this method when you need temporary read-only access to the array's contiguous storage.
+    /// The buffer pointer is only valid for the duration of the closure's execution.
+    ///
+    /// - Parameter body: A closure that takes an `UnsafeBufferPointer` to the array's data.
+    ///   The buffer pointer argument is valid only for the duration of the closure's execution.
+    /// - Returns: The return value of the `body` closure.
+    /// - Throws: Rethrows any error thrown by the `body` closure.
+    public func withUnsafeData<Return>(_ body: (UnsafeBufferPointer<T>) throws -> Return) rethrows -> Return {
+        try data.withUnsafeBufferPointer { pointer in
+            try body(pointer)
+        }
+    }
+
+    /// Provides scoped access to the underlying buffer storing the array's data for mutation.
+    ///
+    /// Use this method when you need temporary read-write access to the array's contiguous storage.
+    /// The buffer pointer is only valid for the duration of the closure's execution.
+    ///
+    /// - Parameter body: A closure that takes an `UnsafeMutableBufferPointer` to the array's data.
+    ///   The buffer pointer argument is valid only for the duration of the closure's execution.
+    /// - Returns: The return value of the `body` closure.
+    /// - Throws: Rethrows any error thrown by the `body` closure.
+    public mutating func withUnsafeMutableData<Return>(_ body: (UnsafeMutableBufferPointer<T>) throws
+        -> Return) rethrows -> Return
+    {
+        try data.withUnsafeMutableBufferPointer { pointer in
+            try body(pointer)
+        }
+    }
 }
 
 extension Array2d {

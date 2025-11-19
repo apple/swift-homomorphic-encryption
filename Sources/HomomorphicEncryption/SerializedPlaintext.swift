@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,9 +38,10 @@ extension Plaintext where Format == Coeff {
     ///   - context: Context to associate with the plaintext.
     /// - Throws: Error upon failure to deserialize.
     @inlinable
-    public init(deserialize serialized: SerializedPlaintext, context: Context<Scheme>) throws {
+    public init(deserialize serialized: SerializedPlaintext, context: Scheme.Context) throws {
         self.context = context
         self.poly = try PolyRq(deserialize: serialized.poly, context: context.plaintextContext)
+        self.auxiliaryData = try Scheme.PlaintextAuxiliaryData(context: context, poly: poly)
     }
 }
 
@@ -53,10 +54,15 @@ extension Plaintext where Format == Eval {
     /// the top-level ciphertext context with all the moduli.
     /// - Throws: Error upon failure to deserialize.
     @inlinable
-    public init(deserialize serialized: SerializedPlaintext, context: Context<Scheme>, moduliCount: Int? = nil) throws {
+    public init(
+        deserialize serialized: SerializedPlaintext,
+        context: Scheme.Context,
+        moduliCount: Int? = nil) throws
+    {
         self.context = context
         let moduliCount = moduliCount ?? context.ciphertextContext.moduli.count
         let plaintextContext = try context.ciphertextContext.getContext(moduliCount: moduliCount)
         self.poly = try PolyRq(deserialize: serialized.poly, context: plaintextContext)
+        self.auxiliaryData = try Scheme.PlaintextAuxiliaryData(context: context, poly: poly)
     }
 }

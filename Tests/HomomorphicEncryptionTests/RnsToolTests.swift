@@ -27,7 +27,7 @@ struct RnsToolTests {
         {
             let inputContext = try PolyContext(degree: degree, moduli: inputModuli)
             let outputContext = try PolyContext(degree: degree, moduli: [outputModulus])
-            let rnsTool = try RnsTool(from: inputContext, to: outputContext)
+            let rnsTool = try _RnsTool(from: inputContext, to: outputContext)
 
             let q: T = inputModuli.product()
             let k = inputModuli.count
@@ -81,7 +81,7 @@ struct RnsToolTests {
 
             let inputContext = try PolyContext<T>(degree: degree, moduli: inputModuli)
             let outputContext = try PolyContext<T>(degree: degree, moduli: [t])
-            let rnsTool = try RnsTool(from: inputContext, to: outputContext)
+            let rnsTool = try _RnsTool(from: inputContext, to: outputContext)
 
             let referenceX = (0..<degree).map { _ in OctoWidth<T>.random(in: 0..<q) }
             let data = referenceX.map { bigInt in TestUtils.crtDecompose(value: bigInt, moduli: inputContext.moduli) }
@@ -127,7 +127,7 @@ struct RnsToolTests {
         {
             let qContext = try PolyContext(degree: degree, moduli: inputModuli)
             let outputContext = try PolyContext(degree: degree, moduli: [T(2)]) // Arbitrary
-            let rnsTool = try RnsTool(from: qContext, to: outputContext)
+            let rnsTool = try _RnsTool(from: qContext, to: outputContext)
             let bSkMtildeContext = rnsTool.rnsConvertQToBSkMTilde.outputContext
 
             var poly: PolyRq<T, Coeff> = PolyRq(context: bSkMtildeContext, data: inputData)
@@ -176,7 +176,7 @@ struct RnsToolTests {
             let inputModuli = try T.generatePrimes(significantBitCounts: significantBitCounts, preferringSmall: true)
             let inputContext = try PolyContext(degree: degree, moduli: inputModuli)
             let outputContext = try PolyContext(degree: degree, moduli: [T(2)]) // arbitrary
-            let rnsTool = try RnsTool(from: inputContext, to: outputContext)
+            let rnsTool = try _RnsTool(from: inputContext, to: outputContext)
             let q: OctoWidth<T> = inputModuli.product()
 
             let referenceX = (0..<degree).map { _ in OctoWidth<T>.random(in: 0..<q) }
@@ -214,7 +214,7 @@ struct RnsToolTests {
             let inputModuli = try T.generatePrimes(significantBitCounts: significantBitCounts, preferringSmall: true)
             let inputContext = try PolyContext(degree: degree, moduli: inputModuli)
             let outputContext = try PolyContext(degree: degree, moduli: [T(2)]) // arbitrary
-            let rnsTool = try RnsTool(from: inputContext, to: outputContext)
+            let rnsTool = try _RnsTool(from: inputContext, to: outputContext)
             let q: OctoWidth<T> = inputModuli.product()
             let qBsk: OctoWidth<T> = rnsTool.qBskContext.moduli.product()
             let bSk: OctoWidth<T> = rnsTool.rnsConvertQToBSk.outputContext.moduli.product()
@@ -274,7 +274,7 @@ struct RnsToolTests {
 
             let inputContext = try PolyContext<T>(degree: degree, moduli: inputModuli)
             let outputContext = try PolyContext<T>(degree: degree, moduli: [2]) // Arbitrary
-            let rnsTool = try RnsTool(from: inputContext, to: outputContext)
+            let rnsTool = try _RnsTool(from: inputContext, to: outputContext)
             let bskContext = rnsTool.rnsConvertQToBSk.outputContext
             let bskModuli = bskContext.moduli
             let bskProd: OctoWidth<T> = bskModuli.product()

@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import HomomorphicEncryption
 /// A database after processing to prepare for PNNS queries.
 public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     /// One context per plaintext modulus.
-    public let contexts: [Context<Scheme>]
+    public let contexts: [Scheme.Context]
 
     /// The processed vectors in the database.
     public let plaintextMatrices: [PlaintextMatrix<Scheme, Eval>]
@@ -33,7 +33,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
 
     @inlinable
     public init(
-        contexts: [Context<Scheme>],
+        contexts: [Scheme.Context],
         plaintextMatrices: [PlaintextMatrix<Scheme, Eval>],
         entryIds: [UInt64],
         entryMetadatas: [[UInt8]],
@@ -52,11 +52,11 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - serialized: Serialized processed database.
     ///   - contexts: Contexts for HE computation, one per plaintext modulus.
     /// - Throws: Error upon failure to load the database.
-    public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Context<Scheme>] = []) throws {
+    public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Scheme.Context] = []) throws {
         var contexts = contexts
         if contexts.isEmpty {
             contexts = try serialized.serverConfig.encryptionParameters.map { encryptionParameters in
-                try Context(encryptionParameters: encryptionParameters)
+                try Scheme.Context(encryptionParameters: encryptionParameters)
             }
         }
         try serialized.serverConfig.validateContexts(contexts: contexts)
@@ -86,7 +86,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     }
 
     @inlinable
-    public func validate(query vector: Array2d<Float>, trials: Int) throws -> ValidationResult<Scheme> {
+    public func validate(query vector: Array2d<Float>, trials: Int) async throws -> ValidationResult<Scheme> {
         guard trials > 0 else {
             throw PnnsError.validationError("Invalid trialsPerShard: \(trials)")
         }
@@ -104,12 +104,13 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
         var databaseDistances = DatabaseDistances()
         let clock = ContinuousClock()
         var minNoiseBudget = Double.infinity
-        let computeTimes = try (0..<trials).map { trial in
+        var computeTimes: [Duration] = Array(repeating: .seconds(0), count: trials)
+        for trial in 0..<trials {
             let secretKey = try client.generateSecretKey()
             let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
             let trialQuery = try client.generateQuery(for: vector, using: secretKey)
-            let computeTime = try clock.measure {
-                response = try server.computeResponse(to: trialQuery, using: trialEvaluationKey)
+            let computeTime = try await clock.measure {
+                response = try await server.computeResponse(to: trialQuery, using: trialEvaluationKey)
             }
             let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
             guard noiseBudget >= Scheme.minNoiseBudget else {
@@ -123,7 +124,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
                 query = trialQuery
                 databaseDistances = trialDatabaseDistances
             }
-            return computeTime
+            computeTimes[trial] = computeTime
         }
         guard let evaluationKey, let query else {
             throw PnnsError.validationError("Empty evaluation key or query")
@@ -188,7 +189,7 @@ extension Database {
     /// - Throws: Error upon failure to process the database.
     @inlinable
     public func process<Scheme: HeScheme>(config: ServerConfig<Scheme>,
-                                          contexts: [Context<Scheme>] = []) throws -> ProcessedDatabase<Scheme>
+                                          contexts: [Scheme.Context] = []) async throws -> ProcessedDatabase<Scheme>
     {
         guard config.distanceMetric == .cosineSimilarity else {
             throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)
@@ -196,7 +197,7 @@ extension Database {
         var contexts = contexts
         if contexts.isEmpty {
             contexts = try config.encryptionParameters.map { encryptionParameters in
-                try Context(encryptionParameters: encryptionParameters)
+                try Scheme.Context(encryptionParameters: encryptionParameters)
             }
         }
         try config.validateContexts(contexts: contexts)

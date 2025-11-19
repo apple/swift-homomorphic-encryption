@@ -123,7 +123,7 @@ extension PrivateInformationRetrieval.Response {
 
 struct ProcessBenchmarkContext<Server: IndexPirServer> {
     let database: [[UInt8]]
-    let context: Context<Server.Scheme>
+    let context: Server.Scheme.Context
     let parameter: IndexPirParameter
     init(server _: Server.Type, pirConfig: IndexPirConfig,
          encryptionConfig: EncryptionParametersConfig) throws
@@ -133,22 +133,22 @@ struct ProcessBenchmarkContext<Server: IndexPirServer> {
         self.database = getDatabaseForTesting(
             numberOfEntries: pirConfig.entryCount,
             entrySizeInBytes: pirConfig.entrySizeInBytes)
-        self.context = try Context(encryptionParameters: encryptParameter)
+        self.context = try Server.Scheme.Context(encryptionParameters: encryptParameter)
         self.parameter = Server.generateParameter(config: pirConfig, with: context)
     }
 }
 
 /// Pre-processing database benchmark.
-public func pirProcessBenchmark<Scheme: HeScheme>(
-    _: Scheme.Type,
+public func pirProcessBenchmark<PirUtil: PirUtilProtocol>(
+    _: PirUtil.Type,
     // swiftlint:disable:next force_try
-    config: PirBenchmarkConfig<Scheme.Scalar> = try! .init()) -> () -> Void
+    config: PirBenchmarkConfig<PirUtil.Scheme.Scalar> = try! .init()) -> () -> Void
 {
     {
         let databaseConfig = config.databaseConfig
         let benchmarkName = [
             "Process",
-            String(describing: Scheme.self),
+            String(describing: PirUtil.Scheme.self),
             config.encryptionConfig.description,
             "entryCount=\(databaseConfig.entryCount)",
             "entrySize=\(databaseConfig.entrySizeInBytes)",
@@ -157,17 +157,17 @@ public func pirProcessBenchmark<Scheme: HeScheme>(
         // swiftlint:disable closure_parameter_position
         Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
             benchmark,
-            benchmarkContext: ProcessBenchmarkContext<MulPirServer<Scheme>>) in
+            benchmarkContext: ProcessBenchmarkContext<MulPirServer<PirUtil>>) in
             for _ in benchmark.scaledIterations {
-                try blackHole(
-                    MulPirServer<Scheme>.process(
+                try await blackHole(
+                    MulPirServer<PirUtil>.process(
                         database: benchmarkContext.database,
                         with: benchmarkContext.context,
                         using: benchmarkContext.parameter))
             }
         } setup: {
             try ProcessBenchmarkContext(
-                server: MulPirServer<Scheme>.self,
+                server: MulPirServer<PirUtil>.self,
                 pirConfig: config.indexPirConfig,
                 encryptionConfig: config.encryptionConfig)
         }
@@ -196,16 +196,16 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
         server _: Server.Type,
         client _: Client.Type,
         pirConfig: IndexPirConfig,
-        encryptionConfig: EncryptionParametersConfig) throws
+        encryptionConfig: EncryptionParametersConfig) async throws
     {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
             try EncryptionParameters(from: encryptionConfig)
-        let context = try Context<Server.Scheme>(encryptionParameters: encryptParameter)
+        let context = try Server.Scheme.Context(encryptionParameters: encryptParameter)
         let indexPirParameters = Server.generateParameter(config: pirConfig, with: context)
         let database = getDatabaseForTesting(
             numberOfEntries: pirConfig.entryCount,
             entrySizeInBytes: pirConfig.entrySizeInBytes)
-        self.processedDatabase = try Server.process(database: database, with: context, using: indexPirParameters)
+        self.processedDatabase = try await Server.process(database: database, with: context, using: indexPirParameters)
 
         self.server = try Server(parameter: indexPirParameters, context: context, database: processedDatabase)
         self.client = Client(parameter: indexPirParameters, context: context)
@@ -216,7 +216,7 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
         // Validate correctness
         let queryIndex = Int.random(in: 0..<pirConfig.entryCount)
         let query = try client.generateQuery(at: [queryIndex], using: secretKey)
-        let response = try server.computeResponse(to: query, using: evaluationKey)
+        let response = try await server.computeResponse(to: query, using: evaluationKey)
         let decryptedResponse = try client.decrypt(response: response, at: queryIndex, using: secretKey)
         guard decryptedResponse == database[queryIndex] else {
             fatalError("Incorrect PIR response")
@@ -233,15 +233,15 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
 }
 
 /// IndexPIR benchmark.
-public func indexPirBenchmark<Scheme: HeScheme>(
-    _: Scheme.Type,
+public func indexPirBenchmark<PirUtil: PirUtilProtocol>(
+    _: PirUtil.Type,
     // swiftlint:disable:next force_try
-    config: PirBenchmarkConfig<Scheme.Scalar> = try! .init()) -> () -> Void
+    config: PirBenchmarkConfig<PirUtil.Scheme.Scalar> = try! .init()) -> () -> Void
 {
     {
         let benchmarkName = [
             "IndexPir",
-            String(describing: Scheme.self),
+            String(describing: PirUtil.Scheme.self),
             config.encryptionConfig.description,
             "entryCount=\(config.databaseConfig.entryCount)",
             "entrySize=\(config.databaseConfig.entrySizeInBytes)",
@@ -250,11 +250,11 @@ public func indexPirBenchmark<Scheme: HeScheme>(
         // swiftlint:disable closure_parameter_position
         Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
             benchmark,
-            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>) in
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<PirUtil>, MulPirClient<PirUtil>>) in
             for _ in benchmark.scaledIterations {
-                try blackHole(benchmarkContext.server.computeResponse(to: benchmarkContext.query,
-                                                                      using: benchmarkContext
-                                                                          .evaluationKey))
+                try await blackHole(benchmarkContext.server.computeResponse(to: benchmarkContext.query,
+                                                                            using: benchmarkContext
+                                                                                .evaluationKey))
             }
             benchmark.measurement(.evaluationKeySize, benchmarkContext.evaluationKeySize)
             benchmark.measurement(.evaluationKeyCount, benchmarkContext.evaluationKeyCount)
@@ -266,9 +266,9 @@ public func indexPirBenchmark<Scheme: HeScheme>(
         }
         // swiftlint:enable closure_parameter_position
         setup: {
-            try IndexPirBenchmarkContext(
-                server: MulPirServer<Scheme>.self,
-                client: MulPirClient<Scheme>.self,
+            try await IndexPirBenchmarkContext(
+                server: MulPirServer<PirUtil>.self,
+                client: MulPirClient<PirUtil>.self,
                 pirConfig: config.indexPirConfig,
                 encryptionConfig: config.encryptionConfig)
         }
@@ -296,7 +296,7 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
     init(config: PirBenchmarkConfig<Server.Scheme.Scalar>) async throws {
         let encryptParameter: EncryptionParameters<Server.Scheme.Scalar> =
             try EncryptionParameters(from: config.encryptionConfig)
-        let context = try Context<Server.Scheme>(encryptionParameters: encryptParameter)
+        let context = try Server.Scheme.Context(encryptionParameters: encryptParameter)
         let rows = (0..<config.databaseConfig.entryCount).map { index in KeywordValuePair(
             keyword: [UInt8](String(index).utf8),
             value: (0..<config.databaseConfig.entrySizeInBytes).map { _ in UInt8.random(in: 0..<UInt8.max) })
@@ -325,7 +325,7 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
         }
 
         let keywordPirConfig = config.keywordPirConfig
-        let processed = try Server.process(
+        let processed = try await Server.process(
             database: rows,
             config: config.keywordPirConfig,
             with: context,
@@ -346,7 +346,7 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
             at: [UInt8](String(describing: queryIndex).utf8),
             using: secretKey)
 
-        let response = try server.computeResponse(to: query, using: evaluationKey)
+        let response = try await server.computeResponse(to: query, using: evaluationKey)
         let decryptedResponse = try client.decrypt(
             response: response,
             at: [UInt8](String(describing: queryIndex).utf8),
@@ -366,15 +366,15 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
 }
 
 /// keywordPIR benchmark.
-public func keywordPirBenchmark<Scheme: HeScheme>(
-    _: Scheme.Type,
+public func keywordPirBenchmark<PirUtil: PirUtilProtocol>(
+    _: PirUtil.Type,
     // swiftlint:disable:next force_try
-    config: PirBenchmarkConfig<Scheme.Scalar> = try! .init()) -> () -> Void
+    config: PirBenchmarkConfig<PirUtil.Scheme.Scalar> = try! .init()) -> () -> Void
 {
     {
         let benchmarkName = [
             "KeywordPir",
-            String(describing: Scheme.self),
+            String(describing: PirUtil.Scheme.self),
             config.encryptionConfig.description,
             "entryCount=\(config.databaseConfig.entryCount)",
             "entrySize=\(config.databaseConfig.entrySizeInBytes)",
@@ -382,8 +382,8 @@ public func keywordPirBenchmark<Scheme: HeScheme>(
         ].joined(separator: "/")
         Benchmark(benchmarkName, configuration: config.benchmarkConfig) { benchmark, benchmarkContext in
             for _ in benchmark.scaledIterations {
-                try blackHole(benchmarkContext.server.computeResponse(to: benchmarkContext.query,
-                                                                      using: benchmarkContext.evaluationKey))
+                try await blackHole(benchmarkContext.server.computeResponse(to: benchmarkContext.query,
+                                                                            using: benchmarkContext.evaluationKey))
             }
             benchmark.measurement(.evaluationKeySize, benchmarkContext.evaluationKeySize)
             benchmark.measurement(.evaluationKeyCount, benchmarkContext.evaluationKeyCount)
@@ -393,7 +393,7 @@ public func keywordPirBenchmark<Scheme: HeScheme>(
             benchmark.measurement(.responseCiphertextCount, benchmarkContext.responseCiphertextCount)
             benchmark.measurement(.noiseBudget, benchmarkContext.noiseBudget)
         } setup: {
-            try await KeywordPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>(
+            try await KeywordPirBenchmarkContext<MulPirServer<PirUtil>, MulPirClient<PirUtil>>(
                 config: config)
         }
     }

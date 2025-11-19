@@ -14,7 +14,7 @@
 
 import _TestUtilities
 import HomomorphicEncryption
-import PrivateInformationRetrieval
+@testable import PrivateInformationRetrieval
 import Testing
 
 @Suite
@@ -27,16 +27,16 @@ struct MulPirTests {
     }
 
     @Test(arguments: PirKeyCompressionStrategy.allCases)
-    func queryGeneration(keyCompression: PirKeyCompressionStrategy) throws {
-        try PirTestUtils.MulPirTests.queryGenerationTest(scheme: NoOpScheme.self, keyCompression)
-        try PirTestUtils.MulPirTests.queryGenerationTest(scheme: Bfv<UInt32>.self, keyCompression)
-        try PirTestUtils.MulPirTests.queryGenerationTest(scheme: Bfv<UInt64>.self, keyCompression)
+    func queryGeneration(keyCompression: PirKeyCompressionStrategy) async throws {
+        try await PirTestUtils.MulPirTests.queryGenerationTest(pirUtil: PirUtil<NoOpScheme>.self, keyCompression)
+        try await PirTestUtils.MulPirTests.queryGenerationTest(pirUtil: PirUtil<Bfv<UInt32>>.self, keyCompression)
+        try await PirTestUtils.MulPirTests.queryGenerationTest(pirUtil: PirUtil<Bfv<UInt64>>.self, keyCompression)
     }
 
     @Test
     func computeCoordinates() throws {
-        try PirTestUtils.MulPirTests.computeCoordinates(scheme: NoOpScheme.self)
-        try PirTestUtils.MulPirTests.computeCoordinates(scheme: Bfv<UInt32>.self)
-        try PirTestUtils.MulPirTests.computeCoordinates(scheme: Bfv<UInt64>.self)
+        try PirTestUtils.MulPirTests.computeCoordinates(pirUtil: PirUtil<NoOpScheme>.self)
+        try PirTestUtils.MulPirTests.computeCoordinates(pirUtil: PirUtil<Bfv<UInt32>>.self)
+        try PirTestUtils.MulPirTests.computeCoordinates(pirUtil: PirUtil<Bfv<UInt64>>.self)
     }
 }

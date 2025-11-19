@@ -14,29 +14,29 @@
 
 import _TestUtilities
 import HomomorphicEncryption
-import PrivateInformationRetrieval
+@testable import PrivateInformationRetrieval
 import Testing
 
 @Suite
 struct ExpansionTests {
     @Test(arguments: PirKeyCompressionStrategy.allCases)
-    func expandCiphertextForOneStepTest(keyCompression: PirKeyCompressionStrategy) throws {
-        try PirTestUtils.ExpansionTests.expandCiphertextForOneStep(scheme: NoOpScheme.self, keyCompression)
-        try PirTestUtils.ExpansionTests.expandCiphertextForOneStep(scheme: Bfv<UInt32>.self, keyCompression)
-        try PirTestUtils.ExpansionTests.expandCiphertextForOneStep(scheme: Bfv<UInt64>.self, keyCompression)
+    func expandCiphertextForOneStepTest(keyCompression: PirKeyCompressionStrategy) async throws {
+        try await PirTestUtils.ExpansionTests.expandCiphertextForOneStep(scheme: NoOpScheme.self, keyCompression)
+        try await PirTestUtils.ExpansionTests.expandCiphertextForOneStep(scheme: Bfv<UInt32>.self, keyCompression)
+        try await PirTestUtils.ExpansionTests.expandCiphertextForOneStep(scheme: Bfv<UInt64>.self, keyCompression)
     }
 
     @Test
-    func oneCiphertextRoundtrip() throws {
-        try PirTestUtils.ExpansionTests.oneCiphertextRoundtrip(scheme: NoOpScheme.self)
-        try PirTestUtils.ExpansionTests.oneCiphertextRoundtrip(scheme: Bfv<UInt32>.self)
-        try PirTestUtils.ExpansionTests.oneCiphertextRoundtrip(scheme: Bfv<UInt64>.self)
+    func oneCiphertextRoundtrip() async throws {
+        try await PirTestUtils.ExpansionTests.oneCiphertextRoundtrip(scheme: NoOpScheme.self)
+        try await PirTestUtils.ExpansionTests.oneCiphertextRoundtrip(scheme: Bfv<UInt32>.self)
+        try await PirTestUtils.ExpansionTests.oneCiphertextRoundtrip(scheme: Bfv<UInt64>.self)
     }
 
     @Test
-    func multipleCiphertextsRoundtrip() throws {
-        try PirTestUtils.ExpansionTests.multipleCiphertextsRoundtrip(scheme: NoOpScheme.self)
-        try PirTestUtils.ExpansionTests.multipleCiphertextsRoundtrip(scheme: Bfv<UInt32>.self)
-        try PirTestUtils.ExpansionTests.multipleCiphertextsRoundtrip(scheme: Bfv<UInt64>.self)
+    func multipleCiphertextsRoundtrip() async throws {
+        try await PirTestUtils.ExpansionTests.multipleCiphertextsRoundtrip(pirUtil: PirUtil<NoOpScheme>.self)
+        try await PirTestUtils.ExpansionTests.multipleCiphertextsRoundtrip(pirUtil: PirUtil<Bfv<UInt32>>.self)
+        try await PirTestUtils.ExpansionTests.multipleCiphertextsRoundtrip(pirUtil: PirUtil<Bfv<UInt64>>.self)
     }
 }

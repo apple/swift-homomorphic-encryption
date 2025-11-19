@@ -14,14 +14,15 @@
 
 import _TestUtilities
 import HomomorphicEncryption
-import PrivateInformationRetrieval
+@testable import PrivateInformationRetrieval
 import Testing
 
 @Suite
 struct IndexPirTests {
     @Test
     func generateParameter() throws {
-        let context: Context<Bfv<UInt64>> = try TestUtils.getTestContext()
+        typealias Scheme = Bfv<UInt64>
+        let context: Context<Scheme> = try TestUtils.getTestContext()
         // unevenDimensions: false
         do {
             let config = try IndexPirConfig(entryCount: 16,
@@ -30,7 +31,7 @@ struct IndexPirTests {
                                             batchSize: 1,
                                             unevenDimensions: false,
                                             keyCompression: .noCompression)
-            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [4, 4])
         }
         do {
@@ -40,7 +41,7 @@ struct IndexPirTests {
                                             batchSize: 2,
                                             unevenDimensions: false,
                                             keyCompression: .noCompression)
-            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [4, 3])
         }
         // unevenDimensions: true
@@ -51,7 +52,7 @@ struct IndexPirTests {
                                             batchSize: 1,
                                             unevenDimensions: true,
                                             keyCompression: .noCompression)
-            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [5, 3])
         }
         do {
@@ -61,7 +62,7 @@ struct IndexPirTests {
                                             batchSize: 2,
                                             unevenDimensions: true,
                                             keyCompression: .noCompression)
-            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [5, 3])
         }
         do {
@@ -71,7 +72,7 @@ struct IndexPirTests {
                                             batchSize: 2,
                                             unevenDimensions: true,
                                             keyCompression: .noCompression)
-            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [9, 2])
         }
         // no key compression
@@ -82,7 +83,7 @@ struct IndexPirTests {
                                             batchSize: 2,
                                             unevenDimensions: true,
                                             keyCompression: .noCompression)
-            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
                 hasRelinearizationKey: true)
@@ -96,7 +97,7 @@ struct IndexPirTests {
                                             batchSize: 2,
                                             unevenDimensions: true,
                                             keyCompression: .hybridCompression)
-            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
                 hasRelinearizationKey: true)
@@ -110,7 +111,7 @@ struct IndexPirTests {
                                             batchSize: 2,
                                             unevenDimensions: true,
                                             keyCompression: .maxCompression)
-            let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9],
                 hasRelinearizationKey: true)
@@ -119,9 +120,9 @@ struct IndexPirTests {
     }
 
     @Test
-    func indexPir() throws {
-        try PirTestUtils.IndexPirTests.indexPir(scheme: NoOpScheme.self)
-        try PirTestUtils.IndexPirTests.indexPir(scheme: Bfv<UInt32>.self)
-        try PirTestUtils.IndexPirTests.indexPir(scheme: Bfv<UInt64>.self)
+    func indexPir() async throws {
+        try await PirTestUtils.IndexPirTests.indexPir(scheme: NoOpScheme.self)
+        try await PirTestUtils.IndexPirTests.indexPir(scheme: Bfv<UInt32>.self)
+        try await PirTestUtils.IndexPirTests.indexPir(scheme: Bfv<UInt64>.self)
     }
 }

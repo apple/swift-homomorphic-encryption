@@ -26,7 +26,6 @@ import Testing
 ///   - absoluteTolerance: An optional absolute tolerance to enforce.
 /// - Returns: true if the expressions are close to each other
 extension BinaryFloatingPoint {
-    @inlinable
     package func isClose(to value: Self,
                          relativeTolerance: Self = Self(1e-5),
                          absoluteTolerance: Self = Self(1e-8)) -> Bool
@@ -92,12 +91,12 @@ extension [UInt8] {
     }
 }
 
-@usableFromInline
-package enum TestUtils {
+/// A collection of constants used in tests.
+public enum TestUtils {
     /// A polynomial degree suitable for testing.
-    @usableFromInline package static let testPolyDegree = 16
+    public static let testPolyDegree = 16
     /// A plaintext modulus suitable for testing.
-    @usableFromInline package static let testPlaintextModulus = 1153
+    public static let testPlaintextModulus = 1153
 }
 
 extension TestUtils {
@@ -154,8 +153,10 @@ extension TestUtils {
         return Double(binCount) * probabilityOfExactlyCountBallsInFirstBin
     }
 
-    @inlinable
-    package static func getRandomPlaintextData<T: ScalarType>(count: Int, in range: Range<T>) -> [T] {
+    /// Generates random array for plaintext encoding.
+    public static func getRandomPlaintextData<T: ScalarType>(count: Int,
+                                                             in range: Range<T>) -> [T]
+    {
         (0..<count).map { _ in T.random(in: range) }
     }
 
@@ -325,8 +326,8 @@ extension TestUtils {
             securityLevel: SecurityLevel.unchecked)
     }
 
-    @inlinable
-    package static func getTestContext<Scheme: HeScheme>() throws -> Context<Scheme> {
-        try Context<Scheme>(encryptionParameters: getTestEncryptionParameters())
+    /// Returns a `HeContext` initialized with the parameters used for testing.
+    public static func getTestContext<Context: HeContext>() throws -> Context {
+        try Context(encryptionParameters: getTestEncryptionParameters())
     }
 }

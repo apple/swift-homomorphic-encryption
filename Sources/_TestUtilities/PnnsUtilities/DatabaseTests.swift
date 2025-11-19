@@ -21,7 +21,7 @@ extension PrivateNearestNeighborSearchUtil {
     public enum DatabaseTests {
         /// Test serialization.
         @inlinable
-        public static func serializedProcessedDatabase<Scheme: HeScheme>(for _: Scheme.Type) throws {
+        public static func serializedProcessedDatabase<Scheme: HeScheme>(for _: Scheme.Type) async throws {
             let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: .insecure_n_8_logq_5x18_logt_5)
             let vectorDimension = 4
 
@@ -49,7 +49,7 @@ extension PrivateNearestNeighborSearchUtil {
                 .diagonal(babyStepGiantStep: BabyStepGiantStep(vectorDimension: vectorDimension))
             let serverConfig = ServerConfig<Scheme>(clientConfig: clientConfig, databasePacking: databasePacking)
 
-            let processed: ProcessedDatabase<Scheme> = try database.process(config: serverConfig)
+            let processed = try await database.process(config: serverConfig)
             let serialized = try processed.serialize()
             let deserialized = try ProcessedDatabase<Scheme>(from: serialized, contexts: processed.contexts)
             #expect(deserialized == processed)

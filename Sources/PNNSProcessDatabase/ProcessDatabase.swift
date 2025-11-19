@@ -205,7 +205,7 @@ struct ProcessDatabase: ParsableCommand {
     ///   - scheme: The HE scheme.
     /// - Throws: Error upon processing the database.
     @inlinable
-    mutating func process<Scheme: HeScheme>(config: Arguments, scheme _: Scheme.Type) throws {
+    mutating func process<Scheme: HeScheme>(config: Arguments, scheme _: Scheme.Type) async throws {
         let database = try Database(from: config.inputDatabase)
         guard let vectorDimension = database.rows.first?.vector.count else {
             throw PnnsError.emptyDatabase
@@ -232,7 +232,7 @@ struct ProcessDatabase: ParsableCommand {
         let serverConfig = ServerConfig<Scheme>(
             clientConfig: clientConfig,
             databasePacking: config.databasePacking)
-        let processed = try database.process(config: serverConfig)
+        let processed = try await database.process(config: serverConfig)
         ProcessDatabase.logger.info("Processed database")
 
         if config.trials > 0 {
@@ -242,7 +242,7 @@ struct ProcessDatabase: ParsableCommand {
                 count: vectorDimension * (config.batchSize - queryRows.rowCount)))
 
             ProcessDatabase.logger.info("Validating")
-            let validationResult = try processed.validate(query: queryRows, trials: config.trials)
+            let validationResult = try await processed.validate(query: queryRows, trials: config.trials)
             for row in 0..<min(database.rows.count, config.batchSize) {
                 let selfProduct = validationResult.databaseDistances.distances.row(row)[row]
                 let error = abs(selfProduct - 1.0)
@@ -266,14 +266,14 @@ struct ProcessDatabase: ParsableCommand {
         }
     }
 
-    mutating func run() throws {
+    mutating func run() async throws {
         let configURL = URL(fileURLWithPath: configFile)
         let configData = try Data(contentsOf: configURL)
         let config = try JSONDecoder().decode(Arguments.self, from: configData)
         if config.rlweParameters.supportsScalar(UInt32.self) {
-            try process(config: config, scheme: Bfv<UInt32>.self)
+            try await process(config: config, scheme: Bfv<UInt32>.self)
         } else {
-            try process(config: config, scheme: Bfv<UInt64>.self)
+            try await process(config: config, scheme: Bfv<UInt64>.self)
         }
     }
 }

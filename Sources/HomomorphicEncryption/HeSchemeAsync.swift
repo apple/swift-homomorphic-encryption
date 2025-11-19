@@ -206,13 +206,13 @@ extension HeScheme {
     }
 
     @inlinable
-    public static func forwardNttAsync(_ ciphertext: CoeffCiphertext) async throws -> EvalCiphertext {
-        try forwardNtt(ciphertext)
+    public static func forwardNttAsync(_ ciphertext: inout CoeffCiphertext) async throws -> EvalCiphertext {
+        try forwardNtt(&ciphertext)
     }
 
     @inlinable
-    public static func inverseNttAsync(_ ciphertext: EvalCiphertext) async throws -> CoeffCiphertext {
-        try inverseNtt(ciphertext)
+    public static func inverseNttAsync(_ ciphertext: inout EvalCiphertext) async throws -> CoeffCiphertext {
+        try inverseNtt(&ciphertext)
     }
 
     @inlinable

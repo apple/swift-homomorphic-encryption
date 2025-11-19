@@ -121,7 +121,7 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     /// - Parameter contexts: Contexts; one per plaintext modulus.
     /// - Throws: Error if the contexts are not valid.
     @inlinable
-    func validateContexts(contexts: [Context<Scheme>]) throws {
+    func validateContexts(contexts: [Scheme.Context]) throws {
         guard contexts.count == encryptionParameters.count else {
             throw PnnsError.wrongContextsCount(got: contexts.count, expected: encryptionParameters.count)
         }
@@ -190,7 +190,7 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     /// - Parameter contexts: Contexts; one per plaintext modulus.
     /// - Throws: Error if the contexts are not valid.
     @inlinable
-    func validateContexts(contexts: [Context<Scheme>]) throws {
+    func validateContexts(contexts: [Scheme.Context]) throws {
         try clientConfig.validateContexts(contexts: contexts)
     }
 }

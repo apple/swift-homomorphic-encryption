@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,10 @@ extension Bfv {
             let coeffPoly = try scaledPoly.inverseNtt()
             return try rnsTool.floorQBskToQ(poly: coeffPoly)
         }
-        return CoeffCiphertext(context: ciphertext.context, polys: polys, correctionFactor: ciphertext.correctionFactor)
+        return try CoeffCiphertext(
+            context: ciphertext.context,
+            polys: polys,
+            correctionFactor: ciphertext.correctionFactor)
     }
 
     @inlinable
@@ -78,6 +81,6 @@ extension Bfv {
         let poly1 = lhsPolys[0] * rhsPolys[1] + lhsPolys[1] * rhsPolys[0]
         let poly2 = lhsPolys[1] * rhsPolys[1]
 
-        return EvalCiphertext(context: lhs.context, polys: [poly0, poly1, poly2], correctionFactor: 1)
+        return try EvalCiphertext(context: lhs.context, polys: [poly0, poly1, poly2], correctionFactor: 1)
     }
 }

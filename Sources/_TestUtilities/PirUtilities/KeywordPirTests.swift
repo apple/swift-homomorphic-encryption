@@ -21,21 +21,21 @@ extension PirTestUtils {
     public enum KeywordPirTests {
         /// Tests database serialization.
         @inlinable
-        public static func processedDatabaseSerialization<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func processedDatabaseSerialization<Scheme: HeScheme>(_: Scheme.Type) async throws {
             let rowCount = 100
             let valueSize = 10
             let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: rowCount, valueSize: valueSize)
             let encryptionParameters: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
-            let testContext: Context<Scheme> = try Context(encryptionParameters: encryptionParameters)
+            let testContext = try Scheme.Context(encryptionParameters: encryptionParameters)
 
             let keywordConfig = try KeywordPirConfig(
                 dimensionCount: 2,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(maxSerializedBucketSize: 5 * valueSize),
                 unevenDimensions: true,
                 keyCompression: .noCompression)
-            let processed = try KeywordPirServer<MulPirServer<Scheme>>.process(database: testDatabase,
-                                                                               config: keywordConfig,
-                                                                               with: testContext)
+            let processed = try await KeywordPirServer<MulPirServer<PirUtil<Scheme>>>.process(database: testDatabase,
+                                                                                              config: keywordConfig,
+                                                                                              with: testContext)
             // Ensure we're testing nil plaintexts
             #expect(processed.database.plaintexts.contains { plaintext in plaintext == nil })
             let serialized = try processed.database.serialize()
@@ -50,15 +50,17 @@ extension PirTestUtils {
             encryptionParameters: EncryptionParameters<PirServer.Scalar>,
             keywordConfig: KeywordPirConfig,
             server _: PirServer.Type,
-            client _: PirClient.Type) throws where PirServer.IndexPir == PirClient.IndexPir
+            client _: PirClient.Type) async throws where PirServer.IndexPir == PirClient.IndexPir
         {
-            let testContext: Context<PirServer.Scheme> = try Context(encryptionParameters: encryptionParameters)
+            // swiftlint:disable:next nesting
+            typealias Scheme = PirServer.Scheme
+            let testContext = try Scheme.Context(encryptionParameters: encryptionParameters)
             let valueSize = testContext.bytesPerPlaintext / 2
             let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 100, valueSize: valueSize)
 
-            let processed = try KeywordPirServer<PirServer>.process(database: testDatabase,
-                                                                    config: keywordConfig,
-                                                                    with: testContext)
+            let processed = try await KeywordPirServer<PirServer>.process(database: testDatabase,
+                                                                          config: keywordConfig,
+                                                                          with: testContext)
             #expect(processed.pirParameter.dimensions.product() > 1, "trivial PIR")
 
             let server = try KeywordPirServer<PirServer>(
@@ -72,8 +74,8 @@ extension PirTestUtils {
             let shuffledValues = Array(testDatabase.indices).shuffled()
             for index in shuffledValues.prefix(10) {
                 let query = try client.generateQuery(at: testDatabase[index].keyword, using: secretKey)
-                let response = try server.computeResponse(to: query, using: evaluationKey)
-                if PirServer.Scheme.self != NoOpScheme.self {
+                let response = try await server.computeResponse(to: query, using: evaluationKey)
+                if Scheme.self != NoOpScheme.self {
                     #expect(!response.isTransparent())
                 }
                 let result = try client.decrypt(response: response, at: testDatabase[index].keyword, using: secretKey)
@@ -81,8 +83,8 @@ extension PirTestUtils {
             }
             let noKey = PirTestUtils.generateRandomBytes(size: 5)
             let query = try client.generateQuery(at: noKey, using: secretKey)
-            let response = try server.computeResponse(to: query, using: evaluationKey)
-            if PirServer.Scheme.self != NoOpScheme.self {
+            let response = try await server.computeResponse(to: query, using: evaluationKey)
+            if Scheme.self != NoOpScheme.self {
                 #expect(!response.isTransparent())
             }
             let result = try client.decrypt(response: response, at: noKey, using: secretKey)
@@ -91,7 +93,7 @@ extension PirTestUtils {
 
         /// Testing Keyword MulPir with 1 hash function.
         @inlinable
-        public static func keywordPirMulPir1HashFunction<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func keywordPirMulPir1HashFunction<Scheme: HeScheme>(_: Scheme.Type) async throws {
             let cuckooTableConfig = try CuckooTableConfig(
                 hashFunctionCount: 1,
                 maxEvictionCount: 100,
@@ -102,16 +104,16 @@ extension PirTestUtils {
                 cuckooTableConfig: cuckooTableConfig,
                 unevenDimensions: true,
                 keyCompression: .noCompression)
-            try Self.keywordPirTest(
+            try await Self.keywordPirTest(
                 encryptionParameters: TestUtils.getTestEncryptionParameters(),
                 keywordConfig: keywordConfig,
-                server: MulPirServer<Scheme>.self,
-                client: MulPirClient<Scheme>.self)
+                server: MulPirServer<PirUtil<Scheme>>.self,
+                client: MulPirClient<PirUtil<Scheme>>.self)
         }
 
         /// Testing Keyword MulPir with 3 hash functions.
         @inlinable
-        public static func keywordPirMulPir3HashFunctions<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func keywordPirMulPir3HashFunctions<Scheme: HeScheme>(_: Scheme.Type) async throws {
             let cuckooTableConfig = try CuckooTableConfig(
                 hashFunctionCount: 3,
                 maxEvictionCount: 100,
@@ -121,76 +123,76 @@ extension PirTestUtils {
                 dimensionCount: 2,
                 cuckooTableConfig: cuckooTableConfig,
                 unevenDimensions: true, keyCompression: .noCompression)
-            try keywordPirTest(
+            try await keywordPirTest(
                 encryptionParameters: TestUtils.getTestEncryptionParameters(),
                 keywordConfig: keywordConfig,
-                server: MulPirServer<Scheme>.self,
-                client: MulPirClient<Scheme>.self)
+                server: MulPirServer<PirUtil<Scheme>>.self,
+                client: MulPirClient<PirUtil<Scheme>>.self)
         }
 
         /// Testing Keyword MulPir with 1 dimension.
         @inlinable
-        public static func keywordPirMulPir1Dimension<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func keywordPirMulPir1Dimension<Scheme: HeScheme>(_: Scheme.Type) async throws {
             let keywordConfig = try KeywordPirConfig(
                 dimensionCount: 1,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                     maxSerializedBucketSize: 100),
                 unevenDimensions: true, keyCompression: .noCompression)
-            try Self.keywordPirTest(
+            try await Self.keywordPirTest(
                 encryptionParameters: TestUtils.getTestEncryptionParameters(),
                 keywordConfig: keywordConfig,
-                server: MulPirServer<Scheme>.self,
-                client: MulPirClient<Scheme>.self)
+                server: MulPirServer<PirUtil<Scheme>>.self,
+                client: MulPirClient<PirUtil<Scheme>>.self)
         }
 
         /// Testing Keyword MulPir with 2 dimensions.
         @inlinable
-        public static func keywordPirMulPir2Dimensions<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func keywordPirMulPir2Dimensions<Scheme: HeScheme>(_: Scheme.Type) async throws {
             let keywordConfig = try KeywordPirConfig(
                 dimensionCount: 2,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                     maxSerializedBucketSize: 100),
                 unevenDimensions: true, keyCompression: .noCompression)
-            try keywordPirTest(
+            try await keywordPirTest(
                 encryptionParameters: TestUtils.getTestEncryptionParameters(),
                 keywordConfig: keywordConfig,
-                server: MulPirServer<Scheme>.self,
-                client: MulPirClient<Scheme>.self)
+                server: MulPirServer<PirUtil<Scheme>>.self,
+                client: MulPirClient<PirUtil<Scheme>>.self)
         }
 
         /// Testing Keyword MulPir with hybrid key compression.
         @inlinable
-        public static func keywordPirMulPirHybridKeyCompression<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func keywordPirMulPirHybridKeyCompression<Scheme: HeScheme>(_: Scheme.Type) async throws {
             let keywordConfig = try KeywordPirConfig(
                 dimensionCount: 2,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                     maxSerializedBucketSize: 100),
                 unevenDimensions: true, keyCompression: .hybridCompression)
-            try Self.keywordPirTest(
+            try await Self.keywordPirTest(
                 encryptionParameters: TestUtils.getTestEncryptionParameters(),
                 keywordConfig: keywordConfig,
-                server: MulPirServer<Scheme>.self,
-                client: MulPirClient<Scheme>.self)
+                server: MulPirServer<PirUtil<Scheme>>.self,
+                client: MulPirClient<PirUtil<Scheme>>.self)
         }
 
         /// Testing Keyword MulPir with max key compression.
         @inlinable
-        public static func keywordPirMulPirMaxKeyCompression<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func keywordPirMulPirMaxKeyCompression<Scheme: HeScheme>(_: Scheme.Type) async throws {
             let keywordConfig = try KeywordPirConfig(
                 dimensionCount: 2,
                 cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                     maxSerializedBucketSize: 100),
                 unevenDimensions: true, keyCompression: .maxCompression)
-            try Self.keywordPirTest(
+            try await Self.keywordPirTest(
                 encryptionParameters: TestUtils.getTestEncryptionParameters(),
                 keywordConfig: keywordConfig,
-                server: MulPirServer<Scheme>.self,
-                client: MulPirClient<Scheme>.self)
+                server: MulPirServer<PirUtil<Scheme>>.self,
+                client: MulPirClient<PirUtil<Scheme>>.self)
         }
 
         /// Testing Keyword MulPir with larger parameters.
         @inlinable
-        public static func keywordPirMulPirLargeParameters<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func keywordPirMulPirLargeParameters<Scheme: HeScheme>(_: Scheme.Type) async throws {
             if Scheme.Scalar.self == UInt32.self {
                 let parameters = try EncryptionParameters<Scheme.Scalar>(from: PredefinedRlweParameters
                     .n_4096_logq_27_28_28_logt_5)
@@ -199,11 +201,11 @@ extension PirTestUtils {
                     cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                         maxSerializedBucketSize: 3 * parameters.bytesPerPlaintext),
                     unevenDimensions: true, keyCompression: .noCompression)
-                try Self.keywordPirTest(
+                try await Self.keywordPirTest(
                     encryptionParameters: parameters,
                     keywordConfig: keywordConfig,
-                    server: MulPirServer<Scheme>.self,
-                    client: MulPirClient<Scheme>.self)
+                    server: MulPirServer<PirUtil<Scheme>>.self,
+                    client: MulPirClient<PirUtil<Scheme>>.self)
             } else if Scheme.Scalar.self == UInt64.self, Scheme.self != NoOpScheme.self {
                 let parameters = try EncryptionParameters<Scheme.Scalar>(from: PredefinedRlweParameters
                     .insecure_n_512_logq_4x60_logt_20)
@@ -212,11 +214,11 @@ extension PirTestUtils {
                     cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                         maxSerializedBucketSize: 3 * parameters.bytesPerPlaintext),
                     unevenDimensions: true, keyCompression: .noCompression)
-                try Self.keywordPirTest(
+                try await Self.keywordPirTest(
                     encryptionParameters: parameters,
                     keywordConfig: keywordConfig,
-                    server: MulPirServer<Scheme>.self,
-                    client: MulPirClient<Scheme>.self)
+                    server: MulPirServer<PirUtil<Scheme>>.self,
+                    client: MulPirClient<PirUtil<Scheme>>.self)
             }
             if Scheme.self == NoOpScheme.self {
                 let noOpParameters = try EncryptionParameters<NoOpScheme.Scalar>(from: PredefinedRlweParameters
@@ -226,24 +228,24 @@ extension PirTestUtils {
                     cuckooTableConfig: PirTestUtils.testCuckooTableConfig(
                         maxSerializedBucketSize: 3 * noOpParameters.bytesPerPlaintext),
                     unevenDimensions: true, keyCompression: .noCompression)
-                try Self.keywordPirTest(
+                try await Self.keywordPirTest(
                     encryptionParameters: noOpParameters,
                     keywordConfig: keywordConfig,
-                    server: MulPirServer<NoOpScheme>.self,
-                    client: MulPirClient<NoOpScheme>.self)
+                    server: MulPirServer<PirUtil<NoOpScheme>>.self,
+                    client: MulPirClient<PirUtil<NoOpScheme>>.self)
             }
         }
 
         /// Testing Keyword Pir fixed configuration.
         @inlinable
-        public static func keywordPirFixedConfig<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func keywordPirFixedConfig<Scheme: HeScheme>(_: Scheme.Type) async throws {
             let rowCount = 100
             let valueSize = 9
             let encryptionParams: EncryptionParameters<Scheme.Scalar> = try TestUtils.getTestEncryptionParameters()
-            let testContext: Context<Scheme> = try Context(encryptionParameters: encryptionParams)
+            let testContext = try Scheme.Context(encryptionParameters: encryptionParams)
             var rng = TestRng()
 
-            let (pirParameter, keywordConfig): (IndexPirParameter, KeywordPirConfig) = try {
+            let (pirParameter, keywordConfig): (IndexPirParameter, KeywordPirConfig) = try await {
                 let cuckooConfig = try CuckooTableConfig(
                     hashFunctionCount: 2,
                     maxEvictionCount: 100,
@@ -257,9 +259,10 @@ extension PirTestUtils {
                     rowCount: rowCount,
                     valueSize: valueSize,
                     using: &rng)
-                let processed = try KeywordPirServer<MulPirServer<Scheme>>.process(database: testDatabase,
-                                                                                   config: keywordConfig,
-                                                                                   with: testContext)
+                let processed = try await KeywordPirServer<MulPirServer<PirUtil<Scheme>>>.process(
+                    database: testDatabase,
+                    config: keywordConfig,
+                    with: testContext)
                 let newConfig = try KeywordPirConfig(
                     dimensionCount: 2,
                     cuckooTableConfig: cuckooConfig.freezingTableSize(
@@ -274,14 +277,14 @@ extension PirTestUtils {
                 rowCount: rowCount + 1,
                 valueSize: valueSize - 1,
                 using: &rng)
-            let processed = try KeywordPirServer<MulPirServer<Scheme>>.process(database: testDatabase,
-                                                                               config: keywordConfig,
-                                                                               with: testContext)
+            let processed = try await KeywordPirServer<MulPirServer<PirUtil<Scheme>>>.process(database: testDatabase,
+                                                                                              config: keywordConfig,
+                                                                                              with: testContext)
             #expect(processed.pirParameter == pirParameter)
-            let server = try KeywordPirServer<MulPirServer<Scheme>>(
+            let server = try KeywordPirServer<MulPirServer<PirUtil<Scheme>>>(
                 context: testContext,
                 processed: processed)
-            let client = KeywordPirClient<MulPirClient<Scheme>>(
+            let client = KeywordPirClient<MulPirClient<PirUtil<Scheme>>>(
                 keywordParameter: keywordConfig.parameter,
                 pirParameter: processed.pirParameter,
                 context: testContext)
@@ -290,7 +293,7 @@ extension PirTestUtils {
             let shuffledValues = Array(testDatabase.indices).shuffled()
             for index in shuffledValues.prefix(1) {
                 let query = try client.generateQuery(at: testDatabase[index].keyword, using: secretKey)
-                let response = try server.computeResponse(to: query, using: evaluationKey)
+                let response = try await server.computeResponse(to: query, using: evaluationKey)
                 if Scheme.self != NoOpScheme.self {
                     #expect(!response.isTransparent())
                 }
@@ -302,7 +305,7 @@ extension PirTestUtils {
             }
             let noKey = PirTestUtils.generateRandomBytes(size: 5)
             let query = try client.generateQuery(at: noKey, using: secretKey)
-            let response = try server.computeResponse(to: query, using: evaluationKey)
+            let response = try await server.computeResponse(to: query, using: evaluationKey)
             if Scheme.self != NoOpScheme.self {
                 #expect(!response.isTransparent())
             }
@@ -312,18 +315,17 @@ extension PirTestUtils {
 
         /// Test sharding.
         @inlinable
-        public static func sharding<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func sharding<PirUtil: PirUtilProtocol>(_: PirUtil.Type) async throws {
             // swiftlint:disable nesting
-            typealias PirClient = MulPirClient<Scheme>
-            typealias PirServer = MulPirServer<Scheme>
+            typealias PirClient = MulPirClient<PirUtil>
+            typealias PirServer = MulPirServer<PirUtil>
             // swiftlint:enable nesting
 
             let rowCount = 1000
             let valueSize = 10
             let rlweParameters = PredefinedRlweParameters.n_4096_logq_27_28_28_logt_5
-            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParameters)
-            let testContext: Context<Scheme> = try Context(
-                encryptionParameters: encryptionParameters)
+            let encryptionParameters = try EncryptionParameters<PirUtil.Scheme.Scalar>(from: rlweParameters)
+            let testContext = try PirUtil.Scheme.Context(encryptionParameters: encryptionParameters)
             let shardCount = 2
 
             let cuckooConfig = try CuckooTableConfig(
@@ -340,14 +342,14 @@ extension PirTestUtils {
                 keywordPirConfig: keywordConfig)
             let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: rowCount, valueSize: valueSize)
 
-            let args = try ProcessKeywordDatabase.Arguments<Scheme.Scalar>(
+            let args = try ProcessKeywordDatabase.Arguments<PirUtil.Scheme.Scalar>(
                 databaseConfig: databaseConfig,
                 encryptionParameters: encryptionParameters,
                 algorithm: PirAlgorithm.mulPir, keyCompression: .noCompression,
                 trialsPerShard: 1)
-            let processed: ProcessKeywordDatabase.Processed<Scheme> = try ProcessKeywordDatabase.process(
+            let processed: ProcessKeywordDatabase.Processed<PirUtil.Scheme> = try await ProcessKeywordDatabase.process(
                 rows: testDatabase,
-                with: args)
+                with: args, using: PirUtil.self)
             #expect(processed.shards.count == shardCount)
 
             let servers = try [String: KeywordPirServer<PirServer>](uniqueKeysWithValues: processed.shards
@@ -374,8 +376,8 @@ extension PirTestUtils {
                 let shardID = keyword.shardID(shardCount: shardCount)
                 let client = try #require(clients[shardID])
                 let query = try client.generateQuery(at: testDatabase[index].keyword, using: secretKey)
-                let response = try #require(servers[shardID]).computeResponse(to: query, using: evaluationKey)
-                if Scheme.self != NoOpScheme.self {
+                let response = try await #require(servers[shardID]).computeResponse(to: query, using: evaluationKey)
+                if PirUtil.Scheme.self != NoOpScheme.self {
                     #expect(!response.isTransparent())
                 }
                 let result = try client.decrypt(
@@ -388,8 +390,8 @@ extension PirTestUtils {
             let shardID = noKey.shardID(shardCount: shardCount)
             let client = try #require(clients[shardID])
             let query = try client.generateQuery(at: noKey, using: secretKey)
-            let response = try #require(servers[shardID]).computeResponse(to: query, using: evaluationKey)
-            if Scheme.self != NoOpScheme.self {
+            let response = try await #require(servers[shardID]).computeResponse(to: query, using: evaluationKey)
+            if PirUtil.Scheme.self != NoOpScheme.self {
                 #expect(!response.isTransparent())
             }
             let result = try client.decrypt(response: response, at: noKey, using: secretKey)
@@ -398,14 +400,14 @@ extension PirTestUtils {
 
         /// Test limiting entries per response.
         @inlinable
-        public static func limitEntriesPerResponse<Scheme: HeScheme>(_: Scheme.Type) throws {
+        public static func limitEntriesPerResponse<Scheme: HeScheme>(_: Scheme.Type) async throws {
             // swiftlint:disable nesting
-            typealias PirClient = MulPirClient<Scheme>
-            typealias PirServer = MulPirServer<Scheme>
+            typealias PirClient = MulPirClient<PirUtil<Scheme>>
+            typealias PirServer = MulPirServer<PirUtil<Scheme>>
             // swiftlint:enable nesting
 
             let rlweParams = PredefinedRlweParameters.n_4096_logq_27_28_28_logt_5
-            let context: Context<PirServer.Scheme> = try Context(encryptionParameters: .init(from: rlweParams))
+            let context = try PirServer.Scheme.Context(encryptionParameters: .init(from: rlweParams))
             let numberOfEntriesPerResponse = 8
             let hashFunctionCount = 2
             var testRng = TestRng()
@@ -421,7 +423,7 @@ extension PirTestUtils {
                 unevenDimensions: true,
                 keyCompression: .noCompression,
                 useMaxSerializedBucketSize: true)
-            let processed = try KeywordPirServer<PirServer>.process(
+            let processed = try await KeywordPirServer<PirServer>.process(
                 database: testDatabase,
                 config: config,
                 with: context)
@@ -436,7 +438,7 @@ extension PirTestUtils {
             let evaluationKey = try client.generateEvaluationKey(using: secretKey)
             let randomKeyValuePair = try #require(testDatabase.randomElement())
             let query = try client.generateQuery(at: randomKeyValuePair.keyword, using: secretKey)
-            let response = try server.computeResponse(to: query, using: evaluationKey)
+            let response = try await server.computeResponse(to: query, using: evaluationKey)
             let result = try client.decrypt(response: response, at: randomKeyValuePair.keyword, using: secretKey)
             #expect(result == randomKeyValuePair.value)
             let entriesFound = try client.countEntriesInResponse(response: response, using: secretKey)

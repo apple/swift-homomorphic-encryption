@@ -17,7 +17,7 @@ import ModularArithmetic
 /// Polynomial format.
 ///
 /// - Warning: There should be no other conformances to ``PolyFormat`` beyond ``Coeff`` and ``Eval``.
-public protocol PolyFormat {
+public protocol PolyFormat: Sendable {
     /// A textual representation of the format.
     static var description: String { get }
 }

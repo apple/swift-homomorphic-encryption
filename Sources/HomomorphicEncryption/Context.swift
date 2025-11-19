@@ -25,7 +25,7 @@ public final class Context<Scheme: HeScheme>: HeContext, Equatable, Sendable {
     /// Plaintext context, with modulus `t`, the plaintext modulus.
     public let plaintextContext: PolyContext<Scalar>
 
-    /// Encoding matrix for ``Encoding.simd`` encoding.
+    /// Encoding matrix for SIMD encoding.
     public let simdEncodingMatrix: [Int]
 
     /// Context for the secret key.

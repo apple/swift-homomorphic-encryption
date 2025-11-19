@@ -604,7 +604,7 @@ extension Ciphertext {
     /// If the ciphertext is in evaluation (``Eval``) format, it performs an inverse NTT (Number Theoretic Transform)
     /// to convert it to coefficient format.
     ///
-    /// - Returns: A ciphertext in coefficient format (``Ciphertext<Scheme, Coeff>``).
+    /// - Returns: A ciphertext in coefficient format.
     /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
     /// - SeeAlso: ``convertToEvalFormat()-9jgqm`` to convert to evaluation format.
     /// - SeeAlso: ``convertToCanonicalFormat()-wgss`` to convert to the scheme's canonical format.
@@ -629,7 +629,7 @@ extension Ciphertext {
     /// If the ciphertext is in coefficient (``Coeff``) format, it performs a forward NTT (Number Theoretic Transform)
     /// to convert it to evaluation format.
     ///
-    /// - Returns: A ciphertext in evaluation format (``Ciphertext<Scheme, Eval>``).
+    /// - Returns: A ciphertext in evaluation format.
     /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
     /// - SeeAlso: ``convertToCoeffFormat()-a2ay`` to convert to coefficient format.
     /// - SeeAlso: ``convertToCanonicalFormat()-wgss`` to convert to the scheme's canonical format.
@@ -654,7 +654,7 @@ extension Ciphertext {
     /// - Forward NTT if converting from coefficient to evaluation format
     /// - Inverse NTT if converting from evaluation to coefficient format
     ///
-    /// - Returns: A ciphertext in the canonical format (``Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>``).
+    /// - Returns: A ciphertext in the canonical format.
     /// - Throws: ``HeError/errorCastingPolyFormat(_:)`` if the format conversion fails.
     /// - SeeAlso: ``convertToCoeffFormat()-a2ay`` to convert to coefficient format.
     /// - seeAlso: ``convertToEvalFormat()-9jgqm`` to convert to evaluation format.

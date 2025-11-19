@@ -189,18 +189,19 @@ public protocol HeScheme: Sendable {
 
     /// Ciphertext in ``Coeff`` format.
     ///
-    /// ``Ciphertext/convertToCoeffFormat()`` can be used to convert a ciphertext to a ``CoeffCiphertext``.
+    /// ``Ciphertext/convertToCoeffFormat()-35q3d`` can be used to convert a ciphertext to a ``CoeffCiphertext``.
     typealias CoeffCiphertext = Ciphertext<Self, Coeff>
 
     /// Ciphertext in ``Eval`` format.
     ///
-    /// ``Ciphertext/convertToEvalFormat()`` can be used to convert a ciphertext to an ``EvalCiphertext``.
+    /// ``Ciphertext/convertToEvalFormat()-8msby`` can be used to convert a ciphertext to an ``EvalCiphertext``.
     typealias EvalCiphertext = Ciphertext<Self, Eval>
 
     /// The canonical representation of a ciphertext.
     ///
     /// The canonical representation is the default ciphertext representation.
-    /// ``Ciphertext/convertToCanonicalFormat()`` can be used to convert a ciphertext to a ``CanonicalCiphertext``.
+    /// ``Ciphertext/convertToCanonicalFormat()-90lbz`` can be used to convert a ciphertext to a
+    /// ``CanonicalCiphertext``.
     /// However, some operations may require a specific format, such as ``CoeffCiphertext`` or ``EvalCiphertext``.
     typealias CanonicalCiphertext = Ciphertext<Self, CanonicalCiphertextFormat>
 

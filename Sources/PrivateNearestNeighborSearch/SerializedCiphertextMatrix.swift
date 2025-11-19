@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 /// Stores a matrix of scalars as ciphertexts.
 public struct SerializedCiphertextMatrix<Scalar: ScalarType>: Equatable, Sendable {

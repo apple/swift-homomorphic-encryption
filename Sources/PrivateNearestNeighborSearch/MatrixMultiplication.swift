@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _HomomorphicEncryptionExtras
-import Algorithms
-import AsyncAlgorithms
+public import _HomomorphicEncryptionExtras
+public import Algorithms
+public import AsyncAlgorithms
 import Foundation
-import HomomorphicEncryption
-import ModularArithmetic
+public import HomomorphicEncryption
+public import ModularArithmetic
 
 /// Pre-computed values for matrix-vector multiplication using baby-step, giant-step algorithm.
 ///

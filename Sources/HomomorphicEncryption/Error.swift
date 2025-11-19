@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
 /// Error type for ``HomomorphicEncryption``.
 public enum HeError: Error, Equatable {

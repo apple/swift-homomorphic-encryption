@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ModularArithmetic
+public import ModularArithmetic
 
 /// Helpers for operation under RNS.
 public struct _RnsTool<T: ScalarType>: Sendable {

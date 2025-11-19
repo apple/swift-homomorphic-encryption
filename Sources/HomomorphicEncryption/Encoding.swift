@@ -15,7 +15,7 @@
 // The encode/decode functions in context are not supposed to be called directly. Instead, one should call the
 // corresponding encode/decode functions in specific Scheme instead.
 
-import ModularArithmetic
+public import ModularArithmetic
 
 extension HeContext {
     /// Encodes `values` in the given format.

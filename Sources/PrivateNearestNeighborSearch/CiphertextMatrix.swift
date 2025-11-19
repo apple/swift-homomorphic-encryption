@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AsyncAlgorithms
-import HomomorphicEncryption
-import ModularArithmetic
+public import AsyncAlgorithms
+public import HomomorphicEncryption
+public import ModularArithmetic
 
 /// Stores a matrix of scalars as ciphertexts.
 public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {

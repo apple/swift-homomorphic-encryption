@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import Foundation
-
-import HomomorphicEncryption
-import PrivateNearestNeighborSearch
+public import HomomorphicEncryption
+public import PrivateNearestNeighborSearch
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric {
     /// Converts the protobuf object to a native type.

@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import Foundation
-
-import HomomorphicEncryption
+public import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
-import PrivateNearestNeighborSearch
+public import PrivateNearestNeighborSearch
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse {
     /// Converts the protobuf object to a native type.

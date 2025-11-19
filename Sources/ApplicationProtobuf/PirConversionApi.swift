@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import HomomorphicEncryption
+public import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
-import PrivateInformationRetrieval
+public import PrivateInformationRetrieval
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse {
     /// Converts the protobuf object to a native type.

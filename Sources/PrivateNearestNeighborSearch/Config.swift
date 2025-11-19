@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 /// Metric for distances between vectors.
 public enum DistanceMetric: CaseIterable, Codable, Equatable, Hashable, Sendable {

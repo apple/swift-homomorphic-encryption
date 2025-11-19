@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import Foundation
-import ModularArithmetic
+public import ModularArithmetic
 
 extension Sequence where Element: Hashable {
     @inlinable

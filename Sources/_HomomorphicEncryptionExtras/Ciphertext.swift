@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 extension Ciphertext {
     /// Rotates the columns of the ciphertext by combining multiple rotation steps corresponding to Galois elements

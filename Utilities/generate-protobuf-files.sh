@@ -25,8 +25,9 @@ rm -f ../Sources/HomomorphicEncryptionProtobuf/generated/*.pb.swift
 echo "Regenerating HomomorphicEncryptionProtobuf swift protobuf files"
 find apple/swift_homomorphic_encryption/v1/ \
     -name "*.proto" -exec protoc \
-    --swift_opt=Visibility=Public \
     --swift_opt=FileNaming=PathToUnderscores \
+    --swift_opt=UseAccessLevelOnImports=true \
+    --swift_opt=Visibility=Public \
     --swift_out ../Sources/HomomorphicEncryptionProtobuf/generated  {} \;
 
 echo "Removing ApplicationProtobuf swift protobuf files"
@@ -39,9 +40,10 @@ find apple/swift_homomorphic_encryption/pnns/ \
     apple/swift_homomorphic_encryption/api/pir/v1/pir.proto \
     apple/swift_homomorphic_encryption/api/pnns/v1/pnns.proto \
     -name "*.proto" -exec protoc \
-    --swift_opt=ProtoPathModuleMappings=../Sources/ApplicationProtobuf/protobuf_module_mappings.txtpb \
-    --swift_opt=Visibility=Public \
     --swift_opt=FileNaming=PathToUnderscores \
+    --swift_opt=ProtoPathModuleMappings=../Sources/ApplicationProtobuf/protobuf_module_mappings.txtpb \
+    --swift_opt=UseAccessLevelOnImports=true \
+    --swift_opt=Visibility=Public \
     --swift_out ../Sources/ApplicationProtobuf/generated  {} \;
 
 cd -

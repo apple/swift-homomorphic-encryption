@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import Foundation
-import HomomorphicEncryption
-import ModularArithmetic
+public import HomomorphicEncryption
+public import ModularArithmetic
 
 /// Private nearest neighbor search client.
 public struct Client<Scheme: HeScheme> {

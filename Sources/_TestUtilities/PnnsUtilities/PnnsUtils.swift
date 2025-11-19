@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import HomomorphicEncryption
-import PrivateNearestNeighborSearch
+public import PrivateNearestNeighborSearch
 
 /// Testing utilities for PrivateNearestNeighborSearch.
 public enum PrivateNearestNeighborSearchUtil {}

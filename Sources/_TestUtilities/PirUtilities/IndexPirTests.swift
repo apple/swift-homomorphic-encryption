@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import HomomorphicEncryption
-import PrivateInformationRetrieval
-import Testing
+public import HomomorphicEncryption
+public import PrivateInformationRetrieval
+public import Testing
 
 extension PirTestUtils {
     /// IndexPir tests.

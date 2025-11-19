@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import Foundation
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 /// Configuration for a ``KeywordDatabase``.
 public struct KeywordPirConfig: Hashable, Codable, Sendable {

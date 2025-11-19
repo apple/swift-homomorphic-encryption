@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 extension PolyRq {
     /// Removes the last k rows of coefficients and drop the last k moduli from the context.

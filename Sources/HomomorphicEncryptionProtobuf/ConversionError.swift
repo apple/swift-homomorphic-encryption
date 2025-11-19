@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import SwiftProtobuf
+public import Foundation
+public import SwiftProtobuf
 
 /// Error type when converting between protobuf and native objects.
 public enum ConversionError: Error {

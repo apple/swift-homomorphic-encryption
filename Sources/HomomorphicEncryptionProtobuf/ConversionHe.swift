@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import Foundation
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 extension Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev {
     /// Converts the protobuf object to a native type.

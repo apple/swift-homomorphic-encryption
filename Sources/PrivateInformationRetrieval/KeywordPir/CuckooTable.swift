@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import HomomorphicEncryption // This import is needed for dividingCeil
-import ModularArithmetic
+public import Foundation
+public import ModularArithmetic
 
 /// Configuration for a `CuckooTable`.
 public struct CuckooTableConfig: Hashable, Codable, Sendable {

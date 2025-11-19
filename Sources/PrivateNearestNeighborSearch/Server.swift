@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AsyncAlgorithms
-import HomomorphicEncryption
+public import AsyncAlgorithms
+public import HomomorphicEncryption
 
 /// Private nearest neighbor server.
 public struct Server<Scheme: HeScheme>: Sendable {

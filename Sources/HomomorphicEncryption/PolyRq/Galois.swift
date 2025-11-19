@@ -121,19 +121,17 @@ extension PolyRq where F == Coeff {
             func outputIndex(column: Int) -> Int {
                 data.index(row: rnsIndex, column: column)
             }
-            data.data.withUnsafeBufferPointer { dataPtr in
-                output.data.data.withUnsafeMutableBufferPointer { outputPtr in
-                    for dataIndex in dataIndices {
-                        guard let (negate, outIndex) = iterator.next() else {
-                            preconditionFailure("GaloisCoeffIterator goes out of index")
-                        }
-                        if negate {
-                            outputPtr[outputIndex(column: outIndex)] = dataPtr[dataIndex]
-                                .negateMod(modulus: modulus)
-                        } else {
-                            outputPtr[outputIndex(column: outIndex)] = dataPtr[dataIndex]
-                        }
-                    }
+            let dataSpan = data.data.span
+            var outputSpan = output.data.data.mutableSpan
+            for dataIndex in dataIndices {
+                guard let (negate, outIndex) = iterator.next() else {
+                    preconditionFailure("GaloisCoeffIterator goes out of index")
+                }
+                if negate {
+                    outputSpan[outputIndex(column: outIndex)] = dataSpan[dataIndex]
+                        .negateMod(modulus: modulus)
+                } else {
+                    outputSpan[outputIndex(column: outIndex)] = dataSpan[dataIndex]
                 }
             }
         }

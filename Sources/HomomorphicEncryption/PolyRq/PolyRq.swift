@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,13 +147,11 @@ extension PolyRq {
     public static func += (_ lhs: inout Self, _ rhs: Self) {
         lhs.validateMetadataEquality(with: rhs)
 
-        lhs.data.data.withUnsafeMutableBufferPointer { lhsData in
-            rhs.data.data.withUnsafeBufferPointer { rhsData in
-                for (rnsIndex, modulus) in rhs.moduli.enumerated() {
-                    for index in rhs.polyIndices(rnsIndex: rnsIndex) {
-                        lhsData[index] = lhsData[index].addMod(rhsData[index], modulus: modulus)
-                    }
-                }
+        var lhsData = lhs.data.data.mutableSpan
+        var rhsData = rhs.data.data.span
+        for (rnsIndex, modulus) in rhs.moduli.enumerated() {
+            for index in rhs.polyIndices(rnsIndex: rnsIndex) {
+                lhsData[index] = lhsData[index].addMod(rhsData[index], modulus: modulus)
             }
         }
     }
@@ -166,13 +164,11 @@ extension PolyRq {
     public static func -= (_ lhs: inout Self, _ rhs: Self) {
         lhs.validateMetadataEquality(with: rhs)
 
-        lhs.data.data.withUnsafeMutableBufferPointer { lhsData in
-            rhs.data.data.withUnsafeBufferPointer { rhsData in
-                for (rnsIndex, modulus) in rhs.moduli.enumerated() {
-                    for index in rhs.polyIndices(rnsIndex: rnsIndex) {
-                        lhsData[index] = lhsData[index].subtractMod(rhsData[index], modulus: modulus)
-                    }
-                }
+        var lhsData = lhs.data.data.mutableSpan
+        let rhsData = rhs.data.data.span
+        for (rnsIndex, modulus) in rhs.moduli.enumerated() {
+            for index in rhs.polyIndices(rnsIndex: rnsIndex) {
+                lhsData[index] = lhsData[index].subtractMod(rhsData[index], modulus: modulus)
             }
         }
     }
@@ -188,13 +184,11 @@ extension PolyRq {
     static func mulAssign(_ lhs: inout Self, secretPoly: borrowing Self) where F == Eval {
         let context = lhs.context
         assert(secretPoly.context.isParentOfOrEqual(to: context))
-        lhs.data.data.withUnsafeMutableBufferPointer { lhsData in
-            secretPoly.data.data.withUnsafeBufferPointer { rhsData in
-                for (rnsIndex, modulus) in context.reduceModuli.enumerated() {
-                    for index in secretPoly.polyIndices(rnsIndex: rnsIndex) {
-                        lhsData[index] = modulus.multiplyMod(lhsData[index], rhsData[index])
-                    }
-                }
+        var lhsData = lhs.data.data.mutableSpan
+        let rhsData = secretPoly.data.data.span
+        for (rnsIndex, modulus) in context.reduceModuli.enumerated() {
+            for index in secretPoly.polyIndices(rnsIndex: rnsIndex) {
+                lhsData[index] = modulus.multiplyMod(lhsData[index], rhsData[index])
             }
         }
     }
@@ -219,16 +213,13 @@ extension PolyRq {
         precondition(accumulator.shape == rhs.data.shape)
         lhs.validateMetadataEquality(with: rhs)
 
-        lhs.data.data.withUnsafeBufferPointer { lhsData in
-            rhs.data.data.withUnsafeBufferPointer { rhsData in
-                accumulator.data.withUnsafeMutableBufferPointer { accumulatorPtr in
-                    for rnsIndex in rhs.moduli.indices {
-                        for index in rhs.polyIndices(rnsIndex: rnsIndex) {
-                            accumulatorPtr[index] &+=
-                                T.DoubleWidth(lhsData[index].multipliedFullWidth(by: rhsData[index]))
-                        }
-                    }
-                }
+        let lhsData = lhs.data.data.span
+        let rhsData = rhs.data.data.span
+        var accumulatorSpan = accumulator.data.mutableSpan
+        for rnsIndex in rhs.moduli.indices {
+            for index in rhs.polyIndices(rnsIndex: rnsIndex) {
+                accumulatorSpan[index] &+=
+                    T.DoubleWidth(lhsData[index].multipliedFullWidth(by: rhsData[index]))
             }
         }
     }
@@ -246,10 +237,9 @@ extension PolyRq {
                 multiplicand: rhsResidue,
                 divisionModulus: modulus.divisionModulus)
             let polyIndices = poly.polyIndices(rnsIndex: rnsIndex)
-            poly.data.data.withUnsafeMutableBufferPointer { lhsData in
-                for index in polyIndices {
-                    lhsData[index] = multiplicationModulus.multiplyMod(lhsData[index])
-                }
+            var lhsData = poly.data.data.mutableSpan
+            for index in polyIndices {
+                lhsData[index] = multiplicationModulus.multiplyMod(lhsData[index])
             }
         }
     }

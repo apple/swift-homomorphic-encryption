@@ -115,7 +115,7 @@ extension CiphertextMatrix {
             ciphertexts: evalCiphertexts)
     }
 
-    /// Async version of ``convertToEvalFormat``.
+    /// Async version of ``convertToEvalFormat()``.
     @inlinable
     public func convertToEvalFormat() async throws -> CiphertextMatrix<Scheme, Eval> {
         if Format.self == Eval.self {
@@ -147,7 +147,7 @@ extension CiphertextMatrix {
             ciphertexts: coeffCiphertexts)
     }
 
-    /// Async version of ``convertToCoeffFormat``.
+    /// Async version of ``convertToCoeffFormat()``.
     @inlinable
     public func convertToCoeffFormat() async throws -> CiphertextMatrix<Scheme, Coeff> {
         if Format.self == Coeff.self {
@@ -179,7 +179,7 @@ extension CiphertextMatrix {
         fatalError("Unsupported Format \(Format.description)")
     }
 
-    /// Async version of ``convertToCanonicalFormat``.
+    /// Async version of ``convertToCanonicalFormat()``.
     @inlinable
     public func convertToCanonicalFormat() async throws -> CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat> {
         if Scheme.CanonicalCiphertextFormat.self == Coeff.self {

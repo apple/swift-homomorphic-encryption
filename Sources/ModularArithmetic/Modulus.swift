@@ -87,8 +87,8 @@ public struct Modulus<T: CoreScalarType>: Equatable, Sendable {
     /// - Returns: `x * y mod p`.
     @inlinable
     public func multiplyMod(_ x: T, _ y: T) -> T {
-        precondition(x < modulus)
-        precondition(y < modulus)
+        assert(x < modulus)
+        assert(y < modulus)
         let product = x.multipliedFullWidth(by: y)
         return reduceProduct(T.DoubleWidth(product))
     }
@@ -366,8 +366,8 @@ public struct ReduceModulus<T: CoreScalarType>: Equatable, Sendable {
     /// - Returns: `x * y mod p`.
     @inlinable
     public func multiplyMod(_ x: T, _ y: T) -> T {
-        precondition(x < modulus)
-        precondition(y < modulus)
+        assert(x < modulus)
+        assert(y < modulus)
         let product = x.multipliedFullWidth(by: y)
         return reduceProduct(T.DoubleWidth(product))
     }

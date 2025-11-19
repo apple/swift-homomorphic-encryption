@@ -480,6 +480,7 @@ public enum ProcessKeywordDatabase {
     /// - Parameters:
     ///   - shard: Shard of a keyword database.
     ///   - arguments: Processing arguments.
+    ///   - _: Type for auxiliary functionalities used in PIR.
     ///   - onEvent: Function to call when a ``ProcessShardEvent`` happens.
     /// - Returns: The processed database.
     /// - Throws: Error upon failure to process the shard.
@@ -510,9 +511,11 @@ public enum ProcessKeywordDatabase {
     ///   - row: Keyword-value pair to validate in a PIR query.
     ///   - trials: How many PIR calls to validate. Must be > 0.
     ///   - context: Context for HE computation.
+    ///   - _: Type for auxiliary functionalities used in PIR.
     /// - Returns: The shard validation results.
     /// - Throws: Error upon failure to validate the sharding.
-    /// - seealso: ``ProcessKeywordDatabase/processShard(shard:with:onEvent:)`` to process a shard before validation.
+    /// - seealso: ``ProcessKeywordDatabase/processShard(shard:with:using:onEvent:)`` to process a shard before
+    /// validation.
     @inlinable
     public static func validateShard<PirUtil: PirUtilProtocol>(
         shard: ProcessedDatabaseWithParameters<PirUtil.Scheme>,
@@ -591,6 +594,7 @@ public enum ProcessKeywordDatabase {
     /// - Parameters:
     ///   - rows: Rows in the database.
     ///   - arguments: Processing arguments.
+    ///   - _: Type for auxiliary functionalities used in PIR.
     /// - Returns: The processed database.
     /// - Throws: Error upon failure to process the database.
     @inlinable

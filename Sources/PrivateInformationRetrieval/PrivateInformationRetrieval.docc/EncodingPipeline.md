@@ -52,7 +52,7 @@ data. Each data row needs to be converted to ``KeywordValuePair`` with ``Keyword
 `keyword` and `value` are both `[UInt8]`. Once you have a collection of ``KeywordValuePair``s you have two options:
 1. You can use ``KeywordPirServer/process(database:config:with:onEvent:symmetricPirConfig:)`` to process the shard directly.
 2. Or you can construct a ``KeywordDatabaseShard`` by using ``KeywordDatabaseShard/init(shardID:rows:)`` and then
-``ProcessKeywordDatabase/processShard(shard:with:onEvent:)``.
+``ProcessKeywordDatabase/processShard(shard:with:using:onEvent:)``.
 
 Both options give as output a ``ProcessedDatabaseWithParameters``.
 
@@ -70,8 +70,8 @@ let pirParameters = try processedDatabaseWithParameters.proto(context: context)
 ## Loading processed shard
 
 To load a processed shard, one needs two parts:
-1. ``ProcessedDatabase`` can be loaded using ``ProcessedDatabase/init(from:context:)-9ppkq`` or
-``ProcessedDatabase/init(from:context:)-4pmcl``.
+1. ``ProcessedDatabase`` can be loaded using ``ProcessedDatabase/init(from:context:)-(String,_)`` or
+``ProcessedDatabase/init(from:context:)-([UInt8],_)``.
 2. Use the `pirParameters` from protobuf and add them in like this:
 
 ```swift

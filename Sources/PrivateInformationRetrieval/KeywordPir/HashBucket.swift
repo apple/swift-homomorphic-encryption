@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Crypto
-import Foundation
+public import Crypto
+public import Foundation
 
 /// Bucket storing a list of (hash(keyword), value) pairs.
 public struct HashBucket: Equatable {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 extension HeScheme {
     /// Rotates the columns of a ciphertext throw multiple steps in async way.

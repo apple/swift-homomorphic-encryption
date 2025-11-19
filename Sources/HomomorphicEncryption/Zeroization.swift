@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #if canImport(Darwin)
-import Darwin
+public import Darwin
 
 /// Set bytes to zero.
 /// - Parameters:
@@ -26,7 +26,7 @@ public func zeroize(_ s: UnsafeMutableRawPointer!, _ n: Int) {
     precondition(exitCode == 0, "memset_s returned exit code \(exitCode)")
 }
 #else
-import CUtil
+public import CUtil
 
 /// Set bytes to zero.
 /// - Parameters:

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import ApplicationProtobuf
-import ArgumentParser
+public import ArgumentParser
 import HomomorphicEncryption
 import PrivateInformationRetrieval
 

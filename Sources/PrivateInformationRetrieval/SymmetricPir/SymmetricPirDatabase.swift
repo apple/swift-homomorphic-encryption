@@ -15,7 +15,7 @@
 import _CryptoExtras
 import Crypto
 import Foundation
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 /// Symmetric PIR config type specifying config for OPRF and keyword entry encryption.
 public enum SymmetricPirConfigType: String, CaseIterable, Codable, Hashable, Sendable {

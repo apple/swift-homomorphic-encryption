@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 /// A database after processing to prepare for PNNS queries.
 public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {

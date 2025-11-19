@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AsyncAlgorithms
-import DequeModule
+public import AsyncAlgorithms
+public import DequeModule
 import Foundation
-import HomomorphicEncryption
-import ModularArithmetic
+public import HomomorphicEncryption
+public import ModularArithmetic
 import Numerics
 
 /// PIR using ciphertext-ciphertext multiplication.

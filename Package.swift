@@ -19,13 +19,17 @@
 import Foundation
 import PackageDescription
 
-let librarySettings: [SwiftSetting] = []
+let featureSettings: [SwiftSetting] = [.enableUpcomingFeature("InternalImportsByDefault")]
+
+let librarySettings: [SwiftSetting] = featureSettings
 
 let executableSettings: [SwiftSetting] =
     librarySettings +
     [.unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))]
 
-let benchmarkSettings: [SwiftSetting] = [.unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))]
+let benchmarkSettings: [SwiftSetting] = featureSettings + [.unsafeFlags(
+    ["-cross-module-optimization"],
+    .when(configuration: .release))]
 
 let enableFlags = "SWIFT_HOMOMORPHIC_ENCRYPTION_MODULAR_ARITHMETIC_EXTRA_SWIFT_FLAGS"
 func shouldEnableFlags() -> Bool {

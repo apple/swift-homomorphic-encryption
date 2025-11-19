@@ -15,7 +15,7 @@
 import ApplicationProtobuf
 import ArgumentParser
 import Foundation
-import HomomorphicEncryption
+public import HomomorphicEncryption
 import PrivateInformationRetrieval
 
 enum ValueTypeArguments: String, CaseIterable, ExpressibleByArgument {

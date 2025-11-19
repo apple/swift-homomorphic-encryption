@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import _CryptoExtras
-import Crypto
-import Foundation
-import HomomorphicEncryption
+public import Crypto
+public import Foundation
+public import HomomorphicEncryption
 
 /// A keyword with an associated value.
 public struct KeywordValuePair: Hashable, Codable {

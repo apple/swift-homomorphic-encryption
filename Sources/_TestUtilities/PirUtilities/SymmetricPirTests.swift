@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _CryptoExtras
-import HomomorphicEncryption
-import PrivateInformationRetrieval
-import Testing
+public import _CryptoExtras
+public import HomomorphicEncryption
+public import PrivateInformationRetrieval
+public import Testing
 
 extension PirTestUtils {
     /// Symmetric PIR tests.

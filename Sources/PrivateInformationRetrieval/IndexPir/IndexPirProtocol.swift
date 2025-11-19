@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import HomomorphicEncryption
+public import Foundation
+public import HomomorphicEncryption
 
 /// Which algorithm to use for PIR computation.
 public enum PirAlgorithm: String, CaseIterable, Codable, CodingKeyRepresentable, Hashable, Sendable {

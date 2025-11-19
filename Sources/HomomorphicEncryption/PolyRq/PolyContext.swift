@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ModularArithmetic
+public import ModularArithmetic
 
 /// Polynomial context that holds all the pre-computed values for doing efficient calculations on ``PolyRq``
 /// polynomials.

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Algorithms
-import HomomorphicEncryption
-import ModularArithmetic
+public import Algorithms
+public import HomomorphicEncryption
+public import ModularArithmetic
 
 /// Different algorithms for packing a matrix of scalar values into plaintexts / ciphertexts.
 public enum MatrixPacking: Codable, Equatable, Hashable, Sendable {

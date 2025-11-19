@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _HomomorphicEncryptionExtras
-import HomomorphicEncryption
-import ModularArithmetic
-import Testing
+public import _HomomorphicEncryptionExtras
+public import HomomorphicEncryption
+public import ModularArithmetic
+public import Testing
 
 /// A collection of helpers for HeScheme level API tests.
 public enum HeAPITestHelpers {

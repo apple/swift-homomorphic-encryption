@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ModularArithmetic
+public import ModularArithmetic
 
 /// Enables base conversion from an input RNS basis `q = q_0, ..., q_{L-1}` to an
 /// output RNS basis `t = t_0, ..., t_{M-1}`.

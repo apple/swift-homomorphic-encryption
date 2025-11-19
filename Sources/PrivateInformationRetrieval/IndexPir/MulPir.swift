@@ -416,7 +416,7 @@ extension MulPirServer {
 
             try await responseCiphertexts
                 .append(.init(stride(from: 0, to: database.count, by: perChunkPlaintextCount).async
-                        .map { startIndex in
+                        .map { [queryCiphertexts, firstDimensionQueries] startIndex in
                             try await self.computeResponseForOneChunk(
                                 expandedDim0Query: firstDimensionQueries,
                                 expandedRemainingQuery: queryCiphertexts,

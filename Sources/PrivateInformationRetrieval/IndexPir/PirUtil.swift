@@ -17,7 +17,7 @@ import HomomorphicEncryption
 import ModularArithmetic
 
 /// A protocol  outlining the auxiliary functionalities used in PIR.
-public protocol PirUtilProtocol {
+public protocol PirUtilProtocol: Sendable {
     /// The underlying HE scheme.
     associatedtype Scheme: HeScheme
     /// The Scalar type used by the HE scheme.
@@ -169,15 +169,16 @@ extension PirUtilProtocol {
             remainingOutputs -= outputToGenerate
             return outputToGenerate
         }
-        let expanded: [[CanonicalCiphertext]] = try await .init((0..<ciphertexts.count).async.map { ciphertextIndex in
-            let outputToGenerate = lengths[ciphertextIndex]
-            return try await expandCiphertext(
-                ciphertexts[ciphertextIndex],
-                outputCount: outputToGenerate,
-                logStep: 1,
-                expectedHeight: outputToGenerate.ceilLog2,
-                using: evaluationKey)
-        })
+        let expanded: [[CanonicalCiphertext]] = try await .init((0..<ciphertexts.count).async
+            .map { [ciphertexts] ciphertextIndex in
+                let outputToGenerate = lengths[ciphertextIndex]
+                return try await expandCiphertext(
+                    ciphertexts[ciphertextIndex],
+                    outputCount: outputToGenerate,
+                    logStep: 1,
+                    expectedHeight: outputToGenerate.ceilLog2,
+                    using: evaluationKey)
+            })
         return expanded.flatMap(\.self)
     }
 

@@ -87,28 +87,31 @@ struct HeAPITests {
     @Test
     func noOpScheme() async throws {
         let context: Context<NoOpScheme> = try TestUtils.getTestContext()
+        // Sync tests
+        // swiftlint:disable line_length
+        // swiftformat:disable wrap wrapArguments
         try HeAPITestHelpers.schemeEncodeDecodeTest(context: context, scheme: NoOpScheme.self)
         try HeAPITestHelpers.schemeEncryptDecryptTest(context: context, scheme: NoOpScheme.self)
         try HeAPITestHelpers.schemeEncryptZeroDecryptTest(context: context, scheme: NoOpScheme.self)
-        try HeAPITestHelpers.schemeEncryptZeroAddDecryptTest(context: context, scheme: NoOpScheme.self)
-        try HeAPITestHelpers.schemeEncryptZeroMultiplyDecryptTest(context: context, scheme: NoOpScheme.self)
+        try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
+
+        // Async tests
+        try await HeAPITestHelpers.schemeEncryptZeroAddDecryptTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeEncryptZeroMultiplyDecryptTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeCiphertextAdditionTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeCiphertextSubtractionTest(context: context, scheme: NoOpScheme.self)
-        try await HeAPITestHelpers.schemeCiphertextCiphertextMultiplicationTest(
-            context: context,
-            scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextCiphertextMultiplicationTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeCiphertextPlaintextAdditionTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeCiphertextPlaintextSubtractionTest(context: context, scheme: NoOpScheme.self)
-        try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplicationTest(
-            context: context,
-            scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplicationTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeCiphertextMultiplyAddTest(context: context, scheme: NoOpScheme.self)
-        try HeAPITestHelpers.schemeCiphertextMultiplyAddPlainTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeCiphertextMultiplyAddPlainTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeCiphertextMultiplySubTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context, scheme: NoOpScheme.self)
-        try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
         try await HeAPITestHelpers.schemeRotationTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeApplyGaloisTest(context: context, scheme: NoOpScheme.self)
+        // swiftlint:enable line_length
+        // swiftformat:enable wrap wrapArguments
     }
 
     private func bfvTestKeySwitching<T>(context: Context<Bfv<T>>) throws {
@@ -169,41 +172,46 @@ struct HeAPITests {
 
         for encryptionParameters in predefined + [custom, manyModuli] {
             let context = try Context<Bfv<T>>(encryptionParameters: encryptionParameters)
+            // Sync tests
             try HeAPITestHelpers.schemeEncodeDecodeTest(context: context, scheme: Bfv<T>.self)
             try HeAPITestHelpers.schemeEncryptDecryptTest(context: context, scheme: Bfv<T>.self)
             try HeAPITestHelpers.schemeEncryptZeroDecryptTest(context: context, scheme: Bfv<T>.self)
-            try HeAPITestHelpers.schemeEncryptZeroAddDecryptTest(context: context, scheme: Bfv<T>.self)
-            try HeAPITestHelpers.schemeEncryptZeroMultiplyDecryptTest(context: context, scheme: Bfv<T>.self)
+            try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
+            try HeAPITestHelpers.noiseBudgetTest(context: context, scheme: Bfv<T>.self)
+
+            // BFV tests
+            try bfvTestKeySwitching(context: context)
+
+            // Async tests
+            // swiftlint:disable line_length
+            // swiftformat:disable wrap wrapArguments
+            try await HeAPITestHelpers.schemeEncryptZeroAddDecryptTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeEncryptZeroMultiplyDecryptTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextAdditionTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextSubtractionTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextPlaintextAdditionTest(context: context, scheme: Bfv<T>.self)
-            // swiftformat:disable wrap wrapArguments
             try await HeAPITestHelpers.schemeCiphertextPlaintextSubtractionTest(context: context, scheme: Bfv<T>.self)
-            // swiftlint:disable line_length
             try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplicationTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextMultiplySubtractPlainTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplyAddPlainTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplySubtractPlainTest(context: context, scheme: Bfv<T>.self)
-            try HeAPITestHelpers.schemeCiphertextMultiplyAddPlainTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeCiphertextMultiplyAddPlainTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextMultiplySubtractPlainTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplyAddPlainTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplySubtractPlainTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextCiphertextMultiplicationTest(context: context, scheme: Bfv<T>.self)
-            // swiftlint:enable line_length
             try await HeAPITestHelpers.schemeCiphertextPlaintextInnerProductTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextCiphertextInnerProductTest(context: context, scheme: Bfv<T>.self)
-            // swiftformat:enable wrap wrapArguments
             try await HeAPITestHelpers.schemeCiphertextMultiplyAddTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context, scheme: Bfv<T>.self)
-            try HeAPITestHelpers.schemeEvaluationKeyTest(context: context)
             try await HeAPITestHelpers.schemeApplyGaloisTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeRotationTest(context: context, scheme: Bfv<T>.self)
-            try bfvTestKeySwitching(context: context)
-            try HeAPITestHelpers.noiseBudgetTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.repeatedAdditionTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.multiplyPowerOfXTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeTestNtt(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeTestFormats(context: context, scheme: Bfv<T>.self)
+            // swiftlint:enable line_length
+            // swiftformat:enable wrap wrapArguments
         }
     }
 

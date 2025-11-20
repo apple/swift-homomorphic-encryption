@@ -600,6 +600,8 @@ extension Collection {
 // MARK: - Async ciphertext functions
 
 extension Ciphertext {
+    // MARK: - Async ciphertext + plaintext
+
     /// Async ciphertext-plaintext addition.
     /// - Parameters:
     ///   - plaintext: Plaintext to add.
@@ -629,6 +631,22 @@ extension Ciphertext {
         try await result += plaintext
         return result
     }
+
+    /// Async ciphertext-plaintext addition.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to add to.
+    ///   - plaintext: Plaintext to add.
+    /// - Throws: Error upon failure to add.
+    @inlinable
+    public static func += (
+        ciphertext: inout Ciphertext<Scheme, Format>,
+        plaintext: Plaintext<Scheme, some PolyFormat>) async throws
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        try await Scheme.addAssignAsync(&ciphertext, plaintext)
+    }
+
+    // MARK: - Async ciphertext + ciphertext
 
     /// Async ciphertext addition.
     /// - Parameters:
@@ -661,20 +679,188 @@ extension Ciphertext {
         return result
     }
 
-    /// Async ciphertext addition.
+    // MARK: Async ciphertext -= ciphertext
+
+    /// Async ciphertext subtraction.
     /// - Parameters:
-    ///   - ciphertext: Ciphertext to add to.
-    ///   - plaintext: Plaintext to add.
-    /// - Throws: Error upon failure to add.
-    /// - seealso: ``Ciphertext/+=(_:_:)-8y0jp`` for a sync version.
+    ///   - lhs: Ciphertext to subtract from.
+    ///   - rhs: Plaintext to subtract.
+    /// - Returns: A ciphertext encrypting the difference `lhs - rhs'.
+    /// - Throws: Error upon failure to subtract.
     @inlinable
-    public static func += (
+    public static func - (lhs: Ciphertext<Scheme, Format>,
+                          rhs: Ciphertext<Scheme, some PolyFormat>) async throws -> Self
+    {
+        var result = lhs
+        try await result -= rhs
+        return result
+    }
+
+    // MARK: Async ciphertext - ciphertext
+
+    /// Async ciphertext subtraction.
+    /// - Parameters:
+    ///   - lhs: Ciphertext to subtract from.
+    ///   - rhs: Ciphertext to subtract.
+    /// - Throws: Error upon failure to subtract.
+    @inlinable
+    public static func -= (
+        lhs: inout Ciphertext<Scheme, Format>,
+        rhs: Ciphertext<Scheme, some PolyFormat>) async throws
+    {
+        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
+        try await Scheme.subAssignAsync(&lhs, rhs)
+    }
+
+    // MARK: Async ciphertext - plaintext
+
+    /// Async ciphertext - plaintext
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to subtract from.
+    ///   - plaintext: Plaintext to subtract.
+    /// - Returns: A ciphertext encrypting the difference `ciphertext - plaintext`.
+    /// - Throws: Error upon failure to subtract.
+    @inlinable
+    public static func - (ciphertext: Ciphertext<Scheme, Format>,
+                          plaintext: Plaintext<Scheme, some PolyFormat>) async throws -> Self
+    {
+        var result = ciphertext
+        try await result -= plaintext
+        return result
+    }
+
+    // MARK: Async ciphertext -= plaintext
+
+    /// Async ciphertext -= plaintext
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to subtract from.
+    ///   - plaintext: Plaintext to subtract.
+    /// - Throws: Error upon failure to subtract.
+    @inlinable
+    public static func -= (
         ciphertext: inout Ciphertext<Scheme, Format>,
         plaintext: Plaintext<Scheme, some PolyFormat>) async throws
     {
         try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
-        try await Scheme.addAssignAsync(&ciphertext, plaintext)
+        try await Scheme.subAssignAsync(&ciphertext, plaintext)
     }
+
+    // MARK: Async plaintext - ciphertext
+
+    /// Async plaintext - ciphertext.
+    /// - Parameters:
+    ///   - plaintext: Plaintext to subtract from.
+    ///   - ciphertext: Ciphertext to subtract.
+    /// - Returns: A ciphertext encrypting the difference `plaintext - ciphertext`.
+    /// - Throws: Error upon failure to subtract.
+    @inlinable
+    public static func - (
+        plaintext: Plaintext<Scheme, some PolyFormat>,
+        ciphertext: Ciphertext<Scheme, Format>) async throws -> Ciphertext<Scheme, Format>
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        return try await Scheme.subAsync(plaintext, ciphertext)
+    }
+
+    // MARK: Async ciphertext * ciphertext
+
+    /// Async ciphertext multiplication.
+    /// - Parameters:
+    ///   - lhs: Ciphertext to multiply.
+    ///   - rhs: Ciphertext to multiply.
+    /// - Returns: A ciphertext encrypting the product `lhs * rhs`.
+    /// - Throws: Error upon failure to multiply.
+    /// > Note: the values of the decrypted product depend on the ``EncodeFormat`` of the plaintexts encrypted by `lhs`
+    /// and `rhs.`
+    ///
+    /// > Important: The resulting ciphertext has 3 polynomials and can be relinearized. See
+    /// ``HeScheme/relinearize(_:using:)``
+    @inlinable
+    public static func * (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) async throws -> Self
+        where Format == Scheme.CanonicalCiphertextFormat
+    {
+        var result = lhs
+        try await result *= rhs
+        return result
+    }
+
+    // MARK: Async ciphertext * plaintext
+
+    /// Async ciphertext-plaintext multiplication.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to multiply.
+    ///   - plaintext: Plaintext to multiply.
+    /// - Returns: A ciphertext encrypting the product `ciphertext * plaintext`.
+    /// - Throws: Error upon failure to multiply.
+    @inlinable
+    public static func * (ciphertext: Ciphertext<Scheme, Format>,
+                          plaintext: Plaintext<Scheme, Eval>) async throws -> Self
+        where Format == Eval
+    {
+        var result = ciphertext
+        try await result *= plaintext
+        return result
+    }
+
+    /// Async ciphertext-plaintext multiplication.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to multiply.
+    ///   - plaintext: Plaintext to multiply.
+    /// - Returns: A ciphertext encrypting the product `ciphertext * plaintext`.
+    /// - Throws: Error upon failure to multiply.
+    @inlinable
+    public static func * (plaintext: Plaintext<Scheme, Eval>,
+                          ciphertext: Ciphertext<Scheme, Format>) async throws -> Self
+        where Format == Eval
+    {
+        try await ciphertext * plaintext
+    }
+
+    // MARK: Async ciphertext *= plaintext
+
+    /// Async ciphertext-plaintext multiplication.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to multiply. Will store the product.
+    ///   - plaintext: Plaintext to multiply.
+    /// - Throws: Error upon failure to multiply.
+    @inlinable
+    public static func *= (
+        ciphertext: inout Ciphertext<Scheme, Format>,
+        plaintext: Plaintext<Scheme, Eval>) async throws
+        where Format == Eval
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        try await Scheme.mulAssignAsync(&ciphertext, plaintext)
+    }
+
+    // MARK: Async ciphertext *= ciphertext
+
+    /// Async ciphertext-ciphertext multiplication.
+    /// - Parameters:
+    ///   - lhs: Ciphertext to multiply. Will store the product.
+    ///   - rhs: Ciphertext to multiply.
+    /// - Throws: Error upon failure to multiply.
+    @inlinable
+    public static func *= (lhs: inout Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, Format>) async throws
+        where Format == Scheme.CanonicalCiphertextFormat
+    {
+        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
+        try await Scheme.mulAssignAsync(&lhs, rhs)
+    }
+
+    // MARK: Async ciphertext = -ciphertext
+
+    /// Async ciphertext negation.
+    /// - Parameter ciphertext: Ciphertext to negate.
+    /// - Returns: The negated ciphertext.
+    @inlinable
+    public static prefix func - (_ ciphertext: Ciphertext<Scheme, Format>) async -> Self {
+        var result = ciphertext
+        await Scheme.negAssignAsync(&result)
+        return result
+    }
+
+    // MARK: - Async ciphertext format conversion
 
     /// Converts the ciphertext to coefficient format asynchronously.
     ///

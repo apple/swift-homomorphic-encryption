@@ -96,12 +96,11 @@ extension PirUtilProtocol {
         }
         precondition(currElement == targetElement)
 
-        var difference = ciphertext
-        try await Scheme.subAssignAsync(&difference, c1)
+        let difference = try await ciphertext - c1
         var differenceCoeff = try await difference.convertToCoeffFormat()
         try await Scheme.multiplyPowerOfXAsync(&differenceCoeff, power: -shiftingPower)
         let differenceCanonical = try await differenceCoeff.convertToCanonicalFormat()
-        try await Scheme.addAssignAsync(&c1, ciphertext)
+        try await c1 += ciphertext
         return (c1, differenceCanonical)
     }
 
@@ -129,7 +128,7 @@ extension PirUtilProtocol {
             if logStep > expectedHeight {
                 return [ciphertext]
             }
-            try await Scheme.addAssignAsync(&output, ciphertext)
+            try await output += ciphertext
             return [output]
         }
         let secondHalfCount = outputCount >> 1

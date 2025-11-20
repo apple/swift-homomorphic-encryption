@@ -327,7 +327,7 @@ extension CiphertextMatrix {
         }()
 
         var ciphertextEval = try await ciphertexts[ciphertextIndex].convertToEvalFormat()
-        try await Scheme.mulAssignAsync(&ciphertextEval, plaintextMask)
+        try await ciphertextEval *= plaintextMask
         var ciphertext = try await ciphertextEval.convertToCanonicalFormat()
         // e.g., `ciphertext` now encrypts
         // [[0, 0, 3, 4, 0, 0, 3, 4],
@@ -341,7 +341,7 @@ extension CiphertextMatrix {
                 of: &ciphertextCopyRight,
                 by: columnCountPowerOfTwo,
                 using: evaluationKey)
-            try await Scheme.addAssignAsync(&ciphertext, ciphertextCopyRight)
+            try await ciphertext += ciphertextCopyRight
         }
         // e.g., `ciphertext` now encrypts
         // [[3, 4, 3, 4, 3, 4, 3, 4],
@@ -350,7 +350,7 @@ extension CiphertextMatrix {
         // Duplicate values to both SIMD rows
         var ciphertextCopy = ciphertext
         try await Scheme.swapRowsAsync(of: &ciphertextCopy, using: evaluationKey)
-        try await Scheme.addAssignAsync(&ciphertext, ciphertextCopy)
+        try await ciphertext += ciphertextCopy
         // e.g., `ciphertext` now encrypts
         // [[3, 4, 3, 4, 3, 4, 3, 4],
         //  [3, 4, 3, 4, 3, 4, 3, 4]]

@@ -1,16 +1,17 @@
 disabled_rules:
   - cyclomatic_complexity
+  - extension_access_modifier
+  - file_header  # pre-commit deals with license header
   - file_length
   - function_body_length
   - identifier_name
+  - modifier_order  # conflicts with swiftformat
   - opening_brace  # conflicts with swiftformat
+  - raw_value_for_camel_cased_codable_enum  # conflicts with swiftformat
   - todo
   - trailing_comma  # conflicts with swiftformat
   - type_body_length
   - vertical_parameter_alignment_on_call  # conflicts with swiftformat
-  - file_header  # pre-commit deals with license header
-  - raw_value_for_camel_cased_codable_enum  # conflicts with swiftformat
-  - extension_access_modifier
 
 excluded:
   - "**/*pb.swift"
@@ -78,7 +79,6 @@ opt_in_rules:
   - local_doc_comment
   - lower_acl_than_parent
   - missing_docs
-  - modifier_order
   - nimble_operator
   - nslocalizedstring_key
   - nslocalizedstring_require_bundle

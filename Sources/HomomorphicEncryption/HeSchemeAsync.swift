@@ -226,3 +226,73 @@ extension HeScheme {
     }
     // swiftlint:enable missing_docs
 }
+
+// MARK: - Implementations generalized over PolyFormat
+
+extension HeScheme {
+    /// In-place ciphertext-plaintext addition: `ciphertext += plaintext`.
+    ///
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to add; will store the sum.
+    ///   - plaintext: Plaintext to add.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``HeScheme/addAssign(_:_:)-407pg`` for a sync version.
+    @inlinable
+    public static func addAssignAsync<CiphertextFormat: PolyFormat, PlaintextFormat: PolyFormat>(
+        _ ciphertext: inout Ciphertext<Self, CiphertextFormat>,
+        _ plaintext: Plaintext<Self, PlaintextFormat>) async throws
+    {
+        // swiftlint:disable force_cast
+        if CiphertextFormat.self == Coeff.self, PlaintextFormat.self == Coeff.self {
+            var coeffCiphertext = ciphertext as! CoeffCiphertext
+            try await addAssignCoeffAsync(&coeffCiphertext, plaintext as! CoeffPlaintext)
+            ciphertext = coeffCiphertext as! Ciphertext<Self, CiphertextFormat>
+        } else if CiphertextFormat.self == Eval.self, PlaintextFormat.self == Eval.self {
+            var evalCiphertext = ciphertext as! EvalCiphertext
+            try await addAssignEvalAsync(&evalCiphertext, plaintext as! EvalPlaintext)
+            ciphertext = evalCiphertext as! Ciphertext<Self, CiphertextFormat>
+        } else {
+            throw HeError.unsupportedHeOperation(
+                """
+                Addition between ciphertext in \(CiphertextFormat.description) \
+                and plaintext in \(PlaintextFormat.description).
+                """)
+        }
+        // swiftlint:enable force_cast
+    }
+
+    /// In-place ciphertext addition: `lhs += rhs`.
+    ///
+    /// - Parameters:
+    ///   - lhs: Ciphertext to add; will store the sum.
+    ///   - rhs: Ciphertext to add.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``HeScheme/addAssign(_:_:)-1sd4b`` for a sync version.
+    @inlinable
+    public static func addAssignAsync<LhsFormat: PolyFormat, RhsFormat: PolyFormat>(
+        _ lhs: inout Ciphertext<Self, LhsFormat>,
+        _ rhs: Ciphertext<Self, RhsFormat>) async throws
+    {
+        // swiftlint:disable force_cast
+        if LhsFormat.self == Coeff.self {
+            var lhsCoeffCiphertext = lhs as! CoeffCiphertext
+            if RhsFormat.self == Coeff.self {
+                try await addAssignCoeffAsync(&lhsCoeffCiphertext, rhs as! CoeffCiphertext)
+            } else {
+                fatalError("Unsupported Format \(RhsFormat.description)")
+            }
+            lhs = lhsCoeffCiphertext as! Ciphertext<Self, LhsFormat>
+        } else if LhsFormat.self == Eval.self {
+            var lhsEvalCiphertext = lhs as! EvalCiphertext
+            if RhsFormat.self == Eval.self {
+                try await addAssignEvalAsync(&lhsEvalCiphertext, rhs as! EvalCiphertext)
+            } else {
+                fatalError("Unsupported Format \(RhsFormat.description)")
+            }
+            lhs = lhsEvalCiphertext as! Ciphertext<Self, LhsFormat>
+        } else {
+            fatalError("Unsupported Format \(LhsFormat.description)")
+        }
+        // swiftlint:enable force_cast
+    }
+}

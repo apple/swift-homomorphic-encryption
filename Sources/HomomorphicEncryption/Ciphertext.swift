@@ -499,14 +499,13 @@ extension Ciphertext {
 }
 
 extension Ciphertext where Format == Coeff {
-    /// Computes `ciphertext * x^{-power}`.
+    /// Computes `ciphertext * x^{power}`.
     ///
-    /// - Parameter power: Power in the monomial; must be positive.
-    /// - Throws: Error upon failure to compute the inverse.
+    /// - Parameter power: Power in the monomial
+    /// - Throws: Error upon failure to compute.
     @inlinable
-    public mutating func multiplyInversePowerOfX(power: Int) throws {
-        precondition(power >= 0)
-        try Scheme.multiplyInversePowerOfX(&self, power: power)
+    public mutating func multiplyPowerOfX(power: Int) throws {
+        try Scheme.multiplyPowerOfX(&self, power: power)
     }
 }
 

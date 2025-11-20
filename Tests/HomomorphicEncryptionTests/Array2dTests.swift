@@ -104,6 +104,34 @@ struct Array2dTests {
     }
 
     @Test
+    func rotateColumns() throws {
+        let data = (0..<12).map { UInt32($0) }
+        var array = Array2d(data: data, rowCount: 3, columnCount: 4)
+        try array.rotateColumns(by: 0)
+        #expect(array.data == data)
+
+        try array.rotateColumns(by: -1)
+        #expect(array.data == [1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8])
+        try array.rotateColumns(by: 1)
+        #expect(array.data == data)
+
+        try array.rotateColumns(by: -2)
+        #expect(array.data == [2, 3, 0, 1, 6, 7, 4, 5, 10, 11, 8, 9])
+        try array.rotateColumns(by: 2)
+        #expect(array.data == data)
+
+        try array.rotateColumns(by: -3)
+        #expect(array.data == [3, 0, 1, 2, 7, 4, 5, 6, 11, 8, 9, 10])
+        try array.rotateColumns(by: 3)
+        #expect(array.data == data)
+
+        try array.rotateColumns(by: -5)
+        #expect(array.data == [1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8])
+        try array.rotateColumns(by: 5)
+        #expect(array.data == data)
+    }
+
+    @Test
     func resizeColumn() {
         var array = Array2d(data: [Int](0..<6), rowCount: 2, columnCount: 3)
 

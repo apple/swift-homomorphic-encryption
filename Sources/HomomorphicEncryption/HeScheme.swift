@@ -993,17 +993,17 @@ public protocol HeScheme: Sendable {
     static func noiseBudgetEval(of ciphertext: EvalCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
         -> Double
 
-    /// Computes `ciphertext * x^{-power}`.
+    /// Computes `ciphertext * x^{power}`.
     ///
     /// - Parameters:
     ///  - ciphertext: ciphertext to be multiplied.
-    ///  - power: Power in the monomial; must be positive.
-    /// - Throws: Error upon failure to compute the inverse.
-    /// - seealso: ``HeScheme/multiplyInversePowerOfXAsync(_:power:)``  for an async version of this API
-    static func multiplyInversePowerOfX(_ ciphertext: inout CoeffCiphertext, power: Int) throws
+    ///  - power: Power in the monomial.
+    /// - Throws: Error upon failure to compute.
+    /// - seealso: ``HeScheme/multiplyPowerOfXAsync(_:power:)``  for an async version of this API.
+    static func multiplyPowerOfX(_ ciphertext: inout CoeffCiphertext, power: Int) throws
 
-    /// The async version of ``HeScheme/multiplyInversePowerOfX(_:power:)``.
-    static func multiplyInversePowerOfXAsync(_ ciphertext: inout CoeffCiphertext, power: Int) async throws
+    /// The async version of ``HeScheme/multiplyPowerOfX(_:power:)``.
+    static func multiplyPowerOfXAsync(_ ciphertext: inout CoeffCiphertext, power: Int) async throws
 }
 
 /// Codify different HE schemes.
@@ -1021,10 +1021,9 @@ public enum HeCryptoSystem: String {
 extension HeScheme {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
-    public static func multiplyInversePowerOfX(_ ciphertext: inout CoeffCiphertext, power: Int) throws {
-        precondition(power >= 0)
+    public static func multiplyPowerOfX(_ ciphertext: inout CoeffCiphertext, power: Int) throws {
         for index in ciphertext.polys.indices {
-            try ciphertext.polys[index].multiplyInversePowerOfX(power)
+            try ciphertext.polys[index].multiplyPowerOfX(power)
         }
     }
 }

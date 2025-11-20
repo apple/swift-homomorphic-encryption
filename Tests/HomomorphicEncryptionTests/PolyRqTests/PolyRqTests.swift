@@ -177,7 +177,7 @@ struct PolyRqTests {
     }
 
     @Test
-    func multiplyInverseXPower() throws {
+    func multiplyPowerOfXNegativeStep() throws {
         let context: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
         let data: [UInt32] = [0, 1, 0, 1,
                               0, 1, 2, 0,
@@ -189,7 +189,7 @@ struct PolyRqTests {
         y.append(x)
         for i in 1...7 {
             var x = x
-            try x.multiplyInversePowerOfX(i)
+            try x.multiplyPowerOfX(-i)
             y.append(x)
         }
         for i in 0...3 {
@@ -208,5 +208,39 @@ struct PolyRqTests {
         #expect(y[3].poly(rnsIndex: 0) == [1, 0, 1, 0])
         #expect(y[3].poly(rnsIndex: 1) == [0, 0, 2, 1])
         #expect(y[3].poly(rnsIndex: 2) == [3, 0, 4, 3])
+    }
+
+    @Test
+    func multiplyPowerOfXPositiveStep() throws {
+        let context: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
+        let data: [UInt32] = [0, 1, 0, 1,
+                              0, 1, 2, 0,
+                              0, 1, 2, 3]
+        let x = PolyRq<_, Coeff>(
+            context: context,
+            data: Array2d(data: data, rowCount: 3, columnCount: 4))
+        var y = [PolyRq<UInt32, Coeff>]()
+        y.append(x)
+        for i in 1...7 {
+            var x = x
+            try x.multiplyPowerOfX(i)
+            y.append(x)
+        }
+        for i in 0...3 {
+            let z = y[i] + y[i + 4]
+            for rnsIndex in 0...2 {
+                #expect(z.poly(rnsIndex: rnsIndex) == [0, 0, 0, 0])
+            }
+        }
+        #expect(y[0] == x)
+        #expect(y[1].poly(rnsIndex: 0) == [1, 0, 1, 0])
+        #expect(y[1].poly(rnsIndex: 1) == [0, 0, 1, 2])
+        #expect(y[1].poly(rnsIndex: 2) == [2, 0, 1, 2])
+        #expect(y[2].poly(rnsIndex: 0) == [0, 1, 0, 1])
+        #expect(y[2].poly(rnsIndex: 1) == [1, 0, 0, 1])
+        #expect(y[2].poly(rnsIndex: 2) == [3, 2, 0, 1])
+        #expect(y[3].poly(rnsIndex: 0) == [1, 0, 1, 0])
+        #expect(y[3].poly(rnsIndex: 1) == [2, 1, 0, 0])
+        #expect(y[3].poly(rnsIndex: 2) == [4, 3, 2, 0])
     }
 }

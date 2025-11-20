@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import ApplicationProtobuf
-import Benchmark
+public import Benchmark
 import Foundation
-import HomomorphicEncryption
+public import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import PrivateNearestNeighborSearch
 

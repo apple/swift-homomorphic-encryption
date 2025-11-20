@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import Benchmark
-import HomomorphicEncryption
+public import HomomorphicEncryption
 
 let noiseBudgetScale = 10
 

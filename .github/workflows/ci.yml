@@ -16,7 +16,6 @@ env:
   # Keep versions in sync with README
   SWIFTLINT_VERSION: 0.62.2
   SWIFTFORMAT_VERSION: 0.58.6
-  SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING: 1
 jobs:
   soundness:
     name: soundness
@@ -34,6 +33,7 @@ jobs:
     with:
       enable_windows_checks: false
       linux_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}]"
+      linux_env_vars: SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1
       linux_pre_build_command: "apt-get update && apt-get install -y libjemalloc-dev"
       linux_build_command: >
         swift test --configuration release;

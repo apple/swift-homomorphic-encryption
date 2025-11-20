@@ -373,6 +373,7 @@ extension Ciphertext {
     ///   - plaintext: Plaintext to add.
     /// - Returns: A ciphertext encrypting the sum.
     /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-3mot4`` for an async version.
     @inlinable
     public static func + (ciphertext: Ciphertext<Scheme, Format>,
                           plaintext: Plaintext<Scheme, some PolyFormat>) throws -> Self
@@ -388,6 +389,7 @@ extension Ciphertext {
     ///   - ciphertext: Ciphertext to add.
     /// - Returns: A ciphertext encrypting the sum.
     /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-3hq92`` for an async version.
     @inlinable
     public static func + (plaintext: Plaintext<Scheme, some PolyFormat>,
                           ciphertext: Ciphertext<Scheme, Format>) throws -> Self
@@ -420,6 +422,7 @@ extension Ciphertext {
     ///   - rhs: Plaintext to add.
     /// - Returns: A ciphertext encrypting the sum `lhs + rhs'.
     /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-89dia`` for an async version.
     @inlinable
     public static func + (lhs: Ciphertext<Scheme, Format>, rhs: Ciphertext<Scheme, some PolyFormat>) throws -> Self {
         var result = lhs
@@ -595,8 +598,85 @@ extension Collection {
     }
 }
 
-/// Async ciphertext functions.
+// MARK: - Async ciphertext functions
+
 extension Ciphertext {
+    /// Async ciphertext-plaintext addition.
+    /// - Parameters:
+    ///   - plaintext: Plaintext to add.
+    ///   - ciphertext: Ciphertext to add.
+    /// - Returns: A ciphertext encrypting the sum.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-2g1nj`` for a sync version.
+    @inlinable
+    public static func + (plaintext: Plaintext<Scheme, some PolyFormat>,
+                          ciphertext: Ciphertext<Scheme, Format>) async throws -> Self
+    {
+        try await ciphertext + plaintext
+    }
+
+    /// Async ciphertext-plaintext addition.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to add.
+    ///   - plaintext: Plaintext to add.
+    /// - Returns: A ciphertext encrypting the sum.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-42x1k`` for a sync version.
+    @inlinable
+    public static func + (ciphertext: Ciphertext<Scheme, Format>,
+                          plaintext: Plaintext<Scheme, some PolyFormat>) async throws -> Self
+    {
+        var result = ciphertext
+        try await result += plaintext
+        return result
+    }
+
+    /// Async ciphertext addition.
+    /// - Parameters:
+    ///   - lhs: Ciphertext to add to.
+    ///   - rhs: Ciphertext to add.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+=(_:_:)-49um`` for a sync version.
+    @inlinable
+    public static func += (
+        lhs: inout Ciphertext<Scheme, Format>,
+        rhs: Ciphertext<Scheme, some PolyFormat>) async throws
+    {
+        try Scheme.validateEquality(of: lhs.context, and: rhs.context)
+        try await Scheme.addAssignAsync(&lhs, rhs)
+    }
+
+    /// Async ciphertext addition.
+    /// - Parameters:
+    ///   - lhs: Ciphertext to add.
+    ///   - rhs: Ciphertext to add.
+    /// - Returns: A ciphertext encrypting the sum `lhs + rhs'.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+(_:_:)-2jflc`` for a sync version.
+    @inlinable
+    public static func + (lhs: Ciphertext<Scheme, Format>,
+                          rhs: Ciphertext<Scheme, some PolyFormat>) async throws -> Self
+    {
+        var result = lhs
+        try await result += rhs
+        return result
+    }
+
+    /// Async ciphertext addition.
+    /// - Parameters:
+    ///   - ciphertext: Ciphertext to add to.
+    ///   - plaintext: Plaintext to add.
+    /// - Throws: Error upon failure to add.
+    /// - seealso: ``Ciphertext/+=(_:_:)-8y0jp`` for a sync version.
+    @inlinable
+    public static func += (
+        ciphertext: inout Ciphertext<Scheme, Format>,
+        plaintext: Plaintext<Scheme, some PolyFormat>) async throws
+    {
+        try Scheme.validateEquality(of: ciphertext.context, and: plaintext.context)
+        try await Scheme.addAssignAsync(&ciphertext, plaintext)
+    }
+
     /// Converts the ciphertext to coefficient format asynchronously.
     ///
     /// This method performs an asynchronous conversion of the ciphertext to ``Coeff`` format.

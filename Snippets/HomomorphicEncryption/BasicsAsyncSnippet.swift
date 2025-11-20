@@ -72,13 +72,13 @@ precondition(decoded == [7, 15, 2, 2, 11, 0, 7, 15])
 
 // snippet.subtraction
 // We can subtract a plaintext from a ciphertext.
-try sum -= plaintext
+try await sum -= plaintext
 plaintextSum = try sum.decrypt(using: secretKey)
 decoded = try plaintextSum.decode(format: .coefficient)
 precondition(decoded == [16, 10, 7, 7, 13, 0, 16, 10])
 
 // We can also subtract a ciphertext from a ciphertext.
-try sum -= ciphertext
+try await sum -= ciphertext
 plaintextSum = try sum.decrypt(using: secretKey)
 decoded = try plaintextSum.decode(format: .coefficient)
 precondition(decoded == [8, 5, 12, 12, 15, 0, 8, 5])
@@ -86,7 +86,7 @@ precondition(decoded == [8, 5, 12, 12, 15, 0, 8, 5])
 // One special case is when subtracting a ciphertext from itself.
 // This yields a "transparent ciphertext", which reveals the underlying
 // plaintext to any observer. The observed value in this case is zero.
-try sum -= sum
+try  await sum -= sum
 precondition(sum.isTransparent())
 
 // snippet.hide

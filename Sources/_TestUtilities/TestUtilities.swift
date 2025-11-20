@@ -26,6 +26,7 @@ import Testing
 ///   - absoluteTolerance: An optional absolute tolerance to enforce.
 /// - Returns: true if the expressions are close to each other
 extension BinaryFloatingPoint {
+    @inlinable
     package func isClose(to value: Self,
                          relativeTolerance: Self = Self(1e-5),
                          absoluteTolerance: Self = Self(1e-8)) -> Bool

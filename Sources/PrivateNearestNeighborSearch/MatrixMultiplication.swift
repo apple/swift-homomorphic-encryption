@@ -201,10 +201,7 @@ extension PlaintextMatrix {
                 let ciphertexts = rotatedCiphertexts[0..<plaintextRows.count]
 
                 // 2) Compute w_k
-                let innerProduct =
-                    try await Scheme.innerProductAsync(
-                        ciphertexts: ciphertexts,
-                        plaintexts: plaintextRows)
+                let innerProduct = try await ciphertexts.innerProduct(plaintexts: plaintextRows)
                 return try await innerProduct.convertToCanonicalFormat()
             }
 

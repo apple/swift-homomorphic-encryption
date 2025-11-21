@@ -359,10 +359,7 @@ extension MulPirServer {
                 let startIndex = dataChunk.startIndex + expandedDim0Query.count * columnIndex
                 let endIndex = min(startIndex + expandedDim0Query.count, dataChunk.endIndex)
                 let plaintexts = dataChunk[startIndex..<endIndex]
-                return try await Scheme.innerProductAsync(
-                    ciphertexts: expandedDim0Query,
-                    plaintexts: plaintexts)
-                    .convertToCanonicalFormat()
+                return try await expandedDim0Query.innerProduct(plaintexts: plaintexts).convertToCanonicalFormat()
             })
 
         var queryStartingIndex = expandedRemainingQuery.startIndex
@@ -373,17 +370,16 @@ extension MulPirServer {
                 .async.map { startIndex in
                     let vector0 = expandedRemainingQuery[currentIndex..<currentIndex + dimensionSize]
                     let vector1 = currentResults[startIndex..<startIndex + dimensionSize]
-                    var product = try await Scheme.innerProductAsync(vector0, vector1)
-                    try await Scheme.relinearizeAsync(&product, using: evaluationKey)
+                    var product = try await vector0.innerProduct(ciphertexts: vector1)
+                    try await product.relinearize(using: evaluationKey)
                     return product
                 })
             queryStartingIndex += dimensionSize
         }
 
-        precondition(
-            intermediateResults.count == 1,
-            "There should be only 1 ciphertext in the final result for each chunk")
-        try await Scheme.modSwitchDownToSingleAsync(&intermediateResults[0])
+        precondition(intermediateResults.count == 1,
+                     "There should be only 1 ciphertext in the final result for each chunk")
+        try await intermediateResults[0].modSwitchDownToSingle()
         return try await intermediateResults[0].convertToCoeffFormat()
     }
 

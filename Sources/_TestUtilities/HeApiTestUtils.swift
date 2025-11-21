@@ -595,6 +595,25 @@ public enum HeAPITestHelpers {
         let testEnv = try TestEnv<Scheme>(context: context, format: .simd)
         let data1 = testEnv.data1
         let data2 = testEnv.data2
+
+        func syncTest(
+            ciphertexts: [Scheme.EvalCiphertext],
+            plaintexts: [Scheme.EvalPlaintext?],
+            expected: [Scheme.Scalar]) throws
+        {
+            let innerProduct = try ciphertexts.innerProduct(plaintexts: plaintexts)
+            try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: expected)
+        }
+
+        func asyncTest(
+            ciphertexts: [Scheme.EvalCiphertext],
+            plaintexts: [Scheme.EvalPlaintext?],
+            expected: [Scheme.Scalar]) async throws
+        {
+            let innerProduct = try await ciphertexts.innerProduct(plaintexts: plaintexts)
+            try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: expected)
+        }
+
         for count in [4, 1257] {
             let innerProductData = zip(data1, data2)
                 .map { x, y in
@@ -606,16 +625,8 @@ public enum HeAPITestHelpers {
             do {
                 let ciphertexts = Array(repeating: testEnv.evalCiphertext1, count: count)
                 let plaintexts = Array(repeating: testEnv.evalPlaintext2, count: count)
-                let innerProduct = try ciphertexts.innerProduct(plaintexts: plaintexts)
-                try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: innerProductData)
-
-                let innerProductAsync = try await Scheme.innerProductAsync(
-                    ciphertexts: ciphertexts,
-                    plaintexts: plaintexts)
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: innerProductAsync,
-                    format: .simd,
-                    expected: innerProductData)
+                try syncTest(ciphertexts: ciphertexts, plaintexts: plaintexts, expected: innerProductData)
+                try await asyncTest(ciphertexts: ciphertexts, plaintexts: plaintexts, expected: innerProductData)
             }
             // no nil values
             do {
@@ -625,16 +636,8 @@ public enum HeAPITestHelpers {
                 let plaintexts: [Scheme.EvalPlaintext?] = Array(
                     repeating: testEnv.evalPlaintext2,
                     count: count)
-                let innerProduct = try ciphertexts.innerProduct(plaintexts: plaintexts)
-                try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: innerProductData)
-
-                let innerProductAsync = try await Scheme.innerProductAsync(
-                    ciphertexts: ciphertexts,
-                    plaintexts: plaintexts)
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: innerProductAsync,
-                    format: .simd,
-                    expected: innerProductData)
+                try syncTest(ciphertexts: ciphertexts, plaintexts: plaintexts, expected: innerProductData)
+                try await asyncTest(ciphertexts: ciphertexts, plaintexts: plaintexts, expected: innerProductData)
             }
             // some nil values
             do {
@@ -644,16 +647,8 @@ public enum HeAPITestHelpers {
                 let plaintexts: [Scheme.EvalPlaintext?] = Array(
                     repeating: testEnv.evalPlaintext2,
                     count: count) + [nil]
-                let innerProduct = try ciphertexts.innerProduct(plaintexts: plaintexts)
-                try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: innerProductData)
-
-                let innerProductAsync = try await Scheme.innerProductAsync(
-                    ciphertexts: ciphertexts,
-                    plaintexts: plaintexts)
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: innerProductAsync,
-                    format: .simd,
-                    expected: innerProductData)
+                try syncTest(ciphertexts: ciphertexts, plaintexts: plaintexts, expected: innerProductData)
+                try await asyncTest(ciphertexts: ciphertexts, plaintexts: plaintexts, expected: innerProductData)
             }
         }
     }
@@ -676,10 +671,17 @@ public enum HeAPITestHelpers {
                 }
             let ciphers1 = Array(repeating: testEnv.ciphertext1, count: count)
             let ciphers2 = Array(repeating: testEnv.ciphertext2, count: count)
-            let innerProduct = try ciphers1.innerProduct(ciphertexts: ciphers2)
-            let innerProductAsync = try await Scheme.innerProductAsync(ciphers1, ciphers2)
-            try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: innerProductData)
-            try testEnv.checkDecryptsDecodes(ciphertext: innerProductAsync, format: .simd, expected: innerProductData)
+            func syncTests() throws {
+                let innerProduct = try ciphers1.innerProduct(ciphertexts: ciphers2)
+                try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: innerProductData)
+            }
+            try syncTests()
+
+            func asyncTests() async throws {
+                let innerProduct = try await ciphers1.innerProduct(ciphertexts: ciphers2)
+                try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: innerProductData)
+            }
+            try await asyncTests()
         }
     }
 
@@ -1257,7 +1259,6 @@ public enum HeAPITestHelpers {
             let testEnv = try TestEnv<Scheme>(context: context, format: .simd, galoisElements: galoisElements)
             let evaluationKey = try #require(testEnv.evaluationKey)
             let degree = context.degree
-
             for step in 1..<min(8, degree / 2) {
                 let expectedData = Array(testEnv.data1[degree / 2 - step..<degree / 2] + testEnv
                     .data1[0..<degree / 2 - step] + testEnv
@@ -1283,7 +1284,6 @@ public enum HeAPITestHelpers {
             let testEnv = try TestEnv<Scheme>(context: context, format: .simd, galoisElements: galoisElements)
             let evaluationKey = try #require(testEnv.evaluationKey)
             let degree = context.degree
-
             for step in 1..<min(8, degree / 2) {
                 let expectedData = Array(testEnv.data1[degree / 2 - step..<degree / 2] + testEnv
                     .data1[0..<degree / 2 - step] + testEnv
@@ -1468,14 +1468,12 @@ public enum HeAPITestHelpers {
         scheme _: Scheme.Type) async throws
     {
         let testEnv = try HeAPITestHelpers.TestEnv<Scheme>(context: context, format: .coefficient)
-
-        var coeffCiphertext = testEnv.ciphertext1
-        var coeffCiphertextAsync = try await coeffCiphertext.convertToCoeffFormat()
         let expected = testEnv.data1.map { num in
             num.multiplyMod(Scheme.Scalar(5), modulus: testEnv.context.plaintextModulus, variableTime: true)
         }
 
         func syncTest() throws {
+            var coeffCiphertext = testEnv.ciphertext1
             try coeffCiphertext += testEnv.coeffPlaintext1
             try coeffCiphertext += testEnv.ciphertext1
             try coeffCiphertext += testEnv.coeffPlaintext1
@@ -1485,11 +1483,44 @@ public enum HeAPITestHelpers {
         try syncTest()
 
         func asyncTest() async throws {
-            try await coeffCiphertextAsync += testEnv.coeffPlaintext1
-            try await coeffCiphertextAsync += testEnv.ciphertext1
-            try await coeffCiphertextAsync += testEnv.coeffPlaintext1
-            try await coeffCiphertextAsync += testEnv.coeffPlaintext1
-            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertextAsync, format: .coefficient, expected: expected)
+            var coeffCiphertext = testEnv.ciphertext1
+            try await coeffCiphertext += testEnv.coeffPlaintext1
+            try await coeffCiphertext += testEnv.ciphertext1
+            try await coeffCiphertext += testEnv.coeffPlaintext1
+            try await coeffCiphertext += testEnv.coeffPlaintext1
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffCiphertext, format: .coefficient, expected: expected)
+        }
+        try await asyncTest()
+    }
+
+    /// Testing repeated addition.
+    @inlinable
+    public static func schemeSumTest<Scheme: HeScheme>(
+        context: Scheme.Context,
+        scheme _: Scheme.Type) async throws
+    {
+        let testEnv = try HeAPITestHelpers.TestEnv<Scheme>(context: context, format: .coefficient)
+        let coeffCiphertext = try await testEnv.ciphertext1.convertToCoeffFormat()
+        let coeffCiphertexts = Array(repeating: coeffCiphertext, count: 5)
+        let evalCiphertext = testEnv.evalCiphertext1
+        let evalCiphertexts = Array(repeating: evalCiphertext, count: 5)
+        let expected = testEnv.data1.map { num in
+            num.multiplyMod(Scheme.Scalar(5), modulus: testEnv.context.plaintextModulus, variableTime: true)
+        }
+
+        func syncTest() throws {
+            let coeffSum = try coeffCiphertexts.sum()
+            let evalSum = try evalCiphertexts.sum()
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffSum, format: .coefficient, expected: expected)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalSum, format: .coefficient, expected: expected)
+        }
+        try syncTest()
+
+        func asyncTest() async throws {
+            let coeffSum = try await coeffCiphertexts.sum()
+            let evalSum = try await evalCiphertexts.sum()
+            try testEnv.checkDecryptsDecodes(ciphertext: coeffSum, format: .coefficient, expected: expected)
+            try testEnv.checkDecryptsDecodes(ciphertext: evalSum, format: .coefficient, expected: expected)
         }
         try await asyncTest()
     }

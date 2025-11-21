@@ -199,8 +199,8 @@ extension CiphertextMatrix {
     /// - Throws: Error upon failure to modulus switch.
     @inlinable
     public mutating func modSwitchDownToSingle() async throws where Format == Scheme.CanonicalCiphertextFormat {
-        for index in 0..<ciphertexts.count {
-            try await Scheme.modSwitchDownToSingleAsync(&ciphertexts[index])
+        for index in ciphertexts.indices {
+            try await ciphertexts[index].modSwitchDownToSingle()
         }
     }
 }

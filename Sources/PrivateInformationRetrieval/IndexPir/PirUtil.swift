@@ -90,7 +90,7 @@ extension PirUtilProtocol {
         let applyGaloisCount = 1 << ((targetElement - 1).log2 - (galoisElement - 1).log2)
         var currElement = 1
         for await _ in (0..<applyGaloisCount).async {
-            try await Scheme.applyGaloisAsync(ciphertext: &c1, element: galoisElement, using: evaluationKey)
+            try await c1.applyGalois(element: galoisElement, using: evaluationKey)
             currElement *= galoisElement
             currElement %= (2 * degree)
         }

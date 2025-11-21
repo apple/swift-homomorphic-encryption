@@ -567,7 +567,7 @@ public enum HeAPITestHelpers {
             try await ciphertextProduct2 *= ciphertext2
 
             var relinearizedProd = ciphertextProduct
-            try relinearizedProd.relinearize(using: #require(testEnv.evaluationKey))
+            try await relinearizedProd.relinearize(using: #require(testEnv.evaluationKey))
             #expect(relinearizedProd.polys.count == Scheme.freshCiphertextPolyCount)
 
             let coeffCiphertext = try await ciphertextProduct.convertToCoeffFormat()
@@ -1233,7 +1233,7 @@ public enum HeAPITestHelpers {
             // with mod-switch down
             if context.coefficientModuli.count > 2 {
                 var ciphertext = testEnv.ciphertext1
-                try ciphertext.modSwitchDown()
+                try await ciphertext.modSwitchDown()
                 let evalCiphertext = try await ciphertext.convertToEvalFormat()
                 let moduliCount = evalCiphertext.moduli.count
                 let evalPlaintext = try testEnv.context.encode(values: data2, format: .simd, moduliCount: moduliCount)
@@ -1253,48 +1253,55 @@ public enum HeAPITestHelpers {
         context: Scheme.Context,
         scheme _: Scheme.Type) async throws
     {
-        func runRotationTest(context: Scheme.Context, galoisElements: [Int], multiStep: Bool) async throws {
-            let degree = context.degree
+        func runRotationTestSync(context: Scheme.Context, galoisElements: [Int], multiStep: Bool) throws {
             let testEnv = try TestEnv<Scheme>(context: context, format: .simd, galoisElements: galoisElements)
             let evaluationKey = try #require(testEnv.evaluationKey)
+            let degree = context.degree
+
             for step in 1..<min(8, degree / 2) {
                 let expectedData = Array(testEnv.data1[degree / 2 - step..<degree / 2] + testEnv
                     .data1[0..<degree / 2 - step] + testEnv
                     .data1[degree - step..<degree] + testEnv.data1[degree / 2..<degree - step])
                 var rotatedCiphertext = testEnv.ciphertext1
-                var rotatedCiphertextAsync = testEnv.ciphertext1
                 if multiStep {
                     try rotatedCiphertext.rotateColumnsMultiStep(by: step, using: evaluationKey)
-                    try await Scheme.rotateColumnsMultiStepAsync(
-                        of: &rotatedCiphertextAsync,
-                        by: step,
-                        using: evaluationKey)
                 } else {
                     try rotatedCiphertext.rotateColumns(by: step, using: evaluationKey)
-                    try await Scheme.rotateColumnsAsync(of: &rotatedCiphertextAsync, by: step, using: evaluationKey)
                 }
                 try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: expectedData)
-                try testEnv.checkDecryptsDecodes(
-                    ciphertext: rotatedCiphertextAsync,
-                    format: .simd,
-                    expected: expectedData)
 
                 if multiStep {
                     try rotatedCiphertext.rotateColumnsMultiStep(by: -step, using: evaluationKey)
-                    try await Scheme.rotateColumnsMultiStepAsync(
-                        of: &rotatedCiphertextAsync,
-                        by: -step,
-                        using: evaluationKey)
                 } else {
                     try rotatedCiphertext.rotateColumns(by: -step, using: evaluationKey)
-                    try await Scheme.rotateColumnsAsync(of: &rotatedCiphertextAsync, by: -step, using: evaluationKey)
                 }
-                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext,
-                                                 format: .simd,
-                                                 expected: testEnv.data1)
-                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertextAsync,
-                                                 format: .simd,
-                                                 expected: testEnv.data1)
+                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: testEnv.data1)
+            }
+        }
+
+        func runRotationTestAsync(context: Scheme.Context, galoisElements: [Int], multiStep: Bool) async throws {
+            let testEnv = try TestEnv<Scheme>(context: context, format: .simd, galoisElements: galoisElements)
+            let evaluationKey = try #require(testEnv.evaluationKey)
+            let degree = context.degree
+
+            for step in 1..<min(8, degree / 2) {
+                let expectedData = Array(testEnv.data1[degree / 2 - step..<degree / 2] + testEnv
+                    .data1[0..<degree / 2 - step] + testEnv
+                    .data1[degree - step..<degree] + testEnv.data1[degree / 2..<degree - step])
+                var rotatedCiphertext = testEnv.ciphertext1
+                if multiStep {
+                    try await rotatedCiphertext.rotateColumnsMultiStep(by: step, using: evaluationKey)
+                } else {
+                    try await rotatedCiphertext.rotateColumns(by: step, using: evaluationKey)
+                }
+                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: expectedData)
+
+                if multiStep {
+                    try await rotatedCiphertext.rotateColumnsMultiStep(by: -step, using: evaluationKey)
+                } else {
+                    try await rotatedCiphertext.rotateColumns(by: -step, using: evaluationKey)
+                }
+                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: testEnv.data1)
             }
         }
 
@@ -1303,24 +1310,6 @@ public enum HeAPITestHelpers {
         }
 
         let degree = context.degree
-        let galoisElementsSwap = [GaloisElement.swappingRows(degree: degree)]
-        let testEnv = try TestEnv<Scheme>(context: context, format: .simd, galoisElements: galoisElementsSwap)
-        let evaluationKey = try #require(testEnv.evaluationKey)
-        let expectedData = Array(testEnv.data1[degree / 2..<degree] + testEnv.data1[0..<degree / 2])
-        var ciphertext = testEnv.ciphertext1
-        var ciphertextAsync = ciphertext
-
-        try ciphertext.swapRows(using: evaluationKey)
-        try await Scheme.swapRowsAsync(of: &ciphertextAsync, using: evaluationKey)
-
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertext, format: .simd, expected: expectedData)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextAsync, format: .simd, expected: expectedData)
-
-        try ciphertext.swapRows(using: evaluationKey)
-        try await Scheme.swapRowsAsync(of: &ciphertextAsync, using: evaluationKey)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertext, format: .simd, expected: testEnv.data1)
-        try testEnv.checkDecryptsDecodes(ciphertext: ciphertextAsync, format: .simd, expected: testEnv.data1)
-
         let galoisElementsRotate = try (1..<(degree >> 1)).flatMap { step in
             try [
                 GaloisElement.rotatingColumns(by: step, degree: degree),
@@ -1329,8 +1318,43 @@ public enum HeAPITestHelpers {
         }
         let galoisElementsMultiStep = try GaloisElement.rotatingColumnsMultiStep(degree: degree)
 
-        try await runRotationTest(context: context, galoisElements: galoisElementsRotate, multiStep: false)
-        try await runRotationTest(context: context, galoisElements: galoisElementsMultiStep, multiStep: true)
+        try runRotationTestSync(context: context, galoisElements: galoisElementsRotate, multiStep: false)
+        try await runRotationTestAsync(context: context, galoisElements: galoisElementsMultiStep, multiStep: true)
+    }
+
+    /// Testing ciphertext rotation of the scheme.
+    @inlinable
+    public static func schemeSwapRowsTest<Scheme: HeScheme>(
+        context: Scheme.Context,
+        scheme _: Scheme.Type) async throws
+    {
+        guard context.supportsSimdEncoding, context.supportsEvaluationKey else {
+            return
+        }
+        let degree = context.degree
+        let galoisElementsSwap = [GaloisElement.swappingRows(degree: degree)]
+        let testEnv = try TestEnv<Scheme>(context: context, format: .simd, galoisElements: galoisElementsSwap)
+        let evaluationKey = try #require(testEnv.evaluationKey)
+        let expectedData = Array(testEnv.data1[degree / 2..<degree] + testEnv.data1[0..<degree / 2])
+        var ciphertext = testEnv.ciphertext1
+
+        func swapRowsSyncTest() throws {
+            try ciphertext.swapRows(using: evaluationKey)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertext, format: .simd, expected: expectedData)
+
+            try ciphertext.swapRows(using: evaluationKey)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertext, format: .simd, expected: testEnv.data1)
+        }
+        try swapRowsSyncTest()
+
+        func swapRowsAsyncTest() async throws {
+            try await ciphertext.swapRows(using: evaluationKey)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertext, format: .simd, expected: expectedData)
+
+            try await ciphertext.swapRows(using: evaluationKey)
+            try testEnv.checkDecryptsDecodes(ciphertext: ciphertext, format: .simd, expected: testEnv.data1)
+        }
+        try await swapRowsAsyncTest()
     }
 
     /// Testing apply Galois element of the scheme.
@@ -1358,25 +1382,37 @@ public enum HeAPITestHelpers {
 
         let dataCount = testEnv.data1.count
         let halfDataCount = dataCount / 2
-        for (step, element) in elements.enumerated() {
-            for modSwitchCount in 0...max(0, context.coefficientModuli.count - 2) {
-                var rotatedCiphertext = testEnv.ciphertext1
-                var rotatedCiphertextAsync = testEnv.ciphertext1
+        func syncTest() throws {
+            for (step, element) in elements.enumerated() {
+                for modSwitchCount in 0...max(0, context.coefficientModuli.count - 2) {
+                    var rotatedCiphertext = testEnv.ciphertext1
 
-                for _ in 0..<modSwitchCount {
-                    try rotatedCiphertext.modSwitchDown()
-                    try await Scheme.modSwitchDownAsync(&rotatedCiphertextAsync)
+                    for _ in 0..<modSwitchCount {
+                        try rotatedCiphertext.modSwitchDown()
+                    }
+                    try rotatedCiphertext.applyGalois(element: element, using: evaluationKey)
+                    let expected = rotate(original: testEnv.data1, halfDataCount: halfDataCount, step: step + 1)
+                    try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: expected)
                 }
-                try rotatedCiphertext.applyGalois(element: element, using: evaluationKey)
-                try await Scheme.applyGaloisAsync(
-                    ciphertext: &rotatedCiphertextAsync,
-                    element: element,
-                    using: evaluationKey)
-                let expected = rotate(original: testEnv.data1, halfDataCount: halfDataCount, step: step + 1)
-                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: expected)
-                try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertextAsync, format: .simd, expected: expected)
             }
         }
+        try syncTest()
+
+        func asyncTest() async throws {
+            for (step, element) in elements.enumerated() {
+                for modSwitchCount in 0...max(0, context.coefficientModuli.count - 2) {
+                    var rotatedCiphertext = testEnv.ciphertext1
+
+                    for _ in 0..<modSwitchCount {
+                        try await rotatedCiphertext.modSwitchDown()
+                    }
+                    try await rotatedCiphertext.applyGalois(element: element, using: evaluationKey)
+                    let expected = rotate(original: testEnv.data1, halfDataCount: halfDataCount, step: step + 1)
+                    try testEnv.checkDecryptsDecodes(ciphertext: rotatedCiphertext, format: .simd, expected: expected)
+                }
+            }
+        }
+        try await asyncTest()
     }
 
     /// Testing noise budget estimation.

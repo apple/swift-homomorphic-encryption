@@ -337,10 +337,7 @@ extension CiphertextMatrix {
         let rotateCount = simdColumnCount / (copiesInMask * columnCountPowerOfTwo) - 1
         var ciphertextCopyRight = ciphertext
         for await _ in (0..<rotateCount).async {
-            try await Scheme.rotateColumnsAsync(
-                of: &ciphertextCopyRight,
-                by: columnCountPowerOfTwo,
-                using: evaluationKey)
+            try await ciphertextCopyRight.rotateColumns(by: columnCountPowerOfTwo, using: evaluationKey)
             try await ciphertext += ciphertextCopyRight
         }
         // e.g., `ciphertext` now encrypts
@@ -349,7 +346,7 @@ extension CiphertextMatrix {
 
         // Duplicate values to both SIMD rows
         var ciphertextCopy = ciphertext
-        try await Scheme.swapRowsAsync(of: &ciphertextCopy, using: evaluationKey)
+        try await ciphertextCopy.swapRows(using: evaluationKey)
         try await ciphertext += ciphertextCopy
         // e.g., `ciphertext` now encrypts
         // [[3, 4, 3, 4, 3, 4, 3, 4],

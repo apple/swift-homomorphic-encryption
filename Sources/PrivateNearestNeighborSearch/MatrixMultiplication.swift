@@ -176,7 +176,7 @@ extension PlaintextMatrix {
         for step in 0..<babyStepGiantStep.babyStep {
             rotatedStates.append(state)
             if step != babyStepGiantStep.babyStep - 1 {
-                try await Scheme.rotateColumnsAsync(of: &state, by: -1, using: evaluationKey)
+                try await state.rotateColumns(by: -1, using: evaluationKey)
             }
         }
         let rotatedCiphertexts: [Scheme.EvalCiphertext] = try await .init(

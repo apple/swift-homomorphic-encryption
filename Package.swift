@@ -102,6 +102,7 @@ let package = Package(
         .target(
             name: "HomomorphicEncryption",
             dependencies: [
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 "CUtil",

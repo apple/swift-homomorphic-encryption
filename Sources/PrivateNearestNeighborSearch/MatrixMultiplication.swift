@@ -176,7 +176,7 @@ extension PlaintextMatrix {
         for step in 0..<babyStepGiantStep.babyStep {
             rotatedStates.append(state)
             if step != babyStepGiantStep.babyStep - 1 {
-                try await Scheme.rotateColumnsAsync(of: &state, by: -1, using: evaluationKey)
+                try await state.rotateColumns(by: -1, using: evaluationKey)
             }
         }
         let rotatedCiphertexts: [Scheme.EvalCiphertext] = try await .init(
@@ -201,10 +201,7 @@ extension PlaintextMatrix {
                 let ciphertexts = rotatedCiphertexts[0..<plaintextRows.count]
 
                 // 2) Compute w_k
-                let innerProduct =
-                    try await Scheme.innerProductAsync(
-                        ciphertexts: ciphertexts,
-                        plaintexts: plaintextRows)
+                let innerProduct = try await ciphertexts.innerProduct(plaintexts: plaintextRows)
                 return try await innerProduct.convertToCanonicalFormat()
             }
 

@@ -109,6 +109,8 @@ struct HeAPITests {
         try await HeAPITestHelpers.schemeCiphertextMultiplySubTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeRotationTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeSwapRowsTest(context: context, scheme: NoOpScheme.self)
+        try await HeAPITestHelpers.schemeSumTest(context: context, scheme: NoOpScheme.self)
         try await HeAPITestHelpers.schemeApplyGaloisTest(context: context, scheme: NoOpScheme.self)
         // swiftlint:enable line_length
         // swiftformat:enable wrap wrapArguments
@@ -206,7 +208,9 @@ struct HeAPITests {
             try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeApplyGaloisTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeRotationTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeSwapRowsTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.repeatedAdditionTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeSumTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.multiplyPowerOfXTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeTestNtt(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeTestFormats(context: context, scheme: Bfv<T>.self)

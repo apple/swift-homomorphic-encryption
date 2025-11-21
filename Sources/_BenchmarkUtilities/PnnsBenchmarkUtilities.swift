@@ -131,6 +131,7 @@ public func cosineSimilarityBenchmark<Scheme: HeScheme>(_: Scheme.Type,
                                                         config: PnnsBenchmarkConfig = try! .init(),
                                                         queryCount: Int = 1) -> () -> Void
 {
+    // swiftlint:disable:next closure_body_length
     {
         let benchmarkName = [
             "CosineSimilarity",
@@ -145,11 +146,32 @@ public func cosineSimilarityBenchmark<Scheme: HeScheme>(_: Scheme.Type,
         Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
             benchmark,
             benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            let context = benchmarkContext.server.contexts[0]
+            let vectorDimension = benchmarkContext.server.config.vectorDimension
             for _ in benchmark.scaledIterations {
-                try await blackHole(
-                    benchmarkContext.server.computeResponse(
-                        to: benchmarkContext.query,
-                        using: benchmarkContext.evaluationKey))
+                let secretKey = try context.generateSecretKey()
+                let evaluationKey = try benchmarkContext.client.generateEvaluationKey(using: secretKey)
+                let serializedEvaluationKey = evaluationKey.serialize().proto()
+                let data = getDatabaseForTesting(config: PnnsDatabaseConfig(
+                    rowCount: queryCount,
+                    vectorDimension: vectorDimension))
+                let queryVectors = Array2d(data: data.rows.map { row in row.vector })
+                let query = try benchmarkContext.client.generateQuery(for: queryVectors, using: secretKey)
+                let serializedQuery = try query.proto()
+
+                benchmark.startMeasurement()
+
+                let deserializedEvalKey: EvaluationKey<Scheme> = try serializedEvaluationKey.native(context: context)
+                let deserializedQuery: Query<Scheme> = try serializedQuery.native(context: context)
+                let response = try await benchmarkContext.server.computeResponse(
+                    to: deserializedQuery,
+                    using: deserializedEvalKey)
+                try blackHole(response.proto())
+
+                benchmark.stopMeasurement()
+
+                let noiseBudget = try response.scaledNoiseBudget(using: secretKey)
+                benchmark.measurement(.noiseBudget, noiseBudget)
             }
             benchmark.measurement(.evaluationKeySize, benchmarkContext.evaluationKeySize)
             benchmark.measurement(.evaluationKeyCount, benchmarkContext.evaluationKeyCount)
@@ -157,7 +179,6 @@ public func cosineSimilarityBenchmark<Scheme: HeScheme>(_: Scheme.Type,
             benchmark.measurement(.queryCiphertextCount, benchmarkContext.queryCiphertextCount)
             benchmark.measurement(.responseSize, benchmarkContext.responseSize)
             benchmark.measurement(.responseCiphertextCount, benchmarkContext.responseCiphertextCount)
-            benchmark.measurement(.noiseBudget, benchmarkContext.noiseBudget)
         } setup: {
             try await PnnsBenchmarkContext<Scheme>(
                 databaseConfig: config.databaseConfig,
@@ -236,16 +257,13 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
     let processedDatabase: ProcessedDatabase<Scheme>
     let server: Server<Scheme>
     let client: Client<Scheme>
-    let secretKey: SecretKey<Scheme>
-    let evaluationKey: Scheme.EvaluationKey
+    let contexts: [Scheme.Context]
     let evaluationKeyCount: Int
-    let query: Query<Scheme>
     let evaluationKeySize: Int
     let querySize: Int
     let queryCiphertextCount: Int
     let responseSize: Int
     let responseCiphertextCount: Int
-    let noiseBudget: Int
 
     init(databaseConfig: PnnsDatabaseConfig,
          encryptionConfig: EncryptionParametersConfig,
@@ -293,18 +311,18 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
             databasePacking: .diagonal(babyStepGiantStep: babyStepGiantStep))
 
         let database = getDatabaseForTesting(config: databaseConfig)
-        let contexts = try clientConfig.encryptionParameters
+        self.contexts = try clientConfig.encryptionParameters
             .map { encryptionParameters in try Scheme.Context(encryptionParameters: encryptionParameters) }
         self.processedDatabase = try await database.process(config: serverConfig, contexts: contexts)
         self.client = try Client(config: clientConfig, contexts: contexts)
         self.server = try Server(database: processedDatabase)
-        self.secretKey = try client.generateSecretKey()
-        self.evaluationKey = try client.generateEvaluationKey(using: secretKey)
+        let secretKey = try client.generateSecretKey()
+        let evaluationKey = try client.generateEvaluationKey(using: secretKey)
 
         // We query exact matches from rows in the database
         let databaseVectors = Array2d(data: database.rows.map { row in row.vector })
         let queryVectors = Array2d(data: database.rows.prefix(queryCount).map { row in row.vector })
-        self.query = try client.generateQuery(for: queryVectors, using: secretKey)
+        let query = try client.generateQuery(for: queryVectors, using: secretKey)
 
         let response = try await server.computeResponse(to: query, using: evaluationKey)
         let decrypted = try client.decrypt(response: response, using: secretKey)
@@ -324,6 +342,5 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
         self.responseSize = try response.size()
         self.responseCiphertextCount = response.ciphertextMatrices
             .map { matrix in matrix.ciphertexts.count }.sum()
-        self.noiseBudget = try response.scaledNoiseBudget(using: secretKey)
     }
 }

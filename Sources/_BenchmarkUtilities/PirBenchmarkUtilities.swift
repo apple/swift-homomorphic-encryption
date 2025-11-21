@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import ApplicationProtobuf
-import Benchmark
+public import Benchmark
 import Foundation
-import HomomorphicEncryption
+public import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
-import PrivateInformationRetrieval
+public import PrivateInformationRetrieval
 
 @usableFromInline nonisolated(unsafe) let pirBenchmarkConfiguration = Benchmark.Configuration(
     metrics: [

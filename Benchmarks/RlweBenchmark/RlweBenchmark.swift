@@ -16,8 +16,8 @@
 // These benchmarks can be triggered with
 // SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1 swift package benchmark --target RlweBenchmark
 
-import Benchmark
-import HomomorphicEncryption
+public import Benchmark
+public import HomomorphicEncryption
 
 @usableFromInline nonisolated(unsafe) let benchmarkConfiguration = Benchmark.Configuration(
     metrics: [.wallClock, .mallocCountTotal, .peakMemoryResident],

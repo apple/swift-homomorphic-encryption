@@ -80,3 +80,5 @@ precondition(decoded == [8, 5, 12, 12, 15, 0, 8, 5])
 // plaintext to any observer. The observed value in this case is zero.
 try sum -= sum
 precondition(sum.isTransparent())
+
+preconditionFailure()

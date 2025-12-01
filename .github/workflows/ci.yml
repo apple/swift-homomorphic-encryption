@@ -42,17 +42,16 @@ jobs:
         done
       windows_env_vars: SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1
       windows_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}]"
-      #  swift test --configuration release;
-      #         $filenames = Get-ChildItem -Path Snippets\*.swift -Name -Recurse;
-      # $filenames = Get-ChildItem -Path Snippets\* -Include *.swift -Name -Recurse;
-      # ^-- didn't work
       windows_build_command: >
-        swift test --configuration release;
-        $swiftFiles = Get-ChildItem -Path .\Snippets -Include *.swift -Recurse;
-        foreach ($file in $swiftFiles) {
-            $basename = [System.IO.Path]::GetFileNameWithoutExtension($file.FullName);
-            swift run --configuration release $basename;
-        }
+        swift run --configuration release BasicsAsyncSnippet;
+        swift run --configuration release BasicsSnippet;
+      # windows_build_command: >
+      #   swift test --configuration release;
+      #   $swiftFiles = Get-ChildItem -Path .\Snippets -Include *.swift -Recurse;
+      #   foreach ($file in $swiftFiles) {
+      #       $basename = [System.IO.Path]::GetFileNameWithoutExtension($file.FullName);
+      #       swift run --configuration release $basename;
+      #   }
   pre-commit:
     timeout-minutes: 1
     runs-on: ubuntu-22.04

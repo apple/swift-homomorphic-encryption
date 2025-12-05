@@ -44,7 +44,7 @@ func getDatabaseForTesting(
 }
 
 /// Configuration for a PIR database.
-public struct PirDatabaseConfig {
+public struct PirDatabaseConfig: Sendable {
     /// Number of rows in the database.
     public let entryCount: Int
     /// Size of each entry in bytes.

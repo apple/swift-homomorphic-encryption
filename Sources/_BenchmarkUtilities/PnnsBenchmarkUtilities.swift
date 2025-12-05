@@ -59,7 +59,7 @@ public struct PnnsBenchmarkConfig {
 }
 
 /// Configuration for a PNNS database.
-public struct PnnsDatabaseConfig {
+public struct PnnsDatabaseConfig: Sendable {
     /// Number of rows in the database.
     public let rowCount: Int
     /// Dimension of each embedding vector.

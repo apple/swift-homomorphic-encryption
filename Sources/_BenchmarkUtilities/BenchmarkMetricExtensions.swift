@@ -28,16 +28,16 @@ extension BenchmarkMetric {
 }
 
 /// Encryption parameters configuration for benchmarks.
-public struct EncryptionParametersConfig {
+public struct EncryptionParametersConfig: Sendable {
     /// Default configuration for PNNS benchmarks
-    public nonisolated(unsafe) static let defaultPnns = EncryptionParametersConfig(
+    public static let defaultPnns = EncryptionParametersConfig(
         polyDegree: 4096,
         // use plaintextModulusBits: [16, 17] for plaintext CRT
         plaintextModulusBits: [17],
         coefficientModulusBits: [27, 28, 28])
 
     /// Default configuration for PIR benchmarks
-    public nonisolated(unsafe) static let defaultPir = EncryptionParametersConfig(
+    public static let defaultPir = EncryptionParametersConfig(
         polyDegree: 4096,
         plaintextModulusBits: [5],
         coefficientModulusBits: [27, 28, 28])

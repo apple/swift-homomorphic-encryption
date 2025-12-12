@@ -136,7 +136,7 @@ The following table maps Swift Homomorphic Encryption package versions to requir
 Package version | Swift version | Xcode version
 ----------------|---------------|-----------------------------------------
 1.0.x           | >= Swift 5.10 | >= Xcode 15.3
-main            | >= Swift 6.0  | >= Xcode 16.1
+main            | >= Swift 6.2  | >= Xcode 26
 
 ### Source Stability
 Swift Homomorphic Encryption follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). Source breaking changes to the public API can only land in a new major version, with the following exception:

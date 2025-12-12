@@ -485,7 +485,7 @@ public protocol HeScheme: Sendable {
     ///   - evaluationKey: Evaluation key to use in the HE computation. Must contain the Galois element associated with
     /// `step`, see ``GaloisElement/rotatingColumns(by:degree:)``.
     /// - Throws: failure to rotate ciphertext's columns.
-    /// - seealso: ``Ciphertext/rotateColumns(by:using:)`` for an alternate API.
+    /// - seealso: ``Ciphertext/rotateColumns(by:using:)-4f3tp`` for an alternate API.
     static func rotateColumns(
         of ciphertext: inout CanonicalCiphertext,
         by step: Int,
@@ -513,7 +513,7 @@ public protocol HeScheme: Sendable {
     ///   - evaluationKey: Evaluation key to use in the HE computation. Must contain the Galois element returned from
     /// ``GaloisElement/swappingRows(degree:)``.
     /// - Throws: error upon failure to swap the ciphertext's rows.
-    /// - seealso: ``Ciphertext/swapRows(using:)`` for an alternate API. ``swapRowsAsync(of:using:)`` for an async
+    /// - seealso: ``Ciphertext/swapRows(using:)-4o179`` for an alternate API. ``swapRowsAsync(of:using:)`` for an async
     /// version of this API
     static func swapRows(of ciphertext: inout CanonicalCiphertext, using evaluationKey: EvaluationKey) throws
 
@@ -862,7 +862,7 @@ public protocol HeScheme: Sendable {
     /// serialization and sending the ciphertext to the secret key owner.
     /// - Parameter ciphertext: Ciphertext; must have > 1 ciphertext modulus.
     /// - Throws: Error upon failure to mod-switch.
-    /// - seealso: ``Ciphertext/modSwitchDown()`` for an alternative API.
+    /// - seealso: ``Ciphertext/modSwitchDown()-4an2b`` for an alternative API.
     /// - seealso: ``modSwitchDownAsync(_:)``  for an async version of this API
     static func modSwitchDown(_ ciphertext: inout CanonicalCiphertext) throws
 
@@ -873,7 +873,7 @@ public protocol HeScheme: Sendable {
     ///
     /// If the ciphertext already has a single modulus, this is a no-op.
     /// - Throws: Error upon failure to modulus switch.
-    /// - seealso: ``Ciphertext/modSwitchDownToSingle()`` for more information and an alternative API.
+    /// - seealso: ``Ciphertext/modSwitchDownToSingle()-3x0dy`` for more information and an alternative API.
     /// - seealso: ``modSwitchDownToSingleAsync(_:)``  for an async version of this API
     static func modSwitchDownToSingle(_ ciphertext: inout CanonicalCiphertext) throws
 

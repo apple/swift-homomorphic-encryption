@@ -32,4 +32,23 @@ extension Ciphertext {
     {
         try Scheme.rotateColumnsMultiStep(of: &self, by: step, using: evaluationKey)
     }
+
+    /// Asynchronously rotates the columns of the ciphertext by combining multiple rotation steps corresponding to
+    /// Galois elements
+    /// available in the `evaluationKey`.
+    ///
+    /// - Parameters:
+    ///   - step: Number of slots to rotate. Negative values indicate a left rotation, and positive values indicate a
+    /// right rotation. Must have absolute value in `[1, N / 2 - 1]` where `N` is the RLWE ring dimension, given by
+    /// `EncryptionParameters/polyDegree`.
+    ///   - evaluationKey: Evaluation key to use in the HE computation. Must contain Galois elements which can be
+    /// combined for the desired rotation step.
+    /// - Throws: Error upon failure to rotate ciphertext's columns.
+    /// - seealso: `HeScheme/_rotateColumnsMultiStep(of:by:using:)` for an alternative API and more information.
+    @inlinable
+    public mutating func rotateColumnsMultiStep(by step: Int, using evaluationKey: EvaluationKey<Scheme>) async throws
+        where Format == Scheme.CanonicalCiphertextFormat
+    {
+        try await Scheme.rotateColumnsMultiStepAsync(of: &self, by: step, using: evaluationKey)
+    }
 }

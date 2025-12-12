@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public import AsyncAlgorithms
+
 /// Ciphertext type.
 public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendable {
     public typealias Scalar = Scheme.Scalar
@@ -28,7 +30,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     ///
     /// After a fresh encryption, the ciphertext has ``HeScheme/freshCiphertextPolyCount`` polynomials.
     /// The count may change during the course of HE operations, e.g. increase during ciphertext multiplication,
-    /// or decrease during relinearization ``Ciphertext/relinearize(using:)``.
+    /// or decrease during relinearization ``Ciphertext/relinearize(using:)-41bsm``.
     public var polyCount: Int {
         polys.count
     }
@@ -314,7 +316,7 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     ///
     /// If the ciphertext already has a single modulus, this is a no-op.
     /// - Throws: Error upon failure to modulus switch.
-    /// - seealso: ``Ciphertext/modSwitchDown()`` for more information and an alternative API.
+    /// - seealso: ``Ciphertext/modSwitchDown()-4an2b`` for more information and an alternative API.
     @inlinable
     public mutating func modSwitchDownToSingle() throws where Format == Scheme.CanonicalCiphertextFormat {
         try Scheme.modSwitchDownToSingle(&self)
@@ -535,22 +537,31 @@ extension Ciphertext where Format == Scheme.CanonicalCiphertextFormat {
 }
 
 extension Collection {
+    /// Sums together the ciphertexts in the collection.
+    /// - Throws: Precondition failure if the collection is empty.
+    /// - Returns: The sum.
     @inlinable
-    func sum<Scheme>() throws -> Element where Element == Ciphertext<Scheme, Eval> {
+    public func sum<Scheme>() throws -> Element where Element == Ciphertext<Scheme, Eval> {
         precondition(!isEmpty)
         // swiftlint:disable:next force_unwrapping
         return try dropFirst().reduce(first!) { try $0 + $1 }
     }
 
+    /// Sums together the ciphertexts in the collection.
+    /// - Throws: Precondition failure if the collection is empty.
+    /// - Returns: The sum.
     @inlinable
-    func sum<Scheme>() throws -> Element where Element == Ciphertext<Scheme, Coeff> {
+    public func sum<Scheme>() throws -> Element where Element == Ciphertext<Scheme, Coeff> {
         precondition(!isEmpty)
         // swiftlint:disable:next force_unwrapping
         return try dropFirst().reduce(first!) { try $0 + $1 }
     }
 
+    /// Sums together the ciphertexts in the collection.
+    /// - Throws: Precondition failure if the collection is empty.
+    /// - Returns: The sum.
     @inlinable
-    func sum<Scheme>() throws -> Element where Element == Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
+    public func sum<Scheme>() throws -> Element where Element == Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat> {
         precondition(!isEmpty)
         // swiftlint:disable:next force_unwrapping
         return try dropFirst().reduce(first!) { try $0 + $1 }
@@ -936,5 +947,168 @@ extension Ciphertext {
             return try await convertToEvalFormat() as! Scheme.CanonicalCiphertext
         }
         throw HeError.errorCastingPolyFormat(from: Format.self, to: Scheme.CanonicalCiphertextFormat.self)
+    }
+
+    // MARK: Async rotations
+
+    /// Asynchronously rotates the columns of a ciphertext.
+    ///
+    /// - Parameters:
+    ///   - step: Number of slots to rotate. Negative values indicate a left rotation, and positive values indicate a
+    /// right rotation. Must have absolute value in `[1, N / 2 - 1]` where `N` is the RLWE ring dimension, given by
+    /// ``EncryptionParameters/polyDegree``.
+    ///   - evaluationKey: Evaluation key to use in the HE computation. Must contain the Galois element associated with
+    /// `step`, see ``GaloisElement/rotatingColumns(by:degree:)``.
+    /// - Throws: failure to rotate ciphertext's columns.
+    /// - seealso: ``HeScheme/rotateColumns(of:by:using:)-7h3fz`` for an alternate API and more information.
+    @inlinable
+    public mutating func rotateColumns(by step: Int,
+                                       using evaluationKey: EvaluationKey<Scheme>) async throws
+        where Format == Scheme.CanonicalCiphertextFormat
+    {
+        try await Scheme.rotateColumnsAsync(of: &self, by: step, using: evaluationKey)
+    }
+
+    /// Asynchronously swaps the rows of a ciphertext.
+    ///
+    /// A plaintext in ``EncodeFormat/simd`` format can be viewed a `2 x (N / 2)` matrix of coefficients.
+    /// For instance, for `N = 8`, given a ciphertext encrypting a plaintext with values
+    /// ```
+    /// [1, 2, 3, 4, 5, 6, 7, 8]
+    /// ```
+    /// calling ``HeScheme/swapRows(of:using:)`` with `step: 1` will yield a ciphertext decrypting to
+    /// ```
+    /// [5, 6, 7, 8, 1, 2, 3, 4]
+    /// ```
+    /// - Parameter evaluationKey: Evaluation key to use in the HE computation. Must contain the Galois element
+    /// associated with `step`, see ``GaloisElement/rotatingColumns(by:degree:)``.
+    /// - Throws: error upon failure to swap the ciphertext's rows.
+    /// - seealso: ``HeScheme/swapRows(of:using:)-50tac`` for an alternate API.
+    @inlinable
+    public mutating func swapRows(using evaluationKey: EvaluationKey<Scheme>) async throws
+        where Format == Scheme.CanonicalCiphertextFormat
+    {
+        try await Scheme.swapRowsAsync(of: &self, using: evaluationKey)
+    }
+
+    /// Asynchronously performs modulus switching on the ciphertext.
+    ///
+    /// - Throws: Error upon failure to mod-switch.
+    /// - seealso: ``HeScheme/modSwitchDown(_:)`` for an alternative API and more information.
+    @inlinable
+    public mutating func modSwitchDown() async throws where Format == Scheme.CanonicalCiphertextFormat {
+        try await Scheme.modSwitchDownAsync(&self)
+    }
+
+    /// Asynchronously performs modulus switching to a single modulus.
+    ///
+    /// If the ciphertext already has a single modulus, this is a no-op.
+    /// - Throws: Error upon failure to modulus switch.
+    /// - seealso: ``Ciphertext/modSwitchDown()-4an2b`` for more information and an alternative API.
+    @inlinable
+    public mutating func modSwitchDownToSingle() async throws where Format == Scheme.CanonicalCiphertextFormat {
+        try await Scheme.modSwitchDownToSingleAsync(&self)
+    }
+}
+
+extension Ciphertext where Format == Scheme.CanonicalCiphertextFormat {
+    /// Asynchronously applies a Galois transformation.
+    ///
+    /// - Parameters:
+    ///   - element: Galois element of the transformation. Must be odd in `[1, 2 * N - 1]` where `N` is the RLWE ring
+    /// dimension, given by ``EncryptionParameters/polyDegree``.
+    ///   - key: Evaluation key. Must contain Galois element `element`.
+    /// - Throws: Error upon failure to apply the Galois transformation.
+    /// - seealso: ``HeScheme/applyGalois(ciphertext:element:using:)`` for an alternative API and more information.
+    @inlinable
+    public mutating func applyGalois(element: Int, using key: EvaluationKey<Scheme>) async throws {
+        try await Scheme.applyGaloisAsync(ciphertext: &self, element: element, using: key)
+    }
+
+    /// Asynchronously Relinearizes the ciphertext.
+    ///
+    /// - Parameter key: Evaluation key to relinearize with. Must contain a `RelinearizationKey`.
+    /// - Throws: Error upon failure to relinearize.
+    /// - seealso: ``HeScheme/relinearize(_:using:)`` for an alternative API and more information.
+    @inlinable
+    public mutating func relinearize(using key: EvaluationKey<Scheme>) async throws {
+        try await Scheme.relinearizeAsync(&self, using: key)
+    }
+}
+
+// MARK: - Async collection extensions
+
+extension Collection {
+    /// Sums together the ciphertexts in the collection.
+    /// - Throws: Precondition failure if the collection is empty.
+    /// - Returns: The sum.
+    @inlinable
+    public func sum<Scheme>() async throws -> Element where Element == Ciphertext<Scheme, Eval> {
+        precondition(!isEmpty)
+        // swiftlint:disable:next force_unwrapping
+        return try await dropFirst().async.reduce(first!) { try await $0 + $1 }
+    }
+
+    /// Sums together the ciphertexts in the collection.
+    /// - Throws: Precondition failure if the collection is empty.
+    /// - Returns: The sum.
+    @inlinable
+    public func sum<Scheme>() async throws -> Element where Element == Ciphertext<Scheme, Coeff> {
+        precondition(!isEmpty)
+        // swiftlint:disable:next force_unwrapping
+        return try await dropFirst().async.reduce(first!) { try await $0 + $1 }
+    }
+
+    /// Sums together the ciphertexts in the collection.
+    /// - Throws: Precondition failure if the collection is empty.
+    /// - Returns: The sum.
+    @inlinable
+    public func sum<Scheme>() async throws -> Element where
+        Element == Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>
+    {
+        precondition(!isEmpty)
+        // swiftlint:disable:next force_unwrapping
+        return try await dropFirst().async.reduce(first!) { try await $0 + $1 }
+    }
+
+    /// Asynchronously computes an inner product between self and a collection of (optional) plaintexts in ``Eval``
+    /// format.
+    ///
+    /// The inner product encrypts `sum_{i, plaintexts[i] != nil} self[i] * plaintexts[i]`. `plaintexts[i]`
+    /// may be `nil`, which denotes a zero plaintext.
+    /// - Parameter plaintexts: Plaintexts. Must not be empty and have `count` matching `self.count`.
+    /// - Returns: A ciphertext encrypting the inner product.
+    /// - Throws: Error upon failure to compute inner product.
+    @inlinable
+    public func innerProduct<Scheme>(plaintexts: some Collection<Plaintext<Scheme, Eval>?>) async throws -> Element
+        where Element == Ciphertext<Scheme, Eval>
+    {
+        try await Scheme.innerProductAsync(ciphertexts: self, plaintexts: plaintexts)
+    }
+
+    /// Asynchronously computes an inner product between self and a collection of plaintexts in ``Eval`` format.
+    ///
+    /// The inner product encrypts `sum_{i} self[i] * plaintexts[i]`.
+    /// - Parameter plaintexts: Plaintexts. Must not be empty and have `count` matching `self.count`.
+    /// - Returns: A ciphertext encrypting the inner product.
+    /// - Throws: Error upon failure to compute inner product.
+    @inlinable
+    public func innerProduct<Scheme>(plaintexts: some Collection<Plaintext<Scheme, Eval>>) async throws -> Element
+        where Element == Ciphertext<Scheme, Eval>
+    {
+        try await Scheme.innerProductAsync(ciphertexts: self, plaintexts: plaintexts)
+    }
+
+    /// Asynchronously computes an inner product between self and another collection of ciphertexts.
+    ///
+    /// The inner product encrypts `sum_{i} self[i] * ciphertexts[i]`.
+    /// - Parameter ciphertexts: Ciphertexts. Must not be empty and have `count` matching `self.count`.
+    /// - Returns: A ciphertext encrypting the inner product.
+    /// - Throws: Error upon failure to compute inner product.
+    @inlinable
+    public func innerProduct<Scheme>(ciphertexts: some Collection<Element>) async throws -> Element
+        where Element == Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>
+    {
+        try await Scheme.innerProductAsync(self, ciphertexts)
     }
 }

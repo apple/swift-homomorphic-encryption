@@ -148,7 +148,7 @@ extension PolyRq {
         lhs.validateMetadataEquality(with: rhs)
 
         var lhsData = lhs.data.data.mutableSpan
-        var rhsData = rhs.data.data.span
+        let rhsData = rhs.data.data.span
         for (rnsIndex, modulus) in rhs.moduli.enumerated() {
             for index in rhs.polyIndices(rnsIndex: rnsIndex) {
                 lhsData[index] = lhsData[index].addMod(rhsData[index], modulus: modulus)
@@ -298,16 +298,13 @@ extension PolyRq {
     @inlinable
     public static prefix func - (_ poly: Self) -> Self {
         var result = Self.zero(context: poly.context)
-        result.data.data.withUnsafeMutableBufferPointer { resultData in
-            poly.data.data.withUnsafeBufferPointer { rhsData in
-                for (rnsIndex, modulus) in poly.moduli.enumerated() {
-                    for index in poly.polyIndices(rnsIndex: rnsIndex) {
-                        resultData[index] = rhsData[index].negateMod(modulus: modulus)
-                    }
-                }
+        var resultData = result.data.data.mutableSpan
+        let rhsData = poly.data.data.span
+        for (rnsIndex, modulus) in poly.moduli.enumerated() {
+            for index in poly.polyIndices(rnsIndex: rnsIndex) {
+                resultData[index] = rhsData[index].negateMod(modulus: modulus)
             }
         }
-
         return result
     }
 

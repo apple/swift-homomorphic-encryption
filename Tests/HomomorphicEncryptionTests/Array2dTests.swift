@@ -186,29 +186,27 @@ struct Array2dTests {
     }
 
     @Test
-    func withUnsafeData() {
+    func withDataSpan() {
         let data = [Int](0..<32)
         let array = Array2d(data: data, rowCount: 4, columnCount: 8)
-        array.withUnsafeData { dataPointer in
-            array.data.withUnsafeBufferPointer { expectedDataPointer in
-                #expect(dataPointer.baseAddress == expectedDataPointer.baseAddress)
+        var sum = 0
+        array.withDataSpan { span in
+            for index in span.indices {
+                sum += span[index]
             }
         }
+        #expect(sum == array.data.sum())
     }
 
     @Test
-    func withUnsafeMutableData() throws {
+    func withMutableDataSpan() {
         let data = [Int](0..<32)
         var array = Array2d(data: data, rowCount: 4, columnCount: 8)
-        // For the comparison we need 'mutable' pointers of the same type.
-        // But, `withUnsafe*` methods need exclusive ownership of the pointer.
-        let expectedBaseAddress = try #require(
-            array.data.withUnsafeMutableBufferPointer { buffer in
-                buffer.baseAddress
-            },
-            "Expected a valid base address")
-        array.withUnsafeMutableData { dataPointer in
-            #expect(dataPointer.baseAddress == expectedBaseAddress)
+        array.withMutableDataSpan { span in
+            for index in span.indices {
+                span[index] += 1
+            }
         }
+        #expect(array.data == [Int](1..<33))
     }
 }

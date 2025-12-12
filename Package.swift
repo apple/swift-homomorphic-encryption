@@ -342,6 +342,6 @@ if enableDocCPlugin {
 // Set the minimum macOS version for the package
 #if canImport(Darwin)
 package.platforms = [
-    .macOS(.v26), // Constrained by UInt128 support
+    .macOS(.v26), // Constrained by use of Span
 ]
 #endif

@@ -25,7 +25,7 @@ jobs:
       api_breakage_check_enabled: false
       # swift:6.2-noble leads to issues with Snippets
       # e.g. https://github.com/apple/swift-homomorphic-encryption/actions/runs/18144503507/job/51643132814#step:5:1087
-      docs_check_container_image: swift:6.1-noble
+      docs_check_container_image: swift:6.2.2-noble
       format_check_enabled: false
   tests:
     name: swifttests

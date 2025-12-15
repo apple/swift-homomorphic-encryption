@@ -147,11 +147,11 @@ extension PolyRq {
     public static func += (_ lhs: inout Self, _ rhs: Self) {
         lhs.validateMetadataEquality(with: rhs)
 
-        var lhsData = lhs.data.data.mutableSpan
-        let rhsData = rhs.data.data.span
+        // var lhsData = lhs.data.data.mutableSpan
+        // let rhsData = rhs.data.data.span
         for (rnsIndex, modulus) in rhs.moduli.enumerated() {
             for index in rhs.polyIndices(rnsIndex: rnsIndex) {
-                lhsData[index] = lhsData[index].addMod(rhsData[index], modulus: modulus)
+                lhs.data.data[index] = lhs.data.data[index].addMod(rhs.data.data[index], modulus: modulus)
             }
         }
     }
@@ -164,11 +164,11 @@ extension PolyRq {
     public static func -= (_ lhs: inout Self, _ rhs: Self) {
         lhs.validateMetadataEquality(with: rhs)
 
-        var lhsData = lhs.data.data.mutableSpan
-        let rhsData = rhs.data.data.span
+        // var lhsData = lhs.data.data.mutableSpan
+        // let rhsData = rhs.data.data.span
         for (rnsIndex, modulus) in rhs.moduli.enumerated() {
             for index in rhs.polyIndices(rnsIndex: rnsIndex) {
-                lhsData[index] = lhsData[index].subtractMod(rhsData[index], modulus: modulus)
+                lhs.data.data[index] = lhs.data.data[index].subtractMod(rhs.data.data[index], modulus: modulus)
             }
         }
     }
@@ -184,11 +184,11 @@ extension PolyRq {
     static func mulAssign(_ lhs: inout Self, secretPoly: borrowing Self) where F == Eval {
         let context = lhs.context
         assert(secretPoly.context.isParentOfOrEqual(to: context))
-        var lhsData = lhs.data.data.mutableSpan
-        let rhsData = secretPoly.data.data.span
+        // var lhsData = lhs.data.data.mutableSpan
+        // let rhsData = secretPoly.data.data.span
         for (rnsIndex, modulus) in context.reduceModuli.enumerated() {
             for index in secretPoly.polyIndices(rnsIndex: rnsIndex) {
-                lhsData[index] = modulus.multiplyMod(lhsData[index], rhsData[index])
+                lhs.data.data[index] = modulus.multiplyMod(lhs.data.data[index], secretPoly.data.data[index])
             }
         }
     }
@@ -213,13 +213,13 @@ extension PolyRq {
         precondition(accumulator.shape == rhs.data.shape)
         lhs.validateMetadataEquality(with: rhs)
 
-        let lhsData = lhs.data.data.span
-        let rhsData = rhs.data.data.span
-        var accumulatorSpan = accumulator.data.mutableSpan
+        // let lhsData = lhs.data.data.span
+        // let rhsData = rhs.data.data.span
+        // var accumulatorSpan = accumulator.data.mutableSpan
         for rnsIndex in rhs.moduli.indices {
             for index in rhs.polyIndices(rnsIndex: rnsIndex) {
-                accumulatorSpan[index] &+=
-                    T.DoubleWidth(lhsData[index].multipliedFullWidth(by: rhsData[index]))
+                accumulator.data[index] &+=
+                    T.DoubleWidth(lhs.data.data[index].multipliedFullWidth(by: rhs.data.data[index]))
             }
         }
     }
@@ -237,9 +237,9 @@ extension PolyRq {
                 multiplicand: rhsResidue,
                 divisionModulus: modulus.divisionModulus)
             let polyIndices = poly.polyIndices(rnsIndex: rnsIndex)
-            var lhsData = poly.data.data.mutableSpan
+            // var lhsData = poly.data.data.mutableSpan
             for index in polyIndices {
-                lhsData[index] = multiplicationModulus.multiplyMod(lhsData[index])
+                poly.data.data[index] = multiplicationModulus.multiplyMod(poly.data.data[index])
             }
         }
     }
@@ -298,11 +298,11 @@ extension PolyRq {
     @inlinable
     public static prefix func - (_ poly: Self) -> Self {
         var result = Self.zero(context: poly.context)
-        var resultData = result.data.data.mutableSpan
-        let rhsData = poly.data.data.span
+        // var resultData = result.data.data.mutableSpan
+        // let rhsData = poly.data.data.span
         for (rnsIndex, modulus) in poly.moduli.enumerated() {
             for index in poly.polyIndices(rnsIndex: rnsIndex) {
-                resultData[index] = rhsData[index].negateMod(modulus: modulus)
+                result.data.data[index] = poly.data.data[index].negateMod(modulus: modulus)
             }
         }
         return result

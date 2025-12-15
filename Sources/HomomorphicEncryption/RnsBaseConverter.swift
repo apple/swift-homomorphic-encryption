@@ -98,9 +98,8 @@ public struct _RnsBaseConverter<T: ScalarType>: Sendable {
         assert(poly.context == inputContext)
         for (rnsIndex, puncturedProduct) in inversePuncturedProducts.enumerated() {
             let indices = poly.polyIndices(rnsIndex: rnsIndex)
-            var dataSpan = poly.data.data.mutableSpan
             for index in indices {
-                dataSpan[index] = puncturedProduct.multiplyMod(dataSpan[index])
+                poly.data.data[index] = puncturedProduct.multiplyMod(poly.data.data[index])
             }
         }
     }
@@ -116,7 +115,7 @@ public struct _RnsBaseConverter<T: ScalarType>: Sendable {
     @inlinable
     func convertApproximate(using products: PolyRq<T, Coeff>) -> PolyRq<T, Coeff> {
         var result = PolyRq<T, Coeff>.zero(context: outputContext)
-        var resultSpan = result.data.data.mutableSpan
+        // var resultSpan = result.data.data.mutableSpan
         for (rnsOutIndex, tj) in outputContext.reduceModuli.enumerated() {
             let puncturedProductColumnIndices = puncturedProducts.rowIndices(row: rnsOutIndex)
             var sums = Array(repeating: T.DoubleWidth(0), count: outputContext.degree)
@@ -127,7 +126,7 @@ public struct _RnsBaseConverter<T: ScalarType>: Sendable {
                     for (coeffIndex, outIndex) in products.polyIndices(rnsIndex: rnsOutIndex).enumerated() {
                         sums[coeffIndex] &+=
                             T.DoubleWidth(products.data[productsIndex].multipliedFullWidth(by: puncturedProd))
-                        resultSpan[outIndex] = tj.reduce(sums[coeffIndex])
+                        result.data.data[outIndex] = tj.reduce(sums[coeffIndex])
                         productsIndex &+= 1
                     }
                 } else {

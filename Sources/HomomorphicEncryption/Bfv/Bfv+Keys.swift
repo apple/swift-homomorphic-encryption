@@ -179,10 +179,10 @@ extension Bfv {
                 for (index, poly) in keyCiphers[decomposeIndex].polys.enumerated() {
                     let accIndex = poly.data.index(row: index, column: 0)
                     let polyIndex = poly.data.index(row: keyIndex, column: 0)
-                    let polySpan = poly.data.data.span
+                    // let polySpan = poly.data.data.span
                     for columnIndex in 0..<degree {
                         let prod = bufferSlice[columnIndex]
-                            .multipliedFullWidth(by: polySpan[polyIndex &+ columnIndex])
+                            .multipliedFullWidth(by: poly.data.data[polyIndex &+ columnIndex])
                         // Overflow avoided by `maxLazyProductAccumulationCount()` check during context
                         // initialization
                         accumulator[accIndex &+ columnIndex] &+= T.DoubleWidth(prod)
@@ -192,9 +192,9 @@ extension Bfv {
             let prodIndex = ciphertextProd.polys[0].data.index(row: rnsIndex, column: 0)
             for rowIndex in ciphertextProd.polys.indices {
                 let accIndex = accumulator.index(row: rowIndex, column: 0)
-                var ciphertextProdSpan = ciphertextProd.polys[rowIndex].data.data.mutableSpan
+                // var ciphertextProdSpan = ciphertextProd.polys[rowIndex].data.data.mutableSpan
                 for columnIndex in 0..<degree {
-                    ciphertextProdSpan[prodIndex &+ columnIndex] = keyModulus
+                    ciphertextProd.polys[rowIndex].data.data[prodIndex &+ columnIndex] = keyModulus
                         .reduce(accumulator[accIndex &+ columnIndex])
                 }
             }

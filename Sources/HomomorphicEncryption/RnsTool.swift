@@ -383,15 +383,15 @@ public struct _RnsTool<T: ScalarType>: Sendable {
         var polyModQ = poly
         try polyModQ.dropContext(to: inputContext)
         var output = try rnsConvertQToBSk.convertApproximate(poly: polyModQ)
-        let polyModBSkSpan = polyModBSk.span
+        // let polyModBSkSpan = polyModBSk.span
         for (rnsIndex, inverseQModBSk) in inverseQModBSk.enumerated() {
             let bSk = rnsConvertQToBSk.outputContext.moduli[rnsIndex]
             let outputIndices = output.polyIndices(rnsIndex: rnsIndex)
-            var outputSpan = output.data.data.mutableSpan
+            // var outputSpan = output.data.data.mutableSpan
             for polyIndex in outputIndices {
-                let inputCoeff = polyModBSkSpan[polyIndex]
-                let outputCoeff = outputSpan[polyIndex]
-                outputSpan[polyIndex] = inverseQModBSk.multiplyMod(inputCoeff &+ bSk &- outputCoeff)
+                let inputCoeff = polyModBSk[polyIndex]
+                let outputCoeff = output.data.data[polyIndex]
+                output.data.data[polyIndex] = inverseQModBSk.multiplyMod(inputCoeff &+ bSk &- outputCoeff)
             }
         }
         return output
@@ -420,29 +420,28 @@ public struct _RnsTool<T: ScalarType>: Sendable {
         let coeffIndices = alphaSk.coeffIndices
         var alphaExceedsThreshold = [T]()
         alphaExceedsThreshold.reserveCapacity(coeffIndices.count)
-        var alphaSkSpan = alphaSk.data.data.mutableSpan
+        // var alphaSkSpan = alphaSk.data.data.mutableSpan
         for coeffIndex in coeffIndices {
             let polyModMSkCoeff = polyModMSk[coeffIndex]
-            var alphaSk = alphaSkSpan[coeffIndex]
-            alphaSk = inverseBModMSk
-                .multiplyMod(alphaSk &+ inverseBModMSk.modulus &- polyModMSkCoeff)
-            alphaSkSpan[coeffIndex] = alphaSk
-            alphaExceedsThreshold.append(alphaSk.constantTimeGreaterThan(mSkThreshold))
+            var alphaSkScalar = alphaSk.data.data[coeffIndex]
+            alphaSkScalar = inverseBModMSk.multiplyMod(alphaSkScalar &+ inverseBModMSk.modulus &- polyModMSkCoeff)
+            alphaSk[coeffIndex] = alphaSkScalar
+            alphaExceedsThreshold.append(alphaSkScalar.constantTimeGreaterThan(mSkThreshold))
         }
 
         var output = rnsConvertBtoQ.convertApproximate(using: polyModB)
-        var outputSpan = output.data.data.mutableSpan
-        let alphaExceedsThresholdSpan = alphaExceedsThreshold.span
+        // var outputSpan = output.data.data.mutableSpan
+        // let alphaExceedsThresholdSpan = alphaExceedsThreshold.span
         for (rnsIndex, (qi, (bModQi, negBModQi))) in zip(inputContext.moduli, zip(bModQ, negBModQ))
             .enumerated()
         {
             for (coeffIndex, outputIndex) in polyModB.polyIndices(rnsIndex: rnsIndex).enumerated() {
                 // Center alphaSk before Shenoy-Kumeresan conversion
                 let adjust = T.constantTimeSelect(
-                    if: alphaExceedsThresholdSpan[coeffIndex],
-                    then: bModQi.multiplyMod(mSk &- alphaSkSpan[coeffIndex]),
-                    else: negBModQi.multiplyMod(alphaSkSpan[coeffIndex]))
-                outputSpan[outputIndex] = outputSpan[outputIndex].addMod(adjust, modulus: qi)
+                    if: alphaExceedsThreshold[coeffIndex],
+                    then: bModQi.multiplyMod(mSk &- alphaSk[coeffIndex]),
+                    else: negBModQi.multiplyMod(alphaSk[coeffIndex]))
+                output[outputIndex] = output[outputIndex].addMod(adjust, modulus: qi)
             }
         }
 

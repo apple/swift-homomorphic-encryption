@@ -293,11 +293,11 @@ public enum Bfv<T: ScalarType>: HeScheme {
     {
         let poly = result.polys[0]
         for (polyIndex, accumulatorPoly) in accumulator.enumerated() {
-            let accumulatorPolySpan = accumulatorPoly.data.span
-            var resultSpan = result.polys[polyIndex].data.data.mutableSpan
+            // let accumulatorPolySpan = accumulatorPoly.data.span
+            // var resultSpan = result.polys[polyIndex].data.data.mutableSpan
             for (rnsIndex, modulus) in poly.polyContext().reduceModuli.enumerated() {
                 for index in poly.polyIndices(rnsIndex: rnsIndex) {
-                    resultSpan[index] = modulus.reduce(accumulatorPolySpan[index])
+                    result.polys[polyIndex].data.data[index] = modulus.reduce(accumulatorPoly.data[index])
                 }
             }
         }

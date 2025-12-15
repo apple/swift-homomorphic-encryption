@@ -433,11 +433,11 @@ public struct MultiplyConstantArrayModulus<T: CoreScalarType>: Equatable, Sendab
 
     @inlinable
     public subscript(index: Int) -> MultiplyConstantModulus<T> {
-        let factorSpan = factors.span
-        let multiplicandsSpan = multiplicands.span
-        return MultiplyConstantModulus(
-            multiplicand: multiplicandsSpan[index],
+        // let factorSpan = factors.span
+        // let multiplicandsSpan = multiplicands.span
+        MultiplyConstantModulus(
+            multiplicand: multiplicands[index],
             modulus: modulus,
-            factor: factorSpan[index])
+            factor: factors[index])
     }
 }

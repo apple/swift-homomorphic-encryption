@@ -87,7 +87,7 @@ public struct _CrtComposer<T: ScalarType>: Sendable {
             for column in 0..<data.columnCount {
                 let tmp = V(inversePuncturedProduct.multiplyMod(data[
                     row,
-                    column
+                    column,
                 ]))
                 let addend = tmp &* puncturedProduct
                 products[column] = products[column].addMod(addend, modulus: q)

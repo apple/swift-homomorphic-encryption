@@ -433,13 +433,11 @@ public struct MultiplyConstantArrayModulus<T: CoreScalarType>: Equatable, Sendab
 
     @inlinable
     public subscript(index: Int) -> MultiplyConstantModulus<T> {
-        factors.withUnsafeBufferPointer { factorPtr in
-            multiplicands.withUnsafeBufferPointer { multiplicandsPtr in
-                MultiplyConstantModulus(
-                    multiplicand: multiplicandsPtr[index],
-                    modulus: modulus,
-                    factor: factorPtr[index])
-            }
-        }
+        let factorSpan = factors.span
+        let multiplicandsSpan = multiplicands.span
+        return MultiplyConstantModulus(
+            multiplicand: multiplicandsSpan[index],
+            modulus: modulus,
+            factor: factorSpan[index])
     }
 }

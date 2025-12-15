@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 // Remember to update CI if changing
 
@@ -108,12 +108,13 @@ let package = Package(
                 "CUtil",
                 "ModularArithmetic",
             ],
+            exclude: ["HomomorphicEncryption.docc"],
             swiftSettings: librarySettings),
         .target(
             name: "HomomorphicEncryptionProtobuf",
             dependencies: ["HomomorphicEncryption",
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
-            exclude: ["generated/README.md"],
+            exclude: ["generated/README.md", "HomomorphicEncryptionProtobuf.docc"],
             swiftSettings: librarySettings),
         .target(
             name: "_HomomorphicEncryptionExtras",
@@ -124,6 +125,7 @@ let package = Package(
             dependencies: ["HomomorphicEncryption",
                            .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                            .product(name: "Numerics", package: "swift-numerics")],
+            exclude: ["PrivateInformationRetrieval.docc"],
             swiftSettings: librarySettings),
         .target(
             name: "PrivateNearestNeighborSearch",
@@ -133,6 +135,7 @@ let package = Package(
                 "HomomorphicEncryption",
                 "_HomomorphicEncryptionExtras",
             ],
+            exclude: ["PrivateNearestNeighborSearch.docc"],
             swiftSettings: librarySettings),
         .target(
             name: "ApplicationProtobuf",
@@ -140,7 +143,7 @@ let package = Package(
                            "PrivateInformationRetrieval",
                            "PrivateNearestNeighborSearch",
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
-            exclude: ["generated/README.md", "protobuf_module_mappings.txtpb"],
+            exclude: ["ApplicationProtobuf.docc", "generated/README.md", "protobuf_module_mappings.txtpb"],
             swiftSettings: librarySettings),
         .target(
             name: "_TestUtilities",
@@ -159,6 +162,7 @@ let package = Package(
                 "HomomorphicEncryption",
                 "ApplicationProtobuf",
             ],
+            exclude: ["PIRGenerateDatabase.docc"],
             swiftSettings: executableSettings),
         .executableTarget(
             name: "PIRProcessDatabase",
@@ -169,6 +173,7 @@ let package = Package(
                 "HomomorphicEncryption",
                 .product(name: "Logging", package: "swift-log"),
             ],
+            exclude: ["PIRProcessDatabase.docc"],
             swiftSettings: executableSettings),
         .executableTarget(
             name: "PIRShardDatabase",
@@ -177,6 +182,7 @@ let package = Package(
                 "HomomorphicEncryption",
                 "ApplicationProtobuf",
             ],
+            exclude: ["PIRShardDatabase.docc"],
             swiftSettings: executableSettings),
         .executableTarget(
             name: "PNNSGenerateDatabase",
@@ -185,6 +191,7 @@ let package = Package(
                 "HomomorphicEncryption",
                 "ApplicationProtobuf",
             ],
+            exclude: ["PNNSGenerateDatabase.docc"],
             swiftSettings: executableSettings),
         .executableTarget(
             name: "PNNSProcessDatabase",
@@ -195,6 +202,7 @@ let package = Package(
                 "HomomorphicEncryption",
                 .product(name: "Logging", package: "swift-log"),
             ],
+            exclude: ["PNNSProcessDatabase.docc"],
             swiftSettings: executableSettings),
         .testTarget(
             name: "HomomorphicEncryptionTests",
@@ -342,6 +350,6 @@ if enableDocCPlugin {
 // Set the minimum macOS version for the package
 #if canImport(Darwin)
 package.platforms = [
-    .macOS(.v15), // Constrained by UInt128 support
+    .macOS(.v26), // Constrained by use of Span
 ]
 #endif

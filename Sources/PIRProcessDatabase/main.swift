@@ -434,7 +434,7 @@ struct ProcessDatabase: AsyncParsableCommand {
         var evaluationKeyConfig = EvaluationKeyConfig()
 
         if parallel {
-            try await withThrowingTaskGroup(of: EvaluationKeyConfig.self) { group in
+            try await withThrowingTaskGroup { group in
                 for (shardID, shard) in shards {
                     group.addTask { @Sendable [self] in
                         try await processShard(

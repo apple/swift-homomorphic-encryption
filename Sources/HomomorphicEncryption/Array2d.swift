@@ -76,36 +76,31 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
             columnCount: columnCount)
     }
 
-    /// Provides scoped access to the underlying buffer storing the array's data.
+    /// Provides scoped access to the underlying buffer storing the array's data using a Span.
     ///
     /// Use this method when you need temporary read-only access to the array's contiguous storage.
-    /// The buffer pointer is only valid for the duration of the closure's execution.
     ///
-    /// - Parameter body: A closure that takes an `UnsafeBufferPointer` to the array's data.
-    ///   The buffer pointer argument is valid only for the duration of the closure's execution.
+    /// - Parameter body: A closure that takes a `Span<T>` to the array's data.
     /// - Returns: The return value of the `body` closure.
     /// - Throws: Rethrows any error thrown by the `body` closure.
-    public func withUnsafeData<Return>(_ body: (UnsafeBufferPointer<T>) throws -> Return) rethrows -> Return {
-        try data.withUnsafeBufferPointer { pointer in
-            try body(pointer)
-        }
+    @inlinable
+    public func withDataSpan<Return>(_ body: (Span<T>) throws -> Return) rethrows -> Return {
+        try body(data.span)
     }
 
     /// Provides scoped access to the underlying buffer storing the array's data for mutation.
     ///
     /// Use this method when you need temporary read-write access to the array's contiguous storage.
-    /// The buffer pointer is only valid for the duration of the closure's execution.
     ///
-    /// - Parameter body: A closure that takes an `UnsafeMutableBufferPointer` to the array's data.
-    ///   The buffer pointer argument is valid only for the duration of the closure's execution.
+    /// - Parameter body: A closure that takes a `MutableSpan<T>` to the array's data.
     /// - Returns: The return value of the `body` closure.
     /// - Throws: Rethrows any error thrown by the `body` closure.
-    public mutating func withUnsafeMutableData<Return>(_ body: (UnsafeMutableBufferPointer<T>) throws
-        -> Return) rethrows -> Return
+    @inlinable
+    public mutating func withMutableDataSpan<Return>(_ body: (inout MutableSpan<T>) throws -> Return) rethrows
+        -> Return
     {
-        try data.withUnsafeMutableBufferPointer { pointer in
-            try body(pointer)
-        }
+        var span = data.mutableSpan
+        return try body(&span)
     }
 }
 

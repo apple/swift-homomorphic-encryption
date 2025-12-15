@@ -79,10 +79,8 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
     /// Provides scoped access to the underlying buffer storing the array's data using a Span.
     ///
     /// Use this method when you need temporary read-only access to the array's contiguous storage.
-    /// The Span is only valid for the duration of the closure's execution.
     ///
     /// - Parameter body: A closure that takes a `Span<T>` to the array's data.
-    ///   The Span argument is valid only for the duration of the closure's execution.
     /// - Returns: The return value of the `body` closure.
     /// - Throws: Rethrows any error thrown by the `body` closure.
     @inlinable
@@ -93,20 +91,16 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
     /// Provides scoped access to the underlying buffer storing the array's data for mutation.
     ///
     /// Use this method when you need temporary read-write access to the array's contiguous storage.
-    /// The MutableSpan is only valid for the duration of the closure's execution.
     ///
     /// - Parameter body: A closure that takes a `MutableSpan<T>` to the array's data.
-    ///   The MutableSpan argument is valid only for the duration of the closure's execution.
     /// - Returns: The return value of the `body` closure.
     /// - Throws: Rethrows any error thrown by the `body` closure.
     @inlinable
     public mutating func withMutableDataSpan<Return>(_ body: (inout MutableSpan<T>) throws -> Return) rethrows
         -> Return
     {
-        try data.withUnsafeMutableBufferPointer { buffer in
-            var span = buffer.mutableSpan
-            return try body(&span)
-        }
+        var span = data.mutableSpan
+        return try body(&span)
     }
 }
 

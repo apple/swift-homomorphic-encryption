@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Pre-commit checks
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 2
       - name: Install pre-commit
@@ -70,10 +70,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Cache SwiftLint
         id: cache-swiftlint
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/swiftlint/SwiftLint/.build/release/swiftlint
           key: ${{ runner.os }}-swiftlint-${{ env.SWIFTLINT_VERSION }}
@@ -88,10 +88,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Cache SwiftFormat
         id: cache-swiftformat
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat
           key: ${{ runner.os }}-swiftformat-${{ env.SWIFTFORMAT_VERSION }}
@@ -106,6 +106,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Check documentation comments
         run: ci/run-apple-swift-format.sh

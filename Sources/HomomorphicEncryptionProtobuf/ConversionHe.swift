@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -315,7 +315,7 @@ extension HeScheme {
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
     public static func proto() throws -> Apple_SwiftHomomorphicEncryption_V1_HeScheme {
-        if Self.self is Bfv<UInt32>.Type || self is Bfv<UInt64>.Type {
+        if cryptosystem == .bfv {
             return .bfv
         }
         throw ConversionError.invalidScheme

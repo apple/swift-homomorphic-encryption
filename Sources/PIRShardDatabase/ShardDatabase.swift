@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,8 +52,8 @@ struct SymmetricPirArguments: ParsableArguments {
             """)
     var databaseEncryptionKeyPath: String?
     @Option(help: """
-        config type for symmetric pir; default is nil, unless `databaseEncryptionKeyPath`\
-        is specified, in which case the default is\
+        config type for symmetric pir; default is nil, unless --database-encryption-key-path \
+        is specified, in which case the default is \
         \(SymmetricPirConfigType.OPRF_P384_AES_GCM_192_NONCE_96_TAG_128.rawValue)
         """)
     var symmetricPirConfigType: SymmetricPirConfigType?

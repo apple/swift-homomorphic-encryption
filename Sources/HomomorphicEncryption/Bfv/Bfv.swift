@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -326,12 +326,14 @@ public enum Bfv<T: ScalarType>: HeScheme {
         guard var result = ciphertexts.first else {
             preconditionFailure("Empty ciphertexts")
         }
+        precondition(ciphertexts.allSatisfy { $0.polys.count == result.polys.count },
+                     "All ciphertexts must have the same polynomial count")
         let poly = result.polys[0]
         let maxProductCount = poly.context.maxLazyProductAccumulationCount()
         var accumulator = Array(
             repeating: Array2d(data: Array(repeating: T.DoubleWidth(0), count: poly.data.count),
                                rowCount: poly.moduli.count, columnCount: poly.degree),
-            count: Bfv.freshCiphertextPolyCount)
+            count: result.polys.count)
 
         var reduceCount = 0
         for (ciphertext, plaintext) in zip(ciphertexts, plaintexts) {

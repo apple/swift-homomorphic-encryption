@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -683,6 +683,70 @@ public enum HeAPITestHelpers {
             }
             try await asyncTests()
         }
+    }
+
+    /// Testing CT-PT inner product with 3-polynomial ciphertexts (unrelinearized).
+    /// This specifically tests that inner product works with ciphertexts that have more than 2 polynomials.
+    @inlinable
+    public static func schemeThreePolyCiphertextPlaintextInnerProductTest<Scheme: HeScheme>(
+        context: Scheme.Context,
+        scheme _: Scheme.Type) async throws
+    {
+        guard context.supportsSimdEncoding, context.supportsEvaluationKey else {
+            return
+        }
+
+        let testEnv = try TestEnv<Scheme>(context: context, format: .simd, relinearizationKey: false)
+
+        // Create a 3-polynomial ciphertext by multiplying two ciphertexts without relinearization
+        let ciphertext1 = testEnv.ciphertext1
+        let ciphertext2 = testEnv.ciphertext2
+        let threePolyCiphertext = try await ciphertext1 * ciphertext2
+
+        // Verify it has 3 polynomials
+        guard threePolyCiphertext.polys.count == 3 else {
+            // For schemes that don't produce 3-poly ciphertexts, skip this test
+            return
+        }
+
+        // Convert to Eval format for inner product
+        let threePolyEvalCiphertext = try await threePolyCiphertext.convertToEvalFormat()
+
+        // Create a vector of this 3-poly ciphertext
+        let count = 5
+        let ciphertexts = Array(repeating: threePolyEvalCiphertext, count: count)
+
+        // Create random plaintext data
+        let plaintextData: [[Scheme.Scalar]] = (0..<count).map { _ in
+            TestUtils.getRandomPlaintextData(count: context.degree, in: 0..<context.plaintextModulus)
+        }
+        // Convert to eval plaintexts
+        let plaintexts: [Scheme.EvalPlaintext] = try plaintextData.map { data in
+            let plaintext: Scheme.CoeffPlaintext = try context.encode(values: data, format: .simd)
+            return try plaintext.convertToEvalFormat()
+        }
+
+        // Compute the expected inner product result
+        // result[i] = sum_j (data1[i] * data2[i] * plaintextData[j][i])
+        let baseProduct = zip(testEnv.data1, testEnv.data2)
+            .map { x, y in x.multiplyMod(y, modulus: context.plaintextModulus, variableTime: true) }
+
+        let expectedData: [Scheme.Scalar] = (0..<context.degree).map { i in
+            plaintextData.reduce(Scheme.Scalar(0)) { sum, plaintext in
+                let product = baseProduct[i].multiplyMod(
+                    plaintext[i],
+                    modulus: context.plaintextModulus,
+                    variableTime: true)
+                return sum.addMod(product, modulus: context.plaintextModulus)
+            }
+        }
+
+        // Test sync version
+        let innerProduct: Scheme.EvalCiphertext = try await ciphertexts.innerProduct(plaintexts: plaintexts)
+        try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: expectedData)
+        // Test async version
+        let innerProductAsync: Scheme.EvalCiphertext = try await ciphertexts.innerProduct(plaintexts: plaintexts)
+        try testEnv.checkDecryptsDecodes(ciphertext: innerProductAsync, format: .simd, expected: expectedData)
     }
 
     /// Testing CT-CT multiplication followed by CT-CT addition of the scheme.

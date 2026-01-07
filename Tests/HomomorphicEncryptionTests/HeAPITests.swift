@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -203,6 +203,7 @@ struct HeAPITests {
             try await HeAPITestHelpers.schemeCiphertextPlaintextMultiplySubtractPlainTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextCiphertextMultiplicationTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextPlaintextInnerProductTest(context: context, scheme: Bfv<T>.self)
+            try await HeAPITestHelpers.schemeThreePolyCiphertextPlaintextInnerProductTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextCiphertextInnerProductTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextMultiplyAddTest(context: context, scheme: Bfv<T>.self)
             try await HeAPITestHelpers.schemeCiphertextNegateTest(context: context, scheme: Bfv<T>.self)

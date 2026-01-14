@@ -26,6 +26,7 @@ swift package experimental-install -c release --product PIRGenerateDatabase
 1. We start by generating a sample database.
 ```sh
 PIRGenerateDatabase \
+    --database-type keyword \
     --output-database database.txtpb \
     --row-count 100 \
     --value-size '10...20' \
@@ -36,6 +37,8 @@ This will generate a database of 100 rows, with keywords 0 to 99, and each value
 
 The database is a serialized [Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/applicationprotobuf/apple_swifthomomorphicencryption_pir_v1_keyworddatabase).
 For readability, the `.txtpb` extension ensures the output database will be saved in protocol buffer text format.
+
+> Note: Pass `--database-type index` to instead generate a serialized [Apple_SwiftHomomorphicEncryption_Pir_V1_IndexPirDatabase](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/applicationprotobuf/apple_swifthomomorphicencryption_pir_v1_indexpirdatabase).
 
 > Note: For a more compact format, use the `.binpb` extension to save the database in protocol buffer binary format.
 

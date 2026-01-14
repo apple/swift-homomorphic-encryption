@@ -34,7 +34,9 @@ swift package experimental-install -c release --product PIRGenerateDatabase --pr
 
 1. We start by generating a sample database.
 ```sh
-PIRGenerateDatabase --output-database database.txtpb \
+PIRGenerateDatabase \
+    --database-type keyword \
+    --output-database database.txtpb \
     --row-count 100 \
     --value-size '10..<20' \
     --value-type repeated

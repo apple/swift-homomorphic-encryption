@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,18 @@ import Foundation
 public import HomomorphicEncryption
 import PrivateInformationRetrieval
 
-enum ValueTypeArguments: String, CaseIterable, ExpressibleByArgument {
+enum DatabaseTypeArgument: String, CaseIterable, ExpressibleByArgument {
+    case index
+    case keyword
+}
+
+enum ValueTypeArgument: String, CaseIterable, ExpressibleByArgument {
     case random
-    /// Repeats the keyword
+    /// Repeats the index/keyword
     case repeated
 }
 
-struct ValueSizeArguments: ExpressibleByArgument {
+struct ValueSizeArgument: ExpressibleByArgument {
     let range: Range<Int>
 
     init?(argument: String) {
@@ -63,6 +68,9 @@ struct GenerateDatabaseCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "PIRGenerateDatabase", version: Version.current.description)
 
+    @Option(help: "Type of database")
+    var databaseType: DatabaseTypeArgument
+
     @Option(help: "Path to output database. Must end in '.txtpb' or '.binpb'")
     var outputDatabase: String
 
@@ -70,32 +78,48 @@ struct GenerateDatabaseCommand: ParsableCommand {
     var rowCount: Int
 
     @Option(help: "Number of bytes in each row. Must be of the form 'x', 'x..<y', or 'x...y'")
-    var valueSize: ValueSizeArguments
+    var valueSize: ValueSizeArgument
 
-    @Option var valueType: ValueTypeArguments
+    @Option var valueType: ValueTypeArgument
 
-    @Option(help: "The first keyword")
+    @Option(help: "The first index/keyword")
     var firstKeyword: Int = 0
 
-    mutating func run() throws {
-        let databaseRows = (0..<rowCount)
-            .map { rowIndex in
-                let keyword = [UInt8](String(firstKeyword + rowIndex).utf8)
-                guard let valueSize = valueSize.range.randomElement() else {
-                    preconditionFailure("Could not sample valueSize from range \(valueSize.range)")
-                }
+    func generateValue(for keyword: [UInt8], size valueSize: Int) -> [UInt8] {
+        switch valueType {
+        case .random:
+            return [UInt8](randomByteCount: valueSize)
+        case .repeated:
+            let repeatCount = valueSize.dividingCeil(keyword.count, variableTime: true)
+            return Array([[UInt8]](repeating: keyword, count: repeatCount).flatMap(\.self).prefix(valueSize))
+        }
+    }
 
-                let value: [UInt8]
-                switch valueType {
-                case .random:
-                    value = [UInt8](randomByteCount: valueSize)
-                case .repeated:
-                    let repeatCount = valueSize.dividingCeil(keyword.count, variableTime: true)
-                    value = Array([[UInt8]](repeating: keyword, count: repeatCount).flatMap(\.self).prefix(valueSize))
-                }
+    mutating func run() throws {
+        guard let valueSize = valueSize.range.randomElement() else {
+            preconditionFailure("Could not sample valueSize from range \(valueSize.range)")
+        }
+
+        switch databaseType {
+        case .index:
+            let databaseRows = (0..<rowCount).map { index in
+                let keyword = [UInt8](String(index).utf8)
+                let value = generateValue(for: keyword, size: valueSize)
+                return Apple_SwiftHomomorphicEncryption_Pir_V1_IndexPirDatabaseRow
+                    .with { row in row.value = Data(value) }
+            }
+            let database = Apple_SwiftHomomorphicEncryption_Pir_V1_IndexPirDatabase.with { database in
+                database.rows = databaseRows
+            }
+            try database.save(to: outputDatabase)
+        case .keyword:
+            let databaseRows = (0..<rowCount).map { rowIndex in
+                let keyword = [UInt8](String(firstKeyword + rowIndex).utf8)
+                let value = generateValue(for: keyword, size: valueSize)
                 return KeywordValuePair(keyword: keyword, value: value)
             }
-        try databaseRows.proto().save(to: outputDatabase)
+            try databaseRows.proto().save(to: outputDatabase)
+        }
     }
 }
 

@@ -87,6 +87,7 @@ executables.
 We generate a database of 100,000 rows, each with 2 bytes.
 ```sh
 PIRGenerateDatabase \
+    --database-type keyword \
     --output-database thinDatabase.txtpb \
     --row-count 100000 \
     --value-size 2 \
@@ -122,8 +123,9 @@ keyword-value pairs, making the database smaller for keyword PIR.
 
 #### Wide Database
 We generate a database of 1000 rows, each with 60,000 bytes.
-```json
+```sh
 PIRGenerateDatabase \
+    --database-type keyword \
     --output-database wideDatabase.txtpb \
     --row-count 1000 \
     --value-size 60000 \

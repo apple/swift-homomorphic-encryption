@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -262,8 +262,6 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
     public let database: ProcessedDatabase<Scheme>
     /// The algorithm that this database was processed for.
     public let algorithm: PirAlgorithm
-    /// Evaluation key configuration.
-    public let evaluationKeyConfig: EvaluationKeyConfig
     /// Parameters for Index PIR queries.
     public let pirParameter: IndexPirParameter
     /// Parameters for keyword-value PIR queries.
@@ -271,25 +269,27 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
     /// Symmetric PIR config.
     public let symmetricPirConfig: SymmetricPirConfig?
 
+    /// Evaluation key configuration.
+    public var evaluationKeyConfig: EvaluationKeyConfig {
+        pirParameter.evaluationKeyConfig
+    }
+
     /// Initializes a ``ProcessedDatabaseWithParameters``.
     /// - Parameters:
     ///   - database: Processed database.
     ///   - algorithm: The PIR algorithm used.
-    ///   - evaluationKeyConfig: Evaluation key configuration.
     ///   - pirParameter: Index PIR parameters.
     ///   - keywordPirParameter: Optional keyword PIR parameters.
     ///   - symmetricPirConfig: Optional config for symmetric PIR.
     public init(
         database: ProcessedDatabase<Scheme>,
         algorithm: PirAlgorithm,
-        evaluationKeyConfig: EvaluationKeyConfig,
         pirParameter: IndexPirParameter,
         keywordPirParameter: KeywordPirParameter? = nil,
         symmetricPirConfig: SymmetricPirConfig? = nil)
     {
         self.database = database
         self.algorithm = algorithm
-        self.evaluationKeyConfig = evaluationKeyConfig
         self.pirParameter = pirParameter
         self.keywordPirParameter = keywordPirParameter
         self.symmetricPirConfig = symmetricPirConfig

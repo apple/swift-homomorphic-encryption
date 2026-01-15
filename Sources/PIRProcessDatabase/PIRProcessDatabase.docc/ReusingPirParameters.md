@@ -31,6 +31,7 @@ swift package experimental-install -c release --product PIRGenerateDatabase --pr
 
 ```sh
 PIRGenerateDatabase \
+    --database-type keyword \
     --output-database /tmp/database-v1.txtpb \
     --row-count 10000 \
     --value-size '10...20' \
@@ -58,8 +59,9 @@ rows {
 ```
 
 2. To simulate an updated database, we generate a database update with 1000 more rows and different value sizes.
-```
+```sh
 PIRGenerateDatabase \
+    --database-type keyword \
     --output-database /tmp/database-update.txtpb \
     --row-count 1000 \
     --first-keyword 10000 \

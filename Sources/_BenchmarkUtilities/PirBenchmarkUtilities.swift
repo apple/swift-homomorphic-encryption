@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -109,7 +109,8 @@ public struct PirBenchmarkConfig<Scalar: ScalarType> {
             dimensionCount: self.keywordPirConfig.dimensionCount,
             batchSize: 1,
             unevenDimensions: self.keywordPirConfig.unevenDimensions,
-            keyCompression: self.keywordPirConfig.keyCompression)
+            keyCompression: self.keywordPirConfig.keyCompression,
+            encodingEntrySize: false)
     }
 }
 

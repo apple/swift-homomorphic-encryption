@@ -43,9 +43,9 @@ public enum PirKeyCompressionStrategy: String, CaseIterable, Codable, CodingKeyR
 /// Configuration for an Index PIR database.
 public struct IndexPirConfig: Hashable, Codable, Sendable {
     /// Number of entries in the database.
-    public let entryCount: Int
+    public var entryCount: Int
     /// Byte size of each entry in the database.
-    public let entrySizeInBytes: Int
+    public var entrySizeInBytes: Int
     /// Number of dimensions in the database.
     public let dimensionCount: Int
     /// Number of indices in a query to the database.
@@ -54,6 +54,19 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     public let unevenDimensions: Bool
     /// Evaluation key compression.
     public let keyCompression: PirKeyCompressionStrategy
+    /// Whether to encode the entry size.
+    public var encodingEntrySize: Bool
+
+    /// Size of the each entry in bytes after encoding.
+    public var encodedEntrySize: Int {
+        if encodingEntrySize {
+            // VarInt is monotonic, i.e. the largest entry will always have the largest encoded entry size.
+            // So we can take an upper bound here.
+            VarInt.encodedSize(UInt(entrySizeInBytes)) + entrySizeInBytes
+        } else {
+            entrySizeInBytes
+        }
+    }
 
     /// Initializes an ``IndexPirConfig``.
     /// - Parameters:
@@ -63,6 +76,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     ///   - batchSize: Number of indices in a query to the database.
     ///   - unevenDimensions: Whether or not to enable `uneven dimensions` optimization.
     ///   - keyCompression: Evaluation key compression.
+    ///   - encodingEntrySize: Whether or not to encode each entry's size.
     /// - Throws: Error upon invalid configuration parameters.
     public init(
         entryCount: Int,
@@ -70,7 +84,8 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         dimensionCount: Int,
         batchSize: Int,
         unevenDimensions: Bool,
-        keyCompression: PirKeyCompressionStrategy) throws
+        keyCompression: PirKeyCompressionStrategy,
+        encodingEntrySize: Bool) throws
     {
         let validDimensionsCount = [1, 2]
         guard validDimensionsCount.contains(dimensionCount) else {
@@ -82,6 +97,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         self.batchSize = batchSize
         self.unevenDimensions = unevenDimensions
         self.keyCompression = keyCompression
+        self.encodingEntrySize = encodingEntrySize
     }
 }
 
@@ -91,7 +107,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
 public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Number of entries in the database.
     public let entryCount: Int
-    /// Byte size of each entry in the database.
+    /// Byte size of each entry in the database, excluding any encoding of the entry size.
     public let entrySizeInBytes: Int
     /// Number of plaintexts in each dimension of the database.
     public let dimensions: [Int]
@@ -99,6 +115,19 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     public let batchSize: Int
     /// Evaluation key configuration.
     public let evaluationKeyConfig: EvaluationKeyConfig
+    /// Whether to encode the entry size.
+    public var encodingEntrySize: Bool
+
+    /// Size of the each entry in bytes after encoding.
+    public var encodedEntrySize: Int {
+        if encodingEntrySize {
+            // VarInt is monotonic, i.e. the largest entry will always have the largest encoded entry size.
+            // So we can take an upper bound here.
+            VarInt.encodedSize(UInt(entrySizeInBytes)) + entrySizeInBytes
+        } else {
+            entrySizeInBytes
+        }
+    }
 
     /// The number of dimensions in the database.
     @usableFromInline package var dimensionCount: Int { dimensions.count }
@@ -108,22 +137,25 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Initializes an ``IndexPirParameter``.
     /// - Parameters:
     ///   - entryCount:  Number of entries in the database.
-    ///   - entrySizeInBytes:  Byte size of each entry in the database.
+    ///   - entrySizeInBytes:  Byte size of each entry in the database, without encoding entry size.
     ///   - dimensions: Number of plaintexts in each dimension of the database.
     ///   - batchSize: Number of indices in a query to the database.
     ///   - evaluationKeyConfig: Evaluation key configuration.
+    ///   - encodingEntrySize: Whether to encode the entry size.
     public init(
         entryCount: Int,
         entrySizeInBytes: Int,
         dimensions: [Int],
         batchSize: Int,
-        evaluationKeyConfig: EvaluationKeyConfig)
+        evaluationKeyConfig: EvaluationKeyConfig,
+        encodingEntrySize: Bool)
     {
         self.entryCount = entryCount
         self.entrySizeInBytes = entrySizeInBytes
         self.dimensions = dimensions
         self.batchSize = batchSize
         self.evaluationKeyConfig = evaluationKeyConfig
+        self.encodingEntrySize = encodingEntrySize
     }
 }
 

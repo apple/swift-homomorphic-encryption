@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -196,6 +196,12 @@ public struct Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: @unchecked 
     set {_uniqueStorage()._keyCompressionStrategy = newValue}
   }
 
+  /// Whether to encode the entry size as part of the Index PIR response.
+  public var encodingEntrySize: Bool {
+    get {return _storage._encodingEntrySize}
+    set {_uniqueStorage()._encodingEntrySize = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -358,7 +364,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_SymmetricPirConfigType: SwiftP
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PirParameters"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}num_entries\0\u{3}entry_size\0\u{1}dimensions\0\u{3}keyword_pir_params\0\u{1}algorithm\0\u{3}batch_size\0\u{3}evaluation_key_config\0\u{3}key_compression_strategy\0\u{c}\u{a}\u{1}\u{c}\u{b}\u{1}\u{c}\u{c}\u{1}")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}num_entries\0\u{3}entry_size\0\u{1}dimensions\0\u{3}keyword_pir_params\0\u{1}algorithm\0\u{3}batch_size\0\u{3}evaluation_key_config\0\u{3}key_compression_strategy\0\u{4}\u{4}encoding_entry_size\0\u{c}\u{a}\u{1}\u{c}\u{b}\u{1}\u{c}\u{c}\u{1}")
 
   fileprivate class _StorageClass {
     var _encryptionParameters: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters? = nil
@@ -370,6 +376,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.M
     var _batchSize: UInt64 = 0
     var _evaluationKeyConfig: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig? = nil
     var _keyCompressionStrategy: Apple_SwiftHomomorphicEncryption_Pir_V1_KeyCompressionStrategy = .unspecified
+    var _encodingEntrySize: Bool = false
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -389,6 +396,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.M
       _batchSize = source._batchSize
       _evaluationKeyConfig = source._evaluationKeyConfig
       _keyCompressionStrategy = source._keyCompressionStrategy
+      _encodingEntrySize = source._encodingEntrySize
     }
   }
 
@@ -416,6 +424,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.M
         case 7: try { try decoder.decodeSingularUInt64Field(value: &_storage._batchSize) }()
         case 8: try { try decoder.decodeSingularMessageField(value: &_storage._evaluationKeyConfig) }()
         case 9: try { try decoder.decodeSingularEnumField(value: &_storage._keyCompressionStrategy) }()
+        case 13: try { try decoder.decodeSingularBoolField(value: &_storage._encodingEntrySize) }()
         default: break
         }
       }
@@ -455,6 +464,9 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.M
       if _storage._keyCompressionStrategy != .unspecified {
         try visitor.visitSingularEnumField(value: _storage._keyCompressionStrategy, fieldNumber: 9)
       }
+      if _storage._encodingEntrySize != false {
+        try visitor.visitSingularBoolField(value: _storage._encodingEntrySize, fieldNumber: 13)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -473,6 +485,7 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters: SwiftProtobuf.M
         if _storage._batchSize != rhs_storage._batchSize {return false}
         if _storage._evaluationKeyConfig != rhs_storage._evaluationKeyConfig {return false}
         if _storage._keyCompressionStrategy != rhs_storage._keyCompressionStrategy {return false}
+        if _storage._encodingEntrySize != rhs_storage._encodingEntrySize {return false}
         return true
       }
       if !storagesAreEqual {return false}

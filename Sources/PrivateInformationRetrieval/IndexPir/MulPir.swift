@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,9 +35,9 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
     public static func generateParameter(config: IndexPirConfig,
                                          with context: Scheme.Context) -> IndexPirParameter
     {
-        let entrySizeInBytes = config.entrySizeInBytes
-        let perChunkPlaintextCount = if entrySizeInBytes <= context.bytesPerPlaintext {
-            config.entryCount.dividingCeil(context.bytesPerPlaintext / entrySizeInBytes, variableTime: true)
+        let encodedEntrySize = config.encodedEntrySize
+        let perChunkPlaintextCount = if encodedEntrySize <= context.bytesPerPlaintext {
+            config.entryCount.dividingCeil(context.bytesPerPlaintext / encodedEntrySize, variableTime: true)
         } else {
             config.entryCount
         }
@@ -74,9 +74,10 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
             keyCompression: config.keyCompression)
         return IndexPirParameter(
             entryCount: config.entryCount,
-            entrySizeInBytes: entrySizeInBytes,
+            entrySizeInBytes: config.entrySizeInBytes,
             dimensions: dimensions, batchSize: config.batchSize,
-            evaluationKeyConfig: evalKeyConfig)
+            evaluationKeyConfig: evalKeyConfig,
+            encodingEntrySize: config.encodingEntrySize)
     }
 
     @inlinable
@@ -134,9 +135,13 @@ public final class MulPirClient<PirUtil: PirUtilProtocol>: IndexPirClient {
 
     @usableFromInline var entrySizeInBytes: Int { parameter.entrySizeInBytes }
 
+    @usableFromInline var encodingEntrySize: Bool { parameter.encodingEntrySize }
+
+    @usableFromInline var encodedEntrySize: Int { parameter.encodedEntrySize }
+
     @usableFromInline var entryChunksPerPlaintext: Int {
-        if context.bytesPerPlaintext >= entrySizeInBytes {
-            return context.bytesPerPlaintext / entrySizeInBytes
+        if context.bytesPerPlaintext >= encodedEntrySize {
+            return context.bytesPerPlaintext / encodedEntrySize
         }
         return 1
     }
@@ -214,12 +219,12 @@ extension MulPirClient {
 
 extension MulPirClient {
     var expectedResponseCiphertextCount: Int {
-        entrySizeInBytes.dividingCeil(context.bytesPerPlaintext, variableTime: true)
+        encodedEntrySize.dividingCeil(context.bytesPerPlaintext, variableTime: true)
     }
 
     private func computeResponseRangeInBytes(at index: Int) -> Range<Int> {
         let position = index % entryChunksPerPlaintext
-        return position * entrySizeInBytes..<(position + 1) * entrySizeInBytes
+        return position * encodedEntrySize..<(position + 1) * encodedEntrySize
     }
 
     /// Decrypts an encrypted response.
@@ -248,7 +253,12 @@ extension MulPirClient {
                     bitsPerCoeff: context.plaintextModulus.log2)
             }
 
-            return Array(bytes[computeResponseRangeInBytes(at: entryIndex)])
+            let responseBytes = bytes[computeResponseRangeInBytes(at: entryIndex)]
+            if encodingEntrySize {
+                let (entrySize, bytesConsumed): (UInt, Int) = try VarInt.decode(responseBytes)
+                return Array(responseBytes[(responseBytes.startIndex + bytesConsumed)...].prefix(Int(entrySize)))
+            }
+            return Array(responseBytes)
         }
     }
 
@@ -336,7 +346,7 @@ public final class MulPirServer<PirUtil: PirUtilProtocol>: IndexPirServer {
 
     @inlinable
     package static func chunkCount(parameter: IndexPirParameter, context: Scheme.Context) -> Int {
-        parameter.entrySizeInBytes.dividingCeil(context.bytesPerPlaintext, variableTime: true)
+        parameter.encodedEntrySize.dividingCeil(context.bytesPerPlaintext, variableTime: true)
     }
 }
 
@@ -437,12 +447,12 @@ extension MulPirServer {
             throw PirError
                 .invalidDatabaseEntryCount(entryCount: database.count, expected: parameter.entryCount)
         }
-        let maximumElementSize = database.map(\.count).max() ?? 0
-        guard maximumElementSize <= parameter.entrySizeInBytes else {
+        let maxEntrySize = database.map(\.count).max() ?? 0
+        guard maxEntrySize <= parameter.entrySizeInBytes else {
             throw PirError
-                .invalidDatabaseEntrySize(maximumEntrySize: maximumElementSize, expected: parameter.entrySizeInBytes)
+                .invalidDatabaseEntrySize(maximumEntrySize: maxEntrySize, expected: parameter.entrySizeInBytes)
         }
-        let chunkCount = parameter.entrySizeInBytes.dividingCeil(context.bytesPerPlaintext, variableTime: true)
+        let chunkCount = parameter.encodedEntrySize.dividingCeil(context.bytesPerPlaintext, variableTime: true)
         if chunkCount > 1 {
             return try await processSplitLargeEntries(database: database, with: context, using: parameter)
         }
@@ -457,14 +467,22 @@ extension MulPirServer {
     {
         let chunkCount = Self.chunkCount(parameter: parameter, context: context)
         var plaintexts: [[Plaintext<Scheme, Eval>?]] = try await .init(database.async.map { entry in
-            try await .init(stride(from: 0, to: parameter.entrySizeInBytes, by: context.bytesPerPlaintext).async
+            let encoded = VarInt.encode(UInt(entry.count))
+            let entryEncodingSize = if parameter.encodingEntrySize { encoded.count } else { 0 }
+            return try await .init(stride(from: 0, to: parameter.encodedEntrySize, by: context.bytesPerPlaintext).async
                 .map { startIndex in
-                    let endIndex = min(startIndex + context.bytesPerPlaintext, entry.count)
+                    let entryStartIndex = startIndex - entryEncodingSize
+                    let endIndex = min(entryStartIndex + context.bytesPerPlaintext, entry.count)
                     // Avoid computing on padding plaintexts
-                    guard startIndex < endIndex else {
+                    guard entryStartIndex < endIndex else {
                         return nil
                     }
-                    let bytes = Array(entry[startIndex..<endIndex])
+                    let bytes = if startIndex == 0, parameter.encodingEntrySize {
+                        encoded + entry[0..<endIndex]
+                    } else {
+                        Array(entry[entryStartIndex..<endIndex])
+                    }
+
                     let coefficients: [Scheme.Scalar] = try CoefficientPacking.bytesToCoefficients(
                         bytes: bytes,
                         bitsPerCoeff: context.plaintextModulus.log2,
@@ -504,12 +522,16 @@ extension MulPirServer {
         assert(database.count == parameter.entryCount)
         let flatDatabase: [UInt8] = database.flatMap { entry in
             var entry = entry
-            let pad = parameter.entrySizeInBytes - entry.count
+            if parameter.encodingEntrySize {
+                let encoded = VarInt.encode(UInt(entry.count))
+                entry = encoded + entry
+            }
+            let pad = parameter.encodedEntrySize - entry.count
             entry.append(contentsOf: repeatElement(0, count: pad))
             return entry
         }
-        let entriesPerPlaintext = context.bytesPerPlaintext / parameter.entrySizeInBytes
-        let bytesPerPlaintext = entriesPerPlaintext * parameter.entrySizeInBytes
+        let entriesPerPlaintext = context.bytesPerPlaintext / parameter.encodedEntrySize
+        let bytesPerPlaintext = entriesPerPlaintext * parameter.encodedEntrySize
         let plaintextIndices = stride(from: 0, to: flatDatabase.count, by: bytesPerPlaintext)
         var plaintexts: [Plaintext<Scheme, Eval>?] = try await .init(plaintextIndices.async
             .map { startIndex in

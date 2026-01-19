@@ -32,8 +32,24 @@ public struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
 
     public init(vectorDimension: Int, babyStep: Int, giantStep: Int) {
         self.vectorDimension = vectorDimension
-        self.babyStep = babyStep
-        self.giantStep = giantStep
+        // Ensure babyStep >= giantStep for correct algorithm behavior.
+        // The baby-step giant-step algorithm requires this ordering.
+        if babyStep >= giantStep {
+            self.babyStep = babyStep
+            self.giantStep = giantStep
+        } else {
+            self.babyStep = giantStep
+            self.giantStep = babyStep
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let vectorDimension = try container.decode(Int.self, forKey: .vectorDimension)
+        let babyStep = try container.decode(Int.self, forKey: .babyStep)
+        let giantStep = try container.decode(Int.self, forKey: .giantStep)
+        // Use the normalizing initializer
+        self.init(vectorDimension: vectorDimension, babyStep: babyStep, giantStep: giantStep)
     }
 
     @inlinable
@@ -126,7 +142,9 @@ extension PlaintextMatrix {
         vector ciphertextVector: CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>,
         using evaluationKey: EvaluationKey<Scheme>) async throws -> [Scheme.CanonicalCiphertext]
     {
-        guard case .diagonal = packing else {
+        // Extract BabyStepGiantStep from the packing to ensure consistency
+        // between how data was packed and how it's accessed during multiplication
+        guard case let .diagonal(babyStepGiantStep: babyStepGiantStep) = packing else {
             let expectedBsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
             throw PnnsError.wrongMatrixPacking(got: packing, expected: .diagonal(babyStepGiantStep: expectedBsgs))
         }
@@ -165,8 +183,6 @@ extension PlaintextMatrix {
         // [4, 5, 10, 15] * [4, 1, 2, 3] => [16, 5, 20, 45] | - + -> [30, 70, 110, 150]
         // We extend this basic idea using baby-step giant-step logic from Section 6.3 of
         // https://eprint.iacr.org/2018/244.pdf.
-
-        let babyStepGiantStep = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
 
         // 1) Compute v_j = theta^j(v)
         var rotatedStates: [Scheme.CanonicalCiphertext] = []

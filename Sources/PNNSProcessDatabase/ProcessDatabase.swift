@@ -228,7 +228,8 @@ struct ProcessDatabase: AsyncParsableCommand {
                 maxQueryCount: config.batchSize,
                 encryptionParameters: encryptionParameters,
                 scheme: Scheme.self),
-            distanceMetric: config.distanceMetric)
+            distanceMetric: config.distanceMetric,
+            extraPlaintextModuli: config.extraPlaintextModuli.map { Scheme.Scalar($0)})
         let serverConfig = ServerConfig<Scheme>(
             clientConfig: clientConfig,
             databasePacking: config.databasePacking)

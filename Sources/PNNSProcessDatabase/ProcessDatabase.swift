@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -229,7 +229,7 @@ struct ProcessDatabase: ParsableCommand {
                 encryptionParameters: encryptionParameters,
                 scheme: Scheme.self),
             distanceMetric: config.distanceMetric,
-            extraPlaintextModuli: config.extraPlaintextModuli.map { Scheme.Scalar($0)})
+            extraPlaintextModuli: config.extraPlaintextModuli.map { Scheme.Scalar($0) })
         let serverConfig = ServerConfig<Scheme>(
             clientConfig: clientConfig,
             databasePacking: config.databasePacking)

@@ -36,7 +36,7 @@ public struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
         // Ensure babyStep >= giantStep for correct algorithm behavior.
         // The baby-step giant-step algorithm requires this ordering.
         precondition(
-            babyStep >= giantStep, "babyStep should be larger than giant step")
+            babyStep >= giantStep, "babyStep cannot be smaller than giantStep")
 
         self.babyStep = babyStep
         self.giantStep = giantStep

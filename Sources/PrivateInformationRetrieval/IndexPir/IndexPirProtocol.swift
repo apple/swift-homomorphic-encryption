@@ -44,7 +44,7 @@ public enum PirKeyCompressionStrategy: String, CaseIterable, Codable, CodingKeyR
 public struct IndexPirConfig: Hashable, Codable, Sendable {
     /// Number of entries in the database.
     public var entryCount: Int
-    /// Byte size of each entry in the database.
+    /// Byte size of the largest entry in the database.
     public var entrySizeInBytes: Int
     /// Number of dimensions in the database.
     public let dimensionCount: Int
@@ -57,7 +57,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     /// Whether to encode the entry size.
     public var encodingEntrySize: Bool
 
-    /// Size of the each entry in bytes after encoding.
+    /// Size of the largest entry in bytes after encoding.
     public var encodedEntrySize: Int {
         if encodingEntrySize {
             // VarInt is monotonic, i.e. the largest entry will always have the largest encoded entry size.
@@ -71,7 +71,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     /// Initializes an ``IndexPirConfig``.
     /// - Parameters:
     ///   - entryCount: Number of entries in the database.
-    ///   - entrySizeInBytes: Byte size of each entry in the database.
+    ///   - entrySizeInBytes: Byte size of the largest entry in the database.
     ///   - dimensionCount: Number of dimensions in database.
     ///   - batchSize: Number of indices in a query to the database.
     ///   - unevenDimensions: Whether or not to enable `uneven dimensions` optimization.
@@ -107,7 +107,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
 public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Number of entries in the database.
     public let entryCount: Int
-    /// Byte size of each entry in the database, excluding any encoding of the entry size.
+    /// Byte size of the largest entry in the database, excluding any encoding of the entry size.
     public let entrySizeInBytes: Int
     /// Number of plaintexts in each dimension of the database.
     public let dimensions: [Int]
@@ -118,7 +118,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Whether to encode the entry size.
     public var encodingEntrySize: Bool
 
-    /// Size of the each entry in bytes after encoding.
+    /// Size of the largest entry in bytes after encoding.
     public var encodedEntrySize: Int {
         if encodingEntrySize {
             // VarInt is monotonic, i.e. the largest entry will always have the largest encoded entry size.
@@ -137,7 +137,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Initializes an ``IndexPirParameter``.
     /// - Parameters:
     ///   - entryCount:  Number of entries in the database.
-    ///   - entrySizeInBytes:  Byte size of each entry in the database, without encoding entry size.
+    ///   - entrySizeInBytes: Byte size of the largest entry in the database, without encoding entry size.
     ///   - dimensions: Number of plaintexts in each dimension of the database.
     ///   - batchSize: Number of indices in a query to the database.
     ///   - evaluationKeyConfig: Evaluation key configuration.

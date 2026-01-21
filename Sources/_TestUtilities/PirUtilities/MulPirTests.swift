@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,13 +131,14 @@ extension PirTestUtils {
             let context: PirUtil.Scheme.Context = try TestUtils.getTestContext()
             let evalKeyConfig = EvaluationKeyConfig()
             // two dimensional case
-            do {
+            for encodingEntrySize in [false, true] {
                 let parameter = IndexPirParameter(
                     entryCount: 100,
                     entrySizeInBytes: 16,
                     dimensions: [10, 10],
                     batchSize: 1,
-                    evaluationKeyConfig: evalKeyConfig)
+                    evaluationKeyConfig: evalKeyConfig,
+                    encodingEntrySize: encodingEntrySize)
                 let client = MulPirClient<PirUtil>(parameter: parameter, context: context)
 
                 let vectors = [
@@ -156,13 +157,14 @@ extension PirTestUtils {
             }
 
             // three dimensional case
-            do {
+            for encodingEntrySize in [false, true] {
                 let parameter = IndexPirParameter(
                     entryCount: 30,
                     entrySizeInBytes: 16,
                     dimensions: [5, 3, 2],
                     batchSize: 1,
-                    evaluationKeyConfig: evalKeyConfig)
+                    evaluationKeyConfig: evalKeyConfig,
+                    encodingEntrySize: encodingEntrySize)
                 let client = MulPirClient<PirUtil>(parameter: parameter, context: context)
 
                 let vectors = [

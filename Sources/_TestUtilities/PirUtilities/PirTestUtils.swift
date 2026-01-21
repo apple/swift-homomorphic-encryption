@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ public enum PirTestUtils {
         entryCount: Int,
         entrySizeInBytes: Int,
         keyCompression: PirKeyCompressionStrategy,
-        batchSize: Int = 10) throws -> IndexPirParameter
+        batchSize: Int = 10,
+        encodingEntrySize: Bool = false) throws -> IndexPirParameter
     {
         let config = try IndexPirConfig(
             entryCount: entryCount,
@@ -32,7 +33,8 @@ public enum PirTestUtils {
             dimensionCount: 2,
             batchSize: batchSize,
             unevenDimensions: true,
-            keyCompression: keyCompression)
+            keyCompression: keyCompression,
+            encodingEntrySize: encodingEntrySize)
         return Pir.generateParameter(config: config, with: context)
     }
 
@@ -44,6 +46,18 @@ public enum PirTestUtils {
     public static func randomIndexPirDatabase(entryCount: Int, entrySizeInBytes: Int) -> [[UInt8]] {
         (0..<entryCount).map { _ in (0..<entrySizeInBytes)
             .map { _ in UInt8.random(in: UInt8.min...UInt8.max) }
+        }
+    }
+
+    /// Generates a database of random entries
+    /// - Parameters:
+    ///   - entryCount: Number of entries in the database.
+    ///   - entrySizeInBytes: Range of possible byte sizes of each entry.
+    /// - Returns: An array of entries in the database.
+    public static func randomIndexPirDatabase(entryCount: Int, entrySizeInBytes: ClosedRange<Int>) -> [[UInt8]] {
+        (0..<entryCount).map { _ in
+            let entrySize = Int.random(in: entrySizeInBytes)
+            return (0..<entrySize).map { _ in UInt8.random(in: UInt8.min...UInt8.max) }
         }
     }
 

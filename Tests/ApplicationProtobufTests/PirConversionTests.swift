@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -114,5 +114,40 @@ struct PirConversionTests {
                                                   symmetricPirClientConfig: symmetricPirClientConfig)
         roundTrip = try keywordPirParameter.proto().native()
         #expect(roundTrip == keywordPirParameter)
+    }
+
+    @Test
+    func pirParameters() throws {
+        let symmetricPirClientConfig = SymmetricPirClientConfig(serverPublicKey: [],
+                                                                configType: .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128)
+        let keywordPirParameter = KeywordPirParameter(hashFunctionCount: 2,
+                                                      symmetricPirClientConfig: symmetricPirClientConfig)
+
+        let evaluationKeyConfig = EvaluationKeyConfig(galoisElements: [3], hasRelinearizationKey: true)
+        let encryptionParameters = try EncryptionParameters<UInt64>(from: .n_4096_logq_27_28_28_logt_13)
+        let pirParameters = try Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters.with { params in
+            params.encryptionParameters = try encryptionParameters.proto(scheme: Bfv<UInt64>.self)
+            params.numEntries = 1
+            params.entrySize = 2
+            params.dimensions = [3, 4]
+            params.keywordPirParams = keywordPirParameter.proto()
+            params.algorithm = .mulPir
+            params.batchSize = 5
+            params.evaluationKeyConfig = try evaluationKeyConfig
+                .proto(encryptionParameters: encryptionParameters, scheme: Bfv<UInt64>.self)
+            params.keyCompressionStrategy = .maximumCompression
+            params.encodingEntrySize = true
+        }
+
+        let native = pirParameters.native()
+        let expected = IndexPirParameter(
+            entryCount: 1,
+            entrySizeInBytes: 2,
+            dimensions: [3, 4],
+            batchSize: 5,
+            evaluationKeyConfig: evaluationKeyConfig,
+            encodingEntrySize: true)
+
+        #expect(native == expected)
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,14 +50,18 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig {
     /// - Parameters:
     ///   - batchSize: Number of queries in a batch.
     ///   - evaluationKeyConfig: Evaluation key configuration
+    ///   - encodingEntrySize: Whether to encode the size.
     /// - Returns: The converted native type.
-    public func native(batchSize: Int, evaluationKeyConfig: EvaluationKeyConfig) -> IndexPirParameter {
+    public func native(batchSize: Int, evaluationKeyConfig: EvaluationKeyConfig, encodingEntrySize: Bool)
+        -> IndexPirParameter
+    {
         IndexPirParameter(
             entryCount: Int(numEntries),
             entrySizeInBytes: Int(entrySize),
             dimensions: dimensions.map(Int.init),
             batchSize: batchSize,
-            evaluationKeyConfig: evaluationKeyConfig)
+            evaluationKeyConfig: evaluationKeyConfig,
+            encodingEntrySize: encodingEntrySize)
     }
 }
 

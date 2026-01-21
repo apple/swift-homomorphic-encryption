@@ -175,7 +175,8 @@ extension Apple_SwiftHomomorphicEncryption_Pir_V1_PirParameters {
             entrySizeInBytes: Int(entrySize),
             dimensions: dimensions.map(Int.init),
             batchSize: Int(batchSize),
-            evaluationKeyConfig: evaluationKeyConfig.native())
+            evaluationKeyConfig: evaluationKeyConfig.native(),
+            encodingEntrySize: encodingEntrySize)
     }
 
     /// Converts the protobuf object into a native type.

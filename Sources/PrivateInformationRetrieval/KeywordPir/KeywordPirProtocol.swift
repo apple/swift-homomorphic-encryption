@@ -213,13 +213,15 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
             }
         }
 
+        // Keyword PIR stores entries using HashBuckets, so there's no need to encode the entry size.
         let indexPirConfig = try IndexPirConfig(
             entryCount: cuckooTable.bucketsPerTable,
             entrySizeInBytes: maxEntrySize,
             dimensionCount: config.dimensionCount,
             batchSize: cuckooTableConfig.hashFunctionCount,
             unevenDimensions: config.unevenDimensions,
-            keyCompression: config.keyCompression)
+            keyCompression: config.keyCompression,
+            encodingEntrySize: false)
         let indexPirParameter = PirServer.generateParameter(config: indexPirConfig, with: context)
         var plaintexts: [Plaintext<Scheme, Eval>?] = []
         let indices = Array(stride(from: 0, to: entryTable.count, by: cuckooTable.bucketsPerTable))

@@ -14,6 +14,7 @@
 
 import Foundation
 
+@usableFromInline
 enum VarIntError: Error {
     case overflow
     case truncated
@@ -21,8 +22,10 @@ enum VarIntError: Error {
 
 /// Variable-width integer
 /// https://protobuf.dev/programming-guides/encoding/#varints
+@usableFromInline
 enum VarInt {
     /// Encode an unsigned integer as a varint
+    @inlinable
     static func encode(_ value: some FixedWidthInteger & UnsignedInteger) -> [UInt8] {
         var result: [UInt8] = []
         var value = value
@@ -51,6 +54,7 @@ enum VarInt {
 
     /// Decode a varint from a byte array
     /// Returns (decoded value, number of bytes consumed)
+    @inlinable
     static func decode<T: FixedWidthInteger & UnsignedInteger>(_ bytes: some Collection<UInt8>) throws
         -> (decoded: T, bytesConsumed: Int)
     {

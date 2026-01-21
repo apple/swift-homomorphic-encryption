@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ struct IndexPirTests {
                                             dimensionCount: 2,
                                             batchSize: 1,
                                             unevenDimensions: false,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [4, 4])
         }
@@ -40,7 +41,8 @@ struct IndexPirTests {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: false,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [4, 3])
         }
@@ -51,7 +53,8 @@ struct IndexPirTests {
                                             dimensionCount: 2,
                                             batchSize: 1,
                                             unevenDimensions: true,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [5, 3])
         }
@@ -61,7 +64,8 @@ struct IndexPirTests {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [5, 3])
         }
@@ -71,7 +75,8 @@ struct IndexPirTests {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [9, 2])
         }
@@ -82,7 +87,8 @@ struct IndexPirTests {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
@@ -96,7 +102,8 @@ struct IndexPirTests {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .hybridCompression)
+                                            keyCompression: .hybridCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
@@ -110,7 +117,23 @@ struct IndexPirTests {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .maxCompression)
+                                            keyCompression: .maxCompression,
+                                            encodingEntrySize: false)
+            let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
+            let evalKeyConfig = EvaluationKeyConfig(
+                galoisElements: [3, 5, 9],
+                hasRelinearizationKey: true)
+            #expect(parameter.evaluationKeyConfig == evalKeyConfig)
+        }
+        // encodingEntrySize
+        do {
+            let config = try IndexPirConfig(entryCount: 100,
+                                            entrySizeInBytes: context.bytesPerPlaintext,
+                                            dimensionCount: 2,
+                                            batchSize: 2,
+                                            unevenDimensions: true,
+                                            keyCompression: .maxCompression,
+                                            encodingEntrySize: true)
             let parameter = MulPir<Scheme>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9],

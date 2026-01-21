@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,15 @@ extension PirTestUtils {
             with context: Server.Scheme.Context) async throws
             where Server.IndexPir == Client.IndexPir
         {
-            let database = PirTestUtils.randomIndexPirDatabase(
-                entryCount: parameter.entryCount,
-                entrySizeInBytes: parameter.entrySizeInBytes)
+            let database = if parameter.encodingEntrySize {
+                PirTestUtils.randomIndexPirDatabase(
+                    entryCount: parameter.entryCount,
+                    entrySizeInBytes: 1...parameter.entrySizeInBytes)
+            } else {
+                PirTestUtils.randomIndexPirDatabase(
+                    entryCount: parameter.entryCount,
+                    entrySizeInBytes: parameter.entrySizeInBytes)
+            }
             let processedDb = try await Server.process(database: database, with: context, using: parameter)
 
             let server = try Server(parameter: parameter, context: context, database: processedDb)
@@ -60,44 +66,63 @@ extension PirTestUtils {
                                                                                  client: Client.Type) async throws
             where Server.IndexPir == Client.IndexPir
         {
-            let configs = try [
+            let configsNotEncodingEntrySize = try [
                 IndexPirConfig(entryCount: 100,
                                entrySizeInBytes: 1,
                                dimensionCount: 2,
                                batchSize: 2,
                                unevenDimensions: false,
-                               keyCompression: .noCompression),
+                               keyCompression: .noCompression,
+                               encodingEntrySize: false),
                 IndexPirConfig(entryCount: 100,
                                entrySizeInBytes: 8,
                                dimensionCount: 2,
                                batchSize: 2,
                                unevenDimensions: false,
-                               keyCompression: .noCompression),
+                               keyCompression: .noCompression,
+                               encodingEntrySize: false),
                 IndexPirConfig(entryCount: 100,
                                entrySizeInBytes: 24,
                                dimensionCount: 2,
                                batchSize: 2,
                                unevenDimensions: true,
-                               keyCompression: .noCompression),
+                               keyCompression: .noCompression,
+                               encodingEntrySize: false),
                 IndexPirConfig(entryCount: 100,
                                entrySizeInBytes: 24,
                                dimensionCount: 1,
                                batchSize: 2,
                                unevenDimensions: true,
-                               keyCompression: .noCompression),
+                               keyCompression: .noCompression,
+                               encodingEntrySize: false),
                 IndexPirConfig(entryCount: 100,
                                entrySizeInBytes: 24,
                                dimensionCount: 1,
                                batchSize: 2,
                                unevenDimensions: true,
-                               keyCompression: .hybridCompression),
+                               keyCompression: .hybridCompression,
+                               encodingEntrySize: false),
                 IndexPirConfig(entryCount: 100,
                                entrySizeInBytes: 24,
                                dimensionCount: 1,
                                batchSize: 2,
                                unevenDimensions: true,
-                               keyCompression: .maxCompression),
+                               keyCompression: .maxCompression,
+                               encodingEntrySize: false),
+                IndexPirConfig(entryCount: 100,
+                               entrySizeInBytes: 24,
+                               dimensionCount: 1,
+                               batchSize: 2,
+                               unevenDimensions: true,
+                               keyCompression: .hybridCompression,
+                               encodingEntrySize: false),
             ]
+            let configsEncodingEntrySize = configsNotEncodingEntrySize.map { config in
+                var config = config
+                config.encodingEntrySize = true
+                return config
+            }
+            let configs = configsNotEncodingEntrySize + configsEncodingEntrySize
 
             let context: Server.Scheme.Context = try TestUtils.getTestContext()
             for config in configs {
@@ -126,7 +151,8 @@ extension PirTestUtils {
                                             dimensionCount: 2,
                                             batchSize: 1,
                                             unevenDimensions: false,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [4, 4])
         }
@@ -136,7 +162,8 @@ extension PirTestUtils {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: false,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [4, 3])
         }
@@ -147,7 +174,8 @@ extension PirTestUtils {
                                             dimensionCount: 2,
                                             batchSize: 1,
                                             unevenDimensions: true,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [5, 3])
         }
@@ -157,7 +185,8 @@ extension PirTestUtils {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [5, 3])
         }
@@ -167,7 +196,8 @@ extension PirTestUtils {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
             #expect(parameter.dimensions == [9, 2])
         }
@@ -178,7 +208,8 @@ extension PirTestUtils {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .noCompression)
+                                            keyCompression: .noCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
@@ -192,7 +223,8 @@ extension PirTestUtils {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .hybridCompression)
+                                            keyCompression: .hybridCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9, 17],
@@ -206,7 +238,8 @@ extension PirTestUtils {
                                             dimensionCount: 2,
                                             batchSize: 2,
                                             unevenDimensions: true,
-                                            keyCompression: .maxCompression)
+                                            keyCompression: .maxCompression,
+                                            encodingEntrySize: false)
             let parameter = MulPir<Bfv<UInt64>>.generateParameter(config: config, with: context)
             let evalKeyConfig = EvaluationKeyConfig(
                 galoisElements: [3, 5, 9],

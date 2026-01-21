@@ -52,7 +52,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig {
     ///   - evaluationKeyConfig: Evaluation key configuration
     ///   - encodingEntrySize: Whether to encode the size.
     /// - Returns: The converted native type.
-    public func native(batchSize: Int, encodingEntrySize: Bool, evaluationKeyConfig: EvaluationKeyConfig)
+    public func native(batchSize: Int, evaluationKeyConfig: EvaluationKeyConfig, encodingEntrySize: Bool)
         -> IndexPirParameter
     {
         IndexPirParameter(

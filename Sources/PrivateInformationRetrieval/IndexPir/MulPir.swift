@@ -255,7 +255,7 @@ extension MulPirClient {
 
             let responseBytes = bytes[computeResponseRangeInBytes(at: entryIndex)]
             if encodingEntrySize {
-                let (entrySize, bytesConsumed): (UInt, Int) = try VarInt.decode(responseBytes)
+                let (entrySize, bytesConsumed): (UInt32, Int) = try VarInt.decode(responseBytes)
                 return Array(responseBytes[(responseBytes.startIndex + bytesConsumed)...].prefix(Int(entrySize)))
             }
             return Array(responseBytes)
@@ -467,7 +467,7 @@ extension MulPirServer {
     {
         let chunkCount = Self.chunkCount(parameter: parameter, context: context)
         var plaintexts: [[Plaintext<Scheme, Eval>?]] = try await .init(database.async.map { entry in
-            let encoded = VarInt.encode(UInt(entry.count))
+            let encoded = VarInt.encode(UInt32(entry.count))
             let entryEncodingSize = if parameter.encodingEntrySize { encoded.count } else { 0 }
             return try await .init(stride(from: 0, to: parameter.encodedEntrySize, by: context.bytesPerPlaintext).async
                 .map { startIndex in
@@ -523,7 +523,7 @@ extension MulPirServer {
         let flatDatabase: [UInt8] = database.flatMap { entry in
             var entry = entry
             if parameter.encodingEntrySize {
-                let encoded = VarInt.encode(UInt(entry.count))
+                let encoded = VarInt.encode(UInt32(entry.count))
                 entry = encoded + entry
             }
             let pad = parameter.encodedEntrySize - entry.count

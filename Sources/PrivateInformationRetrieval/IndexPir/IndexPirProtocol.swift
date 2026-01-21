@@ -62,7 +62,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         if encodingEntrySize {
             // VarInt is monotonic, i.e. the largest entry will always have the largest encoded entry size.
             // So we can take an upper bound here.
-            VarInt.encodedSize(UInt(entrySizeInBytes)) + entrySizeInBytes
+            VarInt.encodedSize(UInt32(entrySizeInBytes)) + entrySizeInBytes
         } else {
             entrySizeInBytes
         }
@@ -123,7 +123,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
         if encodingEntrySize {
             // VarInt is monotonic, i.e. the largest entry will always have the largest encoded entry size.
             // So we can take an upper bound here.
-            VarInt.encodedSize(UInt(entrySizeInBytes)) + entrySizeInBytes
+            VarInt.encodedSize(UInt32(entrySizeInBytes)) + entrySizeInBytes
         } else {
             entrySizeInBytes
         }

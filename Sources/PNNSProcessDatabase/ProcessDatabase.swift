@@ -183,7 +183,7 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
 }
 
 @main
-struct ProcessDatabase: ParsableCommand {
+struct ProcessDatabase: AsyncParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "PNNSProcessDatabase", version: Version.current.description)
 

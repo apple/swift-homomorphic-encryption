@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,24 +32,14 @@ public struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
 
     public init(vectorDimension: Int, babyStep: Int, giantStep: Int) {
         self.vectorDimension = vectorDimension
+
         // Ensure babyStep >= giantStep for correct algorithm behavior.
         // The baby-step giant-step algorithm requires this ordering.
-        if babyStep >= giantStep {
-            self.babyStep = babyStep
-            self.giantStep = giantStep
-        } else {
-            self.babyStep = giantStep
-            self.giantStep = babyStep
-        }
-    }
+        precondition(
+            babyStep >= giantStep, "babyStep should be larger than giant step")
 
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let vectorDimension = try container.decode(Int.self, forKey: .vectorDimension)
-        let babyStep = try container.decode(Int.self, forKey: .babyStep)
-        let giantStep = try container.decode(Int.self, forKey: .giantStep)
-        // Use the normalizing initializer
-        self.init(vectorDimension: vectorDimension, babyStep: babyStep, giantStep: giantStep)
+        self.babyStep = babyStep
+        self.giantStep = giantStep
     }
 
     @inlinable

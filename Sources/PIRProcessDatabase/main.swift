@@ -457,7 +457,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                 let result = try client.decrypt(response: response, at: [requestIndex], using: secretKey)
 
                 let expected = shard[requestIndex]
-                
+
                 let actualResult: [UInt8]
                 if encodingEntrySize {
                     actualResult = Array(result[0])

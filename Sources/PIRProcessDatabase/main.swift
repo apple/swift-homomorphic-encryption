@@ -180,9 +180,9 @@ extension KeywordDatabase {
 
 /// A struct that represents the database processing arguments.
 struct Arguments: Codable, Equatable, Hashable, Sendable {
-    enum Mode: String, Codable {
-        case indexPir
-        case keywordPir
+    enum DatabaseTypeArgument: String, Codable, CaseIterable, ExpressibleByArgument {
+        case index
+        case keyword
     }
 
     /// The default arguments.
@@ -191,14 +191,14 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
         outputDatabase: "/path/to/output/database-SHARD_ID.bin",
         outputPirParameters: "path/to/output/pir-parameters-SHARD_ID.txtpb",
         rlweParameters: .n_4096_logq_27_28_28_logt_5,
-        mode: .keywordPir,
+        databaseType: .keyword,
         outputEvaluationKeyConfig: "/path/to/output/evaluation-key-config.txtpb")
 
     let inputDatabase: String
     let outputDatabase: String
     let outputPirParameters: String
     let rlweParameters: PredefinedRlweParameters
-    let mode: Mode
+    let databaseType: DatabaseTypeArgument
     let outputEvaluationKeyConfig: String?
     var sharding: Sharding?
     var shardingFunction: ShardingFunction?
@@ -235,7 +235,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
             outputDatabase: resolved.outputDatabase,
             outputPirParameters: resolved.outputPirParameters,
             rlweParameters: resolved.rlweParameters,
-            mode: .keywordPir,
+            databaseType: .keyword,
             outputEvaluationKeyConfig: resolved.outputEvaluationKeyConfig,
             sharding: resolved.sharding,
             shardingFunction: resolved.shardingFunction,
@@ -677,14 +677,14 @@ struct ProcessDatabase: AsyncParsableCommand {
         let configURL = URL(fileURLWithPath: configFile)
         let configData = try Data(contentsOf: configURL)
         let config = try JSONDecoder().decode(Arguments.self, from: configData)
-        switch config.mode {
-        case .indexPir:
+        switch config.databaseType {
+        case .index:
             if config.rlweParameters.supportsScalar(UInt32.self) {
                 try await processIndexDatabase(config: config, pirUtil: PirUtil<Bfv<UInt32>>.self)
             } else {
                 try await processIndexDatabase(config: config, pirUtil: PirUtil<Bfv<UInt64>>.self)
             }
-        case .keywordPir:
+        case .keyword:
             if config.rlweParameters.supportsScalar(UInt32.self) {
                 try await processKeywordDatabase(config: config, pirUtil: PirUtil<Bfv<UInt32>>.self)
             } else {

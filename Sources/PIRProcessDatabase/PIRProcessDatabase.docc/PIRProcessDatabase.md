@@ -48,6 +48,8 @@ written. This string must end contain `SHARD_ID`, unless `sharding` is
 `shardCount(1)`, and have extension `.txtpb` or `.binpb`. Again, `SHARD_ID` will
 be replaced with the shard number of each shard.
 
+5. `databaseType` is one of `index/keyword`, describing whether it's a keyword database or a index database.
+
 A minimal configuration sample is
 ```json
 {
@@ -55,6 +57,7 @@ A minimal configuration sample is
     "inputDatabase": "/path/to/input/database.txtpb",
     "outputDatabase": "/path/to/output/database-SHARD_ID.bin",
     "outputPirParameters": "/path/to/output/pir-params-SHARD_ID.txtpb",
+    "databaseType":"keyword",
 }
 ```
 The only required parameter variable which affects performance is

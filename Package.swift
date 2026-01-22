@@ -2,7 +2,7 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 // Remember to update CI if changing
 
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -334,11 +334,13 @@ if enableBenchmarking {
 // MARK: - DoCC plugin
 
 var enableDocCPlugin: Bool {
-    let benchmarkFlags = "SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_DOCCPLUGIN"
-    if let flag = ProcessInfo.processInfo.environment[benchmarkFlags], flag == "1" {
-        return true
-    }
-    return false
+    let env = ProcessInfo.processInfo.environment
+    // Workaround to ensure that swift-docc-plugin is included. Swift Package Index adds
+    // SPI_GENERATE_DOCS (https://github.com/SwiftPackageIndex/SwiftPackageIndex-Server/issues/2336)
+    // when building documentation.
+    let spiGenerateDocs = env["SPI_GENERATE_DOCS"] ?? "" == "1"
+    let enableDocs = env["SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_DOCCPLUGIN"] ?? "" == "1"
+    return spiGenerateDocs || enableDocs
 }
 
 if enableDocCPlugin {

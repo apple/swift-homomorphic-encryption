@@ -209,6 +209,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
     var useMaxSerializedBucketSize: Bool?
     var symmetricPirArguments: SymmetricPirArguments?
     var trialsPerShard: Int?
+    var encodingEntrySize: Bool?
 
     static func defaultJsonString() -> String {
         // swiftlint:disable:next force_try
@@ -410,13 +411,14 @@ struct ProcessDatabase: AsyncParsableCommand {
         let maxEntrySize = shard.map(\.count).max() ?? 0
         let encryptionParameters = try EncryptionParameters<PirUtil.Scheme.Scalar>(from: config.rlweParameters)
         let context = try PirUtil.Scheme.Context(encryptionParameters: encryptionParameters)
-
+        let encodingEntrySize = config.encodingEntrySize ?? false
         let pirConfig = try IndexPirConfig(entryCount: entryCount,
                                            entrySizeInBytes: maxEntrySize,
                                            dimensionCount: 2,
                                            batchSize: 1,
                                            unevenDimensions: true,
-                                           keyCompression: config.keyCompression ?? .noCompression)
+                                           keyCompression: config.keyCompression ?? .noCompression,
+                                           encodingEntrySize:  encodingEntrySize)
         let indexPirParameter = MulPirServer<PirUtil>.generateParameter(config: pirConfig, with: context)
         let processedShard = try await MulPirServer<PirUtil>.process(
             database: shard,
@@ -454,13 +456,22 @@ struct ProcessDatabase: AsyncParsableCommand {
                 let response = try await server.computeResponse(to: query, using: evaluationKey)
                 let result = try client.decrypt(response: response, at: [requestIndex], using: secretKey)
 
-                // Index PIR doesn't trim the suffix of 0s
                 let expected = shard[requestIndex]
-                let entryLength = expected.count
-                let prefix: [UInt8] = Array(result[0].prefix(entryLength))
-                let suffix: [UInt8] = Array(result[0].dropFirst(entryLength))
+                
+                let actualResult: [UInt8]
+                if encodingEntrySize {
+                    actualResult = Array(result[0])
+                } else {
+                    // Index PIR doesn't trim the suffix of 0s if encoding entry size is not enabled.
+                    let entryLength = expected.count
+                    let suffix: [UInt8] = Array(result[0].dropFirst(entryLength))
+                    guard (suffix.allSatisfy { $0 == 0 }) else {
+                        throw PirError.validationError("Incorrect PIR response")
+                    }
+                    actualResult = Array(result[0].prefix(entryLength))
+                }
 
-                guard prefix == expected, (suffix.allSatisfy { $0 == 0 }) else {
+                guard actualResult == expected else {
                     ProcessDatabase.logger.error("\(result[0]) != \(shard[requestIndex])")
                     let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
                     guard noiseBudget >= PirUtil.Scheme.minNoiseBudget else {

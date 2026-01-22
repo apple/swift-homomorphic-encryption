@@ -288,3 +288,7 @@ cuckoo tables instead of increasing the cryptographic parameters to a larger rin
 size whereas two cuckoo tables doubles these parameters, more or less. Also, large metadata entries
 are handled automatically by running multiple keyword PIR protocols in parallel. Each response contains
 metadata for `r = bucketCount x hashFunctionCount` tables' keywords.
+
+#### Encoding Entry Size
+For Index PIR, we can opt-in to encode the entry size info into the database when the entries have various sizes. 
+Turning this option on allows automatic removig excessive `0` suffix padded to the entries during encoding.

@@ -82,7 +82,7 @@ public struct IndexDatabaseConfig: Hashable, Codable, Sendable {
     /// Initializes an ``IndexDatabaseConfig``.
     /// - Parameters:
     ///   - sharding: Sharding to use for the database.
-    ///   - keywordPirConfig: Index PIR configuration.
+    ///   - indexPirConfig: Index PIR configuration.
     public init(
         sharding: Sharding,
         indexPirConfig: IndexPirConfig)

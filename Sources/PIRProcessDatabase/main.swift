@@ -209,6 +209,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
     var useMaxSerializedBucketSize: Bool?
     var symmetricPirArguments: SymmetricPirArguments?
     var trialsPerShard: Int?
+    // swiftlint:disable:next discouraged_optional_boolean
     var encodingEntrySize: Bool?
 
     static func defaultJsonString() -> String {
@@ -418,7 +419,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                                            batchSize: 1,
                                            unevenDimensions: true,
                                            keyCompression: config.keyCompression ?? .noCompression,
-                                           encodingEntrySize:  encodingEntrySize)
+                                           encodingEntrySize: encodingEntrySize)
         let indexPirParameter = MulPirServer<PirUtil>.generateParameter(config: pirConfig, with: context)
         let processedShard = try await MulPirServer<PirUtil>.process(
             database: shard,

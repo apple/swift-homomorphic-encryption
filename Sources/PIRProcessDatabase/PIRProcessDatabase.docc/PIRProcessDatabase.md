@@ -32,7 +32,7 @@ Run `PIRProcessDatabase --help` to get a sample JSON configuration.
 
 ### Required Configuration Parameters
 
-There are four required parameters:
+The required parameters are:
 1. `rlweParameters` is one of the [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/predefinedrlweparameters),
 e.g., `n_4096_logq_27_28_28_logt_5`.
 2. `inputDatabase` is the path to the unprocessed input database. It must be a

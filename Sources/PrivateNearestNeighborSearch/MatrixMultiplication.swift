@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,12 @@ public struct BabyStepGiantStep: Codable, Equatable, Hashable, Sendable {
 
     public init(vectorDimension: Int, babyStep: Int, giantStep: Int) {
         self.vectorDimension = vectorDimension
+
+        // Ensure babyStep >= giantStep for correct algorithm behavior.
+        // The baby-step giant-step algorithm requires this ordering.
+        precondition(
+            babyStep >= giantStep, "babyStep cannot be smaller than giantStep")
+
         self.babyStep = babyStep
         self.giantStep = giantStep
     }
@@ -126,7 +132,9 @@ extension PlaintextMatrix {
         vector ciphertextVector: CiphertextMatrix<Scheme, Scheme.CanonicalCiphertextFormat>,
         using evaluationKey: EvaluationKey<Scheme>) async throws -> [Scheme.CanonicalCiphertext]
     {
-        guard case .diagonal = packing else {
+        // Extract BabyStepGiantStep from the packing to ensure consistency
+        // between how data was packed and how it's accessed during multiplication
+        guard case let .diagonal(babyStepGiantStep: babyStepGiantStep) = packing else {
             let expectedBsgs = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
             throw PnnsError.wrongMatrixPacking(got: packing, expected: .diagonal(babyStepGiantStep: expectedBsgs))
         }
@@ -165,8 +173,6 @@ extension PlaintextMatrix {
         // [4, 5, 10, 15] * [4, 1, 2, 3] => [16, 5, 20, 45] | - + -> [30, 70, 110, 150]
         // We extend this basic idea using baby-step giant-step logic from Section 6.3 of
         // https://eprint.iacr.org/2018/244.pdf.
-
-        let babyStepGiantStep = BabyStepGiantStep(vectorDimension: dimensions.columnCount)
 
         // 1) Compute v_j = theta^j(v)
         var rotatedStates: [Scheme.CanonicalCiphertext] = []

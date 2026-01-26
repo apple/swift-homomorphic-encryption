@@ -108,13 +108,12 @@ let package = Package(
                 "CUtil",
                 "ModularArithmetic",
             ],
-            exclude: ["HomomorphicEncryption.docc"],
             swiftSettings: librarySettings),
         .target(
             name: "HomomorphicEncryptionProtobuf",
             dependencies: ["HomomorphicEncryption",
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
-            exclude: ["generated/README.md", "HomomorphicEncryptionProtobuf.docc"],
+            exclude: ["generated/README.md"],
             swiftSettings: librarySettings),
         .target(
             name: "_HomomorphicEncryptionExtras",
@@ -125,7 +124,6 @@ let package = Package(
             dependencies: ["HomomorphicEncryption",
                            .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                            .product(name: "Numerics", package: "swift-numerics")],
-            exclude: ["PrivateInformationRetrieval.docc"],
             swiftSettings: librarySettings),
         .target(
             name: "PrivateNearestNeighborSearch",
@@ -135,7 +133,6 @@ let package = Package(
                 "HomomorphicEncryption",
                 "_HomomorphicEncryptionExtras",
             ],
-            exclude: ["PrivateNearestNeighborSearch.docc"],
             swiftSettings: librarySettings),
         .target(
             name: "ApplicationProtobuf",
@@ -143,7 +140,7 @@ let package = Package(
                            "PrivateInformationRetrieval",
                            "PrivateNearestNeighborSearch",
                            .product(name: "SwiftProtobuf", package: "swift-protobuf")],
-            exclude: ["ApplicationProtobuf.docc", "generated/README.md", "protobuf_module_mappings.txtpb"],
+            exclude: ["generated/README.md", "protobuf_module_mappings.txtpb"],
             swiftSettings: librarySettings),
         .target(
             name: "_TestUtilities",
@@ -162,7 +159,6 @@ let package = Package(
                 "HomomorphicEncryption",
                 "ApplicationProtobuf",
             ],
-            exclude: ["PIRGenerateDatabase.docc"],
             swiftSettings: executableSettings),
         .executableTarget(
             name: "PIRProcessDatabase",
@@ -173,7 +169,6 @@ let package = Package(
                 "HomomorphicEncryption",
                 .product(name: "Logging", package: "swift-log"),
             ],
-            exclude: ["PIRProcessDatabase.docc"],
             swiftSettings: executableSettings),
         .executableTarget(
             name: "PIRShardDatabase",
@@ -182,7 +177,6 @@ let package = Package(
                 "HomomorphicEncryption",
                 "ApplicationProtobuf",
             ],
-            exclude: ["PIRShardDatabase.docc"],
             swiftSettings: executableSettings),
         .executableTarget(
             name: "PNNSGenerateDatabase",
@@ -191,7 +185,6 @@ let package = Package(
                 "HomomorphicEncryption",
                 "ApplicationProtobuf",
             ],
-            exclude: ["PNNSGenerateDatabase.docc"],
             swiftSettings: executableSettings),
         .executableTarget(
             name: "PNNSProcessDatabase",
@@ -202,7 +195,6 @@ let package = Package(
                 "HomomorphicEncryption",
                 .product(name: "Logging", package: "swift-log"),
             ],
-            exclude: ["PNNSProcessDatabase.docc"],
             swiftSettings: executableSettings),
         .testTarget(
             name: "HomomorphicEncryptionTests",

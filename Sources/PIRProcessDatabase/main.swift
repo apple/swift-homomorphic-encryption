@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -180,18 +180,25 @@ extension KeywordDatabase {
 
 /// A struct that represents the database processing arguments.
 struct Arguments: Codable, Equatable, Hashable, Sendable {
+    enum DatabaseTypeArgument: String, Codable, CaseIterable, ExpressibleByArgument {
+        case index
+        case keyword
+    }
+
     /// The default arguments.
     static let defaultArguments = Arguments(
         inputDatabase: "/path/to/input/database.txtpb",
         outputDatabase: "/path/to/output/database-SHARD_ID.bin",
         outputPirParameters: "path/to/output/pir-parameters-SHARD_ID.txtpb",
         rlweParameters: .n_4096_logq_27_28_28_logt_5,
+        databaseType: .keyword,
         outputEvaluationKeyConfig: "/path/to/output/evaluation-key-config.txtpb")
 
     let inputDatabase: String
     let outputDatabase: String
     let outputPirParameters: String
     let rlweParameters: PredefinedRlweParameters
+    let databaseType: DatabaseTypeArgument
     let outputEvaluationKeyConfig: String?
     var sharding: Sharding?
     var shardingFunction: ShardingFunction?
@@ -202,10 +209,12 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
     var useMaxSerializedBucketSize: Bool?
     var symmetricPirArguments: SymmetricPirArguments?
     var trialsPerShard: Int?
+    // swiftlint:disable:next discouraged_optional_boolean
+    var encodingEntrySize: Bool?
 
     static func defaultJsonString() -> String {
         // swiftlint:disable:next force_try
-        let resolved = try! defaultArguments.resolve(for: [], scheme: Bfv<UInt64>.self)
+        let resolved = try! defaultArguments.resolveForKeywordDatabase(for: [], scheme: Bfv<UInt64>.self)
         let resolvedCuckooConfig = resolved.cuckooTableConfig
         let resolvedBucketCount = switch resolvedCuckooConfig.bucketCount {
         case let .allowExpansion(
@@ -228,6 +237,7 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
             outputDatabase: resolved.outputDatabase,
             outputPirParameters: resolved.outputPirParameters,
             rlweParameters: resolved.rlweParameters,
+            databaseType: .keyword,
             outputEvaluationKeyConfig: resolved.outputEvaluationKeyConfig,
             sharding: resolved.sharding,
             shardingFunction: resolved.shardingFunction,
@@ -244,8 +254,8 @@ struct Arguments: Codable, Equatable, Hashable, Sendable {
         return String(decoding: data, as: UTF8.self)
     }
 
-    func resolve<Scheme: HeScheme>(for database: [KeywordValuePair],
-                                   scheme _: Scheme.Type) throws -> ResolvedArguments
+    func resolveForKeywordDatabase<Scheme: HeScheme>(for database: [KeywordValuePair],
+                                                     scheme _: Scheme.Type) throws -> ResolvedArguments
     {
         let cuckooTableArguments = cuckooTableArguments ?? CuckooTableArguments()
         let maxValueSize = database.map { row in row.value.count }.max() ?? 0
@@ -391,18 +401,152 @@ struct ProcessDatabase: AsyncParsableCommand {
           help: "Enables parallel processing.")
     var parallel = true
 
+    @inlinable
+    func processIndexDatabaseShard<PirUtil: PirUtilProtocol>(shardID: String,
+                                                             shard: [[UInt8]],
+                                                             config: Arguments,
+                                                             pirUtil _: PirUtil
+                                                                 .Type) async throws -> EvaluationKeyConfig
+    {
+        let entryCount = shard.count
+        let maxEntrySize = shard.map(\.count).max() ?? 0
+        let encryptionParameters = try EncryptionParameters<PirUtil.Scheme.Scalar>(from: config.rlweParameters)
+        let context = try PirUtil.Scheme.Context(encryptionParameters: encryptionParameters)
+        let encodingEntrySize = config.encodingEntrySize ?? false
+        let pirConfig = try IndexPirConfig(entryCount: entryCount,
+                                           entrySizeInBytes: maxEntrySize,
+                                           dimensionCount: 2,
+                                           batchSize: 1,
+                                           unevenDimensions: true,
+                                           keyCompression: config.keyCompression ?? .noCompression,
+                                           encodingEntrySize: encodingEntrySize)
+        let indexPirParameter = MulPirServer<PirUtil>.generateParameter(config: pirConfig, with: context)
+        let processedShard = try await MulPirServer<PirUtil>.process(
+            database: shard,
+            with: context,
+            using: indexPirParameter)
+        let processed = ProcessedDatabaseWithParameters(
+            database: processedShard,
+            algorithm: .mulPir,
+            pirParameter: indexPirParameter)
+        let outputDatabaseFilename = config.outputDatabase.replacingOccurrences(
+            of: "SHARD_ID",
+            with: String(shardID))
+        try processedShard.save(to: outputDatabaseFilename)
+        ProcessDatabase.logger.info("Saved shard to \(outputDatabaseFilename)")
+
+        let shardPirParameters = try processed.proto(context: context)
+        let outputParametersFilename = config.outputPirParameters.replacingOccurrences(
+            of: "SHARD_ID",
+            with: String(shardID))
+        try shardPirParameters.save(to: outputParametersFilename)
+        ProcessDatabase.logger.info("Saved shard PIR parameters to \(outputParametersFilename)")
+
+        if let trialsPerShard = config.trialsPerShard, trialsPerShard > 0 {
+            ProcessDatabase.logger.info("Validating shard")
+            let server = try MulPirServer<PirUtil>(
+                parameter: indexPirParameter,
+                context: context,
+                databases: [processedShard])
+            let client = MulPirClient<PirUtil>(parameter: indexPirParameter, context: context)
+            let secretKey = try context.generateSecretKey()
+            for _ in 0..<trialsPerShard {
+                let requestIndex = Int.random(in: 0..<shard.count)
+                let query = try client.generateQuery(at: [requestIndex], using: secretKey)
+                let evaluationKey = try client.generateEvaluationKey(using: secretKey)
+                let response = try await server.computeResponse(to: query, using: evaluationKey)
+                let result = try client.decrypt(response: response, at: [requestIndex], using: secretKey)
+
+                let expected = shard[requestIndex]
+
+                let actualResult: [UInt8]
+                if encodingEntrySize {
+                    actualResult = Array(result[0])
+                } else {
+                    // Index PIR doesn't trim the suffix of 0s if encoding entry size is not enabled.
+                    let entryLength = expected.count
+                    let suffix: [UInt8] = Array(result[0].dropFirst(entryLength))
+                    guard (suffix.allSatisfy { $0 == 0 }) else {
+                        throw PirError.validationError("Incorrect PIR response")
+                    }
+                    actualResult = Array(result[0].prefix(entryLength))
+                }
+
+                guard actualResult == expected else {
+                    ProcessDatabase.logger.error("\(result[0]) != \(shard[requestIndex])")
+                    let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
+                    guard noiseBudget >= PirUtil.Scheme.minNoiseBudget else {
+                        throw PirError.validationError("Insufficient noise budget \(noiseBudget)")
+                    }
+                    throw PirError.validationError("Incorrect PIR response")
+                }
+            }
+        }
+
+        return processed.evaluationKeyConfig
+    }
+
+    @inlinable
+    mutating func processIndexDatabase<PirUtil: PirUtilProtocol>(config: Arguments,
+                                                                 pirUtil: PirUtil.Type) async throws
+    {
+        typealias Scalar = PirUtil.Scheme.Scalar
+        let databaseRows: [[UInt8]] =
+            try Apple_SwiftHomomorphicEncryption_Pir_V1_IndexPirDatabase(from: config
+                .inputDatabase).rows.map { Array($0.value) }
+        let database = try IndexDatabase(rows: databaseRows, sharding: config.sharding ?? Sharding.shardCount(1))
+
+        var evaluationKeyConfig = EvaluationKeyConfig()
+        if parallel {
+            try await withThrowingTaskGroup { group in
+                for (shardID, shard) in database.shards {
+                    group.addTask { @Sendable [self] in
+                        try await processIndexDatabaseShard(shardID: shardID,
+                                                            shard: shard.rows,
+                                                            config: config,
+                                                            pirUtil: pirUtil)
+                    }
+                }
+
+                for try await processedEvaluationKeyConfig in group {
+                    evaluationKeyConfig = [evaluationKeyConfig, processedEvaluationKeyConfig].union()
+                }
+            }
+        } else {
+            for (shardID, shard) in database.shards {
+                let processedEvaluationKeyConfig = try await processIndexDatabaseShard(shardID: shardID,
+                                                                                       shard: shard.rows,
+                                                                                       config: config,
+                                                                                       pirUtil: pirUtil)
+                evaluationKeyConfig = [evaluationKeyConfig, processedEvaluationKeyConfig].union()
+            }
+        }
+
+        let encryptionParameters = try EncryptionParameters<PirUtil.Scheme.Scalar>(from: config.rlweParameters)
+        if let evaluationKeyConfigFile = config.outputEvaluationKeyConfig {
+            let protoEvaluationKeyConfig = try evaluationKeyConfig.proto(
+                encryptionParameters: encryptionParameters,
+                scheme: PirUtil.Scheme.self)
+            try protoEvaluationKeyConfig.save(to: evaluationKeyConfigFile)
+            ProcessDatabase.logger.info("Saved evaluation key configuration to \(evaluationKeyConfigFile)")
+        }
+    }
+
     /// Performs the processing on the given database.
     /// - Parameters:
     ///   - config: The configuration for the PIR processing.
     ///   - scheme: The HE scheme.
     /// - Throws: Error upon processing the database.
     @inlinable
-    mutating func process<PirUtil: PirUtilProtocol>(config: Arguments, pirUtil _: PirUtil.Type) async throws {
+    mutating func processKeywordDatabase<PirUtil: PirUtilProtocol>(
+        config: Arguments,
+        pirUtil _: PirUtil.Type) async throws
+    {
         typealias Scalar = PirUtil.Scheme.Scalar
         let database: [KeywordValuePair] =
             try Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase(from: config.inputDatabase).native()
 
-        let config = try config.resolve(for: database, scheme: PirUtil.Scheme.self)
+        let config = try config.resolveForKeywordDatabase(for: database, scheme: PirUtil.Scheme.self)
         ProcessDatabase.logger.info("Processing database with configuration: \(config)")
         let keywordConfig = try KeywordPirConfig(dimensionCount: 2,
                                                  cuckooTableConfig: config.cuckooTableConfig,
@@ -437,7 +581,7 @@ struct ProcessDatabase: AsyncParsableCommand {
             try await withThrowingTaskGroup { group in
                 for (shardID, shard) in shards {
                     group.addTask { @Sendable [self] in
-                        try await processShard(
+                        try await processKeywordShard(
                             shardID: shardID,
                             shard: shard,
                             config: config,
@@ -453,7 +597,7 @@ struct ProcessDatabase: AsyncParsableCommand {
             }
         } else {
             for (shardID, shard) in shards {
-                let processedEvaluationKeyConfig = try await processShard(
+                let processedEvaluationKeyConfig = try await processKeywordShard(
                     shardID: shardID,
                     shard: shard, config:
                     config, context: context,
@@ -473,7 +617,7 @@ struct ProcessDatabase: AsyncParsableCommand {
     }
 
     // swiftlint:disable:next function_parameter_count
-    private func processShard<PirUtil: PirUtilProtocol>(
+    private func processKeywordShard<PirUtil: PirUtilProtocol>(
         shardID: String,
         shard: KeywordDatabaseShard,
         config: ResolvedArguments,
@@ -545,10 +689,19 @@ struct ProcessDatabase: AsyncParsableCommand {
         let configURL = URL(fileURLWithPath: configFile)
         let configData = try Data(contentsOf: configURL)
         let config = try JSONDecoder().decode(Arguments.self, from: configData)
-        if config.rlweParameters.supportsScalar(UInt32.self) {
-            try await process(config: config, pirUtil: PirUtil<Bfv<UInt32>>.self)
-        } else {
-            try await process(config: config, pirUtil: PirUtil<Bfv<UInt64>>.self)
+        switch config.databaseType {
+        case .index:
+            if config.rlweParameters.supportsScalar(UInt32.self) {
+                try await processIndexDatabase(config: config, pirUtil: PirUtil<Bfv<UInt32>>.self)
+            } else {
+                try await processIndexDatabase(config: config, pirUtil: PirUtil<Bfv<UInt64>>.self)
+            }
+        case .keyword:
+            if config.rlweParameters.supportsScalar(UInt32.self) {
+                try await processKeywordDatabase(config: config, pirUtil: PirUtil<Bfv<UInt32>>.self)
+            } else {
+                try await processKeywordDatabase(config: config, pirUtil: PirUtil<Bfv<UInt64>>.self)
+            }
         }
     }
 }

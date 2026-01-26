@@ -32,7 +32,7 @@ Run `PIRProcessDatabase --help` to get a sample JSON configuration.
 
 ### Required Configuration Parameters
 
-There are four required parameters:
+The required parameters are:
 1. `rlweParameters` is one of the [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/predefinedrlweparameters),
 e.g., `n_4096_logq_27_28_28_logt_5`.
 2. `inputDatabase` is the path to the unprocessed input database. It must be a
@@ -48,6 +48,8 @@ written. This string must end contain `SHARD_ID`, unless `sharding` is
 `shardCount(1)`, and have extension `.txtpb` or `.binpb`. Again, `SHARD_ID` will
 be replaced with the shard number of each shard.
 
+5. `databaseType` is one of `index/keyword`, describing whether it's a keyword database or a index database.
+
 A minimal configuration sample is
 ```json
 {
@@ -55,6 +57,7 @@ A minimal configuration sample is
     "inputDatabase": "/path/to/input/database.txtpb",
     "outputDatabase": "/path/to/output/database-SHARD_ID.bin",
     "outputPirParameters": "/path/to/output/pir-params-SHARD_ID.txtpb",
+    "databaseType":"keyword",
 }
 ```
 The only required parameter variable which affects performance is
@@ -285,3 +288,7 @@ cuckoo tables instead of increasing the cryptographic parameters to a larger rin
 size whereas two cuckoo tables doubles these parameters, more or less. Also, large metadata entries
 are handled automatically by running multiple keyword PIR protocols in parallel. Each response contains
 metadata for `r = bucketCount x hashFunctionCount` tables' keywords.
+
+#### Encoding Entry Size
+For Index PIR, we can opt-in to encode the entry size info into the database when the entries have various sizes, by setting `encodingEntrySize: true`.
+Turning this option on allows automatic removing excessive `0` suffix padded to the entries during encoding.

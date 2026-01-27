@@ -69,6 +69,7 @@ extension ProcessedDatabaseWithParameters {
             params.evaluationKeyConfig = try evaluationKeyConfig
                 .proto(encryptionParameters: encryptionParameters, scheme: Scheme.self)
             params.keyCompressionStrategy = .unspecified
+            params.encodingEntrySize = pirParameter.encodingEntrySize
         }
     }
 }

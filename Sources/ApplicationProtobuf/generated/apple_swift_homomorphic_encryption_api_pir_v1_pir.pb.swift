@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -150,6 +150,27 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: @unchecked 
   public var hasPirShardConfigs: Bool {return _storage._pirShardConfigs != nil}
   /// Clears the value of `pirShardConfigs`. Subsequent reads from it will return its default value.
   public mutating func clearPirShardConfigs() {_uniqueStorage()._pirShardConfigs = nil}
+
+  /// Whether to encode the entry size as part of the Index PIR response.
+  public var encodingEntrySize: Bool {
+    get {return _storage._encodingEntrySize ?? false}
+    set {_uniqueStorage()._encodingEntrySize = newValue}
+  }
+  /// Returns true if `encodingEntrySize` has been explicitly set.
+  public var hasEncodingEntrySize: Bool {return _storage._encodingEntrySize != nil}
+  /// Clears the value of `encodingEntrySize`. Subsequent reads from it will return its default value.
+  public mutating func clearEncodingEntrySize() {_uniqueStorage()._encodingEntrySize = nil}
+
+  /// Additional user config. This field is purely to allow users conveniently attach their own config with CipherML's such
+  /// that they don't need to build their own config service.
+  public var customConfig: SwiftProtobuf.Google_Protobuf_Any {
+    get {return _storage._customConfig ?? SwiftProtobuf.Google_Protobuf_Any()}
+    set {_uniqueStorage()._customConfig = newValue}
+  }
+  /// Returns true if `customConfig` has been explicitly set.
+  public var hasCustomConfig: Bool {return _storage._customConfig != nil}
+  /// Clears the value of `customConfig`. Subsequent reads from it will return its default value.
+  public mutating func clearCustomConfig() {_uniqueStorage()._customConfig = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -428,7 +449,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig: SwiftProto
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PIRConfig"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}shard_configs\0\u{3}keyword_pir_params\0\u{1}algorithm\0\u{3}batch_size\0\u{3}evaluation_key_config_hash\0\u{4}\u{4}pir_shard_configs\0\u{c}\u{7}\u{1}\u{c}\u{8}\u{1}\u{c}\u{9}\u{1}")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encryption_parameters\0\u{3}shard_configs\0\u{3}keyword_pir_params\0\u{1}algorithm\0\u{3}batch_size\0\u{3}evaluation_key_config_hash\0\u{4}\u{4}pir_shard_configs\0\u{3}encoding_entry_size\0\u{4}Y\u{1}custom_config\0\u{c}\u{7}\u{1}\u{c}\u{8}\u{1}\u{c}\u{9}\u{1}")
 
   fileprivate class _StorageClass {
     var _encryptionParameters: HomomorphicEncryptionProtobuf.Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters? = nil
@@ -438,6 +459,8 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
     var _batchSize: UInt64 = 0
     var _evaluationKeyConfigHash: Data = Data()
     var _pirShardConfigs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfigs? = nil
+    var _encodingEntrySize: Bool? = nil
+    var _customConfig: SwiftProtobuf.Google_Protobuf_Any? = nil
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -455,6 +478,8 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
       _batchSize = source._batchSize
       _evaluationKeyConfigHash = source._evaluationKeyConfigHash
       _pirShardConfigs = source._pirShardConfigs
+      _encodingEntrySize = source._encodingEntrySize
+      _customConfig = source._customConfig
     }
   }
 
@@ -480,6 +505,8 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
         case 5: try { try decoder.decodeSingularUInt64Field(value: &_storage._batchSize) }()
         case 6: try { try decoder.decodeSingularBytesField(value: &_storage._evaluationKeyConfigHash) }()
         case 10: try { try decoder.decodeSingularMessageField(value: &_storage._pirShardConfigs) }()
+        case 11: try { try decoder.decodeSingularBoolField(value: &_storage._encodingEntrySize) }()
+        case 100: try { try decoder.decodeSingularMessageField(value: &_storage._customConfig) }()
         default: break
         }
       }
@@ -513,6 +540,12 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
       try { if let v = _storage._pirShardConfigs {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
       } }()
+      try { if let v = _storage._encodingEntrySize {
+        try visitor.visitSingularBoolField(value: v, fieldNumber: 11)
+      } }()
+      try { if let v = _storage._customConfig {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 100)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -529,6 +562,8 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig: SwiftProtobuf.M
         if _storage._batchSize != rhs_storage._batchSize {return false}
         if _storage._evaluationKeyConfigHash != rhs_storage._evaluationKeyConfigHash {return false}
         if _storage._pirShardConfigs != rhs_storage._pirShardConfigs {return false}
+        if _storage._encodingEntrySize != rhs_storage._encodingEntrySize {return false}
+        if _storage._customConfig != rhs_storage._customConfig {return false}
         return true
       }
       if !storagesAreEqual {return false}

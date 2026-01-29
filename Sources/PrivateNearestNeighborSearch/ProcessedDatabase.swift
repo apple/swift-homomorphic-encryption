@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,9 +90,10 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
         guard trials > 0 else {
             throw PnnsError.validationError("Invalid trialsPerShard: \(trials)")
         }
-        guard vector.count == serverConfig.vectorDimension else {
+        guard vector.columnCount == serverConfig.vectorDimension else {
             throw PnnsError
-                .validationError("Wrong vector count \(vector.count), expected \(serverConfig.vectorDimension)")
+                .validationError("Wrong vector dimension" +
+                    " \(vector.columnCount), expected \(serverConfig.vectorDimension)")
         }
 
         let server = try Server(database: self)

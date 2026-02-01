@@ -60,7 +60,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     public var entrySizeEncodingSize: Int {
         if encodingEntrySize {
             // We take the bytes needed for the largest entry as the space needed for encoding entry size.
-            Self.encodedSizeBytes(for: UInt64(entrySizeInBytes))
+            Self.entrySizeEncodingWidth(for: UInt64(entrySizeInBytes))
         } else {
             0
         }
@@ -103,8 +103,9 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         self.encodingEntrySize = encodingEntrySize
     }
 
+    // static method shared by `IndexPirConfig` and `IndexPirParameter`
     @inlinable
-    static func encodedSizeBytes(for entrySize: UInt64) -> Int {
+    static func entrySizeEncodingWidth(for entrySize: UInt64) -> Int {
         if entrySize <= UInt8.max {
             MemoryLayout<UInt8>.size
         } else if entrySize <= UInt16.max {
@@ -116,6 +117,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         }
     }
 
+    // static method shared by `IndexPirConfig` and `IndexPirParameter`
     @inlinable
     static func encodeEntrySize(_ entrySize: some FixedWidthInteger, encodingSize: Int) throws -> [UInt8] {
         switch encodingSize {
@@ -149,22 +151,6 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
             throw PirError.corruptedData("entry size should be encoded to 1, 2, 4 or 8 bytes.")
         }
     }
-
-    @inlinable
-    static func readEntrySizeSize(from data: Data) throws -> UInt64 {
-        switch data.count {
-        case 1:
-            return UInt64(data.withUnsafeBytes { $0.load(as: UInt8.self) })
-        case 2:
-            return UInt64(data.withUnsafeBytes { $0.load(as: UInt16.self) })
-        case 4:
-            return UInt64(data.withUnsafeBytes { $0.load(as: UInt32.self) })
-        case 8:
-            return data.withUnsafeBytes { $0.load(as: UInt64.self) }
-        default:
-            throw PirError.corruptedData("Entry size should be encoded to 1, 2, 4 or 8 bytes.")
-        }
-    }
 }
 
 /// Parameters for an index PIR lookup.
@@ -184,10 +170,10 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Whether to encode the entry size.
     public var encodingEntrySize: Bool
 
-    public var entrySizeEncodingSize: Int {
+    public var entrySizeEncodingWidth: Int {
         if encodingEntrySize {
             // We take the bytes needed for the largest entry as the space needed for encoding entry size.
-            IndexPirConfig.encodedSizeBytes(for: UInt64(entrySizeInBytes))
+            IndexPirConfig.entrySizeEncodingWidth(for: UInt64(entrySizeInBytes))
         } else {
             0
         }
@@ -195,7 +181,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
 
     /// Size of the largest entry in bytes after encoding.
     public var encodedEntrySize: Int {
-        entrySizeEncodingSize + entrySizeInBytes
+        entrySizeEncodingWidth + entrySizeInBytes
     }
 
     /// The number of dimensions in the database.
@@ -225,6 +211,26 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
         self.batchSize = batchSize
         self.evaluationKeyConfig = evaluationKeyConfig
         self.encodingEntrySize = encodingEntrySize
+    }
+
+    @inlinable
+    func readEntrySize(from data: Data) throws -> UInt64 {
+        guard data.count == entrySizeEncodingWidth else {
+            throw PirError
+                .corruptedData("Entry size should be \(entrySizeEncodingWidth) bytes, received \(data.count) bytes")
+        }
+        switch data.count {
+        case 1:
+            return UInt64(data.withUnsafeBytes { $0.load(as: UInt8.self) })
+        case 2:
+            return UInt64(data.withUnsafeBytes { $0.load(as: UInt16.self) })
+        case 4:
+            return UInt64(data.withUnsafeBytes { $0.load(as: UInt32.self) })
+        case 8:
+            return data.withUnsafeBytes { $0.load(as: UInt64.self) }
+        default:
+            throw PirError.corruptedData("Entry size should be \(entrySizeInBytes) bytes, received \(data.count) bytes")
+        }
     }
 }
 

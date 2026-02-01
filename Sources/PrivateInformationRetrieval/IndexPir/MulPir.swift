@@ -257,9 +257,9 @@ extension MulPirClient {
             if encodingEntrySize {
                 let entrySizeBytes =
                     Data(responseBytes[responseBytes.startIndex..<responseBytes.startIndex + parameter
-                            .entrySizeEncodingSize])
-                let entrySize = try IndexPirConfig.readEntrySizeSize(from: entrySizeBytes)
-                return Array(responseBytes[(responseBytes.startIndex + parameter.entrySizeEncodingSize)...]
+                            .entrySizeEncodingWidth])
+                let entrySize = try parameter.readEntrySize(from: entrySizeBytes)
+                return Array(responseBytes[(responseBytes.startIndex + parameter.entrySizeEncodingWidth)...]
                     .prefix(Int(entrySize)))
             }
             return Array(responseBytes)
@@ -473,7 +473,7 @@ extension MulPirServer {
         var plaintexts: [[Plaintext<Scheme, Eval>?]] = try await .init(database.async.map { entry in
             try await .init(stride(from: 0, to: parameter.encodedEntrySize, by: context.bytesPerPlaintext).async
                 .map { startIndex in
-                    let entryStartIndex = startIndex - parameter.entrySizeEncodingSize
+                    let entryStartIndex = startIndex - parameter.entrySizeEncodingWidth
                     let endIndex = min(entryStartIndex + context.bytesPerPlaintext, entry.count)
                     // Avoid computing on padding plaintexts
                     guard entryStartIndex < endIndex else {
@@ -481,7 +481,7 @@ extension MulPirServer {
                     }
                     let bytes = if startIndex == 0, parameter.encodingEntrySize {
                         try IndexPirConfig
-                            .encodeEntrySize(entry.count, encodingSize: parameter.entrySizeEncodingSize) +
+                            .encodeEntrySize(entry.count, encodingSize: parameter.entrySizeEncodingWidth) +
                             entry[0..<endIndex]
                     } else {
                         Array(entry[entryStartIndex..<endIndex])
@@ -529,7 +529,7 @@ extension MulPirServer {
             if parameter.encodingEntrySize {
                 let encoded = try IndexPirConfig.encodeEntrySize(
                     entry.count,
-                    encodingSize: parameter.entrySizeEncodingSize)
+                    encodingSize: parameter.entrySizeEncodingWidth)
                 entry = encoded + entry
             }
             let pad = parameter.encodedEntrySize - entry.count

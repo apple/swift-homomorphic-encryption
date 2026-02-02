@@ -57,18 +57,19 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     /// Whether to encode the entry size.
     public var encodingEntrySize: Bool
 
-    public var entrySizeEncodingSize: Int {
+    /// Width of encoded entry size in bytes. Set to 0 if entry size is not encoded.
+    @usableFromInline var entrySizeEncodingWidth: Int {
         if encodingEntrySize {
             // We take the bytes needed for the largest entry as the space needed for encoding entry size.
-            Self.entrySizeEncodingWidth(for: UInt64(entrySizeInBytes))
+            IndexPirConfig.entrySizeEncodingWidth(for: UInt64(entrySizeInBytes))
         } else {
             0
         }
     }
 
     /// Size of the largest entry in bytes after encoding.
-    public var encodedEntrySize: Int {
-        entrySizeEncodingSize + entrySizeInBytes
+    @usableFromInline var encodedEntrySize: Int {
+        entrySizeEncodingWidth + entrySizeInBytes
     }
 
     /// Initializes an ``IndexPirConfig``.
@@ -134,21 +135,23 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
                     .corruptedData(
                         "entry size shouldn't be larger than \(UInt16.max) when encoding to \(encodingSize) bytes.")
             }
-            var v = UInt16(entrySize).littleEndian
-            return withUnsafeBytes(of: &v) { Array($0) } // little-endian
+            return UInt16(entrySize).littleEndianBytes
         case 4:
             guard entrySize <= UInt32.max else {
                 throw PirError
                     .corruptedData(
                         "entry size shouldn't be larger than \(UInt32.max) when encoding to \(encodingSize) bytes.")
             }
-            var v = UInt32(entrySize).littleEndian
-            return withUnsafeBytes(of: &v) { Array($0) }
+            return UInt32(entrySize).littleEndianBytes
         case 8:
-            var v = entrySize.littleEndian
-            return withUnsafeBytes(of: &v) { Array($0) }
+            return UInt64(entrySize).littleEndianBytes
         default:
-            throw PirError.corruptedData("entry size should be encoded to 1, 2, 4 or 8 bytes.")
+            throw PirError
+                .corruptedData(
+                    """
+                    Entry size should be encoded to 1, 2, 4 or 8 bytes, received \(
+                        encodingSize) when encoding entry size.
+                    """)
         }
     }
 }
@@ -170,7 +173,8 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Whether to encode the entry size.
     public var encodingEntrySize: Bool
 
-    public var entrySizeEncodingWidth: Int {
+    /// Width of encoded entry size in bytes. Set to 0 if entry size is not encoded.
+    @usableFromInline var entrySizeEncodingWidth: Int {
         if encodingEntrySize {
             // We take the bytes needed for the largest entry as the space needed for encoding entry size.
             IndexPirConfig.entrySizeEncodingWidth(for: UInt64(entrySizeInBytes))
@@ -180,7 +184,7 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     }
 
     /// Size of the largest entry in bytes after encoding.
-    public var encodedEntrySize: Int {
+    @usableFromInline var encodedEntrySize: Int {
         entrySizeEncodingWidth + entrySizeInBytes
     }
 
@@ -214,22 +218,24 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     }
 
     @inlinable
-    func readEntrySize(from data: Data) throws -> UInt64 {
+    func decodeEntrySize(from data: [UInt8]) throws -> UInt64 {
         guard data.count == entrySizeEncodingWidth else {
             throw PirError
                 .corruptedData("Entry size should be \(entrySizeEncodingWidth) bytes, received \(data.count) bytes")
         }
         switch data.count {
         case 1:
-            return UInt64(data.withUnsafeBytes { $0.load(as: UInt8.self) })
+            return UInt64(UInt8(littleEndianBytes: data))
         case 2:
-            return UInt64(data.withUnsafeBytes { $0.load(as: UInt16.self) })
+            return UInt64(UInt16(littleEndianBytes: data))
         case 4:
-            return UInt64(data.withUnsafeBytes { $0.load(as: UInt32.self) })
+            return UInt64(UInt32(littleEndianBytes: data))
         case 8:
-            return data.withUnsafeBytes { $0.load(as: UInt64.self) }
+            return UInt64(littleEndianBytes: data)
         default:
-            throw PirError.corruptedData("Entry size should be \(entrySizeInBytes) bytes, received \(data.count) bytes")
+            throw PirError
+                .corruptedData(
+                    "Entry size should be 1, 2, 4 or 8 bytes, received \(data.count) bytes when decoding entry size.")
         }
     }
 }

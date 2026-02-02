@@ -256,9 +256,9 @@ extension MulPirClient {
             let responseBytes = bytes[computeResponseRangeInBytes(at: entryIndex)]
             if encodingEntrySize {
                 let entrySizeBytes =
-                    Data(responseBytes[responseBytes.startIndex..<responseBytes.startIndex + parameter
+                    Array(responseBytes[responseBytes.startIndex..<responseBytes.startIndex + parameter
                             .entrySizeEncodingWidth])
-                let entrySize = try parameter.readEntrySize(from: entrySizeBytes)
+                let entrySize = try parameter.decodeEntrySize(from: entrySizeBytes)
                 return Array(responseBytes[(responseBytes.startIndex + parameter.entrySizeEncodingWidth)...]
                     .prefix(Int(entrySize)))
             }

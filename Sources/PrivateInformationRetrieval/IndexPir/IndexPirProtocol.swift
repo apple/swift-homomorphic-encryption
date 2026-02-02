@@ -57,15 +57,19 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
     /// Whether to encode the entry size.
     public var encodingEntrySize: Bool
 
-    /// Size of the largest entry in bytes after encoding.
-    public var encodedEntrySize: Int {
+    /// Width of encoded entry size in bytes. Set to 0 if entry size is not encoded.
+    @usableFromInline var entrySizeEncodingWidth: Int {
         if encodingEntrySize {
-            // VarInt is monotonic, i.e. the largest entry will always have the largest encoded entry size.
-            // So we can take an upper bound here.
-            VarInt.encodedSize(UInt32(entrySizeInBytes)) + entrySizeInBytes
+            // We take the bytes needed for the largest entry as the space needed for encoding entry size.
+            IndexPirConfig.entrySizeEncodingWidth(for: UInt64(entrySizeInBytes))
         } else {
-            entrySizeInBytes
+            0
         }
+    }
+
+    /// Size of the largest entry in bytes after encoding.
+    @usableFromInline var encodedEntrySize: Int {
+        entrySizeEncodingWidth + entrySizeInBytes
     }
 
     /// Initializes an ``IndexPirConfig``.
@@ -99,6 +103,57 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         self.keyCompression = keyCompression
         self.encodingEntrySize = encodingEntrySize
     }
+
+    // static method shared by `IndexPirConfig` and `IndexPirParameter`
+    @inlinable
+    static func entrySizeEncodingWidth(for entrySize: UInt64) -> Int {
+        if entrySize <= UInt8.max {
+            MemoryLayout<UInt8>.size
+        } else if entrySize <= UInt16.max {
+            MemoryLayout<UInt16>.size
+        } else if entrySize <= UInt32.max {
+            MemoryLayout<UInt32>.size
+        } else {
+            MemoryLayout<UInt64>.size
+        }
+    }
+
+    // static method shared by `IndexPirConfig` and `IndexPirParameter`
+    @inlinable
+    static func encodeEntrySize(_ entrySize: some FixedWidthInteger, encodingSize: Int) throws -> [UInt8] {
+        switch encodingSize {
+        case 1:
+            guard entrySize <= UInt8.max else {
+                throw PirError
+                    .corruptedData(
+                        "entry size shouldn't be larger than \(UInt8.max) when encoding to \(encodingSize) bytes.")
+            }
+            return [UInt8(entrySize)]
+        case 2:
+            guard entrySize <= UInt16.max else {
+                throw PirError
+                    .corruptedData(
+                        "entry size shouldn't be larger than \(UInt16.max) when encoding to \(encodingSize) bytes.")
+            }
+            return UInt16(entrySize).littleEndianBytes
+        case 4:
+            guard entrySize <= UInt32.max else {
+                throw PirError
+                    .corruptedData(
+                        "entry size shouldn't be larger than \(UInt32.max) when encoding to \(encodingSize) bytes.")
+            }
+            return UInt32(entrySize).littleEndianBytes
+        case 8:
+            return UInt64(entrySize).littleEndianBytes
+        default:
+            throw PirError
+                .corruptedData(
+                    """
+                    Entry size should be encoded to 1, 2, 4 or 8 bytes, received \(
+                        encodingSize) when encoding entry size.
+                    """)
+        }
+    }
 }
 
 /// Parameters for an index PIR lookup.
@@ -118,15 +173,19 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     /// Whether to encode the entry size.
     public var encodingEntrySize: Bool
 
-    /// Size of the largest entry in bytes after encoding.
-    public var encodedEntrySize: Int {
+    /// Width of encoded entry size in bytes. Set to 0 if entry size is not encoded.
+    @usableFromInline var entrySizeEncodingWidth: Int {
         if encodingEntrySize {
-            // VarInt is monotonic, i.e. the largest entry will always have the largest encoded entry size.
-            // So we can take an upper bound here.
-            VarInt.encodedSize(UInt32(entrySizeInBytes)) + entrySizeInBytes
+            // We take the bytes needed for the largest entry as the space needed for encoding entry size.
+            IndexPirConfig.entrySizeEncodingWidth(for: UInt64(entrySizeInBytes))
         } else {
-            entrySizeInBytes
+            0
         }
+    }
+
+    /// Size of the largest entry in bytes after encoding.
+    @usableFromInline var encodedEntrySize: Int {
+        entrySizeEncodingWidth + entrySizeInBytes
     }
 
     /// The number of dimensions in the database.
@@ -156,6 +215,28 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
         self.batchSize = batchSize
         self.evaluationKeyConfig = evaluationKeyConfig
         self.encodingEntrySize = encodingEntrySize
+    }
+
+    @inlinable
+    func decodeEntrySize(from data: [UInt8]) throws -> UInt64 {
+        guard data.count == entrySizeEncodingWidth else {
+            throw PirError
+                .corruptedData("Entry size should be \(entrySizeEncodingWidth) bytes, received \(data.count) bytes")
+        }
+        switch data.count {
+        case 1:
+            return UInt64(UInt8(littleEndianBytes: data))
+        case 2:
+            return UInt64(UInt16(littleEndianBytes: data))
+        case 4:
+            return UInt64(UInt32(littleEndianBytes: data))
+        case 8:
+            return UInt64(littleEndianBytes: data)
+        default:
+            throw PirError
+                .corruptedData(
+                    "Entry size should be 1, 2, 4 or 8 bytes, received \(data.count) bytes when decoding entry size.")
+        }
     }
 }
 

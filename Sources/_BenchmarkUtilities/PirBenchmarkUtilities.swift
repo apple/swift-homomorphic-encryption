@@ -222,7 +222,7 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
         self.querySize = try query.size()
         self.queryCiphertextCount = query.ciphertexts.count
         self.responseSize = try response.size()
-        self.responseCiphertextCount = response.ciphertexts.count
+        self.responseCiphertextCount = response.ciphertexts.flatMap(\.self).count
     }
 }
 
@@ -370,7 +370,7 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
         self.querySize = try query.size()
         self.queryCiphertextCount = query.ciphertexts.count
         self.responseSize = try response.size()
-        self.responseCiphertextCount = response.ciphertexts.count
+        self.responseCiphertextCount = response.ciphertexts.flatMap(\.self).count
     }
 }
 

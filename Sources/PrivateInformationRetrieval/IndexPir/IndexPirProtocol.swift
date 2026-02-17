@@ -407,6 +407,70 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
         self.keywordPirParameter = keywordPirParameter
         self.symmetricPirConfig = symmetricPirConfig
     }
+
+    @inlinable
+    public func validate<PirUtil: PirUtilProtocol>(
+        row: IndexDatabaseRow,
+        trials: Int,
+        context: PirUtil.Scheme.Context,
+        using _: PirUtil.Type) async throws -> ShardValidationResult<PirUtil.Scheme>
+        where PirUtil.Scheme == Scheme
+    {
+        guard trials > 0 else {
+            throw PirError.validationError("Invalid trialsPerShard: \(trials)")
+        }
+
+        let server = try MulPirServer<PirUtil>(
+            parameter: pirParameter,
+            context: context,
+            databases: [database])
+
+        let client = MulPirClient<PirUtil>(parameter: pirParameter, context: context)
+        var evaluationKey: EvaluationKey<PirUtil.Scheme>?
+        var query: Query<PirUtil.Scheme>?
+        var response = Response<PirUtil.Scheme>(ciphertexts: [[]])
+        let clock = ContinuousClock()
+        var minNoiseBudget = Double.infinity
+        var computeTimes: [Duration] = Array(repeating: .seconds(0), count: trials)
+        for trial in 0..<trials {
+            let secretKey = try context.generateSecretKey()
+            let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
+            let trialQuery = try client.generateQuery(at: row.index, using: secretKey)
+            let computeTime = try await clock.measure {
+                response = try await server.computeResponse(to: trialQuery, using: trialEvaluationKey)
+            }
+            let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
+            minNoiseBudget = min(minNoiseBudget, noiseBudget)
+            let decryptedResponse = try client.decrypt(
+                response: response,
+                at: row.index,
+                using: secretKey)
+            guard decryptedResponse == row.value else {
+                let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
+                guard noiseBudget >= PirUtil.Scheme.minNoiseBudget else {
+                    throw PirError.validationError("Insufficient noise budget \(noiseBudget)")
+                }
+                throw PirError.validationError("Incorrect PIR response")
+            }
+
+            if trial == 0 {
+                evaluationKey = trialEvaluationKey
+                query = trialQuery
+            }
+            computeTimes[trial] = computeTime
+        }
+        guard let evaluationKey, let query else {
+            throw PirError.validationError("Empty evaluation key or query")
+        }
+
+        return ShardValidationResult<PirUtil.Scheme>(
+            evaluationKey: evaluationKey,
+            query: query,
+            response: response,
+            noiseBudget: minNoiseBudget,
+            computeTimes: computeTimes,
+            entryCountPerResponse: Array(repeating: 1, count: trials))
+    }
 }
 
 /// An index PIR query.

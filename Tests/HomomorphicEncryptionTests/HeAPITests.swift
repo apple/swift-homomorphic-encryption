@@ -155,7 +155,7 @@ struct HeAPITests {
                 significantBitCounts: [12],
                 preferringSmall: true,
                 nttDegree: TestUtils.testPolyDegree)[0],
-            coefficientModuli: HeAPITestHelpers.testCoefficientModuli(),
+            coefficientModuli: TestUtils.testCoefficientModuli(),
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
 

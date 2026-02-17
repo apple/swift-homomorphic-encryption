@@ -101,37 +101,6 @@ public enum HeAPITestHelpers {
         }
     }
 
-    /// Generate the coefficient moduli for test
-    @inlinable
-    public static func testCoefficientModuli<T: ScalarType>() throws -> [T] {
-        // Avoid assumptions on ordering of moduli
-        // Also test `T.bitWidth  - 2
-        if T.self == UInt32.self {
-            return try T.generatePrimes(
-                significantBitCounts: [28, 27, 29, 30],
-                preferringSmall: false,
-                nttDegree: TestUtils.testPolyDegree)
-        }
-        if T.self == UInt64.self {
-            return try T.generatePrimes(
-                significantBitCounts: [55, 52, 62, 58],
-                preferringSmall: false,
-                nttDegree: TestUtils.testPolyDegree)
-        }
-        preconditionFailure("Unsupported scalar type \(T.self)")
-    }
-
-    /// Generate the context for test
-    @inlinable
-    public static func getTestContext<Scalar: ScalarType>() throws -> Context<Scalar> {
-        try Context<Scalar>(encryptionParameters: EncryptionParameters(
-            polyDegree: TestUtils.testPolyDegree,
-            plaintextModulus: Scalar(TestUtils.testPlaintextModulus),
-            coefficientModuli: testCoefficientModuli(),
-            errorStdDev: ErrorStdDev.stdDev32,
-            securityLevel: SecurityLevel.unchecked))
-    }
-
     /// Test the evaluation key configuration
     @inlinable
     public static func schemeEvaluationKeyTest(context _: Context<some HeScheme>) throws {

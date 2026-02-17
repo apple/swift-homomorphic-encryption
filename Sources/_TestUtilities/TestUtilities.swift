@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,14 +90,6 @@ extension [UInt8] {
     package func hexEncodedString() -> String {
         reduce(into: "") { $0 += String(format: "%02x", $1) }
     }
-}
-
-/// A collection of constants used in tests.
-public enum TestUtils {
-    /// A polynomial degree suitable for testing.
-    public static let testPolyDegree = 16
-    /// A plaintext modulus suitable for testing.
-    public static let testPlaintextModulus = 1153
 }
 
 extension TestUtils {
@@ -299,18 +291,27 @@ extension TestUtils {
     }
 }
 
-extension TestUtils {
+/// A collection of constants used in tests.
+public enum TestUtils {
+    /// A polynomial degree suitable for testing.
+    public static let testPolyDegree = 16
+    /// A plaintext modulus suitable for testing.
+    public static let testPlaintextModulus = 1153
+
+    /// Generate the coefficient moduli for test
     @inlinable
-    package static func testCoefficientModuli<T: ScalarType>(_: T.Type) throws -> [T] {
+    public static func testCoefficientModuli<T: ScalarType>() throws -> [T] {
+        // Avoid assumptions on ordering of moduli
+        // Also test `T.bitWidth  - 2
         if T.self == UInt32.self {
             return try T.generatePrimes(
-                significantBitCounts: [28, 28, 28, 28],
+                significantBitCounts: [28, 27, 29, 30],
                 preferringSmall: false,
                 nttDegree: TestUtils.testPolyDegree)
         }
         if T.self == UInt64.self {
             return try T.generatePrimes(
-                significantBitCounts: [55, 55, 55, 55],
+                significantBitCounts: [55, 52, 62, 58],
                 preferringSmall: false,
                 nttDegree: TestUtils.testPolyDegree)
         }
@@ -322,12 +323,13 @@ extension TestUtils {
         try EncryptionParameters<Scalar>(
             polyDegree: testPolyDegree,
             plaintextModulus: Scalar(testPlaintextModulus),
-            coefficientModuli: testCoefficientModuli(Scalar.self),
+            coefficientModuli: testCoefficientModuli(),
             errorStdDev: ErrorStdDev.stdDev32,
             securityLevel: SecurityLevel.unchecked)
     }
 
     /// Returns a `HeContext` initialized with the parameters used for testing.
+    @inlinable
     public static func getTestContext<Context: HeContext>() throws -> Context {
         try Context(encryptionParameters: getTestEncryptionParameters())
     }

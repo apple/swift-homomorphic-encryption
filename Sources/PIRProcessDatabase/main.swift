@@ -408,6 +408,9 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                              pirUtil _: PirUtil
                                                                  .Type) async throws -> EvaluationKeyConfig
     {
+        var logger = ProcessDatabase.logger
+        logger[metadataKey: "shardID"] = .string(shardID)
+
         let entryCount = shard.count
         let maxEntrySize = shard.map(\.count).max() ?? 0
         let encryptionParameters = try EncryptionParameters<PirUtil.Scheme.Scalar>(from: config.rlweParameters)
@@ -433,56 +436,28 @@ struct ProcessDatabase: AsyncParsableCommand {
             of: "SHARD_ID",
             with: String(shardID))
         try processedShard.save(to: outputDatabaseFilename)
-        ProcessDatabase.logger.info("Saved shard to \(outputDatabaseFilename)")
+        logger.info("Saved shard to \(outputDatabaseFilename)")
 
         let shardPirParameters = try processed.proto(context: context)
         let outputParametersFilename = config.outputPirParameters.replacingOccurrences(
             of: "SHARD_ID",
             with: String(shardID))
         try shardPirParameters.save(to: outputParametersFilename)
-        ProcessDatabase.logger.info("Saved shard PIR parameters to \(outputParametersFilename)")
+        logger.info("Saved shard PIR parameters to \(outputParametersFilename)")
 
         if let trialsPerShard = config.trialsPerShard, trialsPerShard > 0 {
-            ProcessDatabase.logger.info("Validating shard")
-            let server = try MulPirServer<PirUtil>(
-                parameter: indexPirParameter,
+            logger.info("Validating shard")
+            let requestIndex = Int.random(in: 0..<shard.count)
+            let expected = shard[requestIndex]
+
+            let validationResults = try await processed.validate(
+                row: IndexDatabaseRow(index: requestIndex, value: expected),
+                trials: trialsPerShard,
                 context: context,
-                databases: [processedShard])
-            let client = MulPirClient<PirUtil>(parameter: indexPirParameter, context: context)
-            let secretKey = try context.generateSecretKey()
-            for _ in 0..<trialsPerShard {
-                let requestIndex = Int.random(in: 0..<shard.count)
-                let query = try client.generateQuery(at: [requestIndex], using: secretKey)
-                let evaluationKey = try client.generateEvaluationKey(using: secretKey)
-                let response = try await server.computeResponse(to: query, using: evaluationKey)
-                let result = try client.decrypt(response: response, at: [requestIndex], using: secretKey)
-
-                let expected = shard[requestIndex]
-
-                let actualResult: [UInt8]
-                if encodingEntrySize {
-                    actualResult = Array(result[0])
-                } else {
-                    // Index PIR doesn't trim the suffix of 0s if encoding entry size is not enabled.
-                    let entryLength = expected.count
-                    let suffix: [UInt8] = Array(result[0].dropFirst(entryLength))
-                    guard (suffix.allSatisfy { $0 == 0 }) else {
-                        throw PirError.validationError("Incorrect PIR response")
-                    }
-                    actualResult = Array(result[0].prefix(entryLength))
-                }
-
-                guard actualResult == expected else {
-                    ProcessDatabase.logger.error("\(result[0]) != \(shard[requestIndex])")
-                    let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
-                    guard noiseBudget >= PirUtil.Scheme.minNoiseBudget else {
-                        throw PirError.validationError("Insufficient noise budget \(noiseBudget)")
-                    }
-                    throw PirError.validationError("Incorrect PIR response")
-                }
-            }
+                using: PirUtil.self)
+            let description = try validationResults.description()
+            logger.info("ValidationResults \(description)")
         }
-
         return processed.evaluationKeyConfig
     }
 
@@ -706,7 +681,7 @@ struct ProcessDatabase: AsyncParsableCommand {
     }
 }
 
-extension ProcessKeywordDatabase.ShardValidationResult {
+extension ShardValidationResult {
     /// Returns a description of processed database validation.
     func description() throws -> String {
         func sizeString(byteCount: Int, count: Int, label: String) -> String {

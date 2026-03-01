@@ -341,9 +341,10 @@ if enableDocCPlugin {
     ]
 }
 
-// Set the minimum macOS version for the package
+// Set the minimum macOS and iOS versions for the package
 #if canImport(Darwin)
 package.platforms = [
     .macOS(.v26), // Constrained by use of Span
+    .iOS(.v18),  // Constrained by Crypto and _CryptoExtras dependencies
 ]
 #endif

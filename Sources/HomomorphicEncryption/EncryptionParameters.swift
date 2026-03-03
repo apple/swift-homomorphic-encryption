@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,16 +84,24 @@ public struct EncryptionParameters<Scalar: ScalarType>: Hashable, Codable, Senda
     public let securityLevel: SecurityLevel
 
     /// Whether or not encryption parameters support ``EncodeFormat/simd`` encoding.
-    public var supportsSimdEncoding: Bool { plaintextModulus.isNttModulus(for: polyDegree) }
+    public var supportsSimdEncoding: Bool {
+        plaintextModulus.isNttModulus(for: polyDegree)
+    }
 
     /// Whether or not encryption parameters use of an ``EvaluationKey``.
-    public var supportsEvaluationKey: Bool { coefficientModuli.count > 1 }
+    public var supportsEvaluationKey: Bool {
+        coefficientModuli.count > 1
+    }
 
     /// The number of bits that can be encoded in a single ``Plaintext``.
-    public var bitsPerPlaintext: Int { polyDegree * plaintextModulus.log2 }
+    public var bitsPerPlaintext: Int {
+        polyDegree * plaintextModulus.log2
+    }
 
     /// The number of bytes that can be encoded in a single ``Plaintext``.
-    public var bytesPerPlaintext: Int { bitsPerPlaintext / UInt8.bitWidth }
+    public var bytesPerPlaintext: Int {
+        bitsPerPlaintext / UInt8.bitWidth
+    }
 
     /// Initializes encryption parameters.
     /// - Parameters:
@@ -217,200 +225,273 @@ public enum PredefinedRlweParameters: String, Hashable, CaseIterable, CustomStri
     CodingKeyRepresentable,
     Sendable
 {
-    // swiftlint:disable sorted_enum_cases
-    case insecure_n_8_logq_5x18_logt_5 // Warning - Insecure parameters, used for testing only
+    case insecure_n_16_logq_60_logt_15 // Warning - Insecure parameters, used for testing only
     case insecure_n_512_logq_4x60_logt_20 // Warning - Insecure parameters, used for testing only
+    case insecure_n_8_logq_5x18_logt_5 // Warning - Insecure parameters, used for testing only
     case n_4096_logq_16_33_33_logt_4 // NTT-unfriendly plaintext modulus
     case n_4096_logq_27_28_28_logt_13 // NTT-unfriendly plaintext modulus
-    case n_4096_logq_27_28_28_logt_5 // NTT-unfriendly plaintext modulus
-    case n_8192_logq_3x55_logt_42
-    case n_8192_logq_3x55_logt_30
-    case n_8192_logq_3x55_logt_29
-    case n_8192_logq_3x55_logt_24
-    case n_8192_logq_29_60_60_logt_15 // NTT-unfriendly plaintext modulus
-    case n_8192_logq_40_60_60_logt_26
-    case n_8192_logq_28_60_60_logt_20
-    case insecure_n_16_logq_60_logt_15 // Warning - Insecure parameters, used for testing only
-    case n_4096_logq_27_28_28_logt_6 // NTT-unfriendly plaintext modulus
     case n_4096_logq_27_28_28_logt_16 // Plaintext CRT params
     case n_4096_logq_27_28_28_logt_17 // Plaintext CRT params
     case n_4096_logq_27_28_28_logt_4 // NTT-unfriendly plaintext modulus
-    // swiftlint:enable sorted_enum_cases
+    case n_4096_logq_27_28_28_logt_5 // NTT-unfriendly plaintext modulus
+    case n_4096_logq_27_28_28_logt_6 // NTT-unfriendly plaintext modulus
+    case n_8192_logq_28_60_60_logt_20
+    case n_8192_logq_29_60_60_logt_15 // NTT-unfriendly plaintext modulus
+    case n_8192_logq_3x55_logt_24
+    case n_8192_logq_3x55_logt_29
+    case n_8192_logq_3x55_logt_30
+    case n_8192_logq_3x55_logt_42
+    case n_8192_logq_40_60_60_logt_26
 
-    public var description: String {
-        let rlweDescription = switch self {
-        case .insecure_n_8_logq_5x18_logt_5:
-            "insecure_n_8_logq_5x18_logt_5"
-        case .insecure_n_512_logq_4x60_logt_20:
-            "insecure_n_512_logq_4x60_logt_20"
-        case .n_4096_logq_16_33_33_logt_4:
-            "n_4096_logq_16_33_33_logt_4"
-        case .n_4096_logq_27_28_28_logt_13:
-            "n_4096_logq_27_28_28_logt_13"
-        case .n_4096_logq_27_28_28_logt_5:
-            "n_4096_logq_27_28_28_logt_5"
-        case .n_8192_logq_3x55_logt_42:
-            "n_8192_logq_3x55_logt_42"
-        case .n_8192_logq_3x55_logt_30:
-            "n_8192_logq_3x55_logt_30"
-        case .n_8192_logq_3x55_logt_29:
-            "n_8192_logq_3x55_logt_29"
-        case .n_8192_logq_3x55_logt_24:
-            "n_8192_logq_3x55_logt_24"
-        case .n_8192_logq_29_60_60_logt_15:
-            "n_8192_logq_29_60_60_logt_15"
-        case .n_8192_logq_40_60_60_logt_26:
-            "n_8192_logq_40_60_60_logt_26"
-        case .n_8192_logq_28_60_60_logt_20:
-            "n_8192_logq_28_60_60_logt_20"
-        case .insecure_n_16_logq_60_logt_15:
-            "insecure_n_16_logq_60_logt_15"
-        case .n_4096_logq_27_28_28_logt_6:
-            "n_4096_logq_27_28_28_logt_6"
-        case .n_4096_logq_27_28_28_logt_16:
-            "n_4096_logq_27_28_28_logt_16"
-        case .n_4096_logq_27_28_28_logt_17:
-            "n_4096_logq_27_28_28_logt_17"
-        case .n_4096_logq_27_28_28_logt_4:
-            "n_4096_logq_27_28_28_logt_4"
-        }
-        return "PredefinedRlweParameters: \(rlweDescription)"
-    }
-
-    /// The RLWE polynomial degree.
-    public var polyDegree: Int {
-        switch self {
-        case .insecure_n_8_logq_5x18_logt_5: 8
-        case .insecure_n_16_logq_60_logt_15: 16
-        case .insecure_n_512_logq_4x60_logt_20: 512
-        case .n_4096_logq_27_28_28_logt_6,
-             .n_4096_logq_27_28_28_logt_16,
-             .n_4096_logq_27_28_28_logt_17,
-             .n_4096_logq_27_28_28_logt_4,
-             .n_4096_logq_16_33_33_logt_4,
-             .n_4096_logq_27_28_28_logt_13,
-             .n_4096_logq_27_28_28_logt_5: 4096
-        case .n_8192_logq_3x55_logt_42,
-             .n_8192_logq_3x55_logt_30,
-             .n_8192_logq_3x55_logt_29,
-             .n_8192_logq_3x55_logt_24,
-             .n_8192_logq_29_60_60_logt_15,
-             .n_8192_logq_40_60_60_logt_26,
-             .n_8192_logq_28_60_60_logt_20: 8192
-        }
-    }
-
-    /// The security level.
-    public var securityLevel: SecurityLevel {
-        switch self {
-        case .insecure_n_8_logq_5x18_logt_5, .insecure_n_512_logq_4x60_logt_20, .insecure_n_16_logq_60_logt_15:
-            .unchecked
-        case .n_4096_logq_16_33_33_logt_4, .n_4096_logq_27_28_28_logt_13, .n_4096_logq_27_28_28_logt_4,
-             .n_4096_logq_27_28_28_logt_5, .n_4096_logq_27_28_28_logt_6, .n_4096_logq_27_28_28_logt_16,
-             .n_4096_logq_27_28_28_logt_17, .n_8192_logq_29_60_60_logt_15, .n_8192_logq_28_60_60_logt_20,
-             .n_8192_logq_3x55_logt_24, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_30,
-             .n_8192_logq_40_60_60_logt_26, .n_8192_logq_3x55_logt_42:
-            .quantum128
-        }
-    }
-
-    /// The standard deviation of the error polynomial.
-    public var errorStdDev: ErrorStdDev {
-        switch self {
-        case .insecure_n_8_logq_5x18_logt_5, .insecure_n_512_logq_4x60_logt_20, .insecure_n_16_logq_60_logt_15,
-             .n_4096_logq_16_33_33_logt_4, .n_4096_logq_27_28_28_logt_13, .n_4096_logq_27_28_28_logt_4,
-             .n_4096_logq_27_28_28_logt_5, .n_4096_logq_27_28_28_logt_6, .n_4096_logq_27_28_28_logt_16,
-             .n_4096_logq_27_28_28_logt_17, .n_8192_logq_29_60_60_logt_15, .n_8192_logq_28_60_60_logt_20,
-             .n_8192_logq_3x55_logt_24, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_30,
-             .n_8192_logq_40_60_60_logt_26, .n_8192_logq_3x55_logt_42:
-            .stdDev32
-        }
-    }
-
-    /// The plaintext modulus.
-    public var plaintextModulus: UInt64 {
-        switch self {
-        case .insecure_n_8_logq_5x18_logt_5: (1 << 4) + 1 // 17
-        case .insecure_n_16_logq_60_logt_15: (1 << 14) + 33 // 16417
-        case .insecure_n_512_logq_4x60_logt_20: (1 << 19) + 1025 // 525_313
-        case .n_4096_logq_16_33_33_logt_4: (1 << 3) + 3 // 11
-        case .n_4096_logq_27_28_28_logt_4: (1 << 3) + 3 // 11
-        case .n_4096_logq_27_28_28_logt_5: (1 << 4) + 1 // 17
-        case .n_4096_logq_27_28_28_logt_6: (1 << 5) + 5 // 37
-        case .n_4096_logq_27_28_28_logt_13: (1 << 12) + 3 // 4099
-        case .n_4096_logq_27_28_28_logt_16: (1 << 15) + 8193 // 40961,
-        case .n_4096_logq_27_28_28_logt_17: (1 << 16) + 1 // 65537
-        case .n_8192_logq_3x55_logt_24: (1 << 23) + 16385 // 8404993
-        case .n_8192_logq_3x55_logt_29: (1 << 28) + 147_457 // 268582913
-        case .n_8192_logq_3x55_logt_30: (1 << 29) + 32769 // 536903681
-        case .n_8192_logq_3x55_logt_42: (1 << 41) + 32769 // 2199023288321
-        case .n_8192_logq_29_60_60_logt_15: (1 << 14) + 27 // 16411
-        case .n_8192_logq_28_60_60_logt_20: (1 << 19) + 32769 // 557057
-        case .n_8192_logq_40_60_60_logt_26: (1 << 25) + 278_529 // 33832961
-        }
-    }
-
-    /// The ciphertext coefficient moduli.
-    public var coefficientModuli: [UInt64] {
-        switch self {
-        case .insecure_n_8_logq_5x18_logt_5:
-            [
+    /// All values for a parameter set in one place. Set supportsScalar32 explicitly for each entry
+    /// to ensure new parameter sets consciously opt in/out of 32-bit scalar support.
+    private struct ParameterSet {
+        static let insecure_n_16_logq_60_logt_15 = ParameterSet(
+            polyDegree: 16,
+            securityLevel: .unchecked,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 14) + 33, // 16417
+            coefficientModuli: [
+                (1 << 60) - 16383, // 1152921504606830593
+            ],
+            supportsScalar32: false)
+        static let insecure_n_512_logq_4x60_logt_20 = ParameterSet(
+            polyDegree: 512,
+            securityLevel: .unchecked,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 19) + 1025, // 525_313
+            coefficientModuli: [
+                (1 << 59) + 13313, // 576460752303436801
+                (1 << 59) + 16385, // 576460752303439873
+                (1 << 59) + 23553, // 576460752303447041
+                (1 << 59) + 48129, // 576460752303471617
+            ],
+            supportsScalar32: false)
+        static let insecure_n_8_logq_5x18_logt_5 = ParameterSet(
+            polyDegree: 8,
+            securityLevel: .unchecked,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 4) + 1, // 17
+            coefficientModuli: [
                 (1 << 17) + 177, // 131249
                 (1 << 17) + 225, // 131297
                 (1 << 17) + 369, // 131441
                 (1 << 17) + 417, // 131489
                 (1 << 17) + 545, // 131617
-            ]
-        case .insecure_n_16_logq_60_logt_15:
-            [
-                (1 << 60) - 16383, // 1152921504606830593
-            ]
-        case .insecure_n_512_logq_4x60_logt_20:
-            [
-                (1 << 59) + 13313, // 576460752303436801
-                (1 << 59) + 16385, // 576460752303439873
-                (1 << 59) + 23553, // 576460752303447041
-                (1 << 59) + 48129, // 576460752303471617
-            ]
-        case .n_4096_logq_16_33_33_logt_4:
-            [
+            ],
+            supportsScalar32: true)
+        static let n_4096_logq_16_33_33_logt_4 = ParameterSet(
+            polyDegree: 4096,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 3) + 3, // 11
+            coefficientModuli: [
                 (1 << 16) - 24575, // 40961
                 (1 << 33) - 81919, // 8589852673
                 (1 << 33) - 90111, // 8589844481
-            ]
-        case .n_4096_logq_27_28_28_logt_4, .n_4096_logq_27_28_28_logt_5, .n_4096_logq_27_28_28_logt_6,
-             .n_4096_logq_27_28_28_logt_13,
-             .n_4096_logq_27_28_28_logt_16, .n_4096_logq_27_28_28_logt_17:
-            [
+            ],
+            supportsScalar32: false)
+        static let n_4096_logq_27_28_28_logt_13 = ParameterSet(
+            polyDegree: 4096,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 12) + 3, // 4099
+            coefficientModuli: [
                 (1 << 27) - 40959, // 134176769
                 (1 << 28) - 65535, // 268369921
                 (1 << 28) - 73727, // 268361729
-            ]
-        case .n_8192_logq_3x55_logt_24, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_30, .n_8192_logq_3x55_logt_42:
-            [
-                (1 << 55) - 311_295, // 36028797018652673
-                (1 << 55) - 1_392_639, // 36028797017571329
-                (1 << 55) - 1_507_327, // 36028797017456641
-            ]
-        case .n_8192_logq_29_60_60_logt_15:
-            [
-                (1 << 29) - 180_223, // 536690689
-                (1 << 60) - 16383, // 1152921504606830593
-                (1 << 60) - 98303, // 1152921504606748673
-            ]
-        case .n_8192_logq_40_60_60_logt_26:
-            [
-                (1 << 40) - 147_455, // 1099511480321
-                (1 << 60) - 16383, // 1152921504606830593
-                (1 << 60) - 98303, // 1152921504606748673
-            ]
-        case .n_8192_logq_28_60_60_logt_20:
-            [
+            ],
+            supportsScalar32: true)
+        static let n_4096_logq_27_28_28_logt_16 = ParameterSet(
+            polyDegree: 4096,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 15) + 8193, // 40961
+            coefficientModuli: [
+                (1 << 27) - 40959, // 134176769
+                (1 << 28) - 65535, // 268369921
+                (1 << 28) - 73727, // 268361729
+            ],
+            supportsScalar32: true)
+        static let n_4096_logq_27_28_28_logt_17 = ParameterSet(
+            polyDegree: 4096,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 16) + 1, // 65537
+            coefficientModuli: [
+                (1 << 27) - 40959, // 134176769
+                (1 << 28) - 65535, // 268369921
+                (1 << 28) - 73727, // 268361729
+            ],
+            supportsScalar32: true)
+        static let n_4096_logq_27_28_28_logt_4 = ParameterSet(
+            polyDegree: 4096,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 3) + 3, // 11
+            coefficientModuli: [
+                (1 << 27) - 40959, // 134176769
+                (1 << 28) - 65535, // 268369921
+                (1 << 28) - 73727, // 268361729
+            ],
+            supportsScalar32: true)
+        static let n_4096_logq_27_28_28_logt_5 = ParameterSet(
+            polyDegree: 4096,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 4) + 1, // 17
+            coefficientModuli: [
+                (1 << 27) - 40959, // 134176769
+                (1 << 28) - 65535, // 268369921
+                (1 << 28) - 73727, // 268361729
+            ],
+            supportsScalar32: true)
+        static let n_4096_logq_27_28_28_logt_6 = ParameterSet(
+            polyDegree: 4096,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 5) + 5, // 37
+            coefficientModuli: [
+                (1 << 27) - 40959, // 134176769
+                (1 << 28) - 65535, // 268369921
+                (1 << 28) - 73727, // 268361729
+            ],
+            supportsScalar32: true)
+        static let n_8192_logq_28_60_60_logt_20 = ParameterSet(
+            polyDegree: 8192,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 19) + 32769, // 557057
+            coefficientModuli: [
                 (1 << 28) - 65535, // 268369921
                 (1 << 60) - 16383, // 1152921504606830593
                 (1 << 60) - 98303, // 1152921504606748673
-            ]
+            ],
+            supportsScalar32: false)
+        static let n_8192_logq_29_60_60_logt_15 = ParameterSet(
+            polyDegree: 8192,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 14) + 27, // 16411
+            coefficientModuli: [
+                (1 << 29) - 180_223, // 536690689
+                (1 << 60) - 16383, // 1152921504606830593
+                (1 << 60) - 98303, // 1152921504606748673
+            ],
+            supportsScalar32: false)
+        static let n_8192_logq_3x55_logt_24 = ParameterSet(
+            polyDegree: 8192,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 23) + 16385, // 8404993
+            coefficientModuli: [
+                (1 << 55) - 311_295, // 36028797018652673
+                (1 << 55) - 1_392_639, // 36028797017571329
+                (1 << 55) - 1_507_327, // 36028797017456641
+            ],
+            supportsScalar32: false)
+        static let n_8192_logq_3x55_logt_29 = ParameterSet(
+            polyDegree: 8192,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 28) + 147_457, // 268582913
+            coefficientModuli: [
+                (1 << 55) - 311_295, // 36028797018652673
+                (1 << 55) - 1_392_639, // 36028797017571329
+                (1 << 55) - 1_507_327, // 36028797017456641
+            ],
+            supportsScalar32: false)
+        static let n_8192_logq_3x55_logt_30 = ParameterSet(
+            polyDegree: 8192,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 29) + 32769, // 536903681
+            coefficientModuli: [
+                (1 << 55) - 311_295, // 36028797018652673
+                (1 << 55) - 1_392_639, // 36028797017571329
+                (1 << 55) - 1_507_327, // 36028797017456641
+            ],
+            supportsScalar32: false)
+        static let n_8192_logq_3x55_logt_42 = ParameterSet(
+            polyDegree: 8192,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 41) + 32769, // 2199023288321
+            coefficientModuli: [
+                (1 << 55) - 311_295, // 36028797018652673
+                (1 << 55) - 1_392_639, // 36028797017571329
+                (1 << 55) - 1_507_327, // 36028797017456641
+            ],
+            supportsScalar32: false)
+        static let n_8192_logq_40_60_60_logt_26 = ParameterSet(
+            polyDegree: 8192,
+            securityLevel: .quantum128,
+            errorStdDev: .stdDev32,
+            plaintextModulus: (1 << 25) + 278_529, // 33832961
+            coefficientModuli: [
+                (1 << 40) - 147_455, // 1099511480321
+                (1 << 60) - 16383, // 1152921504606830593
+                (1 << 60) - 98303, // 1152921504606748673
+            ],
+            supportsScalar32: false)
+
+        let polyDegree: Int
+        let securityLevel: SecurityLevel
+        let errorStdDev: ErrorStdDev
+        let plaintextModulus: UInt64
+        let coefficientModuli: [UInt64]
+        let supportsScalar32: Bool
+    }
+
+    public var description: String {
+        "PredefinedRlweParameters: \(rawValue)"
+    }
+
+    private var parameters: ParameterSet {
+        switch self {
+        case .insecure_n_16_logq_60_logt_15: .insecure_n_16_logq_60_logt_15
+        case .insecure_n_512_logq_4x60_logt_20: .insecure_n_512_logq_4x60_logt_20
+        case .insecure_n_8_logq_5x18_logt_5: .insecure_n_8_logq_5x18_logt_5
+        case .n_4096_logq_16_33_33_logt_4: .n_4096_logq_16_33_33_logt_4
+        case .n_4096_logq_27_28_28_logt_13: .n_4096_logq_27_28_28_logt_13
+        case .n_4096_logq_27_28_28_logt_16: .n_4096_logq_27_28_28_logt_16
+        case .n_4096_logq_27_28_28_logt_17: .n_4096_logq_27_28_28_logt_17
+        case .n_4096_logq_27_28_28_logt_4: .n_4096_logq_27_28_28_logt_4
+        case .n_4096_logq_27_28_28_logt_5: .n_4096_logq_27_28_28_logt_5
+        case .n_4096_logq_27_28_28_logt_6: .n_4096_logq_27_28_28_logt_6
+        case .n_8192_logq_28_60_60_logt_20: .n_8192_logq_28_60_60_logt_20
+        case .n_8192_logq_29_60_60_logt_15: .n_8192_logq_29_60_60_logt_15
+        case .n_8192_logq_3x55_logt_24: .n_8192_logq_3x55_logt_24
+        case .n_8192_logq_3x55_logt_29: .n_8192_logq_3x55_logt_29
+        case .n_8192_logq_3x55_logt_30: .n_8192_logq_3x55_logt_30
+        case .n_8192_logq_3x55_logt_42: .n_8192_logq_3x55_logt_42
+        case .n_8192_logq_40_60_60_logt_26: .n_8192_logq_40_60_60_logt_26
         }
+    }
+
+    /// The RLWE polynomial degree.
+    public var polyDegree: Int {
+        parameters.polyDegree
+    }
+
+    /// The security level.
+    public var securityLevel: SecurityLevel {
+        parameters.securityLevel
+    }
+
+    /// The standard deviation of the error polynomial.
+    public var errorStdDev: ErrorStdDev {
+        parameters.errorStdDev
+    }
+
+    /// The plaintext modulus.
+    public var plaintextModulus: UInt64 {
+        parameters.plaintextModulus
+    }
+
+    /// The ciphertext coefficient moduli.
+    public var coefficientModuli: [UInt64] {
+        parameters.coefficientModuli
     }
 
     /// Whether or not the encryption parameters support generation of an evaluation key.
@@ -429,19 +510,7 @@ public enum PredefinedRlweParameters: String, Hashable, CaseIterable, CustomStri
     /// - Returns: Whether or not the RLWE parameters supoport `scalarType`.
     public func supportsScalar(_ scalarType: (some ScalarType).Type) -> Bool {
         switch scalarType.bitWidth {
-        case 32:
-            switch self {
-            case .insecure_n_8_logq_5x18_logt_5, .n_4096_logq_27_28_28_logt_13, .n_4096_logq_27_28_28_logt_5,
-                 .n_4096_logq_27_28_28_logt_6, .n_4096_logq_27_28_28_logt_16, .n_4096_logq_27_28_28_logt_17,
-                 .n_4096_logq_27_28_28_logt_4:
-                true
-            // avoid `default: false` to ensure new encryption parameter sets explicitly opt in/out of 32-bit support
-            case .insecure_n_512_logq_4x60_logt_20, .n_4096_logq_16_33_33_logt_4, .n_8192_logq_3x55_logt_42,
-                 .n_8192_logq_3x55_logt_30, .n_8192_logq_3x55_logt_29, .n_8192_logq_3x55_logt_24,
-                 .n_8192_logq_29_60_60_logt_15, .n_8192_logq_40_60_60_logt_26,
-                 .n_8192_logq_28_60_60_logt_20, .insecure_n_16_logq_60_logt_15:
-                false
-            }
+        case 32: parameters.supportsScalar32
         case 64: true
         default: false
         }

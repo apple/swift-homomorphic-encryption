@@ -30,6 +30,16 @@ jobs:
     uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@e96b1ad30d9a253d7bd9d253b2e4ef189965dd3d  # 0.0.7
     with:
       enable_windows_checks: false
+      enable_macos_checks: true
+      macos_env_vars: SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1
+      macos_exclude_xcode_versions: "[{\"xcode_version\": \"16.3\"}, {\"xcode_version\": \"16.4\"}]"  # we require swift 6.2
+      macos_pre_build_command: "brew install jemalloc"
+      macos_build_command: >
+        swift test --configuration release;
+        for filename in $(find Snippets -name \*.swift); do
+            basename=$(basename "$filename" .swift)
+              swift run -Xlinker -rpath -Xlinker $DEVELOPER_DIR/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/ --configuration release ${basename}
+        done
       linux_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}, {\"swift_version\": \"6.0\"}, {\"swift_version\": \"6.1\"}]"
       linux_env_vars: SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1
       linux_pre_build_command: "apt-get update && apt-get install -y libjemalloc-dev"

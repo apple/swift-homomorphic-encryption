@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -94,19 +94,29 @@ public struct PlaintextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable, 
     }
 
     /// Number of rows in SIMD-encoded plaintext.
-    @usableFromInline var simdRowCount: Int { simdDimensions.rowCount }
+    @usableFromInline var simdRowCount: Int {
+        simdDimensions.rowCount
+    }
 
     /// Number of columns SIMD-encoded plaintext.
-    @usableFromInline var simdColumnCount: Int { simdDimensions.columnCount }
+    @usableFromInline var simdColumnCount: Int {
+        simdDimensions.columnCount
+    }
 
     /// Number of data values stored in the plaintext matrix.
-    @usableFromInline var count: Int { dimensions.count }
+    @usableFromInline var count: Int {
+        dimensions.count
+    }
 
     /// Number of rows in the stored data.
-    @usableFromInline package var rowCount: Int { dimensions.rowCount }
+    @usableFromInline package var rowCount: Int {
+        dimensions.rowCount
+    }
 
     /// Number of columns in the stored data.
-    @usableFromInline package var columnCount: Int { dimensions.columnCount }
+    @usableFromInline package var columnCount: Int {
+        dimensions.columnCount
+    }
 
     /// Creates a new plaintext matrix.
     /// - Parameters:

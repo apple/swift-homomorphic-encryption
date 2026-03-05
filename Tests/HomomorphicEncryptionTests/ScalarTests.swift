@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ import _TestUtilities
 import ModularArithmetic
 import Testing
 
-@Suite
 struct ScalarTests {
     @Test
     func subtractIfExceeds() {
@@ -537,7 +536,7 @@ struct ScalarTests {
     }
 
     @Test
-    func centeredToRemainder() throws {
+    func centeredToRemainder() {
         func runTest<T: SignedScalarType>(modulus: T) {
             var remainders = (-modulus / 2...((modulus - 1) / 2)).map { v in
                 let remainder = v.centeredToRemainder(modulus: T.UnsignedScalar(modulus))
@@ -554,7 +553,7 @@ struct ScalarTests {
     }
 
     @Test
-    func centeredRemainderRoundTrip() throws {
+    func centeredRemainderRoundTrip() {
         func runTest<T: SignedScalarType>(modulus: T) {
             let unsignedModulus = T.UnsignedScalar(modulus)
             let low: T = -modulus / 2

@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,9 @@ public final class SecretKey<Scheme: HeScheme>: Equatable, @unchecked Sendable {
 
     /// public access to poly.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
-    public var _poly: PolyRq<Scheme.Scalar, Eval> { poly }
+    public var _poly: PolyRq<Scheme.Scalar, Eval> {
+        poly
+    }
 
     /// Create a secret key by providing its content.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
@@ -69,10 +71,15 @@ public struct _KeySwitchKey<Scheme: HeScheme>: HeKeySwitchKey {
 
     /// public access to context.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
-    public var _context: Scheme.Context { context }
+    public var _context: Scheme.Context {
+        context
+    }
+
     /// public access to ciphertexts.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
-    public var _ciphertexts: [Ciphertext<Scheme, Eval>] { ciphertexts }
+    public var _ciphertexts: [Ciphertext<Scheme, Eval>] {
+        ciphertexts
+    }
 
     /// Create a key-switching key by providing its ontent.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
@@ -105,7 +112,9 @@ public struct _RelinearizationKey<Scheme: HeScheme>: Equatable, Sendable {
     @usableFromInline let keySwitchKey: Scheme.KeySwitchKey
     /// public access to key-switching key.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
-    public var _keySwitchKey: Scheme.KeySwitchKey { keySwitchKey }
+    public var _keySwitchKey: Scheme.KeySwitchKey {
+        keySwitchKey
+    }
 
     /// Create a relinearization key by providing its content.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
@@ -135,7 +144,9 @@ public struct _GaloisKey<Scheme: HeScheme>: HeGaloisKey {
     @usableFromInline let keys: [Int: Scheme.KeySwitchKey]
     /// public access to key-switching keys.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
-    public var _keys: [Int: Scheme.KeySwitchKey] { keys }
+    public var _keys: [Int: Scheme.KeySwitchKey] {
+        keys
+    }
 
     /// Create a Galois key by providing its content.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
@@ -173,10 +184,15 @@ public struct EvaluationKey<Scheme: HeScheme>: Equatable, Sendable {
 
     /// public access to Galois key.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
-    public var _galoisKey: _GaloisKey<Scheme>? { galoisKey }
+    public var _galoisKey: _GaloisKey<Scheme>? {
+        galoisKey
+    }
+
     /// public access to relineraization key.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
-    public var _relinearizationKey: _RelinearizationKey<Scheme>? { relinearizationKey }
+    public var _relinearizationKey: _RelinearizationKey<Scheme>? {
+        relinearizationKey
+    }
 
     /// Returns the configuration for the evaluation key.
     public var config: EvaluationKeyConfig {

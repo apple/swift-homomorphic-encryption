@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 public import ModularArithmetic
 
-// These two protocols are merely defined to add the Codable protocol
+/// These two protocols are merely defined to add the Codable protocol
 public protocol ScalarType: ModularArithmetic.CoreScalarType, Codable where SignedScalar: SignedScalarType {}
 
 public protocol SignedScalarType: ModularArithmetic.CoreSignedScalarType, Codable where UnsignedScalar: ScalarType {}

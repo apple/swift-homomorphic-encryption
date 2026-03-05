@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,14 @@ public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, 
     @usableFromInline package var columnCount: Int
 
     /// The row and column counts.
-    public var shape: (rowCount: Int, columnCount: Int) { (rowCount: rowCount, columnCount: columnCount) }
+    public var shape: (rowCount: Int, columnCount: Int) {
+        (rowCount: rowCount, columnCount: columnCount)
+    }
+
     /// The number of entries in the array.
-    public var count: Int { rowCount * columnCount }
+    public var count: Int {
+        rowCount * columnCount
+    }
 
     /// Creates a new ``Array2d``.
     /// - Parameter data: Row-major entries of the array. Each row must have the same number of entries.
@@ -242,7 +247,7 @@ extension Array2d {
         rowCount += newRowCount
     }
 
-    // Sets all the data to zero. This is useful for clearing sensitive data.
+    /// Sets all the data to zero. This is useful for clearing sensitive data.
     @inlinable
     mutating func zeroize() {
         let zeroizeSize = data.count * MemoryLayout<T>.size

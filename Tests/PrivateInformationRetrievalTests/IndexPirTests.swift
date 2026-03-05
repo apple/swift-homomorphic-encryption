@@ -17,7 +17,6 @@ import HomomorphicEncryption
 @testable import PrivateInformationRetrieval
 import Testing
 
-@Suite
 struct IndexPirTests {
     @Test
     func generateParameter() throws {

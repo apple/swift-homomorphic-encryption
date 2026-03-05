@@ -9,3 +9,4 @@
 --ranges no-space
 --self init-only
 --swiftversion 6.2
+--test-case-name-format standard-identifiers

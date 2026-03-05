@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -156,7 +156,7 @@ extension HeContext {
     }
 }
 
-// functions for coefficient encoding/decoding
+/// functions for coefficient encoding/decoding
 extension HeContext {
     /// Encodes a polynomial element-wise in coefficient format.
     ///
@@ -191,7 +191,7 @@ extension HeContext {
     }
 }
 
-// code for SIMD encoding/decoding
+/// code for SIMD encoding/decoding
 extension HeContext {
     @inlinable
     static func generateEncodingMatrix(encryptionParameters: EncryptionParameters<Scalar>) -> [Int] {

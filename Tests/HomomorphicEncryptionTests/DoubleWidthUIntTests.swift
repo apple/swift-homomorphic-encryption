@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@
 @testable import HomomorphicEncryption
 import Testing
 
-@Suite
 struct DoubleWidthTests {
     private typealias DWU16 = DoubleWidthUInt<UInt8>
     private typealias DWUInt128 = DoubleWidthUInt<UInt64>
@@ -41,7 +40,7 @@ struct DoubleWidthTests {
     }
 
     @Test
-    func literals() throws {
+    func literals() {
         let w: DoubleWidthUInt<UInt8> = 100
         #expect(w == 100)
 
@@ -87,17 +86,14 @@ struct DoubleWidthTests {
             #expect(String(lhs % rhs) == "52023287460685389410162512181093036559")
         }
         do {
-            // swiftlint:disable:next force_unwrapping
-            let lhs = DWUInt256("2369676578372158364766242369061213561181961479062237766620")!
-            // swiftlint:disable:next force_unwrapping
-            let rhs = DWUInt256("102797312405202436815976773795958969482")!
+            let lhs = try #require(DWUInt256("2369676578372158364766242369061213561181961479062237766620"))
+            let rhs = try #require(DWUInt256("102797312405202436815976773795958969482"))
             #expect(String(lhs / rhs) == "23051931251193218442")
         }
         do {
-            // swiftlint:disable:next force_unwrapping
-            let lhs = DWUInt256("96467201117289166187766181030232879447148862859323917044548749804018359008044")!
-            // swiftlint:disable:next force_unwrapping
-            let rhs = DWUInt256("4646260627574879223760172113656436161581617773435991717024")!
+            let lhs =
+                try #require(DWUInt256("96467201117289166187766181030232879447148862859323917044548749804018359008044"))
+            let rhs = try #require(DWUInt256("4646260627574879223760172113656436161581617773435991717024"))
             #expect(String(lhs / rhs) == "20762331011904583253")
         }
 

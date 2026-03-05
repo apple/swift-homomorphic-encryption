@@ -102,7 +102,7 @@ opt_in_rules:
   - quick_discouraged_pending_test
   - reduce_into
   - redundant_nil_coalescing
-  - redundant_self_in_closure
+  - redundant_self
   - redundant_type_annotation
   - required_enum_case
   - return_value_from_void_function
@@ -111,7 +111,6 @@ opt_in_rules:
   - single_test_class
   - sorted_enum_cases
   - sorted_first_last
-  - sorted_imports
   - static_operator
   - strict_fileprivate
   - strong_iboutlet
@@ -179,4 +178,5 @@ opt_in_rules:
 # - legacy_objc_type
 # - number_separator
 # - opening_brace
+# - sorted_imports
 # - trailing_comma

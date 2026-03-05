@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
 public import HomomorphicEncryption
+import Foundation
 
 /// Configuration for a ``KeywordDatabase``.
 public struct KeywordPirConfig: Hashable, Codable, Sendable {
@@ -145,9 +145,13 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     /// Index PIR parameters for the index PIR database.
     ///
     /// Must be the same between client and server.
-    public var indexPirParameter: IndexPirParameter { indexPirServer.parameter }
+    public var indexPirParameter: IndexPirParameter {
+        indexPirServer.parameter
+    }
 
-    public var evaluationKeyConfig: EvaluationKeyConfig { indexPirServer.evaluationKeyConfig }
+    public var evaluationKeyConfig: EvaluationKeyConfig {
+        indexPirServer.evaluationKeyConfig
+    }
 
     /// Initializes a ``KeywordPirServer``.
     /// - Parameters:
@@ -276,9 +280,13 @@ public final class KeywordPirClient<PirClient: IndexPirClient>: KeywordPirProtoc
     /// Index PIR parameters for the index PIR database.
     ///
     /// Must be the same between client and server.
-    var indexPirParameter: IndexPirParameter { indexPirClient.parameter }
+    var indexPirParameter: IndexPirParameter {
+        indexPirClient.parameter
+    }
 
-    public var evaluationKeyConfig: EvaluationKeyConfig { indexPirClient.evaluationKeyConfig }
+    public var evaluationKeyConfig: EvaluationKeyConfig {
+        indexPirClient.evaluationKeyConfig
+    }
 
     /// Initializes a ``KeywordPirClient``.
     /// - Parameters:

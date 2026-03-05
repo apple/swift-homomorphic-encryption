@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Benchmark
 public import HomomorphicEncryption
+import Benchmark
 
 let noiseBudgetScale = 10
 
 extension BenchmarkMetric {
-    static var querySize: Self { .custom("Query byte size") }
-    static var queryCiphertextCount: Self { .custom("Query ciphertext count") }
-    static var evaluationKeySize: Self { .custom("Evaluation key byte size") }
-    static var evaluationKeyCount: Self { .custom("Evaluation key count") }
-    static var responseSize: Self { .custom("Response byte size") }
-    static var responseCiphertextCount: Self { .custom("Response ciphertext count") }
-    static var noiseBudget: Self { .custom("Noise budget x \(noiseBudgetScale)") }
+    static var querySize: Self {
+        .custom("Query byte size")
+    }
+
+    static var queryCiphertextCount: Self {
+        .custom("Query ciphertext count")
+    }
+
+    static var evaluationKeySize: Self {
+        .custom("Evaluation key byte size")
+    }
+
+    static var evaluationKeyCount: Self {
+        .custom("Evaluation key count")
+    }
+
+    static var responseSize: Self {
+        .custom("Response byte size")
+    }
+
+    static var responseCiphertextCount: Self {
+        .custom("Response ciphertext count")
+    }
+
+    static var noiseBudget: Self {
+        .custom("Noise budget x \(noiseBudgetScale)")
+    }
 }
 
 /// Encryption parameters configuration for benchmarks.

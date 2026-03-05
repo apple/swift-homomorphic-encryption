@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,7 +68,9 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     public let extraPlaintextModuli: [Scalar]
 
     /// The plaintext CRT moduli.
-    public var plaintextModuli: [Scalar] { encryptionParameters.map(\.plaintextModulus) }
+    public var plaintextModuli: [Scalar] {
+        encryptionParameters.map(\.plaintextModulus)
+    }
 
     /// Creates a new ``ClientConfig``.
     /// - Parameters:
@@ -144,10 +146,14 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     public let databasePacking: MatrixPacking
 
     /// Factor by which to scale floating-point entries before rounding to integers.
-    public var scalingFactor: Int { clientConfig.scalingFactor }
+    public var scalingFactor: Int {
+        clientConfig.scalingFactor
+    }
 
     /// The plaintext CRT moduli.
-    public var plaintextModuli: [Scalar] { clientConfig.plaintextModuli }
+    public var plaintextModuli: [Scalar] {
+        clientConfig.plaintextModuli
+    }
 
     /// For plaintext CRT, the list of extra plaintext moduli.
     ///
@@ -157,7 +163,9 @@ public struct ServerConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
     }
 
     /// Distance metric.
-    public var distanceMetric: DistanceMetric { clientConfig.distanceMetric }
+    public var distanceMetric: DistanceMetric {
+        clientConfig.distanceMetric
+    }
 
     /// The encryption parameters, one per plaintext modulus.
     public var encryptionParameters: [EncryptionParameters<Scalar>] {

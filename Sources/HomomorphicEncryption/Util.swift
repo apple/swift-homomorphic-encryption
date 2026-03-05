@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
 public import ModularArithmetic
+import Foundation
 
 extension Sequence where Element: Hashable {
     @inlinable
@@ -29,7 +29,7 @@ extension Sequence where Element: Hashable {
 }
 
 extension FixedWidthInteger {
-    // not a constant time operation
+    /// not a constant time operation
     @inlinable
     func toRemainder(_ mod: Self, variableTime: Bool) -> Self {
         precondition(variableTime)

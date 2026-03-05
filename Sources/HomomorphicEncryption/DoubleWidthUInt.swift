@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,18 +98,18 @@ public struct DoubleWidthUInt<Base>: Sendable
         #endif
     }
 
-    // We expect users to invoke the public initializer above as demonstrated in
-    // the documentation (that is, by passing in the result of a full width
-    // operation).
-    //
-    // Internally, we'll need to create new instances by supplying high and low
-    // parts directly; ((double parentheses)) greatly impair readability,
-    // especially when nested:
-    //
-    //   DoubleWidthUInt<DoubleWidthUInt>((DoubleWidthUInt((0, 0)), DoubleWidthUInt((0, 0))))
-    //
-    // For that reason, we'll include an internal initializer that takes two
-    // separate arguments.
+    /// We expect users to invoke the public initializer above as demonstrated in
+    /// the documentation (that is, by passing in the result of a full width
+    /// operation).
+    ///
+    /// Internally, we'll need to create new instances by supplying high and low
+    /// parts directly; ((double parentheses)) greatly impair readability,
+    /// especially when nested:
+    ///
+    ///   DoubleWidthUInt<DoubleWidthUInt>((DoubleWidthUInt((0, 0)), DoubleWidthUInt((0, 0))))
+    ///
+    /// For that reason, we'll include an internal initializer that takes two
+    /// separate arguments.
     @inlinable init(_ _high: High, _ low: Low) {
         self.init((_high, low))
     }

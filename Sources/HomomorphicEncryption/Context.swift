@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,13 +45,25 @@ public final class Context<Scheme: HeScheme>: HeContext, Equatable, Sendable {
     public let _rnsTools: [_RnsTool<Scalar>]
 
     /// The plaintext modulus,`t`.
-    public var plaintextModulus: Scalar { encryptionParameters.plaintextModulus }
+    public var plaintextModulus: Scalar {
+        encryptionParameters.plaintextModulus
+    }
+
     /// The coefficient moduli, `q_0, ..., q_L`.
-    public var coefficientModuli: [Scalar] { encryptionParameters.coefficientModuli }
+    public var coefficientModuli: [Scalar] {
+        encryptionParameters.coefficientModuli
+    }
+
     /// The RLWE polynomial degree `N`.
-    public var degree: Int { encryptionParameters.polyDegree }
+    public var degree: Int {
+        encryptionParameters.polyDegree
+    }
+
     /// Whether or not the context supports ``EncodeFormat/simd`` encoding.
-    public var supportsSimdEncoding: Bool { encryptionParameters.supportsSimdEncoding }
+    public var supportsSimdEncoding: Bool {
+        encryptionParameters.supportsSimdEncoding
+    }
+
     /// The (row, column) dimension counts for ``EncodeFormat/simd`` encoding.
     ///
     /// If the HE scheme does not support ``EncodeFormat/simd`` encoding, returns `nil`.
@@ -60,11 +72,19 @@ public final class Context<Scheme: HeScheme>: HeContext, Equatable, Sendable {
     }
 
     /// Whether or not the context supports use of an ``EvaluationKey``.
-    public var supportsEvaluationKey: Bool { encryptionParameters.supportsEvaluationKey }
+    public var supportsEvaluationKey: Bool {
+        encryptionParameters.supportsEvaluationKey
+    }
+
     /// The number of bits that can be encoded in a single ``Plaintext``.
-    public var bitsPerPlaintext: Int { encryptionParameters.bitsPerPlaintext }
+    public var bitsPerPlaintext: Int {
+        encryptionParameters.bitsPerPlaintext
+    }
+
     /// The number of bytes that can be encoded in a single ``Plaintext``.
-    public var bytesPerPlaintext: Int { encryptionParameters.bytesPerPlaintext }
+    public var bytesPerPlaintext: Int {
+        encryptionParameters.bytesPerPlaintext
+    }
 
     /// Initializes a context.
     ///

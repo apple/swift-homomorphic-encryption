@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -141,8 +141,13 @@ public struct CuckooTableConfig: Hashable, Codable, Sendable {
 struct CuckooBucketEntry {
     @usableFromInline let keywordValuePair: KeywordValuePair
 
-    @usableFromInline var keyword: KeywordValuePair.Keyword { keywordValuePair.keyword }
-    var value: KeywordValuePair.Value { keywordValuePair.value }
+    @usableFromInline var keyword: KeywordValuePair.Keyword {
+        keywordValuePair.keyword
+    }
+
+    var value: KeywordValuePair.Value {
+        keywordValuePair.value
+    }
 
     @inlinable
     init(keywordValuePair: KeywordValuePair) {
@@ -197,8 +202,13 @@ extension CuckooBucket: RangeReplaceableCollection {
     @usableFromInline typealias Index = Int
     @usableFromInline typealias Element = CuckooBucketEntry
 
-    @usableFromInline var startIndex: Index { slots.startIndex }
-    @usableFromInline var endIndex: Index { slots.endIndex }
+    @usableFromInline var startIndex: Index {
+        slots.startIndex
+    }
+
+    @usableFromInline var endIndex: Index {
+        slots.endIndex
+    }
 
     @inlinable
     init() {
@@ -274,8 +284,13 @@ public struct CuckooTable {
         buckets.map(\.count).sum()
     }
 
-    @usableFromInline var bucketsPerTable: Int { buckets.count / tableCount }
-    @usableFromInline var tableCount: Int { config.multipleTables ? config.hashFunctionCount : 1 }
+    @usableFromInline var bucketsPerTable: Int {
+        buckets.count / tableCount
+    }
+
+    @usableFromInline var tableCount: Int {
+        config.multipleTables ? config.hashFunctionCount : 1
+    }
 
     init(
         config: CuckooTableConfig,

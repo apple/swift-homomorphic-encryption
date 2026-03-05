@@ -41,7 +41,7 @@ extension String {
 }
 
 /// A struct that represents the database processing arguments.
-struct Arguments: Codable, Equatable, Hashable, Sendable {
+struct Arguments: Codable, Equatable, Hashable {
     /// The default arguments.
     static let defaultArguments = Arguments(
         inputDatabase: "/path/to/input/database.txtpb",

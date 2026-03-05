@@ -28,7 +28,9 @@ public enum Bfv<T: ScalarType>: HeScheme {
 
     public typealias CanonicalCiphertextFormat = Coeff
 
-    public static var cryptosystem: HeCryptoSystem { .bfv }
+    public static var cryptosystem: HeCryptoSystem {
+        .bfv
+    }
 
     public static var freshCiphertextPolyCount: Int {
         2
@@ -220,7 +222,8 @@ public enum Bfv<T: ScalarType>: HeScheme {
     public static func innerProduct(_ lhs: some Collection<CanonicalCiphertext>,
                                     _ rhs: some Collection<CanonicalCiphertext>) throws -> CanonicalCiphertext
     {
-        // Computes accumulator += ciphertext * plaintext
+        // swiftlint:disable:next local_doc_comment
+        /// Computes accumulator += ciphertext * plaintext
         func lazyMultiply(
             _ lhs: CanonicalCiphertext,
             _ rhs: CanonicalCiphertext,
@@ -270,7 +273,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
         return try dropExtendedBase(from: sum)
     }
 
-    // Reduce lazy sum in place
+    /// Reduce lazy sum in place
     @inlinable
     static func reduceInPlace(accumulator: inout [Array2d<T.DoubleWidth>],
                               polyContext: PolyContext<Self.Scalar>)
@@ -285,7 +288,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
         }
     }
 
-    // Reduce lazy sum and save it to a ciphertext
+    /// Reduce lazy sum and save it to a ciphertext
     @inlinable
     static func reduceToCiphertext(
         accumulator: [Array2d<T.DoubleWidth>],
@@ -307,7 +310,8 @@ public enum Bfv<T: ScalarType>: HeScheme {
     public static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
                                     plaintexts: some Collection<EvalPlaintext?>) throws -> EvalCiphertext
     {
-        // Computes accumulator += ciphertext * plaintext
+        // swiftlint:disable:next local_doc_comment
+        /// Computes accumulator += ciphertext * plaintext
         func lazyMultiply(
             ciphertext: EvalCiphertext,
             plaintext: EvalPlaintext,

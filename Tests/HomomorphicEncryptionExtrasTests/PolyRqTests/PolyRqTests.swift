@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@ import _HomomorphicEncryptionExtras
 import HomomorphicEncryption
 import Testing
 
-@Suite
 struct PolyRqTests {
     @Test
-    func removeLastModuli() async throws {
+    func removeLastModuli() throws {
         let context: PolyContext<UInt32> = try PolyContext(degree: 4, moduli: [2, 3, 5])
         let data: [UInt32] = [0, 1, 0, 1,
                               0, 1, 2, 0,

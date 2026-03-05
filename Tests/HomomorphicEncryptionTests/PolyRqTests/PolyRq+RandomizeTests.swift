@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ import _TestUtilities
 @testable import HomomorphicEncryption
 import Testing
 
-@Suite
 struct PolyRqRandomizeTests {
     @Test
     func randomizeUniform() throws {
@@ -68,12 +67,11 @@ struct PolyRqRandomizeTests {
         try runTernaryDistributionTest(UInt64.self)
     }
 
-    private func runRandomizeInteropTest<T>(
+    private func runRandomizeInteropTest<T: ScalarType>(
         hexSeed: String,
         moduli: [T],
         polyData: [[Int]],
         createRandomPoly: (PolyContext<T>, inout PseudoRandomNumberGenerator) -> PolyRq<T, Coeff>) throws
-        where T: ScalarType
     {
         let polyData = polyData.map { $0.map { T($0) } }
         let seed = try #require(Array(hexEncoded: hexSeed))

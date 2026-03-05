@@ -18,7 +18,6 @@ import HomomorphicEncryption
 import PrivateInformationRetrieval
 import Testing
 
-@Suite
 struct ProcessDatabaseTests {
     @Test
     func argumentsJsonParsing() throws {

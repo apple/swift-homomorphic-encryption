@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ import _TestUtilities
 import HomomorphicEncryption
 import Testing
 
-@Suite
 struct CiphertextMatrixTests {
     @Test
     func encryptDecryptRoundTrip() async throws {
@@ -26,7 +25,7 @@ struct CiphertextMatrixTests {
     }
 
     @Test
-    func convertFormatRoundTrip() async throws {
+    func convertFormatRoundTrip() throws {
         try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.convertFormatRoundTrip(for: NoOpScheme.self)
         try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.convertFormatRoundTrip(for: Bfv<UInt32>.self)
         try PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.convertFormatRoundTrip(for: Bfv<UInt64>.self)

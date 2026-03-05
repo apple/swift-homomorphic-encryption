@@ -205,7 +205,7 @@ extension HeError: LocalizedError {
         case let .invalidCoefficientIndex(index, degree):
             "Invalid coefficient index \(index) for degree \(degree)"
         case let .invalidCoefficientPacking(bitsPerCoeff, skipLSBs):
-            "Invalid coefficint packing: bitsPerCoeff \(bitsPerCoeff), skipLSBs \(skipLSBs)"
+            "Invalid coefficient packing: bitsPerCoeff \(bitsPerCoeff), skipLSBs \(skipLSBs)"
         case let .invalidCiphertext(description):
             "\(description)"
         case let .invalidContext(description):

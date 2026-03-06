@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -405,7 +405,8 @@ extension _NttContext {
             let kTimesModulus = modulus &<< lazyReductionCounter
 
             if m == 1 {
-                // Final stage, folding in multiplication by n^{-1} and modular reduction
+                // swiftlint:disable:next local_doc_comment
+                /// Final stage, folding in multiplication by n^{-1} and modular reduction
                 func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
                     for xIdx in 0..<nDiv2 {
                         let yIdx = xIdx &+ nDiv2
@@ -451,6 +452,7 @@ extension _NttContext {
                     applyOp { _, _ in }
                 }
             } else {
+                @inline(__always)
                 func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
                     for i in 0..<m {
                         let inverseRootOfUnity = inverseRootOfUnityPowers[rootIdx &+ i]

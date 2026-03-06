@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1033,6 +1033,17 @@ extension Ciphertext where Format == Scheme.CanonicalCiphertextFormat {
     @inlinable
     public mutating func relinearize(using key: EvaluationKey<Scheme>) async throws {
         try await Scheme.relinearizeAsync(&self, using: key)
+    }
+}
+
+extension Ciphertext where Format == Coeff {
+    /// Computes `ciphertext * x^{power}`.
+    ///
+    /// - Parameter power: Power in the monomial
+    /// - Throws: Error upon failure to compute.
+    @inlinable
+    public mutating func multiplyPowerOfX(power: Int) async throws {
+        try await Scheme.multiplyPowerOfXAsync(&self, power: power)
     }
 }
 

@@ -106,7 +106,7 @@ extension ScalarType {
 }
 
 @usableFromInline
-struct NttContext<T: ScalarType> {
+struct NttContext<T: ScalarType>: Sendable {
     @usableFromInline let rootOfUnityPowers: MultiplyConstantArrayModulus<T>
     @usableFromInline let inverseRootOfUnityPowers: MultiplyConstantArrayModulus<T>
     /// `degree^{-1} mod modulus`.

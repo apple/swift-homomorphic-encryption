@@ -179,7 +179,7 @@ extension KeywordDatabase {
 }
 
 /// A struct that represents the database processing arguments.
-struct Arguments: Codable, Equatable, Hashable, Sendable {
+struct Arguments: Codable, Equatable, Hashable {
     enum DatabaseTypeArgument: String, Codable, CaseIterable, ExpressibleByArgument {
         case index
         case keyword
@@ -380,8 +380,8 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
     }
 }
 
-// This executable is used in tests, which breaks `swift test -c release` when used with `@main`.
-// So we avoid using `@main` here.
+/// This executable is used in tests, which breaks `swift test -c release` when used with `@main`.
+/// So we avoid using `@main` here.
 struct ProcessDatabase: AsyncParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "PIRProcessDatabase", version: Version.current.description)
@@ -723,7 +723,7 @@ extension Duration {
     }
 }
 
-// workaround to call the async main, but without using a top-level `await` to not break `swift test -c release`.
+/// workaround to call the async main, but without using a top-level `await` to not break `swift test -c release`.
 let group = DispatchGroup()
 group.enter()
 let task = Task.detached(priority: .userInitiated) {

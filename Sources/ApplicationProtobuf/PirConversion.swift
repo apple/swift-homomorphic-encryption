@@ -13,10 +13,10 @@
 // limitations under the License.
 
 public import _CryptoExtras
-import Crypto
-import Foundation
 public import HomomorphicEncryption
 public import PrivateInformationRetrieval
+import Crypto
+import Foundation
 import SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_Pir_V1_EncryptedIndices {

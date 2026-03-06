@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import _CryptoExtras
 public import Crypto
 public import Foundation
 public import HomomorphicEncryption
+import _CryptoExtras
 
 /// A keyword with an associated value.
 public struct KeywordValuePair: Hashable, Codable {
@@ -66,7 +66,7 @@ extension KeywordValuePair.Keyword {
 public struct ShardingFunction: Hashable, Sendable {
     /// Internal enumeration with supported cases.
     @usableFromInline
-    package enum Internal: Hashable, Sendable {
+    package enum Internal: Hashable, Sendable { // swiftformat:disable:this redundantSendable
         case sha256
         case doubleMod(otherShardCount: Int)
     }
@@ -111,7 +111,7 @@ extension ShardingFunction {
     }
 }
 
-// custom implementation
+/// custom implementation
 extension ShardingFunction: Codable {
     enum CodingKeys: String, CodingKey {
         case sha256
@@ -276,9 +276,13 @@ extension KeywordDatabaseShard: Collection {
     public typealias Index = [KeywordValuePair.Keyword: KeywordValuePair.Value].Index
     public typealias Element = KeywordValuePair
 
-    public var startIndex: Index { rows.startIndex }
+    public var startIndex: Index {
+        rows.startIndex
+    }
 
-    public var endIndex: Index { rows.endIndex }
+    public var endIndex: Index {
+        rows.endIndex
+    }
 
     public func index(after i: Index) -> Index {
         rows.index(after: i)

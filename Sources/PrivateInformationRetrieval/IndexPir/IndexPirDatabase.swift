@@ -61,9 +61,13 @@ extension IndexDatabaseShard: Collection {
     public typealias Index = Int
     public typealias Element = IndexDatabaseRowValue
 
-    public var startIndex: Index { rows.startIndex }
+    public var startIndex: Index {
+        rows.startIndex
+    }
 
-    public var endIndex: Index { rows.endIndex }
+    public var endIndex: Index {
+        rows.endIndex
+    }
 
     public func index(after i: Index) -> Index {
         rows.index(after: i)

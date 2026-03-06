@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,14 +72,13 @@ extension CoefficientPacking {
 
     ///  Converts an sequence of bytes into coefficients, unused bits in the last coefficient will be set to zero.
     @inlinable
-    static func bytesToCoefficientsInplace<C, T, B>(
+    static func bytesToCoefficientsInplace<C: MutableCollection, T: ScalarType, B: Collection>(
         bytes: B,
         coeffs coeffsCollection: inout C,
         bitsPerCoeff: Int,
         skipLSBs: Int = 0) throws
-        where T: ScalarType,
-        B: Collection, B.Element == UInt8, B.Index == Int,
-        C: MutableCollection, C.Element == T, C.Index == Int
+        where B.Element == UInt8, B.Index == Int,
+        C.Element == T, C.Index == Int
     {
         typealias BufferType = UInt64
         precondition(T.bitWidth <= BufferType.bitWidth)
@@ -167,14 +166,12 @@ extension CoefficientPacking {
     }
 
     @inlinable
-    static func coefficientsToBytesInplace<T, C>(
+    static func coefficientsToBytesInplace<T: ScalarType, C: MutableCollection>(
         coeffs: some Sequence<T>,
         bytes: inout C,
         bitsPerCoeff: Int,
         skipLSBs: Int = 0) throws
-        where T: ScalarType,
-        C: MutableCollection,
-        C.Element == UInt8,
+        where C.Element == UInt8,
         C.Index == Int
     {
         try validate(bitsPerCoeff: bitsPerCoeff, skipLSBs: skipLSBs)

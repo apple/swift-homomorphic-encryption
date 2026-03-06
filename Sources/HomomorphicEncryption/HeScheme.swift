@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,19 +102,39 @@ public protocol HeContext: Equatable, Sendable, CustomStringConvertible {
 
 extension HeContext {
     /// The RLWE polynomial degree `N`.
-    public var degree: Int { encryptionParameters.polyDegree }
+    public var degree: Int {
+        encryptionParameters.polyDegree
+    }
+
     /// The plaintext modulus,`t`.
-    public var plaintextModulus: Scalar { encryptionParameters.plaintextModulus }
+    public var plaintextModulus: Scalar {
+        encryptionParameters.plaintextModulus
+    }
+
     /// The coefficient moduli, `q_0, ..., q_L`.
-    public var coefficientModuli: [Scalar] { encryptionParameters.coefficientModuli }
+    public var coefficientModuli: [Scalar] {
+        encryptionParameters.coefficientModuli
+    }
+
     /// Whether or not the context supports ``EncodeFormat/simd`` encoding.
-    public var supportsSimdEncoding: Bool { encryptionParameters.supportsSimdEncoding }
+    public var supportsSimdEncoding: Bool {
+        encryptionParameters.supportsSimdEncoding
+    }
+
     /// Whether or not the context supports use of an ``EvaluationKey``.
-    public var supportsEvaluationKey: Bool { encryptionParameters.supportsEvaluationKey }
+    public var supportsEvaluationKey: Bool {
+        encryptionParameters.supportsEvaluationKey
+    }
+
     /// The number of bits that can be encoded in a single ``Plaintext``.
-    public var bitsPerPlaintext: Int { encryptionParameters.bitsPerPlaintext }
+    public var bitsPerPlaintext: Int {
+        encryptionParameters.bitsPerPlaintext
+    }
+
     /// The number of bytes that can be encoded in a single ``Plaintext``.
-    public var bytesPerPlaintext: Int { encryptionParameters.bytesPerPlaintext }
+    public var bytesPerPlaintext: Int {
+        encryptionParameters.bytesPerPlaintext
+    }
 }
 
 public protocol HeKeySwitchKey: Equatable, Sendable {
@@ -126,8 +146,13 @@ public protocol HeKeySwitchKey: Equatable, Sendable {
 }
 
 extension HeKeySwitchKey {
-    @usableFromInline var context: Scheme.Context { _context }
-    @usableFromInline var ciphertexts: [Ciphertext<Scheme, Eval>] { _ciphertexts }
+    @usableFromInline var context: Scheme.Context {
+        _context
+    }
+
+    @usableFromInline var ciphertexts: [Ciphertext<Scheme, Eval>] {
+        _ciphertexts
+    }
 }
 
 public protocol HeGaloisKey: Equatable, Sendable {
@@ -139,7 +164,9 @@ public protocol HeGaloisKey: Equatable, Sendable {
 }
 
 extension HeGaloisKey {
-    @usableFromInline var keys: [Int: Scheme.KeySwitchKey] { _keys }
+    @usableFromInline var keys: [Int: Scheme.KeySwitchKey] {
+        _keys
+    }
 }
 
 public protocol CiphertextAuxiliary: Equatable, Sendable {

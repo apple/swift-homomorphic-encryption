@@ -14,9 +14,9 @@
 
 public import AsyncAlgorithms
 public import DequeModule
-import Foundation
 public import HomomorphicEncryption
 public import ModularArithmetic
+import Foundation
 import Numerics
 
 /// PIR using ciphertext-ciphertext multiplication.
@@ -30,7 +30,9 @@ public enum MulPir<Scheme: HeScheme>: IndexPirProtocol {
     public typealias Response = PrivateInformationRetrieval.Response<Scheme>
     @usableFromInline typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
 
-    public static var algorithm: PirAlgorithm { .mulPir }
+    public static var algorithm: PirAlgorithm {
+        .mulPir
+    }
 
     public static func generateParameter(config: IndexPirConfig,
                                          with context: Scheme.Context) -> IndexPirParameter
@@ -133,11 +135,17 @@ public final class MulPirClient<PirUtil: PirUtilProtocol>: IndexPirClient {
         parameter.evaluationKeyConfig
     }
 
-    @usableFromInline var entrySizeInBytes: Int { parameter.entrySizeInBytes }
+    @usableFromInline var entrySizeInBytes: Int {
+        parameter.entrySizeInBytes
+    }
 
-    @usableFromInline var encodingEntrySize: Bool { parameter.encodingEntrySize }
+    @usableFromInline var encodingEntrySize: Bool {
+        parameter.encodingEntrySize
+    }
 
-    @usableFromInline var encodedEntrySize: Int { parameter.encodedEntrySize }
+    @usableFromInline var encodedEntrySize: Int {
+        parameter.encodedEntrySize
+    }
 
     @usableFromInline var entryChunksPerPlaintext: Int {
         if context.bytesPerPlaintext >= encodedEntrySize {
@@ -313,7 +321,9 @@ public final class MulPirServer<PirUtil: PirUtilProtocol>: IndexPirServer {
     /// Processed databases.
     public let databases: [Database]
 
-    @usableFromInline var entrySizeInBytes: Int { parameter.entrySizeInBytes }
+    @usableFromInline var entrySizeInBytes: Int {
+        parameter.entrySizeInBytes
+    }
 
     @usableFromInline var chunkCount: Int {
         Self.chunkCount(parameter: parameter, context: context)
@@ -356,14 +366,16 @@ public final class MulPirServer<PirUtil: PirUtilProtocol>: IndexPirServer {
 
 extension MulPirServer {
     @inlinable
-    func computeResponseForOneChunk<ExpandedQueries: Sendable, DataChunk: Sendable>(
+    func computeResponseForOneChunk<
+        ExpandedQueries: Sendable & Collection<CanonicalCiphertext>,
+        DataChunk: Sendable & Collection<Plaintext<Scheme, Eval>?>,
+    >(
         expandedDim0Query: [Ciphertext<Scheme, Eval>],
         expandedRemainingQuery: ExpandedQueries,
         dataChunk: DataChunk,
         using evaluationKey: EvaluationKey<Scheme>) async throws
         -> Ciphertext<Scheme, Coeff>
-        where ExpandedQueries: Collection<CanonicalCiphertext>, DataChunk: Collection<Plaintext<Scheme, Eval>?>,
-        ExpandedQueries.Index == Int, DataChunk.Index == Int
+        where ExpandedQueries.Index == Int, DataChunk.Index == Int
     {
         let databaseColumnsCount = perChunkPlaintextCount / parameter.dimensions[0]
         precondition(databaseColumnsCount == 1 || databaseColumnsCount == expandedRemainingQuery.count)

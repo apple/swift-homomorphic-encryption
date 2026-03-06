@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ func getRandomPlaintextData<T: ScalarType>(count: Int, in range: Range<T>) -> [T
     (0..<count).map { _ in T.random(in: range) }
 }
 
-struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
+struct RlweBenchmarkContext<Scheme: HeScheme> {
     var encryptionParameters: EncryptionParameters<Scheme.Scalar>
     var context: Scheme.Context
 

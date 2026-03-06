@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,13 +28,12 @@ extension Serialize {
     }
 
     @inlinable
-    static func serializePolys<C, T>(
+    static func serializePolys<C: MutableCollection, T>(
         _ polys: some Collection<PolyRq<T, some Any>>,
         to buffer: inout C,
         context: PolyContext<T>,
         skipLSBs: [Int] = []) throws
-        where C: MutableCollection,
-        C.Element == UInt8,
+        where C.Element == UInt8,
         C.Index == Int
     {
         let skipLSBs = skipLSBs.isEmpty ? .init(repeating: 0, count: polys.count) : skipLSBs
@@ -68,10 +67,10 @@ extension Serialize {
     }
 
     @inlinable
-    static func deserializePolys<C, T, F>(from buffer: C,
-                                          context: PolyContext<T>,
-                                          skipLSBs: [Int] = []) throws -> [PolyRq<T, F>]
-        where C: Collection, C.Element == UInt8, C.Index == Int
+    static func deserializePolys<C: Collection, T, F>(from buffer: C,
+                                                      context: PolyContext<T>,
+                                                      skipLSBs: [Int] = []) throws -> [PolyRq<T, F>]
+        where C.Element == UInt8, C.Index == Int
     {
         guard buffer.count >= MemoryLayout<UInt16>.size else {
             throw HeError.serializationBufferSizeMismatch(polyContext: context, actual: buffer.count, expected: 2)

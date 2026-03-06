@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public import HomomorphicEncryption
 import _CryptoExtras
 import Crypto
 import Foundation
-public import HomomorphicEncryption
 
 /// Symmetric PIR config type specifying config for OPRF and keyword entry encryption.
 public enum SymmetricPirConfigType: String, CaseIterable, Codable, Hashable, Sendable {
@@ -112,7 +112,7 @@ public final class Secret: Equatable, Hashable, @unchecked Sendable {
         hasher.combine(value)
     }
 
-    // Sets all bytes to zero.
+    /// Sets all bytes to zero.
     @inlinable
     public func zeroize() {
         let zeroizeSize = value.count * MemoryLayout<UInt8>.size

@@ -15,7 +15,6 @@
 @testable import PIRGenerateDatabase
 import Testing
 
-@Suite
 struct PIRGenerateDatabaseTests {
     @Test
     func valueSizeArgument() throws {

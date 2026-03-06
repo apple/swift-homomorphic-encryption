@@ -16,7 +16,6 @@ import _TestUtilities
 @testable import HomomorphicEncryption
 import Testing
 
-@Suite
 struct HeAPITests {
     private struct TestEnv<Scheme: HeScheme> {
         let context: Scheme.Context

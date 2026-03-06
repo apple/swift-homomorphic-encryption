@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -205,7 +205,7 @@ extension HeError: LocalizedError {
         case let .invalidCoefficientIndex(index, degree):
             "Invalid coefficient index \(index) for degree \(degree)"
         case let .invalidCoefficientPacking(bitsPerCoeff, skipLSBs):
-            "Invalid coefficint packing: bitsPerCoeff \(bitsPerCoeff), skipLSBs \(skipLSBs)"
+            "Invalid coefficient packing: bitsPerCoeff \(bitsPerCoeff), skipLSBs \(skipLSBs)"
         case let .invalidCiphertext(description):
             "\(description)"
         case let .invalidContext(description):

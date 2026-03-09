@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ extension ScalarType {
         return nil
     }
 
-    /// Generates the smallest primitive `degree`'th primitive root for integers mod this value, `p`.
+    /// Generates the smallest primitive degree'th primitive root for integers mod this value, p.
     ///
     /// This value, `p`, must be prime.
     /// - Parameter degree: Must be a power of two that divides `p - 1`.
@@ -104,11 +104,11 @@ extension ScalarType {
 }
 
 @usableFromInline
-struct NttContext<T: ScalarType>: Sendable {
+struct NttContext<T: ScalarType> {
     @usableFromInline let rootOfUnityPowers: MultiplyConstantArrayModulus<T>
     @usableFromInline let inverseRootOfUnityPowers: MultiplyConstantArrayModulus<T>
     @usableFromInline let inverseDegree: MultiplyConstantModulus<T> // degree^{-1} mod modulus
-    // (degree)^{-1} * w^{-N} mod modulus for `w` a root of unity mod modulus
+    /// (degree)^{-1} * w^{-N} mod modulus for `w` a root of unity mod modulus.
     @usableFromInline let inverseDegreeRootOfUnity: MultiplyConstantModulus<T>
 
     @inlinable
@@ -408,7 +408,8 @@ extension PolyRq where F == Eval {
                 let kTimesModulus = modulus &<< lazyReductionCounter
 
                 if m == 1 {
-                    // Final stage, folding in multiplication by n^{-1} and modular reduction
+                    // swiftlint:disable:next local_doc_comment
+                    /// Final stage, folding in multiplication by n^{-1} and modular reduction
                     func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
                         for xIdx in 0..<nDiv2 {
                             let yIdx = xIdx &+ nDiv2
@@ -454,6 +455,7 @@ extension PolyRq where F == Eval {
                         applyOp { _, _ in }
                     }
                 } else {
+                    @inline(__always)
                     func applyOp(_ op: (_ x: inout T, _ y: inout T) -> Void) {
                         for i in 0..<m {
                             let inverseRootOfUnity = inverseRootOfUnityPowers[rootIdx &+ i]

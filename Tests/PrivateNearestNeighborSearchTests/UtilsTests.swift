@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,9 @@ import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
 import Testing
 
-@Suite
 struct UtilsTests {
     @Test
-    func matrixMultiplication() throws {
+    func matrixMultiplication() {
         // Int64
         do {
             let x = Array2d<Int64>(data: Array(-3..<3), rowCount: 2, columnCount: 3)

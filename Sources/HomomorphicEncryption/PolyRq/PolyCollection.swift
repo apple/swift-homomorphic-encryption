@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,11 +26,17 @@ public protocol PolyCollection {
 
 extension PolyCollection {
     /// The polynomial's degree.
-    @inlinable public var degree: Int { polyContext().degree }
+    @inlinable public var degree: Int {
+        polyContext().degree
+    }
 
     /// The polynomial's scalar moduli.
-    @inlinable public var moduli: [Scalar] { polyContext().moduli }
+    @inlinable public var moduli: [Scalar] {
+        polyContext().moduli
+    }
 
     /// The polynomial's moduli.
-    @inlinable var reduceModuli: [Modulus<Scalar>] { polyContext().reduceModuli }
+    @inlinable var reduceModuli: [Modulus<Scalar>] {
+        polyContext().reduceModuli
+    }
 }

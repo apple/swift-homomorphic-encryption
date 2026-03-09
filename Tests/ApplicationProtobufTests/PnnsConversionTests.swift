@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 
 @testable import HomomorphicEncryption
 @testable import PrivateNearestNeighborSearch
-
 import Testing
 
 func increasingData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> [[T]] {
@@ -26,7 +25,6 @@ func increasingData<T: ScalarType>(dimensions: MatrixDimensions, modulus: T) -> 
     }
 }
 
-@Suite
 struct PnnsConversionTests {
     @Test
     func distanceMetric() throws {
@@ -85,7 +83,7 @@ struct PnnsConversionTests {
     }
 
     @Test
-    func database() throws {
+    func database() {
         let rows = (0...10).map { rowIndex in
             DatabaseRow(
                 entryId: rowIndex,

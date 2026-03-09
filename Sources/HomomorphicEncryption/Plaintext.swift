@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,9 @@ public struct Plaintext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Sendab
 
     /// Public access to poly.
     /// - Warning: This API is not subject to semantic versioning: these APIs may change without warning.
-    public var _poly: PolyRq<Scalar, Format> { poly }
+    public var _poly: PolyRq<Scalar, Format> {
+        poly
+    }
 
     /// The auxiliary data is scheme-specific.
     public var auxiliaryData: Scheme.PlaintextAuxiliaryData

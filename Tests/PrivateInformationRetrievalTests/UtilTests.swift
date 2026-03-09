@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@ import Foundation
 @testable import PrivateInformationRetrieval
 import Testing
 
-@Suite
 struct UtilTests {
     @Test
-    func utf8OrBase64() throws {
+    func utf8OrBase64() {
         let utf8 = Array(Data("abc123".utf8))
         #expect(utf8.utf8OrBase64() == "abc123 (utf8)")
 

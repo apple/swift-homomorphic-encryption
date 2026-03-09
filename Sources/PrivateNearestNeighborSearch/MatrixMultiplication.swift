@@ -15,9 +15,9 @@
 public import _HomomorphicEncryptionExtras
 public import Algorithms
 public import AsyncAlgorithms
-import Foundation
 public import HomomorphicEncryption
 public import ModularArithmetic
+import Foundation
 
 /// Pre-computed values for matrix-vector multiplication using baby-step, giant-step algorithm.
 ///

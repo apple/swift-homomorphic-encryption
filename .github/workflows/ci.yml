@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 env:
   # Keep versions in sync with README
-  SWIFTLINT_VERSION: 0.62.2
-  SWIFTFORMAT_VERSION: 0.58.6
+  SWIFTLINT_VERSION: 0.63.2
+  SWIFTFORMAT_VERSION: 0.60.0
 jobs:
   soundness:
     name: soundness

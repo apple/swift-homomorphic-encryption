@@ -104,7 +104,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         self.encodingEntrySize = encodingEntrySize
     }
 
-    // static method shared by `IndexPirConfig` and `IndexPirParameter`
+    /// static method shared by `IndexPirConfig` and `IndexPirParameter`
     @inlinable
     static func entrySizeEncodingWidth(for entrySize: UInt64) -> Int {
         if entrySize <= UInt8.max {
@@ -118,7 +118,7 @@ public struct IndexPirConfig: Hashable, Codable, Sendable {
         }
     }
 
-    // static method shared by `IndexPirConfig` and `IndexPirParameter`
+    /// static method shared by `IndexPirConfig` and `IndexPirParameter`
     @inlinable
     static func encodeEntrySize(_ entrySize: some FixedWidthInteger, encodingSize: Int) throws -> [UInt8] {
         switch encodingSize {
@@ -189,9 +189,14 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     }
 
     /// The number of dimensions in the database.
-    @usableFromInline package var dimensionCount: Int { dimensions.count }
+    @usableFromInline package var dimensionCount: Int {
+        dimensions.count
+    }
+
     /// The number of ciphertexts in each query after server-side expansion.
-    @usableFromInline package var expandedQueryCount: Int { dimensions.sum() }
+    @usableFromInline package var expandedQueryCount: Int {
+        dimensions.sum()
+    }
 
     /// Initializes an ``IndexPirParameter``.
     /// - Parameters:
@@ -263,10 +268,14 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     public let plaintexts: [Plaintext<Scheme, Eval>?]
 
     /// Number of plaintexts in the database, including padding plaintexts.
-    public var count: Int { plaintexts.count }
+    public var count: Int {
+        plaintexts.count
+    }
 
     /// Whether or not the database is empty.
-    public var isEmpty: Bool { plaintexts.isEmpty }
+    public var isEmpty: Bool {
+        plaintexts.isEmpty
+    }
 
     /// Initializes a ``ProcessedDatabase`` from plaintexts.
     /// - Parameter plaintexts: Plaintexts.

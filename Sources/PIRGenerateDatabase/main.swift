@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public import HomomorphicEncryption
 import ApplicationProtobuf
 import ArgumentParser
 import Foundation
-public import HomomorphicEncryption
 import PrivateInformationRetrieval
 
 enum DatabaseTypeArgument: String, CaseIterable, ExpressibleByArgument {
@@ -62,8 +62,8 @@ extension [UInt8] {
     }
 }
 
-// This executable is used in tests, which breaks `swift test -c release` when used with `@main`.
-// So we avoid using `@main` here.
+/// This executable is used in tests, which breaks `swift test -c release` when used with `@main`.
+/// So we avoid using `@main` here.
 struct GenerateDatabaseCommand: ParsableCommand {
     static let configuration: CommandConfiguration = .init(
         commandName: "PIRGenerateDatabase", version: Version.current.description)

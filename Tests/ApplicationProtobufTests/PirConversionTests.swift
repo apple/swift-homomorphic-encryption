@@ -21,10 +21,9 @@ import Foundation
 @testable import PrivateInformationRetrieval
 import Testing
 
-@Suite
 struct PirConversionTests {
     @Test
-    func keywordDatabase() throws {
+    func keywordDatabase() {
         let rowCount = 10
         let payloadSize = 5
         let databaseRows = (0..<rowCount).map { index in KeywordValuePair(

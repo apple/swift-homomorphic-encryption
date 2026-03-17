@@ -44,6 +44,12 @@ repos:
           - --use-current-year
   - repo: local
     hooks:
+      - id: filter-package-resolved
+        name: filter-package-resolved
+        entry: ci/filter-package-resolved.sh
+        language: script
+        files: ^Package\.resolved$
+        pass_filenames: false
       # https://github.com/nicklockwood/SwiftFormat
       - id: lockwood-swiftformat
         name: lockwood-swiftformat

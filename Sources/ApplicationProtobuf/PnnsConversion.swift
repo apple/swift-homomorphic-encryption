@@ -24,6 +24,8 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric {
         switch self {
         case .cosineSimilarity:
             .cosineSimilarity
+        case .dotProduct:
+            .dotProduct
         case let .UNRECOGNIZED(value):
             throw ConversionError.unrecognizedEnumValue(enum: Self.self, value: value)
         }
@@ -37,6 +39,8 @@ extension DistanceMetric {
         switch self {
         case .cosineSimilarity:
             Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric.cosineSimilarity
+        case .dotProduct:
+            Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric.dotProduct
         }
     }
 }

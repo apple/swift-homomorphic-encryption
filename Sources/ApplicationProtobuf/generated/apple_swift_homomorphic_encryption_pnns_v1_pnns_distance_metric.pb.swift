@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,9 @@ public enum Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric: SwiftProtob
 
   /// Cosine similarity.
   case cosineSimilarity // = 0
+
+  /// Raw dot product (no normalization).
+  case dotProduct // = 1
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -49,6 +52,7 @@ public enum Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric: SwiftProtob
   public init?(rawValue: Int) {
     switch rawValue {
     case 0: self = .cosineSimilarity
+    case 1: self = .dotProduct
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -56,6 +60,7 @@ public enum Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric: SwiftProtob
   public var rawValue: Int {
     switch self {
     case .cosineSimilarity: return 0
+    case .dotProduct: return 1
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -63,6 +68,7 @@ public enum Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric: SwiftProtob
   // The compiler won't synthesize support with the UNRECOGNIZED case.
   public static let allCases: [Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric] = [
     .cosineSimilarity,
+    .dotProduct,
   ]
 
 }
@@ -70,5 +76,8 @@ public enum Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric: SwiftProtob
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DISTANCE_METRIC_COSINE_SIMILARITY\0")
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "DISTANCE_METRIC_COSINE_SIMILARITY"),
+    1: .same(proto: "DISTANCE_METRIC_DOT_PRODUCT"),
+  ]
 }

@@ -32,9 +32,23 @@ struct CiphertextMatrixTests {
     }
 
     @Test
+    func addition() async throws {
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.addition(for: NoOpScheme.self)
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.addition(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.addition(for: Bfv<UInt64>.self)
+    }
+
+    @Test
     func extractDenseRow() async throws {
         try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: NoOpScheme.self)
         try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: Bfv<UInt32>.self)
         try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.extractDenseRow(for: Bfv<UInt64>.self)
+    }
+
+    @Test
+    func responseAggregation() async throws {
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.responseAggregation(for: NoOpScheme.self)
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.responseAggregation(for: Bfv<UInt32>.self)
+        try await PrivateNearestNeighborSearchUtil.CiphertextMatrixTests.responseAggregation(for: Bfv<UInt64>.self)
     }
 }

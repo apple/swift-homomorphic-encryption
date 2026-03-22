@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,6 +90,51 @@ extension PrivateNearestNeighborSearchUtil {
             #expect(plaintextMatrix == decoded)
         }
 
+        /// Testing ciphertext matrix addition.
+        @inlinable
+        public static func addition<Scheme: HeScheme>(for _: Scheme.Type) async throws {
+            let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
+            #expect(encryptionParameters.supportsSimdEncoding)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
+            let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
+            let plaintextModulus = context.plaintextModulus
+
+            let valuesA: [[Scheme.Scalar]] = increasingData(dimensions: dimensions, modulus: plaintextModulus)
+            let valuesB: [[Scheme.Scalar]] = randomData(dimensions: dimensions, modulus: plaintextModulus)
+
+            let plaintextMatrixA = try PlaintextMatrix<Scheme, Coeff>(
+                context: context,
+                dimensions: dimensions,
+                packing: .denseRow,
+                values: valuesA.flatMap(\.self))
+            let plaintextMatrixB = try PlaintextMatrix<Scheme, Coeff>(
+                context: context,
+                dimensions: dimensions,
+                packing: .denseRow,
+                values: valuesB.flatMap(\.self))
+
+            let secretKey = try context.generateSecretKey()
+            let ciphertextMatrixA = try plaintextMatrixA.encrypt(using: secretKey)
+            let ciphertextMatrixB = try plaintextMatrixB.encrypt(using: secretKey)
+
+            let ciphertextMatrixSum = try ciphertextMatrixA + ciphertextMatrixB
+            let decryptedSum = try ciphertextMatrixSum.decrypt(using: secretKey)
+            let unpackedSum: [Scheme.Scalar] = try decryptedSum.unpack()
+
+            let expectedSum = zip(valuesA.flatMap(\.self), valuesB.flatMap(\.self)).map { a, b in
+                (a + b) % plaintextModulus
+            }
+            #expect(unpackedSum == expectedSum)
+
+            // Test += variant
+            var ciphertextMatrixC = ciphertextMatrixA
+            try ciphertextMatrixC += ciphertextMatrixB
+            let decryptedC = try ciphertextMatrixC.decrypt(using: secretKey)
+            let unpackedC: [Scheme.Scalar] = try decryptedC.unpack()
+            #expect(unpackedC == expectedSum)
+        }
+
         /// Testing `extractDenseRow`.
         @inlinable
         public static func extractDenseRow<Scheme: HeScheme>(for _: Scheme.Type) async throws {
@@ -157,6 +202,57 @@ extension PrivateNearestNeighborSearchUtil {
                     }
                 }
             }
+        }
+
+        /// Testing Response aggregation.
+        @inlinable
+        public static func responseAggregation<Scheme: HeScheme>(for _: Scheme.Type) async throws {
+            let rlweParams = PredefinedRlweParameters.insecure_n_8_logq_5x18_logt_5
+            let encryptionParameters = try EncryptionParameters<Scheme.Scalar>(from: rlweParams)
+            let context = try Scheme.Context(encryptionParameters: encryptionParameters)
+            let dimensions = try MatrixDimensions(rowCount: 10, columnCount: 4)
+            let plaintextModulus = context.plaintextModulus
+
+            let valuesA: [[Scheme.Scalar]] = randomData(dimensions: dimensions, modulus: plaintextModulus)
+            let valuesB: [[Scheme.Scalar]] = randomData(dimensions: dimensions, modulus: plaintextModulus)
+            let valuesC: [[Scheme.Scalar]] = randomData(dimensions: dimensions, modulus: plaintextModulus)
+
+            let secretKey = try context.generateSecretKey()
+
+            func encryptValues(_ values: [[Scheme.Scalar]]) throws -> CiphertextMatrix<Scheme, Coeff> {
+                let plaintext = try PlaintextMatrix<Scheme, Coeff>(
+                    context: context,
+                    dimensions: dimensions,
+                    packing: .denseRow,
+                    values: values.flatMap(\.self))
+                return try plaintext.encrypt(using: secretKey).convertToCoeffFormat()
+            }
+
+            let ctA = try encryptValues(valuesA)
+            let ctB = try encryptValues(valuesB)
+            let ctC = try encryptValues(valuesC)
+
+            let entryIds: [UInt64] = (0..<10).map { UInt64($0) }
+
+            let responseA = Response<Scheme>(ciphertextMatrices: [ctA], entryIds: entryIds, entryMetadatas: [])
+            let responseB = Response<Scheme>(ciphertextMatrices: [ctB], entryIds: entryIds, entryMetadatas: [])
+            let responseC = Response<Scheme>(ciphertextMatrices: [ctC], entryIds: entryIds, entryMetadatas: [])
+
+            let aggregated = try Response.aggregate([responseA, responseB, responseC])
+
+            #expect(aggregated.entryIds == entryIds)
+            #expect(aggregated.ciphertextMatrices.count == 1)
+
+            let decrypted = try aggregated.ciphertextMatrices[0].decrypt(using: secretKey)
+            let unpacked: [Scheme.Scalar] = try decrypted.unpack()
+
+            let flatA = valuesA.flatMap(\.self)
+            let flatB = valuesB.flatMap(\.self)
+            let flatC = valuesC.flatMap(\.self)
+            let expectedSum = zip(zip(flatA, flatB), flatC).map { ab, c in
+                (ab.0 + ab.1 + c) % plaintextModulus
+            }
+            #expect(unpacked == expectedSum)
         }
     }
 }

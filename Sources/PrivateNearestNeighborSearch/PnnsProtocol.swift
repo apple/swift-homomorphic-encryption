@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,6 +73,51 @@ public struct DatabaseDistances: Sendable {
         self.distances = distances
         self.entryIds = entryIds
         self.entryMetadatas = entryMetadatas
+    }
+}
+
+// MARK: Response aggregation
+
+extension Response {
+    /// Element-wise response addition.
+    ///
+    /// Adds the ciphertext matrices from two responses element-wise. Both responses must have the same number of
+    /// ciphertext matrices with matching dimensions. Entry IDs and metadata are taken from the left-hand side.
+    /// - Parameters:
+    ///   - lhs: First response.
+    ///   - rhs: Second response.
+    /// - Returns: A response whose ciphertext matrices encrypt the element-wise sums.
+    /// - Throws: Error upon mismatched ciphertext matrix counts or dimensions.
+    @inlinable
+    public static func + (lhs: Self, rhs: Self) throws -> Self {
+        guard lhs.ciphertextMatrices.count == rhs.ciphertextMatrices.count else {
+            throw PnnsError.wrongCiphertextCount(
+                got: rhs.ciphertextMatrices.count,
+                expected: lhs.ciphertextMatrices.count)
+        }
+        let sumMatrices = try zip(lhs.ciphertextMatrices, rhs.ciphertextMatrices).map { try $0 + $1 }
+        return Self(
+            ciphertextMatrices: sumMatrices,
+            entryIds: lhs.entryIds,
+            entryMetadatas: lhs.entryMetadatas)
+    }
+
+    /// Aggregates multiple responses by element-wise ciphertext addition.
+    ///
+    /// This is the operation the proxy uses to combine partial inner-product results from multiple servers
+    /// (e.g., 4 servers in a dimension-split + additive-split architecture).
+    /// - Parameter responses: Responses to aggregate; must not be empty.
+    /// - Returns: A single response whose ciphertexts encrypt the sum of all input responses.
+    /// - Throws: Error if `responses` is empty or if any response has mismatched dimensions.
+    @inlinable
+    public static func aggregate(_ responses: [Self]) throws -> Self {
+        guard var result = responses.first else {
+            throw PnnsError.emptyCiphertextArray
+        }
+        for response in responses.dropFirst() {
+            result = try result + response
+        }
+        return result
     }
 }
 

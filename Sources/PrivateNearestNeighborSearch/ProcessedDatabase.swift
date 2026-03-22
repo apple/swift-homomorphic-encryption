@@ -192,9 +192,6 @@ extension Database {
     public func process<Scheme: HeScheme>(config: ServerConfig<Scheme>,
                                           contexts: [Scheme.Context] = []) async throws -> ProcessedDatabase<Scheme>
     {
-        guard config.distanceMetric == .cosineSimilarity else {
-            throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)
-        }
         var contexts = contexts
         if contexts.isEmpty {
             contexts = try config.encryptionParameters.map { encryptionParameters in
@@ -204,8 +201,13 @@ extension Database {
         try config.validateContexts(contexts: contexts)
 
         let vectors = Array2d(data: rows.map { row in row.vector })
-        let roundedVectors: Array2d<Scheme.SignedScalar> = vectors.normalizedScaledAndRounded(
-            scalingFactor: Float(config.scalingFactor))
+        let roundedVectors: Array2d<Scheme.SignedScalar> = switch config.distanceMetric {
+        case .cosineSimilarity:
+            vectors.normalizedScaledAndRounded(
+                scalingFactor: Float(config.scalingFactor))
+        case .dotProduct:
+            vectors.scaled(by: Float(config.scalingFactor)).rounded()
+        }
 
         let plaintextMatrices: [PlaintextMatrix<Scheme, Eval>] = try contexts.map { context in
             // For a single plaintext modulus, reduction isn't necessary

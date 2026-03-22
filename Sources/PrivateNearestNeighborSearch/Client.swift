@@ -44,9 +44,6 @@ public struct Client<Scheme: HeScheme> {
     /// - Throws: Error upon failure to create the client.
     @inlinable
     public init(config: ClientConfig<Scheme>, contexts: [Scheme.Context] = []) throws {
-        guard config.distanceMetric == .cosineSimilarity else {
-            throw PnnsError.wrongDistanceMetric(got: config.distanceMetric, expected: .cosineSimilarity)
-        }
         self.config = config
 
         var contexts = contexts
@@ -74,8 +71,13 @@ public struct Client<Scheme: HeScheme> {
     public func generateQuery(for vectors: Array2d<Float>,
                               using secretKey: SecretKey<Scheme>) throws -> Query<Scheme>
     {
-        let scaledVectors: Array2d<Scheme.SignedScalar> = vectors
-            .normalizedScaledAndRounded(scalingFactor: Float(config.scalingFactor))
+        let scaledVectors: Array2d<Scheme.SignedScalar> = switch config.distanceMetric {
+        case .cosineSimilarity:
+            vectors
+                .normalizedScaledAndRounded(scalingFactor: Float(config.scalingFactor))
+        case .dotProduct:
+            vectors.scaled(by: Float(config.scalingFactor)).rounded()
+        }
         let matrices = try contexts.map { context in
             // For a single plaintext modulus, reduction isn't necessary
             let shouldReduce = contexts.count > 1

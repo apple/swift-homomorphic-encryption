@@ -20,6 +20,12 @@ public enum DistanceMetric: CaseIterable, Codable, Equatable, Hashable, Sendable
     ///
     /// The cosine similarity between zero vectors is defined as zero.
     case cosineSimilarity
+
+    /// Raw dot product (no normalization).
+    ///
+    /// Use when vectors are pre-normalized or when additive shares
+    /// should not be re-normalized (e.g. two-server vector splitting).
+    case dotProduct
 }
 
 /// CosineSimilarity configuration.
@@ -109,14 +115,36 @@ public struct ClientConfig<Scheme: HeScheme>: Codable, Equatable, Hashable, Send
         self.extraPlaintextModuli = extraPlaintextModuli
     }
 
+    /// Computes the maximum scaling factor for the given distance metric.
+    /// - Parameters:
+    ///   - distanceMetric: Distance metric.
+    ///   - vectorDimension: Number of entries in each vector.
+    ///   - plaintextModuli: Plaintext CRT moduli.
+    ///   - maxVectorNorm: For ``DistanceMetric/dotProduct``, the maximum L2 norm of any database
+    ///     vector. Ignored for ``DistanceMetric/cosineSimilarity`` (vectors are normalized to unit
+    ///     length internally). Defaults to `sqrt(2)`, which accommodates two-server additive
+    ///     splitting where each share has norm at most `sqrt(2)`.
+    /// - Returns: The maximum scaling factor.
     @inlinable
     public static func maxScalingFactor(distanceMetric: DistanceMetric, vectorDimension: Int,
-                                        plaintextModuli: [Scalar]) -> Int
+                                        plaintextModuli: [Scalar],
+                                        maxVectorNorm: Float = Float(2.0).squareRoot()) -> Int
     {
-        precondition(distanceMetric == .cosineSimilarity)
         let t = plaintextModuli.map { Float($0) }.reduce(1, *)
-        let scalingFactor = (((t - 1) / 2).squareRoot() - Float(vectorDimension).squareRoot() / 2).rounded(.down)
-        return Int(scalingFactor)
+        switch distanceMetric {
+        case .cosineSimilarity:
+            // Unit vectors: inner product bounded by sf^2.
+            let scalingFactor = (((t - 1) / 2).squareRoot() - Float(vectorDimension).squareRoot() / 2).rounded(.down)
+            return Int(scalingFactor)
+        case .dotProduct:
+            // Query is still unit-normalized (norm = sf after scaling).
+            // DB vectors may have norm up to maxVectorNorm (norm = maxVectorNorm * sf after scaling).
+            // Inner product bounded by sf * maxVectorNorm * sf = maxVectorNorm * sf^2.
+            // Need maxVectorNorm * sf^2 < (t-1)/2.
+            let scalingFactor = (((t - 1) / (2 * maxVectorNorm)).squareRoot()
+                - Float(vectorDimension).squareRoot() / 2).rounded(.down)
+            return Int(scalingFactor)
+        }
     }
 
     /// Validates the contexts are suitable for computing with this configuration.

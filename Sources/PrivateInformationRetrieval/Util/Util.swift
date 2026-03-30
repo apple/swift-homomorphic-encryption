@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,5 +21,20 @@ extension [UInt8] {
         } else {
             "\(Data(self).base64EncodedString()) (base64)"
         }
+    }
+}
+
+/// Runtime options to specify configs. E.g. multi-threading preference.
+public enum CallOptions: Equatable, Sendable {
+    case multiThreaded
+    case singleThreaded
+}
+
+extension CallOptions {
+    /// Default call options
+    public static let `default` = CallOptions.singleThreaded
+
+    @usableFromInline var multiThreading: Bool {
+        self != .singleThreaded
     }
 }

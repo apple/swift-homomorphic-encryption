@@ -412,42 +412,16 @@ extension MulPirServer {
     @inlinable
     // swiftlint:disable:next missing_docs attributes
     public func computeResponse(to query: Query,
-                                using evaluationKey: EvaluationKey<Scheme>) async throws -> Response
-
+                                using evaluationKey: EvaluationKey<Scheme>,
+                                callOptions: CallOptions) async throws -> Response
     {
-        guard databases.count == 1 || databases.count >= query.indicesCount else {
-            throw PirError.invalidBatchSize(queryCount: query.indicesCount, databaseCount: databases.count)
-        }
-        let expandedQueries = try await PirUtil.expand(ciphertexts:
-            query.ciphertexts,
-            outputCount: parameter.expandedQueryCount * query.indicesCount,
-            using: evaluationKey)
-        // This is a deque where remove first is a constant time op.
-        var ciphertextForEachQuery = expandedQueries.chunk(by: parameter.expandedQueryCount)
-        var responseCiphertexts: [[Scheme.CoeffCiphertext]] = []
-
-        for queryIndex in 0..<query.indicesCount {
-            let database = databases[databases.count == 1 ? 0 : queryIndex]
-            var queryCiphertexts = ciphertextForEachQuery.removeFirst()
-            var firstDimensionQueries: [Scheme.EvalCiphertext] = []
-            firstDimensionQueries.reserveCapacity(parameter.dimensions[0])
-            for _ in 0..<parameter.dimensions[0] {
-                try await firstDimensionQueries.append(queryCiphertexts.removeFirst().convertToEvalFormat())
-            }
-            let perChunkPlaintextCount = database.count / chunkCount
-
-            try await responseCiphertexts
-                .append(.init(stride(from: 0, to: database.count, by: perChunkPlaintextCount).async
-                        .map { [queryCiphertexts, firstDimensionQueries] startIndex in
-                            try await self.computeResponseForOneChunk(
-                                expandedDim0Query: firstDimensionQueries,
-                                expandedRemainingQuery: queryCiphertexts,
-                                dataChunk: database
-                                    .plaintexts[startIndex..<startIndex + perChunkPlaintextCount],
-                                using: evaluationKey)
-                        }))
-        }
-        return Response(ciphertexts: responseCiphertexts)
+        try await PirUtil.computeResponse(
+            to: query,
+            using: evaluationKey,
+            databases: databases,
+            parameter: parameter,
+            context: context,
+            callOptions: callOptions)
     }
 }
 

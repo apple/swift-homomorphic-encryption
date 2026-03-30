@@ -89,4 +89,80 @@ struct UtilTests {
         let base64String = data.base64EncodedString()
         #expect(Array(base64Encoded: base64String) == data)
     }
+
+    @Test
+    func concurrentMap() async throws {
+        // Empty collection
+        let empty: [Int] = []
+
+        #expect(try await empty.concurrentMap { $0 * 2 }.isEmpty)
+
+        // Single element
+        #expect(try await [42].concurrentMap { $0 * 2 } == [84])
+
+        // Multiple elements, ordered (default) — output order must match input order
+        let input = Array(0..<20)
+        let ordered = try await input.concurrentMap { $0 * $0 }
+        #expect(ordered == input.map { $0 * $0 })
+
+        // Multiple elements, unordered — all elements present regardless of order
+        let unordered = try await input.concurrentMap(ordered: false) { $0 * $0 }
+        #expect(unordered.sorted() == input.map { $0 * $0 }.sorted())
+
+        // Async transform
+        let asyncResult = try await input.concurrentMap { value -> Int in
+            try await Task.sleep(nanoseconds: 1)
+            return value + 1
+        }
+        #expect(asyncResult == input.map { $0 + 1 })
+
+        // Error propagation
+        struct ConcurrentMapError: Error {}
+        await #expect(throws: ConcurrentMapError.self) {
+            try await input.concurrentMap { value -> Int in
+                if value == 5 { throw ConcurrentMapError() }
+                return value
+            }
+        }
+    }
+
+    @Test
+    func concurrentConsumingMap() async throws {
+        // Empty collection
+        var empty: [Int] = []
+
+        #expect(try await empty.concurrentConsumingMap { $0 * 2 }.isEmpty)
+
+        // Single element
+        var single = [42]
+        #expect(try await single.concurrentConsumingMap { $0 * 2 } == [84])
+
+        // Multiple elements, ordered (default) — output order must match input order
+        var input = Array(0..<20)
+        let ordered = try await input.concurrentConsumingMap { $0 * $0 }
+        #expect(ordered == (0..<20).map { $0 * $0 })
+
+        // Multiple elements, unordered — all elements present regardless of order
+        var input2 = Array(0..<20)
+        let unordered = try await input2.concurrentConsumingMap(ordered: false) { $0 * $0 }
+        #expect(unordered.sorted() == (0..<20).map { $0 * $0 }.sorted())
+
+        // Async transform
+        var input3 = Array(0..<20)
+        let asyncResult = try await input3.concurrentConsumingMap { value -> Int in
+            try await Task.sleep(nanoseconds: 1)
+            return value + 1
+        }
+        #expect(asyncResult == (0..<20).map { $0 + 1 })
+
+        // Error propagation
+        struct ConcurrentConsumingMapError: Error {}
+        var input4 = Array(0..<20)
+        await #expect(throws: ConcurrentConsumingMapError.self) {
+            try await input4.concurrentConsumingMap { value -> Int in
+                if value == 5 { throw ConcurrentConsumingMapError() }
+                return value
+            }
+        }
+    }
 }

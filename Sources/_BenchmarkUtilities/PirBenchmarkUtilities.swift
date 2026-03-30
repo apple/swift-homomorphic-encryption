@@ -43,6 +43,40 @@ func getDatabaseForTesting(
     }
 }
 
+/// Returns a compact representation of an entry count (e.g. `1M`, `10K`, `500`) of certain size entries.
+func formatEntryCountAndSize(count: Int, size: Int) -> String {
+    let countString = if count >= 1_000_000, count.isMultiple(of: 1_000_000) {
+        "\(count / 1_000_000)M"
+    } else if count >= 1000, count.isMultiple(of: 1000) {
+        "\(count / 1000)K"
+    } else {
+        "\(count)"
+    }
+    let sizeString = if size >= 1000, size.isMultiple(of: 1000) {
+        "\(size / 1000)KB"
+    } else {
+        "\(size)B"
+    }
+    return "\(countString)_\(sizeString)_entries"
+}
+
+/// Returns an abbreviated key-compression label (e.g. `hybrid`, `no`).
+func formatKeyCompression(_ compression: PirKeyCompressionStrategy) -> String {
+    switch compression {
+    case .hybridCompression:
+        "hybrid"
+    case .maxCompression:
+        "minimalKey"
+    case .noCompression:
+        "allKey"
+    }
+}
+
+/// Returns a short threading label (`allThread` or `1Thread`).
+func formatCallOptions(_ options: CallOptions) -> String {
+    options == .multiThreaded ? "allThread" : "1Thread"
+}
+
 /// Configuration for a PIR database.
 public struct PirDatabaseConfig: Sendable {
     /// Number of rows in the database.
@@ -149,9 +183,10 @@ public func pirProcessBenchmark<PirUtil: PirUtilProtocol>(
             "Process",
             String(describing: PirUtil.Scheme.self),
             config.encryptionConfig.description,
-            "entryCount=\(databaseConfig.entryCount)",
-            "entrySize=\(databaseConfig.entrySizeInBytes)",
-            "keyCompression=\(config.keywordPirConfig.keyCompression)",
+            formatEntryCountAndSize(
+                count: config.databaseConfig.entryCount,
+                size: config.databaseConfig.entrySizeInBytes),
+            formatKeyCompression(config.keywordPirConfig.keyCompression),
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
         Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
@@ -230,7 +265,8 @@ struct IndexPirBenchmarkContext<Server: IndexPirServer, Client: IndexPirClient>
 public func indexPirBenchmark<PirUtil: PirUtilProtocol>(
     _: PirUtil.Type,
     // swiftlint:disable:next force_try
-    config: PirBenchmarkConfig<PirUtil.Scheme.Scalar> = try! .init()) -> () -> Void
+    config: PirBenchmarkConfig<PirUtil.Scheme.Scalar> = try! .init(),
+    callOptions: CallOptions = .default) -> () -> Void
 {
     // swiftlint:disable:next closure_body_length
     {
@@ -238,9 +274,11 @@ public func indexPirBenchmark<PirUtil: PirUtilProtocol>(
             "IndexPir",
             String(describing: PirUtil.Scheme.self),
             config.encryptionConfig.description,
-            "entryCount=\(config.databaseConfig.entryCount)",
-            "entrySize=\(config.databaseConfig.entrySizeInBytes)",
-            "keyCompression=\(config.indexPirConfig.keyCompression)",
+            formatEntryCountAndSize(
+                count: config.databaseConfig.entryCount,
+                size: config.databaseConfig.entrySizeInBytes),
+            formatKeyCompression(config.indexPirConfig.keyCompression),
+            formatCallOptions(callOptions),
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
         Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
@@ -262,7 +300,8 @@ public func indexPirBenchmark<PirUtil: PirUtilProtocol>(
                     .native(context: context)
                 let response = try await benchmarkContext.server.computeResponse(
                     to: deserializedQuery,
-                    using: deserializedEvalKey)
+                    using: deserializedEvalKey,
+                    callOptions: callOptions)
                 try blackHole(response.proto())
 
                 benchmark.stopMeasurement()
@@ -378,7 +417,8 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
 public func keywordPirBenchmark<PirUtil: PirUtilProtocol>(
     _: PirUtil.Type,
     // swiftlint:disable:next force_try
-    config: PirBenchmarkConfig<PirUtil.Scheme.Scalar> = try! .init()) -> () -> Void
+    config: PirBenchmarkConfig<PirUtil.Scheme.Scalar> = try! .init(),
+    callOptions: CallOptions = .default) -> () -> Void
 {
     // swiftlint:disable:next closure_body_length
     {
@@ -386,9 +426,11 @@ public func keywordPirBenchmark<PirUtil: PirUtilProtocol>(
             "KeywordPir",
             String(describing: PirUtil.Scheme.self),
             config.encryptionConfig.description,
-            "entryCount=\(config.databaseConfig.entryCount)",
-            "entrySize=\(config.databaseConfig.entrySizeInBytes)",
-            "keyCompression=\(config.keywordPirConfig.keyCompression)",
+            formatEntryCountAndSize(
+                count: config.databaseConfig.entryCount,
+                size: config.databaseConfig.entrySizeInBytes),
+            formatKeyCompression(config.keywordPirConfig.keyCompression),
+            formatCallOptions(callOptions),
         ].joined(separator: "/")
         // swiftlint:disable closure_parameter_position
         Benchmark(benchmarkName, configuration: config.benchmarkConfig) { (
@@ -412,7 +454,8 @@ public func keywordPirBenchmark<PirUtil: PirUtilProtocol>(
                     .native(context: context)
                 let response = try await benchmarkContext.server.computeResponse(
                     to: deserializedQuery,
-                    using: deserializedEvalKey)
+                    using: deserializedEvalKey,
+                    callOptions: callOptions)
                 try blackHole(response.proto())
 
                 benchmark.stopMeasurement()

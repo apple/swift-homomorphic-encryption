@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public import Algorithms
 public import ModularArithmetic
+import Foundation
 
 /// Brakerski-Fan-Vercauteren cryptosystem.
 public enum Bfv<T: ScalarType>: HeScheme {
@@ -219,6 +221,97 @@ public enum Bfv<T: ScalarType>: HeScheme {
     // MARK: Inner product
 
     @inlinable
+    static func validateInnerProductInput(_ lhs: CanonicalCiphertext,
+                                          _ rhs: CanonicalCiphertext) throws
+    {
+        try validateEquality(of: lhs.context, and: rhs.context)
+        guard lhs.polys.count == freshCiphertextPolyCount, lhs.correctionFactor == 1 else {
+            throw HeError.invalidCiphertext(lhs)
+        }
+        guard rhs.polys.count == freshCiphertextPolyCount, rhs.correctionFactor == 1 else {
+            throw HeError.invalidCiphertext(rhs)
+        }
+    }
+
+    @inlinable
+    public static func innerProductAsync(_ lhs: some Collection<CanonicalCiphertext>,
+                                         _ rhs: some Collection<CanonicalCiphertext>) async throws
+        -> CanonicalCiphertext
+    {
+        // swiftlint:disable:next local_doc_comment
+        /// Computes accumulator += lhs * rhs
+        @Sendable
+        func lazyMultiply(
+            _ lhs: CanonicalCiphertext,
+            _ rhs: CanonicalCiphertext,
+            to accumulator: inout [Array2d<T.DoubleWidth>]) throws
+        {
+            try validateInnerProductInput(lhs, rhs)
+
+            let lhsPolys = try computeBehzPolys(ciphertext: lhs)
+            let rhsPolys = try computeBehzPolys(ciphertext: rhs)
+            PolyRq.addingLazyProduct(lhsPolys[0], rhsPolys[0], to: &accumulator[0])
+            PolyRq.addingLazyProduct(lhsPolys[0], rhsPolys[1], to: &accumulator[1])
+            PolyRq.addingLazyProduct(lhsPolys[1], rhsPolys[0], to: &accumulator[1])
+            PolyRq.addingLazyProduct(lhsPolys[1], rhsPolys[1], to: &accumulator[2])
+        }
+
+        let firstCiphertext = lhs[lhs.startIndex]
+        let rnsTool = firstCiphertext.context.getRnsTool(moduliCount: firstCiphertext.moduli.count)
+        let moduliCount = rnsTool.qBskContext.moduli.count
+        let poly = firstCiphertext.polys[0]
+        let maxProductCount = rnsTool.qBskContext.maxLazyProductAccumulationCount() / 2
+        let polyContext = rnsTool.qBskContext
+
+        let pairs = Array(zip(lhs, rhs))
+        let chunks = pairs.evenlyChunked(in: Util.activeProcessorCount)
+
+        // Each task accumulates its chunk independently then reduces to [0, modulus).
+        let partials = try await chunks.concurrentMap(ordered: false) { chunk in
+            var accumulator = Array(
+                repeating: Array2d(
+                    data: Array(repeating: T.DoubleWidth(0), count: moduliCount * poly.degree),
+                    rowCount: moduliCount, columnCount: poly.degree),
+                count: 3)
+            var reduceCount = 0
+            for (lhsCipher, rhsCipher) in chunk {
+                try lazyMultiply(lhsCipher, rhsCipher, to: &accumulator)
+                reduceCount += 1
+                if reduceCount >= maxProductCount {
+                    reduceCount = 0
+                    reduceInPlace(accumulator: &accumulator, polyContext: polyContext)
+                }
+            }
+            reduceInPlace(accumulator: &accumulator, polyContext: polyContext)
+            return accumulator
+        }
+
+        // Merge: values are in [0, modulus) after reduceInPlace, so summing fits in DoubleWidth.
+        var merged = partials[0]
+        for partial in partials.dropFirst() {
+            for polyIndex in merged.indices {
+                for i in merged[polyIndex].data.indices {
+                    #if DEBUG
+                    let (result, didOverflow) = merged[polyIndex].data[i]
+                        .addingReportingOverflow(partial[polyIndex].data[i])
+                    assert(!didOverflow, "Overflow in polynomial addition at polyIndex \(polyIndex), index \(i)")
+                    merged[polyIndex].data[i] = result
+                    #else
+                    merged[polyIndex].data[i] &+= partial[polyIndex].data[i]
+                    #endif
+                }
+            }
+        }
+
+        var sum = try EvalCiphertext(
+            context: firstCiphertext.context,
+            polys: Array(repeating: .zero(context: rnsTool.qBskContext), count: 3),
+            correctionFactor: 1)
+        reduceToCiphertext(accumulator: merged, result: &sum)
+        return try dropExtendedBase(from: sum)
+    }
+
+    @inlinable
     public static func innerProduct(_ lhs: some Collection<CanonicalCiphertext>,
                                     _ rhs: some Collection<CanonicalCiphertext>) throws -> CanonicalCiphertext
     {
@@ -229,13 +322,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
             _ rhs: CanonicalCiphertext,
             to accumulator: inout [Array2d<T.DoubleWidth>]) throws
         {
-            try validateEquality(of: lhs.context, and: rhs.context)
-            guard lhs.polys.count == freshCiphertextPolyCount, lhs.correctionFactor == 1 else {
-                throw HeError.invalidCiphertext(lhs)
-            }
-            guard rhs.polys.count == freshCiphertextPolyCount, rhs.correctionFactor == 1 else {
-                throw HeError.invalidCiphertext(rhs)
-            }
+            try validateInnerProductInput(lhs, rhs)
 
             let lhsPolys = try computeBehzPolys(ciphertext: lhs)
             let rhsPolys = try computeBehzPolys(ciphertext: rhs)
@@ -306,26 +393,89 @@ public enum Bfv<T: ScalarType>: HeScheme {
         }
     }
 
+    /// Computes accumulator += ciphertext * plaintext
+    @inlinable
+    static func lazyMultiply(
+        ciphertext: EvalCiphertext,
+        plaintext: EvalPlaintext,
+        to accumulator: inout [Array2d<T.DoubleWidth>]) throws
+    {
+        try validateEquality(of: ciphertext.context, and: plaintext.context)
+        guard ciphertext.moduli.count == plaintext.moduli.count else {
+            throw HeError.incompatibleCiphertextAndPlaintext(ciphertext: ciphertext, plaintext: plaintext)
+        }
+        for (polyIndex, ciphertextPoly) in ciphertext.polys.enumerated() {
+            PolyRq.addingLazyProduct(ciphertextPoly, plaintext.poly, to: &accumulator[polyIndex])
+        }
+    }
+
+    @inlinable
+    public static func innerProductAsync(ciphertexts: some Collection<EvalCiphertext>,
+                                         plaintexts: some Collection<EvalPlaintext?>) async throws -> EvalCiphertext
+    {
+        precondition(plaintexts.count == ciphertexts.count)
+        guard var result = ciphertexts.first else {
+            preconditionFailure("Empty ciphertexts")
+        }
+        precondition(ciphertexts.allSatisfy { $0.polys.count == result.polys.count },
+                     "All ciphertexts must have the same polynomial count")
+        let poly = result.polys[0]
+        let maxProductCount = poly.context.maxLazyProductAccumulationCount()
+        let polyContext = result.polyContext()
+        let polyCount = result.polys.count
+        let dataCount = poly.data.count
+        let moduliCount = poly.moduli.count
+        let degree = poly.degree
+
+        let pairs = Array(zip(ciphertexts, plaintexts))
+        let chunks = pairs.evenlyChunked(in: Util.activeProcessorCount)
+
+        // Each task accumulates its chunk independently then reduces to [0, modulus).
+        let partials = try await chunks.concurrentMap(ordered: false) { chunk in
+            var accumulator = Array(
+                repeating: Array2d(
+                    data: Array(repeating: T.DoubleWidth(0), count: dataCount),
+                    rowCount: moduliCount, columnCount: degree),
+                count: polyCount)
+            var reduceCount = 0
+            for (ciphertext, plaintext) in chunk {
+                guard let plaintext else { continue }
+                try lazyMultiply(ciphertext: ciphertext, plaintext: plaintext, to: &accumulator)
+                reduceCount += 1
+                if reduceCount >= maxProductCount {
+                    reduceCount = 0
+                    reduceInPlace(accumulator: &accumulator, polyContext: polyContext)
+                }
+            }
+            reduceInPlace(accumulator: &accumulator, polyContext: polyContext)
+            return accumulator
+        }
+
+        // Merge: values are in [0, modulus) after reduceInPlace, so summing fits in DoubleWidth.
+        var merged = partials[0]
+        for partial in partials.dropFirst() {
+            for polyIndex in merged.indices {
+                for i in merged[polyIndex].data.indices {
+                    #if DEBUG
+                    let (result, didOverflow) = merged[polyIndex].data[i]
+                        .addingReportingOverflow(partial[polyIndex].data[i])
+                    assert(!didOverflow, "Overflow in polynomial addition at polyIndex \(polyIndex), index \(i)")
+                    merged[polyIndex].data[i] = result
+                    #else
+                    merged[polyIndex].data[i] &+= partial[polyIndex].data[i]
+                    #endif
+                }
+            }
+        }
+
+        reduceToCiphertext(accumulator: merged, result: &result)
+        return result
+    }
+
     @inlinable
     public static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
                                     plaintexts: some Collection<EvalPlaintext?>) throws -> EvalCiphertext
     {
-        // swiftlint:disable:next local_doc_comment
-        /// Computes accumulator += ciphertext * plaintext
-        func lazyMultiply(
-            ciphertext: EvalCiphertext,
-            plaintext: EvalPlaintext,
-            to accumulator: inout [Array2d<T.DoubleWidth>]) throws
-        {
-            try validateEquality(of: ciphertext.context, and: plaintext.context)
-            guard ciphertext.moduli.count == plaintext.moduli.count else {
-                throw HeError.incompatibleCiphertextAndPlaintext(ciphertext: ciphertext, plaintext: plaintext)
-            }
-            for (polyIndex, ciphertextPoly) in ciphertext.polys.enumerated() {
-                PolyRq.addingLazyProduct(ciphertextPoly, plaintext.poly, to: &accumulator[polyIndex])
-            }
-        }
-
         precondition(plaintexts.count == ciphertexts.count)
         guard var result = ciphertexts.first else {
             preconditionFailure("Empty ciphertexts")

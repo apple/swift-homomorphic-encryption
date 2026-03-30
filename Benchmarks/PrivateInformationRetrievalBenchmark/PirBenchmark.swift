@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,13 @@ nonisolated(unsafe) let benchmarks: () -> Void = {
     pirProcessBenchmark(PirUtil<Bfv<UInt32>>.self)()
     pirProcessBenchmark(PirUtil<Bfv<UInt64>>.self)()
 
-    indexPirBenchmark(PirUtil<Bfv<UInt32>>.self)()
-    indexPirBenchmark(PirUtil<Bfv<UInt64>>.self)()
+    indexPirBenchmark(PirUtil<Bfv<UInt32>>.self, callOptions: .multiThreaded)()
+    indexPirBenchmark(PirUtil<Bfv<UInt32>>.self, callOptions: .singleThreaded)()
+    indexPirBenchmark(PirUtil<Bfv<UInt64>>.self, callOptions: .multiThreaded)()
+    indexPirBenchmark(PirUtil<Bfv<UInt64>>.self, callOptions: .singleThreaded)()
 
-    keywordPirBenchmark(PirUtil<Bfv<UInt32>>.self)()
-    keywordPirBenchmark(PirUtil<Bfv<UInt64>>.self)()
+    keywordPirBenchmark(PirUtil<Bfv<UInt32>>.self, callOptions: .multiThreaded)()
+    keywordPirBenchmark(PirUtil<Bfv<UInt32>>.self, callOptions: .singleThreaded)()
+    keywordPirBenchmark(PirUtil<Bfv<UInt64>>.self, callOptions: .multiThreaded)()
+    keywordPirBenchmark(PirUtil<Bfv<UInt64>>.self, callOptions: .singleThreaded)()
 }

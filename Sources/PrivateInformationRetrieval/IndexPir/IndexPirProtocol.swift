@@ -422,7 +422,8 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
         row: IndexDatabaseRow,
         trials: Int,
         context: PirUtil.Scheme.Context,
-        using _: PirUtil.Type) async throws -> ShardValidationResult<PirUtil.Scheme>
+        using _: PirUtil.Type,
+        callOptions: CallOptions = .default) async throws -> ShardValidationResult<PirUtil.Scheme>
         where PirUtil.Scheme == Scheme
     {
         guard trials > 0 else {
@@ -446,7 +447,8 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
             let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
             let trialQuery = try client.generateQuery(at: row.index, using: secretKey)
             let computeTime = try await clock.measure {
-                response = try await server.computeResponse(to: trialQuery, using: trialEvaluationKey)
+                response = try await server.computeResponse(
+                    to: trialQuery, using: trialEvaluationKey, callOptions: callOptions)
             }
             let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
             minNoiseBudget = min(minNoiseBudget, noiseBudget)
@@ -590,14 +592,31 @@ public protocol IndexPirServer: Sendable {
                         with context: Scheme.Context,
                         using parameter: IndexPirParameter) async throws -> Database
 
-    /// Compute the encrypted response to a query lookup.
+    /// Compute the encrypted response to a query lookup with an option to turn off multi-threading
+    /// - Parameters:
+    ///   - query: Encrypted query with one or more indices.
+    ///   - evaluationKey: Evaluation key to aid in the server computation.
+    ///   - callOptions: runtime configs (e.g. multi-threading)
+    /// - Returns: The encrypted response.
+    /// - Throws: Error upon failure to compute a response.
+    func computeResponse(to query: Query,
+                         using evaluationKey: EvaluationKey<Scheme>,
+                         callOptions: CallOptions) async throws -> Response
+}
+
+extension IndexPirServer {
+    /// Compute the encrypted response to a query lookup with as many threads as possible.
     /// - Parameters:
     ///   - query: Encrypted query with one or more indices.
     ///   - evaluationKey: Evaluation key to aid in the server computation.
     /// - Returns: The encrypted response.
     /// - Throws: Error upon failure to compute a response.
-    func computeResponse(to query: Query,
-                         using evaluationKey: EvaluationKey<Scheme>) async throws -> Response
+    @inlinable
+    public func computeResponse(to query: Query,
+                                using evaluationKey: EvaluationKey<Scheme>) async throws -> Response
+    {
+        try await computeResponse(to: query, using: evaluationKey, callOptions: .default)
+    }
 }
 
 extension IndexPirServer {

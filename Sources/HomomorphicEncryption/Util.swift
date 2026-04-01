@@ -135,3 +135,82 @@ extension Array where Element: ScalarType {
         return width32.reduce(Width32<Self.Element>(1)) { $0 * $1 }
     }
 }
+
+extension Collection where Self.Element: Sendable {
+    @inlinable
+    package func concurrentMap<T: Sendable>(
+        ordered: Bool = true,
+        _ transform: @Sendable @escaping (Element) async throws -> T) async throws -> [T]
+    {
+        // Fast path for empty collection
+        if isEmpty {
+            return []
+        }
+
+        // We use enumerated indices (Int) for stable ordering.
+        return try await withThrowingTaskGroup(of: (Int, T).self) { group in
+            for (index, element) in self.enumerated() {
+                group.addTask {
+                    try await (index, transform(element))
+                }
+            }
+
+            if ordered {
+                var orderedBuffer = [T?](repeating: nil, count: self.count)
+                for try await (index, value) in group {
+                    orderedBuffer[index] = value
+                }
+                return orderedBuffer.compactMap(\.self)
+            }
+
+            var unorderedResults: [T] = []
+            unorderedResults.reserveCapacity(self.count)
+            for try await (_, value) in group {
+                unorderedResults.append(value)
+            }
+            return unorderedResults
+        }
+    }
+
+    @inlinable
+    package mutating func concurrentConsumingMap<T: Sendable>(
+        ordered: Bool = true,
+        _ transform: @Sendable @escaping (consuming Element) async throws -> T) async throws -> [T]
+    {
+        // Fast path for empty collection
+        if isEmpty {
+            return []
+        }
+
+        // We use enumerated indices (Int) for stable ordering.
+        return try await withThrowingTaskGroup(of: (Int, T).self) { group in
+            for (index, element) in self.enumerated() {
+                group.addTask {
+                    try await (index, transform(element))
+                }
+            }
+
+            if ordered {
+                var orderedBuffer = [T?](repeating: nil, count: self.count)
+                for try await (index, value) in group {
+                    orderedBuffer[index] = value
+                }
+                return orderedBuffer.compactMap(\.self)
+            }
+
+            var unorderedResults: [T] = []
+            unorderedResults.reserveCapacity(self.count)
+            for try await (_, value) in group {
+                unorderedResults.append(value)
+            }
+            return unorderedResults
+        }
+    }
+}
+
+@usableFromInline
+enum Util {
+    @usableFromInline static var activeProcessorCount: Int {
+        ProcessInfo.processInfo.activeProcessorCount
+    }
+}

@@ -476,6 +476,7 @@ public enum ProcessKeywordDatabase {
     ///   - trials: How many PIR calls to validate. Must be > 0.
     ///   - context: Context for HE computation.
     ///   - _: Type for auxiliary functionalities used in PIR.
+    ///   - callOptions: runtime configurations for e.g. multi-threading preference.
     /// - Returns: The shard validation results.
     /// - Throws: Error upon failure to validate the sharding.
     /// - seealso: ``ProcessKeywordDatabase/processShard(shard:with:using:onEvent:)`` to process a shard before
@@ -486,7 +487,8 @@ public enum ProcessKeywordDatabase {
         row: KeywordValuePair,
         trials: Int,
         context: PirUtil.Scheme.Context,
-        using _: PirUtil.Type) async throws -> ShardValidationResult<PirUtil.Scheme>
+        using _: PirUtil.Type,
+        callOptions: CallOptions = .default) async throws -> ShardValidationResult<PirUtil.Scheme>
     {
         guard trials > 0 else {
             throw PirError.validationError("Invalid trialsPerShard: \(trials)")
@@ -514,7 +516,8 @@ public enum ProcessKeywordDatabase {
             let trialEvaluationKey = try client.generateEvaluationKey(using: secretKey)
             let trialQuery = try client.generateQuery(at: row.keyword, using: secretKey)
             let computeTime = try await clock.measure {
-                response = try await server.computeResponse(to: trialQuery, using: trialEvaluationKey)
+                response = try await server.computeResponse(
+                    to: trialQuery, using: trialEvaluationKey, callOptions: callOptions)
             }
             let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
             minNoiseBudget = min(minNoiseBudget, noiseBudget)

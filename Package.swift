@@ -81,6 +81,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.2"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.10.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
@@ -102,6 +103,7 @@ let package = Package(
         .target(
             name: "HomomorphicEncryption",
             dependencies: [
+                .product(name: "Algorithms", package: "swift-algorithms"),
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
@@ -123,6 +125,7 @@ let package = Package(
             name: "PrivateInformationRetrieval",
             dependencies: ["HomomorphicEncryption",
                            .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
+                           .product(name: "Collections", package: "swift-collections"),
                            .product(name: "Numerics", package: "swift-numerics")],
             swiftSettings: librarySettings),
         .target(

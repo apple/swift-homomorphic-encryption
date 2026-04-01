@@ -13,6 +13,7 @@
 // limitations under the License.
 
 public import AsyncAlgorithms
+public import DequeModule
 public import HomomorphicEncryption
 public import ModularArithmetic
 
@@ -25,7 +26,7 @@ public protocol PirUtilProtocol: Sendable {
     /// HE ciphertext in canonical format.
     typealias CanonicalCiphertext = Scheme.CanonicalCiphertext
 
-    /// Expand a small number of ciphertexts to a large number of ciphertexts.
+    /// Expand a small number of ciphertexts to a large number of ciphertexts with as many threads as possible
     ///
     /// Each output will be the encryption of a constant poly, where the constant of i-th output is the i-th coefficient
     /// in the inputs.
@@ -39,6 +40,23 @@ public protocol PirUtilProtocol: Sendable {
         outputCount: Int,
         using evaluationKey: EvaluationKey<Scheme>) async throws -> [CanonicalCiphertext]
 
+    /// Expand a small number of ciphertexts to a large number of ciphertexts with the option to turn off
+    /// multi-threading.
+    ///
+    /// Each output will be the encryption of a constant poly, where the constant of i-th output is the i-th coefficient
+    /// in the inputs.
+    /// - Parameters:
+    ///   - ciphertexts: ciphertexts to expand
+    ///   - outputCount: how many outputs are expected
+    ///   - evaluationKey: evaluation key used for rotation and apply galois
+    ///   - callOptions: runtime configs (e.g. multi-threading).
+    /// - Returns: the expanded ciphertext
+    static func expand(
+        ciphertexts: consuming [CanonicalCiphertext],
+        outputCount: Int,
+        using evaluationKey: EvaluationKey<Scheme>,
+        callOptions: CallOptions) async throws -> [CanonicalCiphertext]
+
     /// Compress an binary array into ciphertexts such that the expanded ciphertexts is the original array.
     ///
     /// - Parameters:
@@ -51,9 +69,121 @@ public protocol PirUtilProtocol: Sendable {
         oneIndices: [Int],
         context: Scheme.Context,
         using secretKey: SecretKey<Scheme>) throws -> [CanonicalCiphertext]
+
+    /// Compute the PIR response for a query with as many possible threads as possible
+    /// - Parameters:
+    ///   - query: The encrypted query.
+    ///   - evaluationKey: Evaluation key for homomorphic operations.
+    ///   - databases: The processed databases.
+    ///   - parameter: PIR parameters.
+    ///   - context: The HE context.
+    /// - Returns: The encrypted response.
+    static func computeResponse(
+        to query: Query<Scheme>,
+        using evaluationKey: EvaluationKey<Scheme>,
+        databases: [ProcessedDatabase<Scheme>],
+        parameter: IndexPirParameter,
+        context: Scheme.Context) async throws -> Response<Scheme>
+
+    // swiftlint:disable function_parameter_count
+
+    /// Compute the PIR response for a query with an option to turn-off multi-threading.
+    /// - Parameters:
+    ///   - query: The encrypted query.
+    ///   - evaluationKey: Evaluation key for homomorphic operations.
+    ///   - databases: The processed databases.
+    ///   - parameter: PIR parameters.
+    ///   - context: The HE context.
+    ///   - callOptions: runtime configs (e.g. multi-threading)
+    /// - Returns: The encrypted response.
+    static func computeResponse(
+        to query: Query<Scheme>,
+        using evaluationKey: EvaluationKey<Scheme>,
+        databases: [ProcessedDatabase<Scheme>],
+        parameter: IndexPirParameter,
+        context: Scheme.Context,
+        callOptions: CallOptions) async throws -> Response<Scheme>
+
+    /// Compute the response for one chunk of the database with as many threads as possible.
+    /// - Parameters:
+    ///   - expandedDim0Query: Expanded queries for the first dimension.
+    ///   - expandedRemainingQuery: Expanded queries for remaining dimensions.
+    ///   - dataChunk: Chunk of plaintexts from the database.
+    ///   - evaluationKey: Evaluation key for homomorphic operations.
+    ///   - parameter: PIR parameters.
+    /// - Returns: The ciphertext response for this chunk.
+    static func computeResponseForOneChunk<
+        ExpandedQueries: Sendable & Collection<CanonicalCiphertext>,
+        DataChunk: Sendable & Collection<Plaintext<Scheme, Eval>?>,
+    >(
+        expandedDim0Query: [Ciphertext<Scheme, Eval>],
+        expandedRemainingQuery: ExpandedQueries,
+        dataChunk: DataChunk,
+        using evaluationKey: EvaluationKey<Scheme>,
+        parameter: IndexPirParameter) async throws -> Ciphertext<Scheme, Coeff>
+        where ExpandedQueries.Index == Int, DataChunk.Index == Int
+
+    /// Compute the response for one chunk of the database with the option to disable multi-threading.
+    /// - Parameters:
+    ///   - expandedDim0Query: Expanded queries for the first dimension.
+    ///   - expandedRemainingQuery: Expanded queries for remaining dimensions.
+    ///   - dataChunk: Chunk of plaintexts from the database.
+    ///   - evaluationKey: Evaluation key for homomorphic operations.
+    ///   - parameter: PIR parameters.
+    ///   - callOptions: runtime configs (e.g. multi-threading).
+    /// - Returns: The ciphertext response for this chunk.
+    static func computeResponseForOneChunk<
+        ExpandedQueries: Sendable & Collection<CanonicalCiphertext>,
+        DataChunk: Sendable & Collection<Plaintext<Scheme, Eval>?>,
+    >(
+        expandedDim0Query: [Ciphertext<Scheme, Eval>],
+        expandedRemainingQuery: ExpandedQueries,
+        dataChunk: DataChunk,
+        using evaluationKey: EvaluationKey<Scheme>,
+        parameter: IndexPirParameter,
+        callOptions: CallOptions) async throws -> Ciphertext<Scheme, Coeff>
+        where ExpandedQueries.Index == Int, DataChunk.Index == Int
 }
 
 extension PirUtilProtocol {
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func computeResponseForOneChunk<
+        ExpandedQueries: Sendable & Collection<CanonicalCiphertext>,
+        DataChunk: Sendable & Collection<Plaintext<Scheme, Eval>?>,
+    >(
+        expandedDim0Query: [Ciphertext<Scheme, Eval>],
+        expandedRemainingQuery: ExpandedQueries,
+        dataChunk: DataChunk,
+        using evaluationKey: EvaluationKey<Scheme>,
+        parameter: IndexPirParameter) async throws -> Ciphertext<Scheme, Coeff>
+        where ExpandedQueries.Index == Int, DataChunk.Index == Int
+    {
+        try await computeResponseForOneChunk(expandedDim0Query: expandedDim0Query,
+                                             expandedRemainingQuery: expandedRemainingQuery,
+                                             dataChunk: dataChunk,
+                                             using: evaluationKey,
+                                             parameter: parameter,
+                                             callOptions: .default)
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func computeResponse(
+        to query: Query<Scheme>,
+        using evaluationKey: EvaluationKey<Scheme>,
+        databases: [ProcessedDatabase<Scheme>],
+        parameter: IndexPirParameter,
+        context: Scheme.Context) async throws -> Response<Scheme>
+    {
+        try await computeResponse(to: query,
+                                  using: evaluationKey,
+                                  databases: databases,
+                                  parameter: parameter,
+                                  context: context,
+                                  callOptions: .default)
+    }
+
     /// Convert one encrypted polynomial `c` to two encrypted polynomials, `p` and `q`.
     ///
     /// It is guaranteed that:
@@ -120,7 +250,8 @@ extension PirUtilProtocol {
         outputCount: Int,
         logStep: Int,
         expectedHeight: Int,
-        using evaluationKey: EvaluationKey<Scheme>) async throws -> [CanonicalCiphertext]
+        using evaluationKey: EvaluationKey<Scheme>,
+        callOptions: CallOptions) async throws -> [CanonicalCiphertext]
     {
         precondition(outputCount >= 0 && outputCount <= ciphertext.degree)
         var output = ciphertext
@@ -138,27 +269,58 @@ extension PirUtilProtocol {
             ciphertext,
             logStep: logStep,
             using: evaluationKey)
-        let firstHalf = try await expandCiphertext(
-            p0,
-            outputCount: firstHalfCount,
-            logStep: logStep + 1,
-            expectedHeight: expectedHeight,
-            using: evaluationKey)
-        let secondHalf = try await expandCiphertext(
-            p1,
-            outputCount: secondHalfCount,
-            logStep: logStep + 1,
-            expectedHeight: expectedHeight,
-            using: evaluationKey)
+        var firstHalf: [CanonicalCiphertext] = []
+        var secondHalf: [CanonicalCiphertext] = []
+        let taskLeft: @Sendable () async throws -> [CanonicalCiphertext] = {
+            try await expandCiphertext(
+                p0,
+                outputCount: firstHalfCount,
+                logStep: logStep + 1,
+                expectedHeight: expectedHeight,
+                using: evaluationKey,
+                callOptions: callOptions)
+        }
+        let taskRight: @Sendable () async throws -> [CanonicalCiphertext] = {
+            try await expandCiphertext(
+                p1,
+                outputCount: secondHalfCount,
+                logStep: logStep + 1,
+                expectedHeight: expectedHeight,
+                using: evaluationKey,
+                callOptions: callOptions)
+        }
+        if callOptions.multiThreading {
+            async let asyncFirstHalf = taskLeft()
+            async let asyncSecondHalf = taskRight()
+            firstHalf = try await asyncFirstHalf
+            secondHalf = try await asyncSecondHalf
+        } else {
+            firstHalf = try await taskLeft()
+            secondHalf = try await taskRight()
+        }
         return zip(firstHalf.prefix(secondHalfCount), secondHalf).flatMap { [$0, $1] } + firstHalf
             .suffix(firstHalfCount - secondHalfCount)
+    }
+
+    @inlinable
+    // swiftlint:disable:next missing_docs attributes
+    public static func expand(ciphertexts: consuming [CanonicalCiphertext],
+                              outputCount: Int,
+                              using evaluationKey: EvaluationKey<Scheme>) async throws -> [CanonicalCiphertext]
+    {
+        try await expand(
+            ciphertexts: ciphertexts,
+            outputCount: outputCount,
+            using: evaluationKey,
+            callOptions: .default)
     }
 
     /// Expand a ciphertext array into given number of encrypted constant polynomials.
     @inlinable
     public static func expand(ciphertexts: consuming [CanonicalCiphertext],
                               outputCount: Int,
-                              using evaluationKey: EvaluationKey<Scheme>) async throws -> [CanonicalCiphertext]
+                              using evaluationKey: EvaluationKey<Scheme>,
+                              callOptions: CallOptions = .default) async throws -> [CanonicalCiphertext]
     {
         precondition((ciphertexts.count - 1) * ciphertexts[0].degree < outputCount)
         precondition(ciphertexts.count * ciphertexts[0].degree >= outputCount)
@@ -168,16 +330,21 @@ extension PirUtilProtocol {
             remainingOutputs -= outputToGenerate
             return outputToGenerate
         }
-        let expanded: [[CanonicalCiphertext]] = try await .init((0..<ciphertexts.count).async
-            .map { [ciphertexts] ciphertextIndex in
-                let outputToGenerate = lengths[ciphertextIndex]
-                return try await expandCiphertext(
-                    ciphertexts[ciphertextIndex],
-                    outputCount: outputToGenerate,
-                    logStep: 1,
-                    expectedHeight: outputToGenerate.ceilLog2,
-                    using: evaluationKey)
-            })
+        let transform: @Sendable (Int) async throws -> [CanonicalCiphertext] = { [ciphertexts] ciphertextIndex in
+            let outputToGenerate = lengths[ciphertextIndex]
+            return try await expandCiphertext(
+                ciphertexts[ciphertextIndex],
+                outputCount: outputToGenerate,
+                logStep: 1,
+                expectedHeight: outputToGenerate.ceilLog2,
+                using: evaluationKey,
+                callOptions: callOptions)
+        }
+        let expanded: [[CanonicalCiphertext]] = if callOptions.multiThreading {
+            try await .init((0..<ciphertexts.count).concurrentMap(transform))
+        } else {
+            try await .init((0..<ciphertexts.count).async.map(transform))
+        }
         return expanded.flatMap(\.self)
     }
 
@@ -229,6 +396,152 @@ extension PirUtilProtocol {
         }
         return try plaintexts.map { plaintext in try plaintext.encrypt(using: secretKey) }
     }
+
+    /// Default implementation of computeResponseForOneChunk.
+    @inlinable
+    public static func computeResponseForOneChunk<
+        ExpandedQueries: Sendable & Collection<CanonicalCiphertext>,
+        DataChunk: Sendable & Collection<Plaintext<Scheme, Eval>?>,
+    >(
+        expandedDim0Query: [Ciphertext<Scheme, Eval>],
+        expandedRemainingQuery: ExpandedQueries,
+        dataChunk: DataChunk,
+        using evaluationKey: EvaluationKey<Scheme>,
+        parameter: IndexPirParameter,
+        callOptions: CallOptions) async throws -> Ciphertext<Scheme, Coeff>
+        where ExpandedQueries.Index == Int, DataChunk.Index == Int
+    {
+        let perChunkPlaintextCount: Int = parameter.dimensions.product()
+        let databaseColumnsCount = perChunkPlaintextCount / parameter.dimensions[0]
+        precondition(databaseColumnsCount == 1 || databaseColumnsCount == expandedRemainingQuery.count)
+
+        let computePtCtInnerProduct: @Sendable (Int) async throws -> Scheme.CanonicalCiphertext = { columnIndex in
+            let startIndex = dataChunk.startIndex + expandedDim0Query.count * columnIndex
+            let endIndex = min(startIndex + expandedDim0Query.count, dataChunk.endIndex)
+            let plaintexts = dataChunk[startIndex..<endIndex]
+            if callOptions.multiThreading {
+                return try await Scheme.innerProductAsync(ciphertexts: expandedDim0Query,
+                                                          plaintexts: plaintexts).convertToCanonicalFormat()
+            }
+            return try await Scheme.innerProduct(ciphertexts: expandedDim0Query, plaintexts: plaintexts)
+                .convertToCanonicalFormat()
+        }
+
+        var intermediateResults: [Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>] = if callOptions
+            .multiThreading
+        {
+            try await (0..<databaseColumnsCount).concurrentMap(computePtCtInnerProduct)
+        } else {
+            try await .init((0..<databaseColumnsCount).async.map(computePtCtInnerProduct))
+        }
+
+        let computeCtCtInnerProduct: @Sendable (Int, Int, Int, [Scheme.CanonicalCiphertext]) async throws -> Scheme
+            .CanonicalCiphertext = { startIndex, currentIndex, dimensionSize, currentResults in
+                let vector0 = expandedRemainingQuery[currentIndex..<currentIndex + dimensionSize]
+                let vector1 = currentResults[startIndex..<startIndex + dimensionSize]
+                var product: Scheme.CanonicalCiphertext = if callOptions.multiThreading {
+                    try await Scheme.innerProductAsync(vector0, vector1)
+                } else {
+                    try Scheme.innerProduct(vector0, vector1)
+                }
+                try await product.relinearize(using: evaluationKey)
+                return product
+            }
+        var queryStartingIndex = expandedRemainingQuery.startIndex
+        for await dimensionSize in parameter.dimensions.dropFirst().async {
+            let currentIndex = queryStartingIndex
+            let lastResult = intermediateResults
+            if callOptions.multiThreading {
+                intermediateResults = try await Array(stride(
+                    from: 0,
+                    to: intermediateResults.count,
+                    by: dimensionSize))
+                    .concurrentMap { try await computeCtCtInnerProduct($0, currentIndex, dimensionSize, lastResult) }
+            } else {
+                intermediateResults = try await .init(stride(
+                    from: 0,
+                    to: intermediateResults.count,
+                    by: dimensionSize)
+                    .async.map { try await computeCtCtInnerProduct($0, currentIndex, dimensionSize, lastResult) })
+            }
+            queryStartingIndex += dimensionSize
+        }
+
+        precondition(intermediateResults.count == 1,
+                     "There should be only 1 ciphertext in the final result for each chunk")
+        try await intermediateResults[0].modSwitchDownToSingle()
+        return try await intermediateResults[0].convertToCoeffFormat()
+    }
+
+    /// Default implementation of computeResponse.
+    @inlinable
+    public static func computeResponse(
+        to query: Query<Scheme>,
+        using evaluationKey: EvaluationKey<Scheme>,
+        databases: [ProcessedDatabase<Scheme>],
+        parameter: IndexPirParameter,
+        context: Scheme.Context,
+        callOptions: CallOptions) async throws -> Response<Scheme>
+    {
+        guard databases.count == 1 || databases.count >= query.indicesCount else {
+            throw PirError.invalidBatchSize(queryCount: query.indicesCount, databaseCount: databases.count)
+        }
+        let expandedQueries = try await expand(ciphertexts:
+            query.ciphertexts,
+            outputCount: parameter.expandedQueryCount * query.indicesCount,
+            using: evaluationKey,
+            callOptions: callOptions)
+
+        let chunkCount = parameter.encodedEntrySize.dividingCeil(context.bytesPerPlaintext, variableTime: true)
+
+        func computeResponse(ciphertextForEachQuery: consuming Deque<Deque<CanonicalCiphertext>>) async throws
+            -> [[Ciphertext<Scheme, Coeff>]]
+        {
+            var enumerated = ciphertextForEachQuery.enumerated()
+            let computeResponseChunk: @Sendable ((Int, Deque<CanonicalCiphertext>)) async throws
+                -> [Ciphertext<Scheme, Coeff>] = { enumerated in
+                    var (queryIndex, queryCiphertexts) = enumerated
+                    let database = databases[databases.count == 1 ? 0 : queryIndex]
+                    let firstDimensionQueries: [Ciphertext<Scheme, Eval>] = if callOptions.multiThreading {
+                        try await queryCiphertexts[0..<parameter.dimensions[0]]
+                            .concurrentMap { ciphertext in
+                                try ciphertext.convertToEvalFormat()
+                            }
+                    } else {
+                        try await .init(queryCiphertexts[0..<parameter.dimensions[0]].async
+                            .map { try $0.convertToEvalFormat() })
+                    }
+                    queryCiphertexts.removeFirst(parameter.dimensions[0])
+                    let perChunkPlaintextCount = database.count / chunkCount
+                    let computeRemainingDimensions: @Sendable (Int) async throws -> Ciphertext<Scheme, Coeff> =
+                        { [queryCiphertexts, firstDimensionQueries] startIndex in
+                            try await Self.computeResponseForOneChunk(
+                                expandedDim0Query: firstDimensionQueries,
+                                expandedRemainingQuery: queryCiphertexts,
+                                dataChunk: database
+                                    .plaintexts[startIndex..<startIndex + perChunkPlaintextCount],
+                                using: evaluationKey,
+                                parameter: parameter,
+                                callOptions: callOptions)
+                        }
+                    if callOptions.multiThreading {
+                        return try await Array(stride(from: 0, to: database.count, by: perChunkPlaintextCount))
+                            .concurrentMap(computeRemainingDimensions)
+                    }
+                    return try await .init(stride(from: 0, to: database.count, by: perChunkPlaintextCount).async
+                        .map(computeRemainingDimensions))
+                }
+            if callOptions.multiThreading {
+                return try await enumerated.concurrentConsumingMap(computeResponseChunk)
+            }
+            return try await .init(enumerated.async.map(computeResponseChunk))
+        }
+        let responseCiphertexts = try await computeResponse(ciphertextForEachQuery:
+            expandedQueries.chunk(by: parameter.expandedQueryCount))
+        return Response(ciphertexts: responseCiphertexts)
+    }
+
+    // swiftlint:enable function_parameter_count
 }
 
 public enum PirUtil<Scheme: HeScheme>: PirUtilProtocol {}

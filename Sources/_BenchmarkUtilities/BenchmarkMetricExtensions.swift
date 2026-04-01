@@ -83,7 +83,9 @@ public struct EncryptionParametersConfig: Sendable {
 
 extension EncryptionParametersConfig: CustomStringConvertible {
     public var description: String {
-        "N=\(polyDegree)/logt=\(plaintextModulusBits)/logq=\(coefficientModulusBits.description)"
+        let tStr = plaintextModulusBits.map { "\($0)" }.joined(separator: "_")
+        let qStr = coefficientModulusBits.map { "\($0)" }.joined(separator: "_")
+        return "N_\(polyDegree)_t_\(tStr)_q_\(qStr)"
     }
 }
 

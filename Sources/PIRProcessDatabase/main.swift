@@ -449,14 +449,22 @@ struct ProcessDatabase: AsyncParsableCommand {
             logger.info("Validating shard")
             let requestIndex = Int.random(in: 0..<shard.count)
             let expected = shard[requestIndex]
+            let row = IndexDatabaseRow(index: requestIndex, value: expected)
 
-            let validationResults = try await processed.validate(
-                row: IndexDatabaseRow(index: requestIndex, value: expected),
+            let multiThreadResults = try await processed.validate(
+                row: row,
                 trials: trialsPerShard,
                 context: context,
-                using: PirUtil.self)
-            let description = try validationResults.description()
-            logger.info("ValidationResults \(description)")
+                using: PirUtil.self,
+                callOptions: .multiThreaded)
+            let singleThreadResults = try await processed.validate(
+                row: row,
+                trials: trialsPerShard,
+                context: context,
+                using: PirUtil.self,
+                callOptions: .singleThreaded)
+            let results = try multiThreadResults.combinedDescription(singleThreaded: singleThreadResults)
+            logger.info("ValidationResults \(results)")
         }
         return processed.evaluationKeyConfig
     }
@@ -636,12 +644,20 @@ struct ProcessDatabase: AsyncParsableCommand {
                 throw PirError.emptyDatabase
             }
             logger.info("Validating shard")
-            let validationResults = try await ProcessKeywordDatabase
+            let keywordRow = KeywordValuePair(keyword: row.key, value: row.value)
+
+            let multiThreadResults = try await ProcessKeywordDatabase
                 .validateShard(shard: processed,
-                               row: KeywordValuePair(keyword: row.key, value: row.value),
-                               trials: config.trialsPerShard, context: context, using: PirUtil.self)
-            let description = try validationResults.description()
-            logger.info("ValidationResults \(description)")
+                               row: keywordRow,
+                               trials: config.trialsPerShard, context: context, using: PirUtil.self,
+                               callOptions: .multiThreaded)
+            let singleThreadResults = try await ProcessKeywordDatabase
+                .validateShard(shard: processed,
+                               row: keywordRow,
+                               trials: config.trialsPerShard, context: context, using: PirUtil.self,
+                               callOptions: .singleThreaded)
+            let results = try multiThreadResults.combinedDescription(singleThreaded: singleThreadResults)
+            logger.info("ValidationResults \(results)")
         }
 
         let outputDatabaseFilename = config.outputDatabase.replacingOccurrences(
@@ -682,38 +698,43 @@ struct ProcessDatabase: AsyncParsableCommand {
 }
 
 extension ShardValidationResult {
-    /// Returns a description of processed database validation.
-    func description() throws -> String {
+    /// Returns a combined description of processed database validation for both threading modes.
+    func combinedDescription(singleThreaded other: ShardValidationResult) throws -> String {
         func sizeString(byteCount: Int, count: Int, label: String) -> String {
             let sizeKB = String(format: "%.01f", Double(byteCount) / 1000.0)
             return "\(sizeKB) KB (\(count) \(label))"
         }
 
-        var descriptionDict = [String: String]()
-        descriptionDict["query size"] = try sizeString(byteCount: query.size(), count: query.ciphertexts.count,
-                                                       label: "ciphertexts")
-        descriptionDict["evaluation key size"] = try sizeString(
-            byteCount: evaluationKey.size(),
-            count: evaluationKey.config.keyCount,
-            label: "keys")
-        descriptionDict["response size"] = try sizeString(byteCount: response.size(),
-                                                          count: response.ciphertexts.flatMap(\.self).count,
-                                                          label: "ciphertexts")
-        descriptionDict["noise budget"] = String(format: "%.01f", noiseBudget)
+        let multiMs = computeTimes.sorted().map(\.milliseconds)
+        let singleMs = other.computeTimes.sorted().map(\.milliseconds)
 
-        let runtimeString = computeTimes.sorted().map { runtime in
-            String(format: "%.01f", runtime.milliseconds)
-        }.joined(separator: ", ")
-        descriptionDict["runtime (ms)"] = "[\(runtimeString)]"
-        descriptionDict["entry count per response"] = "\(entryCountPerResponse)"
+        let speedupValues = zip(singleMs, multiMs).compactMap { s, m in m > 0 ? s / m : nil }
+        let speedupString = if speedupValues.count == 1, let value = speedupValues.first {
+            String(format: "%.02fx", value)
+        } else if let minSpeedup = speedupValues.min(), let maxSpeedup = speedupValues.max() {
+            String(format: "%.02fx - %.02fx", minSpeedup, maxSpeedup)
+        } else {
+            "N/A"
+        }
 
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        // swiftlint:disable:next force_try
-        let data = try! encoder.encode(descriptionDict)
-        // swiftlint:disable:next optional_data_string_conversion
-        let description = String(decoding: data, as: UTF8.self)
-        return description.replacingOccurrences(of: "\"", with: "")
+        let pairs: [(String, String)] = try [
+            ("query size", sizeString(byteCount: query.size(), count: query.ciphertexts.count,
+                                      label: "ciphertexts")),
+            ("evaluation key size", sizeString(byteCount: evaluationKey.size(),
+                                               count: evaluationKey.config.keyCount, label: "keys")),
+            ("response size", sizeString(byteCount: response.size(),
+                                         count: response.ciphertexts.flatMap(\.self).count,
+                                         label: "ciphertexts")),
+            ("noise budget", String(format: "%.01f", noiseBudget)),
+            ("entry count per response", "\(entryCountPerResponse)"),
+            ("runtime single-threaded (ms)",
+             "[\(singleMs.map { String(format: "%.01f", $0) }.joined(separator: ", "))]"),
+            ("runtime multi-threaded (ms)",
+             "[\(multiMs.map { String(format: "%.01f", $0) }.joined(separator: ", "))]"),
+            ("runtime speedup", speedupString),
+        ]
+        let lines = pairs.map { key, value in "  \(key) : \(value)" }
+        return "{\n\(lines.joined(separator: ",\n"))\n}"
     }
 }
 

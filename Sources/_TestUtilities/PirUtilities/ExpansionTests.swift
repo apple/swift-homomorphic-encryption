@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,7 +98,8 @@ extension PirTestUtils {
                     outputCount: inputCount,
                     logStep: 1,
                     expectedHeight: inputCount.ceilLog2,
-                    using: evaluationKey)
+                    using: evaluationKey,
+                    callOptions: .default)
                 #expect(expandedCiphertexts.count == inputCount)
                 for index in 0..<inputCount {
                     let decodedData: [Scheme.Scalar] = try expandedCiphertexts[index].decrypt(using: secretKey)

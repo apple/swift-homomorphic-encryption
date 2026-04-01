@@ -258,6 +258,21 @@ public final class KeywordPirServer<PirServer: IndexPirServer>: KeywordPirProtoc
     {
         try await indexPirServer.computeResponse(to: query, using: evaluationKey)
     }
+
+    /// Compute the encrypted response to a query lookup.
+    /// - Parameters:
+    ///   - query: Encrypted query.
+    ///   - evaluationKey: Evaluation key to aid in the server computation.
+    ///   - callOptions: Runtime configs (e.g. multi-threading).
+    /// - Returns: The encrypted response.
+    /// - Throws: Error upon failure to compute a response.
+    @inlinable
+    public func computeResponse(to query: Query,
+                                using evaluationKey: EvaluationKey<Scheme>,
+                                callOptions: CallOptions) async throws -> Response
+    {
+        try await indexPirServer.computeResponse(to: query, using: evaluationKey, callOptions: callOptions)
+    }
 }
 
 /// Client which can perform keyword PIR requests.

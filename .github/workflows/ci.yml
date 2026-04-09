@@ -29,7 +29,16 @@ jobs:
     # Note: this commit is used in soundness & swifttests workflows, so they should be kept in sync
     uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@f84da042883848ad67aadd051dc322eec18660d3  # 0.0.9
     with:
-      enable_windows_checks: false
+      windows_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}, {\"swift_version\": \"6.0\"}, {\"swift_version\": \"6.1\"}]"
+      windows_build_command: >
+        # swift run --configuration release BasicsAsyncSnippet;
+        # swift run --configuration release BasicsSnippet;
+        swift test --configuration release;
+        $swiftFiles = Get-ChildItem -Path .\Snippets -Include *.swift -Recurse;
+        foreach ($file in $swiftFiles) {
+            $basename = [System.IO.Path]::GetFileNameWithoutExtension($file.FullName);
+            swift run --configuration release $basename;
+        }
       enable_macos_checks: true
       macos_env_vars: SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1
       macos_exclude_xcode_versions: "[{\"xcode_version\": \"16.3\"}, {\"xcode_version\": \"16.4\"}]"  # we require swift 6.2

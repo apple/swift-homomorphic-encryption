@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public import Algorithms
 public import AsyncAlgorithms
 public import DequeModule
 public import HomomorphicEncryption
@@ -278,7 +279,7 @@ extension PirUtilProtocol {
                 logStep: logStep + 1,
                 expectedHeight: expectedHeight,
                 using: evaluationKey,
-                callOptions: callOptions)
+                callOptions: callOptions.divided(among: 2))
         }
         let taskRight: @Sendable () async throws -> [CanonicalCiphertext] = {
             try await expandCiphertext(
@@ -287,7 +288,7 @@ extension PirUtilProtocol {
                 logStep: logStep + 1,
                 expectedHeight: expectedHeight,
                 using: evaluationKey,
-                callOptions: callOptions)
+                callOptions: callOptions.divided(among: 2))
         }
         if callOptions.multiThreading {
             async let asyncFirstHalf = taskLeft()
@@ -332,16 +333,21 @@ extension PirUtilProtocol {
         }
         let transform: @Sendable (Int) async throws -> [CanonicalCiphertext] = { [ciphertexts] ciphertextIndex in
             let outputToGenerate = lengths[ciphertextIndex]
+            let childOptions = callOptions.divided(among: min(callOptions.maxConcurrentTasks, ciphertexts.count))
             return try await expandCiphertext(
                 ciphertexts[ciphertextIndex],
                 outputCount: outputToGenerate,
                 logStep: 1,
                 expectedHeight: outputToGenerate.ceilLog2,
                 using: evaluationKey,
-                callOptions: callOptions)
+                callOptions: childOptions)
         }
-        let expanded: [[CanonicalCiphertext]] = if callOptions.multiThreading {
-            try await .init((0..<ciphertexts.count).concurrentMap(transform))
+        let groupCount = max(1, min(callOptions.maxConcurrentTasks, ciphertexts.count))
+        let expanded: [[CanonicalCiphertext]] = if groupCount > 1 {
+            try await .init(Array(0..<ciphertexts.count).evenlyChunked(in: groupCount)
+                .concurrentMap { batch in
+                    try await [[CanonicalCiphertext]](batch.async.map { try await transform($0) }).flatMap(\.self)
+                })
         } else {
             try await .init((0..<ciphertexts.count).async.map(transform))
         }
@@ -415,22 +421,25 @@ extension PirUtilProtocol {
         let databaseColumnsCount = perChunkPlaintextCount / parameter.dimensions[0]
         precondition(databaseColumnsCount == 1 || databaseColumnsCount == expandedRemainingQuery.count)
 
+        let columnGroupCount = max(1, min(callOptions.maxConcurrentTasks, databaseColumnsCount))
+        let columnChildOptions = callOptions.divided(among: columnGroupCount)
+
         let computePtCtInnerProduct: @Sendable (Int) async throws -> Scheme.CanonicalCiphertext = { columnIndex in
             let startIndex = dataChunk.startIndex + expandedDim0Query.count * columnIndex
             let endIndex = min(startIndex + expandedDim0Query.count, dataChunk.endIndex)
             let plaintexts = dataChunk[startIndex..<endIndex]
-            if callOptions.multiThreading {
-                return try await Scheme.innerProductAsync(ciphertexts: expandedDim0Query,
-                                                          plaintexts: plaintexts).convertToCanonicalFormat()
-            }
-            return try await Scheme.innerProduct(ciphertexts: expandedDim0Query, plaintexts: plaintexts)
+            return try await Scheme.innerProduct(ciphertexts: expandedDim0Query,
+                                                 plaintexts: plaintexts,
+                                                 maxConcurrentTasks: columnChildOptions.maxConcurrentTasks)
                 .convertToCanonicalFormat()
         }
 
-        var intermediateResults: [Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>] = if callOptions
-            .multiThreading
-        {
-            try await (0..<databaseColumnsCount).concurrentMap(computePtCtInnerProduct)
+        var intermediateResults: [Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>] = if columnGroupCount > 1 {
+            try await Array(0..<databaseColumnsCount).evenlyChunked(in: columnGroupCount)
+                .concurrentMap { batch in
+                    try await [Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>](batch.async
+                        .map { try await computePtCtInnerProduct($0) })
+                }.flatMap(\.self)
         } else {
             try await .init((0..<databaseColumnsCount).async.map(computePtCtInnerProduct))
         }
@@ -439,11 +448,8 @@ extension PirUtilProtocol {
             .CanonicalCiphertext = { startIndex, currentIndex, dimensionSize, currentResults in
                 let vector0 = expandedRemainingQuery[currentIndex..<currentIndex + dimensionSize]
                 let vector1 = currentResults[startIndex..<startIndex + dimensionSize]
-                var product: Scheme.CanonicalCiphertext = if callOptions.multiThreading {
-                    try await Scheme.innerProductAsync(vector0, vector1)
-                } else {
-                    try Scheme.innerProduct(vector0, vector1)
-                }
+                var product = try await Scheme.innerProduct(vector0, vector1,
+                                                            maxConcurrentTasks: columnChildOptions.maxConcurrentTasks)
                 try await product.relinearize(using: evaluationKey)
                 return product
             }
@@ -451,12 +457,18 @@ extension PirUtilProtocol {
         for await dimensionSize in parameter.dimensions.dropFirst().async {
             let currentIndex = queryStartingIndex
             let lastResult = intermediateResults
-            if callOptions.multiThreading {
+            let dimItemCount = intermediateResults.count / dimensionSize
+            let dimGroupCount = max(1, min(callOptions.maxConcurrentTasks, dimItemCount))
+            if dimGroupCount > 1 {
                 intermediateResults = try await Array(stride(
                     from: 0,
                     to: intermediateResults.count,
-                    by: dimensionSize))
-                    .concurrentMap { try await computeCtCtInnerProduct($0, currentIndex, dimensionSize, lastResult) }
+                    by: dimensionSize)).evenlyChunked(in: dimGroupCount)
+                    .concurrentMap { batch in
+                        try await [Ciphertext<Scheme, Scheme.CanonicalCiphertextFormat>](batch.async.map { startIndex in
+                            try await computeCtCtInnerProduct(startIndex, currentIndex, dimensionSize, lastResult)
+                        })
+                    }.flatMap(\.self)
             } else {
                 intermediateResults = try await .init(stride(
                     from: 0,
@@ -498,21 +510,31 @@ extension PirUtilProtocol {
             -> [[Ciphertext<Scheme, Coeff>]]
         {
             var enumerated = ciphertextForEachQuery.enumerated()
+            let queryCount = ciphertextForEachQuery.count
+            let queryGroupCount = max(1, min(callOptions.maxConcurrentTasks, queryCount))
+            let queryChildOptions = callOptions.divided(among: queryGroupCount)
+
             let computeResponseChunk: @Sendable ((Int, Deque<CanonicalCiphertext>)) async throws
                 -> [Ciphertext<Scheme, Coeff>] = { enumerated in
                     var (queryIndex, queryCiphertexts) = enumerated
                     let database = databases[databases.count == 1 ? 0 : queryIndex]
-                    let firstDimensionQueries: [Ciphertext<Scheme, Eval>] = if callOptions.multiThreading {
-                        try await queryCiphertexts[0..<parameter.dimensions[0]]
-                            .concurrentMap { ciphertext in
-                                try ciphertext.convertToEvalFormat()
-                            }
+                    let dim0Count = parameter.dimensions[0]
+                    let dim0GroupCount = max(1, min(queryChildOptions.maxConcurrentTasks, dim0Count))
+                    let firstDimensionQueries: [Ciphertext<Scheme, Eval>] = if dim0GroupCount > 1 {
+                        try await Array(queryCiphertexts[0..<dim0Count])
+                            .evenlyChunked(in: dim0GroupCount)
+                            .concurrentMap { batch in
+                                try batch.map { try $0.convertToEvalFormat() }
+                            }.flatMap(\.self)
                     } else {
-                        try await .init(queryCiphertexts[0..<parameter.dimensions[0]].async
+                        try await .init(queryCiphertexts[0..<dim0Count].async
                             .map { try $0.convertToEvalFormat() })
                     }
                     queryCiphertexts.removeFirst(parameter.dimensions[0])
                     let perChunkPlaintextCount = database.count / chunkCount
+                    let chunkItemCount = database.count / perChunkPlaintextCount
+                    let chunkGroupCount = max(1, min(queryChildOptions.maxConcurrentTasks, chunkItemCount))
+                    let chunkChildOptions = queryChildOptions.divided(among: chunkGroupCount)
                     let computeRemainingDimensions: @Sendable (Int) async throws -> Ciphertext<Scheme, Coeff> =
                         { [queryCiphertexts, firstDimensionQueries] startIndex in
                             try await Self.computeResponseForOneChunk(
@@ -522,16 +544,20 @@ extension PirUtilProtocol {
                                     .plaintexts[startIndex..<startIndex + perChunkPlaintextCount],
                                 using: evaluationKey,
                                 parameter: parameter,
-                                callOptions: callOptions)
+                                callOptions: chunkChildOptions)
                         }
-                    if callOptions.multiThreading {
+                    if chunkGroupCount > 1 {
                         return try await Array(stride(from: 0, to: database.count, by: perChunkPlaintextCount))
-                            .concurrentMap(computeRemainingDimensions)
+                            .evenlyChunked(in: chunkGroupCount)
+                            .concurrentMap { batch in
+                                try await [Ciphertext<Scheme, Coeff>](batch.async
+                                    .map { try await computeRemainingDimensions($0) })
+                            }.flatMap(\.self)
                     }
                     return try await .init(stride(from: 0, to: database.count, by: perChunkPlaintextCount).async
                         .map(computeRemainingDimensions))
                 }
-            if callOptions.multiThreading {
+            if queryGroupCount > 1 {
                 return try await enumerated.concurrentConsumingMap(computeResponseChunk)
             }
             return try await .init(enumerated.async.map(computeResponseChunk))

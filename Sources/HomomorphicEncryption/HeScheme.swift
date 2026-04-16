@@ -784,6 +784,47 @@ public protocol HeScheme: Sendable {
     static func innerProductAsync(ciphertexts: some Collection<EvalCiphertext>,
                                   plaintexts: some Collection<EvalPlaintext?>) async throws -> EvalCiphertext
 
+    /// Computes an inner product between two collections of ciphertexts with a concurrency budget.
+    ///
+    /// When `maxConcurrentTasks > 1`, the computation may be parallelized.
+    /// - Parameters:
+    ///   - lhs: Left-hand-side ciphertexts. Must not be empty.
+    ///   - rhs: Right-hand-side ciphertexts. Must have `count` matching `lhs.count`.
+    ///   - maxConcurrentTasks: Maximum number of concurrent tasks to use for the computation.
+    /// - Returns: A ciphertext encrypting the inner product.
+    /// - Throws: Error upon failure to compute inner product.
+    static func innerProduct(
+        _ lhs: some Collection<CanonicalCiphertext>,
+        _ rhs: some Collection<CanonicalCiphertext>,
+        maxConcurrentTasks: Int) async throws -> CanonicalCiphertext
+
+    /// Computes an inner product between ciphertexts and plaintexts with a concurrency budget.
+    ///
+    /// When `maxConcurrentTasks > 1`, the computation may be parallelized.
+    /// - Parameters:
+    ///   - ciphertexts: Ciphertexts. Must not be empty.
+    ///   - plaintexts: Plaintexts. Must not be empty and have `count` matching `ciphertexts.count`.
+    ///   - maxConcurrentTasks: Maximum number of concurrent tasks to use for the computation.
+    /// - Returns: A ciphertext encrypting the inner product.
+    /// - Throws: Error upon failure to compute inner product.
+    static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
+                             plaintexts: some Collection<EvalPlaintext>,
+                             maxConcurrentTasks: Int) async throws -> EvalCiphertext
+
+    /// Computes an inner product between ciphertexts and optional plaintexts with a concurrency budget.
+    ///
+    /// When `maxConcurrentTasks > 1`, the computation may be parallelized.
+    /// `nil` plaintexts indicate zero plaintexts which can be ignored in the computation.
+    /// - Parameters:
+    ///   - ciphertexts: Ciphertexts. Must not be empty.
+    ///   - plaintexts: Plaintexts. Must not be empty and have `count` matching `ciphertexts.count`.
+    ///   - maxConcurrentTasks: Maximum number of concurrent tasks to use for the computation.
+    /// - Returns: A ciphertext encrypting the inner product.
+    /// - Throws: Error upon failure to compute inner product.
+    static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
+                             plaintexts: some Collection<EvalPlaintext?>,
+                             maxConcurrentTasks: Int) async throws -> EvalCiphertext
+
     /// In-place ciphertext multiplication: `ciphertext *= ciphertext`.
     ///
     /// - Parameters:

@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -138,6 +138,43 @@ extension HeScheme {
                                          plaintexts: some Collection<EvalPlaintext?>) async throws -> EvalCiphertext
     {
         try innerProduct(ciphertexts: ciphertexts, plaintexts: plaintexts)
+    }
+
+    @inlinable
+    public static func innerProduct(
+        _ lhs: some Collection<CanonicalCiphertext>,
+        _ rhs: some Collection<CanonicalCiphertext>,
+        maxConcurrentTasks: Int) async throws -> CanonicalCiphertext
+    {
+        if maxConcurrentTasks > 1 {
+            try await innerProductAsync(lhs, rhs)
+        } else {
+            try innerProduct(lhs, rhs)
+        }
+    }
+
+    @inlinable
+    public static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
+                                    plaintexts: some Collection<EvalPlaintext>,
+                                    maxConcurrentTasks: Int) async throws -> EvalCiphertext
+    {
+        if maxConcurrentTasks > 1 {
+            try await innerProductAsync(ciphertexts: ciphertexts, plaintexts: plaintexts)
+        } else {
+            try innerProduct(ciphertexts: ciphertexts, plaintexts: plaintexts)
+        }
+    }
+
+    @inlinable
+    public static func innerProduct(ciphertexts: some Collection<EvalCiphertext>,
+                                    plaintexts: some Collection<EvalPlaintext?>,
+                                    maxConcurrentTasks: Int) async throws -> EvalCiphertext
+    {
+        if maxConcurrentTasks > 1 {
+            try await innerProductAsync(ciphertexts: ciphertexts, plaintexts: plaintexts)
+        } else {
+            try innerProduct(ciphertexts: ciphertexts, plaintexts: plaintexts)
+        }
     }
 
     @inlinable

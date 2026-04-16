@@ -33,4 +33,15 @@ nonisolated(unsafe) let benchmarks: () -> Void = {
     keywordPirBenchmark(PirUtil<Bfv<UInt32>>.self, callOptions: .singleThreaded)()
     keywordPirBenchmark(PirUtil<Bfv<UInt64>>.self, callOptions: .multiThreaded)()
     keywordPirBenchmark(PirUtil<Bfv<UInt64>>.self, callOptions: .singleThreaded)()
+
+    // Keyword PIR benchmark with 8K entries of 8KB each.
+    // swiftlint:disable:next force_try
+    let largeEntryConfig = try! PirBenchmarkConfig<UInt32>(
+        databaseConfig: .init(entryCount: 8000, entrySizeInBytes: 8000))
+    keywordPirBenchmark(PirUtil<Bfv<UInt32>>.self,
+                        config: largeEntryConfig,
+                        callOptions: .multiThreaded)()
+    keywordPirBenchmark(PirUtil<Bfv<UInt32>>.self,
+                        config: largeEntryConfig,
+                        callOptions: .singleThreaded)()
 }

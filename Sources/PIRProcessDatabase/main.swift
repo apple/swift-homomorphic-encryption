@@ -262,12 +262,9 @@ struct Arguments: Codable, Equatable, Hashable {
         let maxSerializedBucketSize = try cuckooTableArguments.maxSerializedBucketSize ?? {
             let bytesPerPlaintext = try EncryptionParameters<Scheme.Scalar>(from:
                 rlweParameters).bytesPerPlaintext
-            let singleBucketSize = HashBucket.serializedSize(singleValueSize: maxValueSize)
-            return if singleBucketSize >= bytesPerPlaintext / 2 {
-                singleBucketSize.nextMultiple(of: bytesPerPlaintext, variableTime: true)
-            } else {
-                bytesPerPlaintext / 2
-            }
+            return CuckooTableConfig.defaultMaxSerializedBucketSize(
+                maxValueSize: maxValueSize,
+                bytesPerPlaintext: bytesPerPlaintext)
         }()
         guard maxSerializedBucketSize >= HashBucket.serializedSize(singleValueSize: maxValueSize) else {
             let requiredSize = HashBucket.serializedSize(singleValueSize: maxValueSize)

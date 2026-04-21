@@ -544,18 +544,18 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                  shardingFunction: config.shardingFunction,
                                                  symmetricPirClientConfig: config.symmetricPirConfig?.clientConfig())
 
-
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
 
         let encryptionParameters = try EncryptionParameters<Scalar>(from: config.rlweParameters)
-        let processArgs = try ProcessKeywordDatabase.Arguments<PirUtil.Scheme>(databaseConfig: databaseConfig,
-                                                                       encryptionParameters: encryptionParameters,
-                                                                       algorithm: config.algorithm,
-                                                                       keyCompression: config.keyCompression,
-                                                                       trialsPerShard: config.trialsPerShard,
-                                                                       symmetricPirConfig: config.symmetricPirConfig)
+        let processArgs = try ProcessKeywordDatabase.Arguments<PirUtil.Scheme>(
+            databaseConfig: databaseConfig,
+            encryptionParameters: encryptionParameters,
+            algorithm: config.algorithm,
+            keyCompression: config.keyCompression,
+            trialsPerShard: config.trialsPerShard,
+            symmetricPirConfig: config.symmetricPirConfig)
 
         let context = try PirUtil.Scheme.Context(encryptionParameters: processArgs.encryptionParameters)
 

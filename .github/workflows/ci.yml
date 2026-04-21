@@ -34,7 +34,7 @@ jobs:
       macos_env_vars: SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1
       macos_exclude_xcode_versions: "[{\"xcode_version\": \"16.3\"}, {\"xcode_version\": \"16.4\"}]"  # we require swift 6.2
       macos_pre_build_command: "brew install jemalloc"
-      macos_build_command: >
+      macos_build_command: |
         swift test --configuration release;
         for filename in $(find Snippets -name \*.swift); do
             basename=$(basename "$filename" .swift)
@@ -48,7 +48,7 @@ jobs:
       linux_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}, {\"swift_version\": \"6.0\"}, {\"swift_version\": \"6.1\"}]"
       linux_env_vars: SWIFT_HOMOMORPHIC_ENCRYPTION_ENABLE_BENCHMARKING=1
       linux_pre_build_command: "apt-get update && apt-get install -y libjemalloc-dev"
-      linux_build_command: >
+      linux_build_command: |
         swift test --configuration release;
         for filename in $(find Snippets -name \*.swift); do
             basename=$(basename "$filename" .swift)

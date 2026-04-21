@@ -213,8 +213,15 @@ struct Arguments: Codable, Equatable, Hashable {
     var encodingEntrySize: Bool?
 
     static func defaultJsonString() -> String {
-        // swiftlint:disable:next force_try
-        let resolved = try! defaultArguments.resolveForKeywordDatabase(for: [], scheme: Bfv<UInt64>.self)
+        do {
+            return try defaultJsonStringThrowing()
+        } catch {
+            return "{}"
+        }
+    }
+
+    private static func defaultJsonStringThrowing() throws -> String {
+        let resolved = try defaultArguments.resolveForKeywordDatabase(for: [], scheme: Bfv<UInt64>.self)
         let resolvedCuckooConfig = resolved.cuckooTableConfig
         let resolvedBucketCount = switch resolvedCuckooConfig.bucketCount {
         case let .allowExpansion(
@@ -246,12 +253,7 @@ struct Arguments: Codable, Equatable, Hashable {
             keyCompression: PirKeyCompressionStrategy.noCompression,
             trialsPerShard: resolved.trialsPerShard)
 
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        // swiftlint:disable:next force_try
-        let data = try! encoder.encode(defaultArguments)
-        // swiftlint:disable:next optional_data_string_conversion
-        return String(decoding: data, as: UTF8.self)
+        return try JSONEncoder.encodeToString(defaultArguments)
     }
 
     func resolveForKeywordDatabase<Scheme: HeScheme>(for database: [KeywordValuePair],
@@ -279,13 +281,14 @@ struct Arguments: Codable, Equatable, Hashable {
                 """)
         }
         let cuckooTableConfig = try cuckooTableArguments.resolve(maxSerializedBucketSize: maxSerializedBucketSize)
+        let resolvedSharding = try sharding ?? Sharding(shardCount: 1)
 
         return try ResolvedArguments(
             inputDatabase: inputDatabase,
             outputDatabase: outputDatabase,
             outputPirParameters: outputPirParameters,
             outputEvaluationKeyConfig: outputEvaluationKeyConfig,
-            sharding: sharding ?? Sharding.shardCount(1),
+            sharding: resolvedSharding,
             shardingFunction: shardingFunction ?? .sha256,
             cuckooTableConfig: cuckooTableConfig,
             rlweParameters: rlweParameters,
@@ -368,10 +371,11 @@ struct ResolvedArguments: CustomStringConvertible, Encodable {
 
     /// Performs the validation of the resolved arguments.
     func validate() throws {
-        guard sharding == Sharding.shardCount(1) || outputPirParameters.contains("SHARD_ID") else {
+        let singleShard = try Sharding(shardCount: 1)
+        guard sharding == singleShard || outputPirParameters.contains("SHARD_ID") else {
             throw ValidationError("'outputPirParameters' must contain 'SHARD_ID', found \(outputPirParameters)")
         }
-        guard sharding == Sharding.shardCount(1) || outputDatabase.contains("SHARD_ID") else {
+        guard sharding == singleShard || outputDatabase.contains("SHARD_ID") else {
             throw ValidationError("'outputPirDatabase' must contain 'SHARD_ID', found \(outputDatabase)")
         }
         guard algorithm == .mulPir else {
@@ -464,7 +468,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                 using: PirUtil.self,
                 callOptions: .singleThreaded)
             let results = try multiThreadResults.combinedDescription(singleThreaded: singleThreadResults)
-            logger.info("ValidationResults \(results)")
+            logger.info("ValidationResults\n\(results)")
         }
         return processed.evaluationKeyConfig
     }
@@ -477,7 +481,8 @@ struct ProcessDatabase: AsyncParsableCommand {
         let databaseRows: [[UInt8]] =
             try Apple_SwiftHomomorphicEncryption_Pir_V1_IndexPirDatabase(from: config
                 .inputDatabase).rows.map { Array($0.value) }
-        let database = try IndexDatabase(rows: databaseRows, sharding: config.sharding ?? Sharding.shardCount(1))
+        let database = try IndexDatabase(rows: databaseRows,
+                                         sharding: config.sharding ?? Sharding(shardCount: 1))
 
         var evaluationKeyConfig = EvaluationKeyConfig()
         if parallel {
@@ -530,7 +535,7 @@ struct ProcessDatabase: AsyncParsableCommand {
             try Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase(from: config.inputDatabase).native()
 
         let config = try config.resolveForKeywordDatabase(for: database, scheme: PirUtil.Scheme.self)
-        ProcessDatabase.logger.info("Processing database with configuration: \(config)")
+        ProcessDatabase.logger.info("Processing database with configuration:\n\(config)")
         let keywordConfig = try KeywordPirConfig(dimensionCount: 2,
                                                  cuckooTableConfig: config.cuckooTableConfig,
                                                  unevenDimensions: true,
@@ -538,17 +543,20 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                  useMaxSerializedBucketSize: config.useMaxSerializedBucketSize,
                                                  shardingFunction: config.shardingFunction,
                                                  symmetricPirClientConfig: config.symmetricPirConfig?.clientConfig())
+
+
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,
             keywordPirConfig: keywordConfig)
 
         let encryptionParameters = try EncryptionParameters<Scalar>(from: config.rlweParameters)
-        let processArgs = try ProcessKeywordDatabase.Arguments<Scalar>(databaseConfig: databaseConfig,
+        let processArgs = try ProcessKeywordDatabase.Arguments<PirUtil.Scheme>(databaseConfig: databaseConfig,
                                                                        encryptionParameters: encryptionParameters,
                                                                        algorithm: config.algorithm,
                                                                        keyCompression: config.keyCompression,
                                                                        trialsPerShard: config.trialsPerShard,
                                                                        symmetricPirConfig: config.symmetricPirConfig)
+
         let context = try PirUtil.Scheme.Context(encryptionParameters: processArgs.encryptionParameters)
 
         let keywordDatabase = try KeywordDatabase(
@@ -605,7 +613,7 @@ struct ProcessDatabase: AsyncParsableCommand {
         shard: KeywordDatabaseShard,
         config: ResolvedArguments,
         context: PirUtil.Scheme.Context,
-        processArgs: ProcessKeywordDatabase.Arguments<PirUtil.Scheme.Scalar>,
+        processArgs: ProcessKeywordDatabase.Arguments<PirUtil.Scheme>,
         pirUtil _: PirUtil.Type) async throws -> EvaluationKeyConfig
     {
         var logger = ProcessDatabase.logger
@@ -657,7 +665,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                                trials: config.trialsPerShard, context: context, using: PirUtil.self,
                                callOptions: .singleThreaded)
             let results = try multiThreadResults.combinedDescription(singleThreaded: singleThreadResults)
-            logger.info("ValidationResults \(results)")
+            logger.info("ValidationResults\n\(results)")
         }
 
         let outputDatabaseFilename = config.outputDatabase.replacingOccurrences(
@@ -697,44 +705,68 @@ struct ProcessDatabase: AsyncParsableCommand {
     }
 }
 
+private struct CombinedShardValidationResultFields: Encodable {
+    struct EvaluationKeyFields: Encodable {
+        let sizeKB: Double
+        let keyCount: Int
+    }
+
+    struct CiphertextFields: Encodable {
+        let sizeKB: Double
+        let ciphertextCount: Int
+    }
+
+    struct SpeedupFields: Encodable {
+        let values: [Double]
+        let min: Double?
+        let max: Double?
+    }
+
+    let noiseBudget: Double
+    let evaluationKey: EvaluationKeyFields
+    let entryCountPerResponse: [Int]
+    let query: CiphertextFields
+    let response: CiphertextFields
+    let runtimeMultiThreadedMs: [Double]
+    let runtimeSingleThreadedMs: [Double]
+    let runtimeSpeedup: SpeedupFields
+}
+
 extension ShardValidationResult {
     /// Returns a combined description of processed database validation for both threading modes.
     func combinedDescription(singleThreaded other: ShardValidationResult) throws -> String {
-        func sizeString(byteCount: Int, count: Int, label: String) -> String {
-            let sizeKB = String(format: "%.01f", Double(byteCount) / 1000.0)
-            return "\(sizeKB) KB (\(count) \(label))"
+        func kb(_ byteCount: Int) -> Double {
+            (Double(byteCount) / 1000.0 * 10).rounded() / 10
         }
 
-        let multiMs = computeTimes.sorted().map(\.milliseconds)
-        let singleMs = other.computeTimes.sorted().map(\.milliseconds)
+        let multiMs = computeTimes.sorted().map { $0.milliseconds.rounded(decimalPlaces: 1) }
+        let singleMs = other.computeTimes.sorted().map { $0.milliseconds.rounded(decimalPlaces: 1) }
 
-        let speedupValues = zip(singleMs, multiMs).compactMap { s, m in m > 0 ? s / m : nil }
-        let speedupString = if speedupValues.count == 1, let value = speedupValues.first {
-            String(format: "%.02fx", value)
-        } else if let minSpeedup = speedupValues.min(), let maxSpeedup = speedupValues.max() {
-            String(format: "%.02fx - %.02fx", minSpeedup, maxSpeedup)
-        } else {
-            "N/A"
+        let speedupValues = zip(singleMs, multiMs).compactMap { s, m in
+            m > 0 ? (s / m * 100).rounded() / 100 : nil
         }
+        let speedup = CombinedShardValidationResultFields.SpeedupFields(
+            values: speedupValues,
+            min: speedupValues.min(),
+            max: speedupValues.max())
 
-        let pairs: [(String, String)] = try [
-            ("query size", sizeString(byteCount: query.size(), count: query.ciphertexts.count,
-                                      label: "ciphertexts")),
-            ("evaluation key size", sizeString(byteCount: evaluationKey.size(),
-                                               count: evaluationKey.config.keyCount, label: "keys")),
-            ("response size", sizeString(byteCount: response.size(),
-                                         count: response.ciphertexts.flatMap(\.self).count,
-                                         label: "ciphertexts")),
-            ("noise budget", String(format: "%.01f", noiseBudget)),
-            ("entry count per response", "\(entryCountPerResponse)"),
-            ("runtime single-threaded (ms)",
-             "[\(singleMs.map { String(format: "%.01f", $0) }.joined(separator: ", "))]"),
-            ("runtime multi-threaded (ms)",
-             "[\(multiMs.map { String(format: "%.01f", $0) }.joined(separator: ", "))]"),
-            ("runtime speedup", speedupString),
-        ]
-        let lines = pairs.map { key, value in "  \(key) : \(value)" }
-        return "{\n\(lines.joined(separator: ",\n"))\n}"
+        let fields = try CombinedShardValidationResultFields(
+            noiseBudget: noiseBudget.rounded(decimalPlaces: 1),
+            evaluationKey: .init(
+                sizeKB: kb(evaluationKey.size()),
+                keyCount: evaluationKey.config.keyCount),
+            entryCountPerResponse: entryCountPerResponse,
+            query: .init(
+                sizeKB: kb(query.size()),
+                ciphertextCount: query.ciphertexts.count),
+            response: .init(
+                sizeKB: kb(response.size()),
+                ciphertextCount: response.ciphertexts.flatMap(\.self).count),
+            runtimeMultiThreadedMs: multiMs,
+            runtimeSingleThreadedMs: singleMs,
+            runtimeSpeedup: speedup)
+
+        return try JSONEncoder.encodeToString(fields)
     }
 }
 

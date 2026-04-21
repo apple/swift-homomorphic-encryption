@@ -149,88 +149,165 @@ extension ShardingFunction: Codable {
 }
 
 /// Different ways to divide a database into disjoint shards.
-public enum Sharding: Hashable, Codable, Sendable {
-    /// Divide database into as many shards as needed to average at least `entryCountPerShard` entries per shard.
-    case entryCountPerShard(Int)
-    /// Divide database into `shardCount` approximately equal-sized shards.
-    case shardCount(Int)
-
-    enum CodingKeys: String, CodingKey {
-        case entryCountPerShard
-        case shardCount
+public struct Sharding: Hashable, Sendable {
+    /// The core sharding strategy.
+    public enum Strategy: Hashable, Sendable {
+        /// Divide database into as many shards as needed to average at least `entryCountPerShard` entries per shard.
+        case entryCountPerShard(Int)
+        /// Divide database into `shardCount` approximately equal-sized shards.
+        case shardCount(Int)
     }
 
-    public init(from decoder: Decoder) throws {
-        // Default codable conformance expects a json with "shardCount": { "shardCount": 10 }
-        // Custom implementation expects a json with "shardCount": 10
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        var allKeys = ArraySlice(container.allKeys)
-        guard let onlyKey = allKeys.popFirst(), allKeys.isEmpty else {
-            throw DecodingError.typeMismatch(Sharding.self, DecodingError.Context(
-                codingPath: container.codingPath,
-                debugDescription: "Invalid number of keys found, expected one.",
-                underlyingError: nil))
-        }
-        switch onlyKey {
-        case .entryCountPerShard:
-            self = try .entryCountPerShard(container.decode(Int.self, forKey: CodingKeys.entryCountPerShard))
-        case .shardCount:
-            self = try .shardCount(container.decode(Int.self, forKey: CodingKeys.shardCount))
+    /// The sharding strategy.
+    public let strategy: Strategy
+    /// Maximum number of shards. When using `entryCountPerShard`, caps the computed shard count.
+    /// When using `shardCount`, the given count must not exceed this value.
+    public let maxShardCount: Int?
+    /// When true, the shard count must be a power of two. When using `entryCountPerShard`, the computed
+    /// count is floored to the nearest power of two. When using `shardCount`, the given count must
+    /// already be a power of two.
+    public let requirePowerOfTwoShardCount: Bool? // swiftlint:disable:this discouraged_optional_boolean
+
+    /// Initializes a ``Sharding``.
+    /// - Parameters:
+    ///   - strategy: The sharding strategy.
+    ///   - maxShardCount: Optional maximum shard count.
+    ///   - requirePowerOfTwoShardCount: Whether the shard count must be a power of two.
+    /// - Throws: ``PirError/invalidSharding(_:)`` if the configuration is invalid.
+    public init(
+        strategy: Strategy,
+        maxShardCount: Int? = nil,
+        // swiftlint:disable:next discouraged_optional_boolean
+        requirePowerOfTwoShardCount: Bool? = nil) throws
+    {
+        self.strategy = strategy
+        self.maxShardCount = maxShardCount
+        self.requirePowerOfTwoShardCount = requirePowerOfTwoShardCount
+        switch strategy {
+        case let .shardCount(count):
+            if count < 1 {
+                throw PirError.invalidSharding(self, message: "shardCount \(count) must be at least 1")
+            }
+            if let maxShardCount, count > maxShardCount {
+                throw PirError.invalidSharding(self,
+                                               message: "shardCount \(count) exceeds maxShardCount \(maxShardCount)")
+            }
+            if requirePowerOfTwoShardCount == true, !count.isPowerOfTwo {
+                throw PirError.invalidSharding(self,
+                                               message: "shardCount \(count) is not a power of two")
+            }
+        case let .entryCountPerShard(countPerShard):
+            if countPerShard < 1 {
+                throw PirError.invalidSharding(self,
+                                               message: "entryCountPerShard \(countPerShard) must be at least 1")
+            }
         }
     }
 
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch self {
-        case let .entryCountPerShard(entryCountPerShard):
-            try container.encode(entryCountPerShard, forKey: CodingKeys.entryCountPerShard)
-        case let .shardCount(shardCount):
-            try container.encode(shardCount, forKey: CodingKeys.shardCount)
-        }
+    /// Initializes a ``Sharding`` with a fixed shard count.
+    /// - Parameters:
+    ///   - shardCount: Number of shards.
+    ///   - maxShardCount: Optional maximum shard count; the given count must not exceed it.
+    ///   - requirePowerOfTwoShardCount: When true, the given count must be a power of two.
+    /// - Throws: ``PirError/invalidSharding(_:)`` if the configuration is invalid.
+    public init(
+        shardCount: Int,
+        maxShardCount: Int? = nil,
+        // swiftlint:disable:next discouraged_optional_boolean
+        requirePowerOfTwoShardCount: Bool? = nil) throws
+    {
+        try self.init(
+            strategy: .shardCount(shardCount),
+            maxShardCount: maxShardCount,
+            requirePowerOfTwoShardCount: requirePowerOfTwoShardCount)
+    }
+
+    /// Initializes a ``Sharding`` that targets a fixed number of entries per shard.
+    /// - Parameters:
+    ///   - entryCountPerShard: Target number of entries per shard.
+    ///   - maxShardCount: Optional cap on the computed shard count.
+    ///   - requirePowerOfTwoShardCount: When true, the computed count is floored to a power of two.
+    /// - Throws: ``PirError/invalidSharding(_:)`` if the configuration is invalid.
+    public init(
+        entryCountPerShard: Int,
+        maxShardCount: Int? = nil,
+        // swiftlint:disable:next discouraged_optional_boolean
+        requirePowerOfTwoShardCount: Bool? = nil) throws
+    {
+        try self.init(
+            strategy: .entryCountPerShard(entryCountPerShard),
+            maxShardCount: maxShardCount,
+            requirePowerOfTwoShardCount: requirePowerOfTwoShardCount)
     }
 }
 
 extension Sharding {
-    /// Whether or not a sharding is valid.
-    public var isValid: Bool {
-        switch self {
-        case let .shardCount(shardCount):
-            guard shardCount >= 1 else {
-                return false
-            }
-        case let .entryCountPerShard(entryCountPerShard):
-            guard entryCountPerShard >= 1 else {
-                return false
-            }
-        }
-        return true
-    }
-
-    /// Initializes a new ``Sharding`` from a number of shards.
-    /// - Parameter shardCount: Number of shards.
-    public init?(shardCount: Int) {
-        self = .shardCount(shardCount)
-        guard isValid else {
-            return nil
-        }
-    }
-
-    /// Initializes a new ``Sharding`` from an entry count per shard.
-    /// - Parameter entryCountPerShard: Average number of entries in a shard.
-    public init?(entryCountPerShard: Int) {
-        self = .entryCountPerShard(entryCountPerShard)
-        guard isValid else {
-            return nil
-        }
-    }
-
-    /// Validates the sharding is valid.
+    /// Computes the resolved shard count for a database with the given number of rows.
     ///
-    /// - Throws: Error upon invalid sharding.
-    public func validate() throws {
-        guard isValid else {
-            throw PirError.invalidSharding(self)
+    /// For ``Strategy/shardCount(_:)``, returns the fixed count (validated at init time).
+    /// For ``Strategy/entryCountPerShard(_:)``, computes the count from `rowCount` then
+    /// applies `maxShardCount` and `requirePowerOfTwoShardCount` as adjustments.
+    /// - Parameter rowCount: Number of rows in the database.
+    /// - Returns: Resolved shard count, always at least 1.
+    func shardCount(for rowCount: Int) -> Int {
+        switch strategy {
+        case let .shardCount(count):
+            return count
+        case let .entryCountPerShard(countPerShard):
+            // Flooring divide ensures `entryCountPerShard` for privacy
+            var count = max(rowCount / countPerShard, 1)
+            if let maxShardCount {
+                count = min(count, maxShardCount)
+            }
+            if requirePowerOfTwoShardCount == true {
+                count = count.previousPowerOfTwo
+            }
+            return count
         }
+    }
+}
+
+extension Sharding: Codable {
+    enum CodingKeys: String, CodingKey {
+        case entryCountPerShard
+        case shardCount
+        case maxShardCount
+        case requirePowerOfTwoShardCount
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let shardCountValue = try container.decodeIfPresent(Int.self, forKey: .shardCount)
+        let entryCountPerShardValue = try container.decodeIfPresent(Int.self, forKey: .entryCountPerShard)
+        let maxShardCount = try container.decodeIfPresent(Int.self, forKey: .maxShardCount)
+        let requirePowerOfTwoShardCount = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .requirePowerOfTwoShardCount)
+        let strategy: Strategy
+        switch (shardCountValue, entryCountPerShardValue) {
+        case let (count?, nil):
+            strategy = .shardCount(count)
+        case let (nil, countPerShard?):
+            strategy = .entryCountPerShard(countPerShard)
+        default:
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: decoder.codingPath,
+                debugDescription: "Exactly one of 'shardCount' or 'entryCountPerShard' must be set."))
+        }
+        try self.init(strategy: strategy, maxShardCount: maxShardCount,
+                      requirePowerOfTwoShardCount: requirePowerOfTwoShardCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch strategy {
+        case let .shardCount(n):
+            try container.encode(n, forKey: .shardCount)
+        case let .entryCountPerShard(n):
+            try container.encode(n, forKey: .entryCountPerShard)
+        }
+        try container.encodeIfPresent(maxShardCount, forKey: .maxShardCount)
+        try container.encodeIfPresent(requirePowerOfTwoShardCount, forKey: .requirePowerOfTwoShardCount)
     }
 }
 
@@ -338,12 +415,7 @@ public struct KeywordDatabase {
         } else {
             rows
         }
-        let shardCount = switch sharding {
-        case let .shardCount(shardCount): shardCount
-        case let .entryCountPerShard(entryCountPerShard):
-            // Flooring divide ensures `entryCountPerShard` for privacy
-            max(rows.count / entryCountPerShard, 1)
-        }
+        let shardCount = sharding.shardCount(for: rows.count)
 
         var shards: [String: KeywordDatabaseShard] = [:]
         for row in database {
@@ -368,11 +440,11 @@ public struct KeywordDatabase {
 /// Utilities for processing a ``KeywordDatabase``.
 public enum ProcessKeywordDatabase {
     /// Arguments for processing a keyword database.
-    public struct Arguments<Scalar: ScalarType>: Codable, Sendable {
+    public struct Arguments<Scheme: HeScheme>: Codable, Sendable {
         /// Database configuration.
         public let databaseConfig: KeywordDatabaseConfig
         /// Encryption parameters.
-        public let encryptionParameters: EncryptionParameters<Scalar>
+        public let encryptionParameters: EncryptionParameters<Scheme.Scalar>
         /// PIR algorithm to process with.
         public let algorithm: PirAlgorithm
         /// Strategy for evaluation key compression.
@@ -393,7 +465,7 @@ public enum ProcessKeywordDatabase {
         ///  - Throws: Error upon invalid arguments
         public init(
             databaseConfig: KeywordDatabaseConfig,
-            encryptionParameters: EncryptionParameters<Scalar>,
+            encryptionParameters: EncryptionParameters<Scheme.Scalar>,
             algorithm: PirAlgorithm,
             keyCompression: PirKeyCompressionStrategy,
             trialsPerShard: Int,
@@ -450,7 +522,7 @@ public enum ProcessKeywordDatabase {
     /// - Throws: Error upon failure to process the shard.
     @inlinable
     public static func processShard<PirUtil: PirUtilProtocol>(shard: KeywordDatabaseShard,
-                                                              with arguments: Arguments<PirUtil.Scheme.Scalar>,
+                                                              with arguments: Arguments<PirUtil.Scheme>,
                                                               using _: PirUtil.Type,
                                                               onEvent: @escaping (ProcessShardEvent) throws
                                                                   -> Void = { _ in
@@ -476,7 +548,6 @@ public enum ProcessKeywordDatabase {
     ///   - trials: How many PIR calls to validate. Must be > 0.
     ///   - context: Context for HE computation.
     ///   - _: Type for auxiliary functionalities used in PIR.
-    ///   - callOptions: runtime configurations for e.g. multi-threading preference.
     /// - Returns: The shard validation results.
     /// - Throws: Error upon failure to validate the sharding.
     /// - seealso: ``ProcessKeywordDatabase/processShard(shard:with:using:onEvent:)`` to process a shard before
@@ -567,7 +638,7 @@ public enum ProcessKeywordDatabase {
     @inlinable
     public static func process<PirUtil: PirUtilProtocol>(
         rows: some Collection<KeywordValuePair>,
-        with arguments: Arguments<PirUtil.Scheme.Scalar>,
+        with arguments: Arguments<PirUtil.Scheme>,
         using _: PirUtil.Type) async throws -> Processed<PirUtil.Scheme>
     {
         var evaluationKeyConfig = EvaluationKeyConfig()

@@ -57,7 +57,7 @@ struct SymmetricPirTests {
         let config = try PirTestUtils.SymmetricPirTests.generateSymmetricPirConfig()
         let encryptedDatabase = try KeywordDatabase(
             rows: testDatabase,
-            sharding: .shardCount(shardCount),
+            sharding: Sharding(shardCount: shardCount),
             symmetricPirConfig: config)
 
         let oprfSecretKey = try OprfPrivateKey(rawRepresentation: config.oprfSecretKey.value)

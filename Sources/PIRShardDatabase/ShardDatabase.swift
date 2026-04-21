@@ -61,11 +61,15 @@ struct SymmetricPirArguments: ParsableArguments {
 
 extension Sharding {
     init?(from arguments: ShardingArguments) {
-        switch arguments.sharding {
-        case .entryCountPerShard:
-            self.init(entryCountPerShard: arguments.shardingCount)
-        case .shardCount:
-            self.init(shardCount: arguments.shardingCount)
+        do {
+            switch arguments.sharding {
+            case .entryCountPerShard:
+                try self.init(strategy: .entryCountPerShard(arguments.shardingCount))
+            case .shardCount:
+                try self.init(strategy: .shardCount(arguments.shardingCount))
+            }
+        } catch {
+            return nil
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -277,9 +277,9 @@ extension FixedWidthInteger {
 
     /// Whether or not this value is a positive power of two.
     ///
-    /// Warning: Leaks this value through timing.
+    /// This value must be a positive nonzero integer to be considered a power of two.
     public var isPowerOfTwo: Bool {
-        self > 0 && nonzeroBitCount == 1
+        self > 0 && (self & (self - 1)) == 0
     }
 
     /// The next power of two greater than or equal to this value.
@@ -294,12 +294,12 @@ extension FixedWidthInteger {
         return 1 &<< ((self &- 1).log2 &+ 1)
     }
 
-    /// The next power of two greater than or equal to this value.
+    /// The previous power of two less than or equal to this value.
     ///
     /// This value must be positive.
     public var previousPowerOfTwo: Self {
         precondition(self > 0)
-        return 1 &<< (Self.bitWidth &- 1 - leadingZeroBitCount)
+        return 1 &<< (bitWidth &- 1 - leadingZeroBitCount)
     }
 
     /// Computes a modular multiplication.

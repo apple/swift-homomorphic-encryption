@@ -60,6 +60,37 @@ A minimal configuration sample is
     "databaseType":"keyword",
 }
 ```
+
+A typical configuration file, including the most commonly used optional parameters, looks like:
+```json
+{
+  "algorithm": "mulPir",
+  "cuckooTableArguments": {
+    "bucketCount": {
+      "allowExpansion": {
+        "expansionFactor": 1.1,
+        "targetLoadFactor": 0.9
+      }
+    },
+    "hashFunctionCount": 2,
+    "maxEvictionCount": 100,
+    "maxSerializedBucketSize": 1024
+  },
+  "databaseType": "keyword",
+  "inputDatabase": "/path/to/input/database.txtpb",
+  "keyCompression": "noCompression",
+  "outputDatabase": "/path/to/output/database-SHARD_ID.bin",
+  "outputEvaluationKeyConfig": "/path/to/output/evaluation-key-config.txtpb",
+  "outputPirParameters": "/path/to/output/pir-parameters-SHARD_ID.txtpb",
+  "rlweParameters": "n_4096_logq_27_28_28_logt_5",
+  "sharding": {
+    "shardCount": 2
+  },
+  "trialsPerShard": 1
+}
+```
+
+Run `PIRProcessDatabase --help` to print the full default configuration.
 The only required parameter variable which affects performance is
 `rlweParameters`. These parameters are picked from a set of [PredefinedRlweParameters](https://swiftpackageindex.com/apple/swift-homomorphic-encryption/main/documentation/homomorphicencryption/predefinedrlweparameters).
 RLWE parameters are defined by ring dimension `n`, a ciphertext modulus bit
@@ -103,10 +134,23 @@ for each ciphertext.
 #### Sharding
 Our keyword PIR shards the server’s database to improve performance: the keyword
 PIR protocol is run on a database the size the query’s destination shard. The
-only sharding parameter is the number of shards. This can be set manually with:
-* `shardCount`, e.g., `"shardCount" : 10` will divide the database into 10 roughly equal-sized shards.
-* `entryCountPerShard`, e.g. `entryCountPerShard: 1000`, which will divide the database into as many shards as needed to
-  average 100 entries per shard.
+sharding strategy is set with one of:
+* `shardCount`, e.g., `"shardCount": 10` will divide the database into 10 roughly equal-sized shards.
+* `entryCountPerShard`, e.g., `"entryCountPerShard": 1000`, which will divide the database into as many shards as needed to
+  average 1000 entries per shard.
+
+Two optional fields can be combined with either strategy or both:
+* `maxShardCount`: an integer upper bound on the shard count. When used with `shardCount`, an error is thrown if the given shard count exceeds this value. When used with `entryCountPerShard`, the computed shard count is capped to this value.
+* `requirePowerOfTwoShardCount`: when `true`, the shard count must be a power of two. When used with `shardCount`, an error is thrown if the given shard count is not a power of two. When used with `entryCountPerShard`, the computed shard count is floored to the nearest power of two.
+
+For example, to compute the shard count from entry density but cap it at 16 and round down to a power of two:
+```json
+"sharding": {
+  "entryCountPerShard": 1000,
+  "maxShardCount": 16,
+  "requirePowerOfTwoShardCount": true
+}
+```
 
 More shards, or equivalently, fewer entries per shard, lowers the query load per shard. However,
 there is a privacy loss in having too many shards since the query’s shard is

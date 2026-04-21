@@ -113,18 +113,24 @@ public struct IndexDatabase {
         sharding: Sharding) throws
     {
         let database = rows
-        let shardCount = switch sharding {
-        case let .shardCount(shardCount): shardCount
-        case let .entryCountPerShard(entryCountPerShard):
-            // Flooring divide ensures `entryCountPerShard` for privacy
-            max(rows.count / entryCountPerShard, 1)
-        }
+        let shardCount = sharding.shardCount(for: rows.count)
 
         var shards: [String: IndexDatabaseShard] = [:]
         for (index, row) in database.enumerated() {
-            let shardID = String(index % shardCount)
+            let (_, shardIndex) = Self.shardInfo(for: index, shardCount: shardCount)
+            let shardID = String(shardIndex)
             shards[shardID, default: IndexDatabaseShard(shardID: shardID, rows: [])].rows.append(row)
         }
         self.shards = shards
+    }
+}
+
+extension IndexDatabase {
+    /// Convert an index in database to index in shard and shard info
+    /// - Parameters:
+    ///     - index: index in database.
+    ///     - shardCount: number of shards.
+    public static func shardInfo(for index: Int, shardCount: Int) -> (indexInShard: Int, shardIndex: Int) {
+        (indexInShard: index / shardCount, shardIndex: index % shardCount)
     }
 }

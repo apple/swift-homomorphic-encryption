@@ -20,11 +20,103 @@ import Testing
 struct KeywordDatabaseTests {
     @Test
     func shardingCodable() throws {
-        for sharding in [Sharding.shardCount(10), Sharding.entryCountPerShard(11)] {
+        // Basic round-trips
+        for sharding in try [Sharding(shardCount: 10), Sharding(entryCountPerShard: 11)] {
             let encoded = try JSONEncoder().encode(sharding)
             let decoded = try JSONDecoder().decode(Sharding.self, from: encoded)
             #expect(decoded == sharding)
         }
+        // Round-trip with optional fields set
+        let sharding = try Sharding(entryCountPerShard: 100, maxShardCount: 16,
+                                    requirePowerOfTwoShardCount: true)
+        let encoded = try JSONEncoder().encode(sharding)
+        let decoded = try JSONDecoder().decode(Sharding.self, from: encoded)
+        #expect(decoded == sharding)
+    }
+
+    @Test
+    func shardingCodableValidation() throws {
+        // Both keys present must throw
+        let bothSet = #"{"shardCount": 5, "entryCountPerShard": 10}"#
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(Sharding.self, from: Data(bothSet.utf8))
+        }
+        // Neither key present must throw
+        let neitherSet = #"{}"#
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(Sharding.self, from: Data(neitherSet.utf8))
+        }
+    }
+
+    @Test
+    func shardingStrategy() throws {
+        #expect(try Sharding(shardCount: 5).strategy == .shardCount(5))
+        #expect(try Sharding(entryCountPerShard: 100).strategy == .entryCountPerShard(100))
+    }
+
+    @Test
+    func shardingShardCount() throws {
+        // Invalid count throws
+        #expect(throws: PirError.self) {
+            try Sharding(shardCount: 0)
+        }
+
+        // maxShardCount: exceeded throws
+        #expect(throws: PirError.self) {
+            try Sharding(shardCount: 4, maxShardCount: 3)
+        }
+
+        // requirePowerOfTwoShardCount: not a power of two throws
+        #expect(throws: PirError.self) {
+            try Sharding(shardCount: 3, requirePowerOfTwoShardCount: true)
+        }
+
+        // Valid: fixed shard count
+        #expect(try Sharding(shardCount: 4).strategy == .shardCount(4))
+
+        // Valid: maxShardCount not exceeded
+        #expect(try Sharding(shardCount: 4, maxShardCount: 8).strategy == .shardCount(4))
+
+        // Valid: already a power of two
+        #expect(try Sharding(shardCount: 8, requirePowerOfTwoShardCount: true).strategy == .shardCount(8))
+    }
+
+    @Test
+    func shardingEntryCountPerShard() throws {
+        // Invalid count throws at init
+        #expect(throws: PirError.self) {
+            try Sharding(entryCountPerShard: 0)
+        }
+
+        // Use enough rows to ensure all expected shards are populated
+        let rowCount = 1000
+        let rows = PirTestUtils.randomKeywordPirDatabase(rowCount: rowCount, valueSize: 3)
+
+        // Basic: 1000 rows / 100 per shard = 10 shards
+        let sharding10 = try Sharding(entryCountPerShard: 100)
+        #expect(try KeywordDatabase(rows: rows, sharding: sharding10).shards.count == 10)
+
+        // Fewer rows than entryCountPerShard floors to 1 shard
+        let sharding1 = try Sharding(entryCountPerShard: 2000)
+        #expect(try KeywordDatabase(rows: rows, sharding: sharding1).shards.count == 1)
+
+        // maxShardCount caps the computed count
+        let shardingCapped = try Sharding(entryCountPerShard: 100, maxShardCount: 8)
+        #expect(try KeywordDatabase(rows: rows, sharding: shardingCapped).shards.count == 8)
+
+        // requirePowerOfTwoShardCount floors to nearest power of two (10 -> 8)
+        let shardingPow2 = try Sharding(entryCountPerShard: 100, requirePowerOfTwoShardCount: true)
+        #expect(try KeywordDatabase(rows: rows, sharding: shardingPow2).shards.count == 8)
+
+        // Both: cap first then floor to power of two (10 -> cap 6 -> floor 4)
+        let shardingBoth = try Sharding(entryCountPerShard: 100, maxShardCount: 6,
+                                        requirePowerOfTwoShardCount: true)
+        #expect(try KeywordDatabase(rows: rows, sharding: shardingBoth).shards.count == 4)
+
+        // Both: result already a power of two after cap (10 -> cap 8 -> 8)
+        let shardingBoth2 = try Sharding(entryCountPerShard: 100, maxShardCount: 8,
+                                         requirePowerOfTwoShardCount: true)
+        #expect(try KeywordDatabase(rows: rows, sharding: shardingBoth2).shards.count == 8)
     }
 
     @Test
@@ -36,7 +128,7 @@ struct KeywordDatabaseTests {
 
         let database = try KeywordDatabase(
             rows: testDatabase,
-            sharding: .shardCount(shardCount))
+            sharding: Sharding(shardCount: shardCount))
         #expect(database.shards.count <= shardCount)
         #expect(database.shards.map { shard in shard.value.rows.count }.sum() == rowCount)
         for row in testDatabase {

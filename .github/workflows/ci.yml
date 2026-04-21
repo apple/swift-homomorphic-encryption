@@ -49,6 +49,11 @@ jobs:
             basename=$(basename "$filename" .swift)
             swift run --configuration release ${basename}
         done
+        # Test the PIR executables
+        export PATH="/root/.swiftpm/bin:$PATH"
+        swift package experimental-install --configuration release --product PIRGenerateDatabase
+        swift package experimental-install --configuration release --product PIRProcessDatabase
+        ./ci/check-pir-process-db.sh
   pre-commit:
     timeout-minutes: 1
     runs-on: ubuntu-22.04

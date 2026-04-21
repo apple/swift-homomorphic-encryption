@@ -13,7 +13,7 @@
 // limitations under the License.
 
 public import ModularArithmetic
-import Foundation
+package import Foundation
 
 extension Sequence where Element: Hashable {
     @inlinable
@@ -209,9 +209,13 @@ extension Collection where Self.Element: Sendable {
 }
 
 extension JSONEncoder {
-    package static func encodeToString(_ fields: some Encodable) throws -> String {
+    package static func encodeToString(
+        _ fields: some Encodable,
+        formatting: JSONEncoder.OutputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]) throws
+        -> String
+    {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        encoder.outputFormatting = formatting
         let data = try encoder.encode(fields)
         guard let result = String(data: data, encoding: .utf8) else {
             throw EncodingError.invalidValue(fields, .init(codingPath: [], debugDescription: "UTF-8 encoding failed"))

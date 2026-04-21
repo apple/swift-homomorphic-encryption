@@ -548,6 +548,7 @@ public enum ProcessKeywordDatabase {
     ///   - trials: How many PIR calls to validate. Must be > 0.
     ///   - context: Context for HE computation.
     ///   - _: Type for auxiliary functionalities used in PIR.
+    ///   - callOptions: Options for the PIR call.
     /// - Returns: The shard validation results.
     /// - Throws: Error upon failure to validate the sharding.
     /// - seealso: ``ProcessKeywordDatabase/processShard(shard:with:using:onEvent:)`` to process a shard before

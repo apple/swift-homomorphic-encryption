@@ -72,9 +72,17 @@ func formatKeyCompression(_ compression: PirKeyCompressionStrategy) -> String {
     }
 }
 
-/// Returns a short threading label (`allThread` or `1Thread`).
+/// Returns a short threading label (e.g. `Threads:10`, `Threads:1`, `Threads:all`).
 func formatCallOptions(_ options: CallOptions) -> String {
-    options == .multiThreaded ? "allThread" : "1Thread"
+    switch options {
+    case let .multiThreaded(maxConcurrentTasks)
+        where maxConcurrentTasks >= ProcessInfo.processInfo.activeProcessorCount:
+        "Threads:all"
+    case let .multiThreaded(maxConcurrentTasks):
+        "Threads:\(maxConcurrentTasks)"
+    case .singleThreaded:
+        "Threads:1"
+    }
 }
 
 /// Configuration for a PIR database.
@@ -131,8 +139,11 @@ public struct PirBenchmarkConfig<Scalar: ScalarType> {
             self.keywordPirConfig = keywordPirConfig
         } else {
             let encryptionParams = try EncryptionParameters<Scalar>(from: encryptionConfig)
+            let maxSerializedBucketSize = CuckooTableConfig.defaultMaxSerializedBucketSize(
+                maxValueSize: databaseConfig.entrySizeInBytes,
+                bytesPerPlaintext: encryptionParams.bytesPerPlaintext)
             let cuckooTableConfig = CuckooTableConfig
-                .defaultKeywordPir(maxSerializedBucketSize: encryptionParams.bytesPerPlaintext)
+                .defaultKeywordPir(maxSerializedBucketSize: maxSerializedBucketSize)
             self.keywordPirConfig = try KeywordPirConfig(dimensionCount: 2, cuckooTableConfig: cuckooTableConfig,
                                                          unevenDimensions: true,
                                                          keyCompression: .hybridCompression)

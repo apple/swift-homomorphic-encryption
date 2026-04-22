@@ -26,7 +26,7 @@ extension [UInt8] {
 
 /// Runtime options to specify configs. E.g. multi-threading preference.
 public enum CallOptions: Equatable, Sendable {
-    case multiThreaded
+    case multiThreaded(maxConcurrentTasks: Int)
     case singleThreaded
 }
 
@@ -34,7 +34,33 @@ extension CallOptions {
     /// Default call options
     public static let `default` = CallOptions.singleThreaded
 
+    /// Convenience: `.multiThreaded` without explicit `maxConcurrentTasks` uses all processors.
+    public static var multiThreaded: CallOptions {
+        .multiThreaded(maxConcurrentTasks: ProcessInfo.processInfo.activeProcessorCount)
+    }
+
     @usableFromInline var multiThreading: Bool {
-        self != .singleThreaded
+        if case .singleThreaded = self {
+            return false
+        }
+        return true
+    }
+
+    /// The maximum number of concurrent tasks for this call option.
+    @usableFromInline var maxConcurrentTasks: Int {
+        switch self {
+        case let .multiThreaded(maxConcurrentTasks): maxConcurrentTasks
+        case .singleThreaded: 1
+        }
+    }
+
+    /// Divide `maxConcurrentTasks` among `groupCount` child tasks.
+    @usableFromInline
+    func divided(among groupCount: Int) -> CallOptions {
+        let childMaxConcurrentTasks = max(1, maxConcurrentTasks / max(1, groupCount))
+        if childMaxConcurrentTasks <= 1 {
+            return .singleThreaded
+        }
+        return .multiThreaded(maxConcurrentTasks: childMaxConcurrentTasks)
     }
 }

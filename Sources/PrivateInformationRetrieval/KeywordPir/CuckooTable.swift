@@ -98,6 +98,25 @@ public struct CuckooTableConfig: Hashable, Codable, Sendable {
             bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.9))
     }
 
+    /// Computes a default `maxSerializedBucketSize` for keyword PIR.
+    ///
+    /// When the serialized size of a single-entry bucket exceeds half of `bytesPerPlaintext`,
+    /// rounds up to the next multiple of `bytesPerPlaintext`. Otherwise uses `bytesPerPlaintext / 2`.
+    /// - Parameters:
+    ///   - maxValueSize: Maximum value size in bytes across all entries.
+    ///   - bytesPerPlaintext: Bytes per plaintext from the encryption parameters.
+    /// - Returns: A suitable `maxSerializedBucketSize`.
+    package static func defaultMaxSerializedBucketSize(
+        maxValueSize: Int,
+        bytesPerPlaintext: Int) -> Int
+    {
+        let singleBucketSize = HashBucket.serializedSize(singleValueSize: maxValueSize)
+        if singleBucketSize >= bytesPerPlaintext / 2 {
+            return singleBucketSize.nextMultiple(of: bytesPerPlaintext, variableTime: true)
+        }
+        return bytesPerPlaintext / 2
+    }
+
     /// Converts the configuration into one with a fixed bucket count.
     /// - Parameters:
     ///   - maxSerializedBucketSize: Maximum number of evictions when inserting a new entry.

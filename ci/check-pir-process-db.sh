@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 ## Copyright 2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");

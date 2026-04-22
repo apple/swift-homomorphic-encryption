@@ -20,7 +20,7 @@ jobs:
   soundness:
     name: soundness
     # Note: this commit is used in soundness & swifttests workflows, so they should be kept in sync
-    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@3b5576d74703a6e4e30b49e2d2311313638c82e4  # 0.0.10
+    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@a487d5014a30e7e0a75f39a4d65dc7655a1855ad  # 0.0.11
     with:
       docs_check_container_image: swift:6.2.2-noble
       format_check_enabled: false

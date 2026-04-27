@@ -543,7 +543,6 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                  useMaxSerializedBucketSize: config.useMaxSerializedBucketSize,
                                                  shardingFunction: config.shardingFunction,
                                                  symmetricPirClientConfig: config.symmetricPirConfig?.clientConfig())
-        let databaseConfig = KeywordDatabaseConfig(sharding: config.sharding, keywordPirConfig: keywordConfig)
 
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,

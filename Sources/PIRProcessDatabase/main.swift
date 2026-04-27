@@ -211,6 +211,8 @@ struct Arguments: Codable, Equatable, Hashable {
     var trialsPerShard: Int?
     // swiftlint:disable:next discouraged_optional_boolean
     var encodingEntrySize: Bool?
+    // swiftlint:disable:next discouraged_optional_boolean
+    var unevenDimensions: Bool?
 
     static func defaultJsonString() -> String {
         do {
@@ -421,7 +423,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                                            entrySizeInBytes: maxEntrySize,
                                            dimensionCount: 2,
                                            batchSize: 1,
-                                           unevenDimensions: true,
+                                           unevenDimensions: config.unevenDimensions ?? true,
                                            keyCompression: config.keyCompression ?? .noCompression,
                                            encodingEntrySize: encodingEntrySize)
         let indexPirParameter = MulPirServer<PirUtil>.generateParameter(config: pirConfig, with: context)
@@ -531,15 +533,17 @@ struct ProcessDatabase: AsyncParsableCommand {
         let database: [KeywordValuePair] =
             try Apple_SwiftHomomorphicEncryption_Pir_V1_KeywordDatabase(from: config.inputDatabase).native()
 
+        let unevenDimensions = config.unevenDimensions
         let config = try config.resolveForKeywordDatabase(for: database, scheme: PirUtil.Scheme.self)
         ProcessDatabase.logger.info("Processing database with configuration:\n\(config)")
         let keywordConfig = try KeywordPirConfig(dimensionCount: 2,
                                                  cuckooTableConfig: config.cuckooTableConfig,
-                                                 unevenDimensions: true,
+                                                 unevenDimensions: unevenDimensions ?? true,
                                                  keyCompression: config.keyCompression,
                                                  useMaxSerializedBucketSize: config.useMaxSerializedBucketSize,
                                                  shardingFunction: config.shardingFunction,
                                                  symmetricPirClientConfig: config.symmetricPirConfig?.clientConfig())
+        let databaseConfig = KeywordDatabaseConfig(sharding: config.sharding, keywordPirConfig: keywordConfig)
 
         let databaseConfig = KeywordDatabaseConfig(
             sharding: config.sharding,

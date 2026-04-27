@@ -108,4 +108,37 @@ struct ProcessDatabaseTests {
         }
         #expect(throws: PirError.self) { try decoded(sharding: #"{"entryCountPerShard": 0}"#) }
     }
+
+    @Test
+    func unevenDimensionsDecoding() throws {
+        func decoded(unevenDimensions: String) throws -> Arguments {
+            let json = """
+                {
+                  "rlweParameters": "n_4096_logq_27_28_28_logt_5",
+                  "databaseType": "keyword",
+                  "inputDatabase": "input.txtpb",
+                  "outputDatabase": "output-SHARD_ID.bin",
+                  "outputPirParameters": "params-SHARD_ID.txtpb",
+                  "unevenDimensions": \(unevenDimensions)
+                }
+                """
+            return try JSONDecoder().decode(Arguments.self, from: Data(json.utf8))
+        }
+
+        #expect(try decoded(unevenDimensions: "true").unevenDimensions == true)
+        #expect(try decoded(unevenDimensions: "false").unevenDimensions == false)
+
+        // Omitting the field leaves it nil (defaults to true at processing time)
+        let json = """
+            {
+              "rlweParameters": "n_4096_logq_27_28_28_logt_5",
+              "databaseType": "keyword",
+              "inputDatabase": "input.txtpb",
+              "outputDatabase": "output-SHARD_ID.bin",
+              "outputPirParameters": "params-SHARD_ID.txtpb"
+            }
+            """
+        let noField = try JSONDecoder().decode(Arguments.self, from: Data(json.utf8))
+        #expect(noField.unevenDimensions == nil)
+    }
 }

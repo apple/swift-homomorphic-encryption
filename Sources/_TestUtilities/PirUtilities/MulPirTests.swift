@@ -17,6 +17,21 @@ public import PrivateInformationRetrieval
 public import Testing
 
 extension PirTestUtils {
+    @usableFromInline
+    struct UnevenTestVector {
+        @usableFromInline let entryCount: Int
+        @usableFromInline let batchSize: Int
+        @usableFromInline let evenDims: [Int]
+        @usableFromInline let unevenDimsForBfv: [Int]
+        @usableFromInline
+        init(entryCount: Int, batchSize: Int, evenDims: [Int], unevenDimsForBfv: [Int]) {
+            self.entryCount = entryCount
+            self.batchSize = batchSize
+            self.evenDims = evenDims
+            self.unevenDimsForBfv = unevenDimsForBfv
+        }
+    }
+
     /// MulPir tests.
     public enum MulPirTests {
         /// Tests evaluation key configuration.
@@ -181,6 +196,79 @@ extension PirTestUtils {
                 for vector in vectors {
                     #expect(try client.computeCoordinates(at: vector.0) == vector.1)
                 }
+            }
+        }
+
+        /// Tests that `unevenDimensions` produces exact expected dimensions for known inputs.
+        @inlinable
+        public static func unevenDimensionVectorsTest<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
+            // entrySizeInBytes=21 > bytesPerPlaintext=20 for test context (polyDegree=16, plaintextModulus=1153),
+            // so perChunkPlaintextCount == entryCount for all vectors.
+            let vectors: [UnevenTestVector] = [
+                // perfect square: floor(sqrt(9))=3 → [3,3]; unevenLimit=nextPow2(6)=8 → [5,2]
+                UnevenTestVector(entryCount: 9, batchSize: 1, evenDims: [3, 3], unevenDimsForBfv: [5, 2]),
+                // non-square needing one bump: floor(sqrt(20))=4 → [5,4]; unevenLimit=nextPow2(9)=16 → [10,2]
+                UnevenTestVector(entryCount: 20, batchSize: 1, evenDims: [5, 4], unevenDimsForBfv: [10, 2]),
+                // floor(sqrt(100))=10 → [10,10]; unevenLimit=nextPow2(20)=32 → [25,4]
+                UnevenTestVector(entryCount: 100, batchSize: 1, evenDims: [10, 10], unevenDimsForBfv: [25, 4]),
+                // floor(sqrt(72))=8 → [9,8]; unevenLimit=nextPow2(17)=32 → [24,3]
+                UnevenTestVector(entryCount: 72, batchSize: 1, evenDims: [9, 8], unevenDimsForBfv: [24, 3]),
+                // batchSize=3: even→[10,10]; unevenLimit=nextPow2(60)=64 → [13,8]
+                UnevenTestVector(entryCount: 100, batchSize: 3, evenDims: [10, 10], unevenDimsForBfv: [13, 8]),
+            ]
+            let context: Scheme.Context = try TestUtils.getTestContext()
+            for vector in vectors {
+                for unevenDimensions in [false, true] {
+                    let config = try IndexPirConfig(
+                        entryCount: vector.entryCount,
+                        entrySizeInBytes: 21,
+                        dimensionCount: 2,
+                        batchSize: vector.batchSize,
+                        unevenDimensions: unevenDimensions,
+                        keyCompression: .noCompression,
+                        encodingEntrySize: false)
+                    let param = MulPir<Scheme>.generateParameter(config: config, with: context)
+                    let expected = (unevenDimensions && Scheme.cryptosystem == .bfv)
+                        ? vector.unevenDimsForBfv
+                        : vector.evenDims
+                    #expect(param.dimensions == expected)
+                }
+            }
+        }
+
+        /// Tests that `unevenDimensions` produces the expected dimension layout.
+        @inlinable
+        public static func unevenDimensionsTest<Scheme: HeScheme>(scheme _: Scheme.Type) throws {
+            let context: Scheme.Context = try TestUtils.getTestContext()
+            let entryCount = 100
+
+            let unevenConfig = try IndexPirConfig(
+                entryCount: entryCount,
+                entrySizeInBytes: 1,
+                dimensionCount: 2,
+                batchSize: 1,
+                unevenDimensions: true,
+                keyCompression: .noCompression,
+                encodingEntrySize: false)
+            let unevenParam = MulPir<Scheme>.generateParameter(config: unevenConfig, with: context)
+
+            let evenConfig = try IndexPirConfig(
+                entryCount: entryCount,
+                entrySizeInBytes: 1,
+                dimensionCount: 2,
+                batchSize: 1,
+                unevenDimensions: false,
+                keyCompression: .noCompression,
+                encodingEntrySize: false)
+            let evenParam = MulPir<Scheme>.generateParameter(config: evenConfig, with: context)
+
+            if Scheme.cryptosystem == .bfv {
+                #expect(unevenParam.dimensions[0] > unevenParam.dimensions[1])
+                #expect(abs(evenParam.dimensions[0] - evenParam.dimensions[1]) <= 1)
+                #expect(unevenParam.dimensions != evenParam.dimensions)
+            } else {
+                // unevenDimensions only applies to BFV; other schemes currently produce identical dims
+                #expect(unevenParam.dimensions == evenParam.dimensions)
             }
         }
     }

@@ -38,4 +38,18 @@ struct MulPirTests {
         try PirTestUtils.MulPirTests.computeCoordinates(pirUtil: PirUtil<Bfv<UInt32>>.self)
         try PirTestUtils.MulPirTests.computeCoordinates(pirUtil: PirUtil<Bfv<UInt64>>.self)
     }
+
+    @Test
+    func unevenDimensions() throws {
+        try PirTestUtils.MulPirTests.unevenDimensionsTest(scheme: NoOpScheme.self)
+        try PirTestUtils.MulPirTests.unevenDimensionsTest(scheme: Bfv<UInt32>.self)
+        try PirTestUtils.MulPirTests.unevenDimensionsTest(scheme: Bfv<UInt64>.self)
+    }
+
+    @Test
+    func unevenDimensionVectors() throws {
+        try PirTestUtils.MulPirTests.unevenDimensionVectorsTest(scheme: NoOpScheme.self)
+        try PirTestUtils.MulPirTests.unevenDimensionVectorsTest(scheme: Bfv<UInt32>.self)
+        try PirTestUtils.MulPirTests.unevenDimensionVectorsTest(scheme: Bfv<UInt64>.self)
+    }
 }

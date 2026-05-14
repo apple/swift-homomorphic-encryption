@@ -13,11 +13,11 @@
 // limitations under the License.
 
 public import Benchmark
+public import Foundation
 public import HomomorphicEncryption
+public import HomomorphicEncryptionProtobuf
 public import PrivateNearestNeighborSearch
-import Foundation
-import HomomorphicEncryptionProtobuf
-import PrivateNearestNeighborSearchProtobuf
+public import PrivateNearestNeighborSearchProtobuf
 
 @usableFromInline nonisolated(unsafe) let PnnsBenchmarkConfiguration = Benchmark.Configuration(
     metrics: [
@@ -413,7 +413,7 @@ public func pnnsProtoBenchmarks<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void 
                 to: benchmarkContext.query,
                 using: benchmarkContext.evaluationKey)
             let proto = try response.proto()
-            let contexts = [try Context<Scheme>(encryptionParameters: .init(from: encryptionConfig))]
+            let contexts = try [Context<Scheme>(encryptionParameters: .init(from: encryptionConfig))]
             benchmark.startMeasurement()
             for _ in benchmark.scaledIterations {
                 try blackHole(_ = proto.native(contexts: contexts) as Response<Scheme>)

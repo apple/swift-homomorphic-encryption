@@ -13,11 +13,11 @@
 // limitations under the License.
 
 public import Benchmark
+public import Foundation
 public import HomomorphicEncryption
+public import HomomorphicEncryptionProtobuf
 public import PrivateInformationRetrieval
-import Foundation
-import HomomorphicEncryptionProtobuf
-import PrivateInformationRetrievalProtobuf
+public import PrivateInformationRetrievalProtobuf
 
 @usableFromInline nonisolated(unsafe) let pirBenchmarkConfiguration = Benchmark.Configuration(
     metrics: [
@@ -410,6 +410,7 @@ public func indexPirProtoBenchmarks<Scheme: HeScheme>(_: Scheme.Type) -> () -> V
         polyDegree: 4096,
         plaintextModulusBits: 5,
         coefficientModulusBits: [27, 28, 28])
+    // swiftlint:disable:next force_try
     let pirConfig = try! IndexPirConfig(
         entryCount: entryCount,
         entrySizeInBytes: entrySizeInBytes,

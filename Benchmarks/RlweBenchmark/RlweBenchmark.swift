@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ func getRandomPlaintextData<T: ScalarType>(count: Int, in range: Range<T>) -> [T
     (0..<count).map { _ in T.random(in: range) }
 }
 
-struct RlweBenchmarkContext<Scheme: HeScheme>: Sendable {
+struct RlweBenchmarkContext<Scheme: HeScheme> {
     var encryptionParameters: EncryptionParameters<Scheme>
     var context: Context<Scheme>
 
@@ -683,6 +683,18 @@ func evaluationKeyDeserializeSeedBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> 
     }
 }
 
+func evaluationKeySerializeSeedBenchmark<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    {
+        benchmark("EvaluationKeySerializeSeed", Scheme.self) { benchmark in
+            let benchmarkContext: RlweBenchmarkContext<Scheme> = try StaticRlweBenchmarkContext.getBenchmarkContext()
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                blackHole(benchmarkContext.evaluationKey.serialize())
+            }
+        }
+    }
+}
+
 // swiftlint:disable:next closure_body_length
 nonisolated(unsafe) let benchmarks: () -> Void = {
     // Context
@@ -793,4 +805,7 @@ nonisolated(unsafe) let benchmarks: () -> Void = {
 
     evaluationKeyDeserializeSeedBenchmark(Bfv<UInt32>.self)()
     evaluationKeyDeserializeSeedBenchmark(Bfv<UInt64>.self)()
+
+    evaluationKeySerializeSeedBenchmark(Bfv<UInt32>.self)()
+    evaluationKeySerializeSeedBenchmark(Bfv<UInt64>.self)()
 }

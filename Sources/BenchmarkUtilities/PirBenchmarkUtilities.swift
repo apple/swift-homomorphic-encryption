@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Benchmark
+public import Benchmark
+public import HomomorphicEncryption
+public import PrivateInformationRetrieval
 import Foundation
-import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
-import PrivateInformationRetrieval
 import PrivateInformationRetrievalProtobuf
 
 @usableFromInline nonisolated(unsafe) let pirBenchmarkConfiguration = Benchmark.Configuration(
@@ -393,5 +393,110 @@ public func keywordPirBenchmark<Scheme: HeScheme>(_: Scheme.Type, entryCount: In
                 parameterConfig: encryptionConfig,
                 keyCompression: keyCompression)
         }
+    }
+}
+
+// MARK: - Serialization benchmarks
+
+@usableFromInline nonisolated(unsafe) let pirSerializationBenchmarkConfiguration = Benchmark.Configuration(
+    metrics: [.wallClock, .mallocCountTotal, .peakMemoryResident],
+    maxDuration: .seconds(3))
+
+/// Benchmarks `IndexPir` query/response `.proto()` and `.native()` conversions.
+public func indexPirProtoBenchmarks<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    let entryCount = 1_000_000
+    let entrySizeInBytes = 1
+    let encryptionConfig = PirEncryptionParametersConfig(
+        polyDegree: 4096,
+        plaintextModulusBits: 5,
+        coefficientModulusBits: [27, 28, 28])
+    let pirConfig = try! IndexPirConfig(
+        entryCount: entryCount,
+        entrySizeInBytes: entrySizeInBytes,
+        dimensionCount: 2,
+        batchSize: 1,
+        unevenDimensions: true,
+        keyCompression: .noCompression)
+
+    let suffix = [
+        String(describing: Scheme.self),
+        encryptionConfig.description,
+        "entryCount=\(entryCount)",
+        "entrySize=\(entrySizeInBytes)",
+    ].joined(separator: "/")
+
+    // swiftlint:disable:next closure_body_length
+    return {
+        // swiftlint:disable closure_parameter_position
+        Benchmark("IndexPirQueryProto/\(suffix)", configuration: pirSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>) in
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(benchmarkContext.query.proto())
+            }
+        } setup: {
+            try IndexPirBenchmarkContext(
+                server: MulPirServer<Scheme>.self,
+                client: MulPirClient<Scheme>.self,
+                pirConfig: pirConfig,
+                parameterConfig: encryptionConfig)
+        }
+
+        Benchmark("IndexPirQueryNative/\(suffix)", configuration: pirSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>) in
+            let proto = try benchmarkContext.query.proto()
+            let context = try Context<Scheme>(encryptionParameters: .init(from: encryptionConfig))
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = proto.native(context: context) as Query<Scheme>)
+            }
+        } setup: {
+            try IndexPirBenchmarkContext(
+                server: MulPirServer<Scheme>.self,
+                client: MulPirClient<Scheme>.self,
+                pirConfig: pirConfig,
+                parameterConfig: encryptionConfig)
+        }
+
+        Benchmark("IndexPirResponseProto/\(suffix)", configuration: pirSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>) in
+            let response = try benchmarkContext.server.computeResponse(
+                to: benchmarkContext.query,
+                using: benchmarkContext.evaluationKey)
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(response.proto())
+            }
+        } setup: {
+            try IndexPirBenchmarkContext(
+                server: MulPirServer<Scheme>.self,
+                client: MulPirClient<Scheme>.self,
+                pirConfig: pirConfig,
+                parameterConfig: encryptionConfig)
+        }
+
+        Benchmark("IndexPirResponseNative/\(suffix)", configuration: pirSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<Scheme>, MulPirClient<Scheme>>) in
+            let response = try benchmarkContext.server.computeResponse(
+                to: benchmarkContext.query,
+                using: benchmarkContext.evaluationKey)
+            let proto = try response.proto()
+            let context = try Context<Scheme>(encryptionParameters: .init(from: encryptionConfig))
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = proto.native(context: context) as Response<Scheme>)
+            }
+        } setup: {
+            try IndexPirBenchmarkContext(
+                server: MulPirServer<Scheme>.self,
+                client: MulPirClient<Scheme>.self,
+                pirConfig: pirConfig,
+                parameterConfig: encryptionConfig)
+        }
+        // swiftlint:enable closure_parameter_position
     }
 }

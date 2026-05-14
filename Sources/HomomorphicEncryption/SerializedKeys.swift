@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ extension SecretKey {
     ///   - serialized: Serialized secret key.
     ///   - context: Context to associate with the secret key.
     /// - Throws: ``HeError`` upon failure to deserialize.
+    @inlinable
     public convenience init(deserialize serialized: SerializedSecretKey, context: Context<Scheme>) throws {
         let polys: [PolyRq<Scheme.Scalar, Eval>] = try Serialize.deserializePolys(
             from: serialized.polys,
@@ -39,6 +40,7 @@ extension SecretKey {
 
     /// Serializes the secret key.
     /// - Returns: The serialized secret key.
+    @inlinable
     public func serialize() -> SerializedSecretKey {
         var polys = [UInt8](
             repeating: 0,
@@ -62,6 +64,7 @@ extension KeySwitchKey {
         }
     }
 
+    @inlinable
     func serialize() -> [SerializedCiphertext<Scalar>] {
         ciphers.map { $0.serialize() }
     }
@@ -87,6 +90,7 @@ extension GaloisKey {
         }
     }
 
+    @inlinable
     func serialize() -> SerializedGaloisKey<Scalar> {
         SerializedGaloisKey(galoisKey: keys.mapValues { $0.serialize() })
     }
@@ -110,6 +114,7 @@ extension RelinearizationKey {
         self.keySwitchKey = try KeySwitchKey(deserialize: serialized.relinKey, context: context)
     }
 
+    @inlinable
     func serialize() -> SerializedRelinearizationKey<Scalar> {
         SerializedRelinearizationKey(relinKey: keySwitchKey.serialize())
     }
@@ -150,6 +155,7 @@ extension EvaluationKey {
 
     /// Serializes the evaluation key.
     /// - Returns: The serialized evaluation key.
+    @inlinable
     public func serialize() -> SerializedEvaluationKey<Scheme.Scalar> {
         SerializedEvaluationKey(galoisKey: galoisKey.map { $0.serialize() },
                                 relinearizationKey: relinearizationKey.map { $0.serialize() })

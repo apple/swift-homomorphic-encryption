@@ -14,10 +14,10 @@
 
 public import Benchmark
 public import HomomorphicEncryption
+public import PrivateNearestNeighborSearch
 import ApplicationProtobuf
 import Foundation
 import HomomorphicEncryptionProtobuf
-import PrivateNearestNeighborSearch
 
 @usableFromInline nonisolated(unsafe) let pnnsBenchmarkConfiguration = Benchmark.Configuration(
     metrics: [
@@ -342,5 +342,129 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
         self.responseSize = try response.size()
         self.responseCiphertextCount = response.ciphertextMatrices
             .map { matrix in matrix.ciphertexts.count }.sum()
+    }
+}
+
+// MARK: - Serialization benchmarks
+
+@usableFromInline nonisolated(unsafe) let pnnsSerializationBenchmarkConfiguration = Benchmark.Configuration(
+    metrics: [.wallClock, .mallocCountTotal, .peakMemoryResident],
+    maxDuration: .seconds(3))
+
+/// Benchmarks PNNS `Query` / `Response` `.proto()` and `.native()` conversions.
+public func pnnsProtoBenchmarks<Scheme: HeScheme>(
+    _: Scheme.Type,
+    // swiftlint:disable:next force_try
+    config: PnnsBenchmarkConfig = try! .init()) -> () -> Void
+{
+    // swiftlint:disable:next closure_body_length
+    {
+        let suffix = [
+            String(describing: Scheme.self),
+            "rowCount=\(config.databaseConfig.rowCount)",
+            "vectorDimension=\(config.databaseConfig.vectorDimension)",
+        ].joined(separator: "/")
+        // swiftlint:disable closure_parameter_position
+
+        Benchmark("PnnsQueryProto/\(suffix)",
+                  configuration: pnnsSerializationBenchmarkConfiguration)
+        { (
+            benchmark,
+            benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            let secretKey = try benchmarkContext.client.generateSecretKey()
+            let databaseVectors = Array2d(
+                data: getDatabaseForTesting(config: PnnsDatabaseConfig(
+                    rowCount: 1,
+                    vectorDimension: benchmarkContext.server.config.vectorDimension))
+                    .rows.map(\.vector))
+            let query = try benchmarkContext.client.generateQuery(for: databaseVectors, using: secretKey)
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(query.proto())
+            }
+        } setup: {
+            try await PnnsBenchmarkContext<Scheme>(
+                databaseConfig: config.databaseConfig,
+                encryptionConfig: config.encryptionConfig,
+                queryCount: 1)
+        }
+
+        Benchmark("PnnsQueryNative/\(suffix)",
+                  configuration: pnnsSerializationBenchmarkConfiguration)
+        { (
+            benchmark,
+            benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            let secretKey = try benchmarkContext.client.generateSecretKey()
+            let databaseVectors = Array2d(
+                data: getDatabaseForTesting(config: PnnsDatabaseConfig(
+                    rowCount: 1,
+                    vectorDimension: benchmarkContext.server.config.vectorDimension))
+                    .rows.map(\.vector))
+            let query = try benchmarkContext.client.generateQuery(for: databaseVectors, using: secretKey)
+            let proto = try query.proto()
+            let context = benchmarkContext.contexts[0]
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = proto.native(context: context) as Query<Scheme>)
+            }
+        } setup: {
+            try await PnnsBenchmarkContext<Scheme>(
+                databaseConfig: config.databaseConfig,
+                encryptionConfig: config.encryptionConfig,
+                queryCount: 1)
+        }
+
+        Benchmark("PnnsResponseProto/\(suffix)",
+                  configuration: pnnsSerializationBenchmarkConfiguration)
+        { (
+            benchmark,
+            benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            let secretKey = try benchmarkContext.client.generateSecretKey()
+            let evaluationKey = try benchmarkContext.client.generateEvaluationKey(using: secretKey)
+            let databaseVectors = Array2d(
+                data: getDatabaseForTesting(config: PnnsDatabaseConfig(
+                    rowCount: 1,
+                    vectorDimension: benchmarkContext.server.config.vectorDimension))
+                    .rows.map(\.vector))
+            let query = try benchmarkContext.client.generateQuery(for: databaseVectors, using: secretKey)
+            let response = try await benchmarkContext.server.computeResponse(to: query, using: evaluationKey)
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(response.proto())
+            }
+        } setup: {
+            try await PnnsBenchmarkContext<Scheme>(
+                databaseConfig: config.databaseConfig,
+                encryptionConfig: config.encryptionConfig,
+                queryCount: 1)
+        }
+
+        Benchmark("PnnsResponseNative/\(suffix)",
+                  configuration: pnnsSerializationBenchmarkConfiguration)
+        { (
+            benchmark,
+            benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            let secretKey = try benchmarkContext.client.generateSecretKey()
+            let evaluationKey = try benchmarkContext.client.generateEvaluationKey(using: secretKey)
+            let databaseVectors = Array2d(
+                data: getDatabaseForTesting(config: PnnsDatabaseConfig(
+                    rowCount: 1,
+                    vectorDimension: benchmarkContext.server.config.vectorDimension))
+                    .rows.map(\.vector))
+            let query = try benchmarkContext.client.generateQuery(for: databaseVectors, using: secretKey)
+            let response = try await benchmarkContext.server.computeResponse(to: query, using: evaluationKey)
+            let proto = try response.proto()
+            let contexts = benchmarkContext.contexts
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = proto.native(contexts: contexts) as Response<Scheme>)
+            }
+        } setup: {
+            try await PnnsBenchmarkContext<Scheme>(
+                databaseConfig: config.databaseConfig,
+                encryptionConfig: config.encryptionConfig,
+                queryCount: 1)
+        }
+        // swiftlint:enable closure_parameter_position
     }
 }

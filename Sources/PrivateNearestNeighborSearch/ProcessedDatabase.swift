@@ -52,6 +52,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     ///   - serialized: Serialized processed database.
     ///   - contexts: Contexts for HE computation, one per plaintext modulus.
     /// - Throws: Error upon failure to load the database.
+    @inlinable
     public init(from serialized: SerializedProcessedDatabase<Scheme>, contexts: [Scheme.Context] = []) throws {
         var contexts = contexts
         if contexts.isEmpty {
@@ -76,6 +77,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     /// Serializes the processed database.
     /// - Returns: The serialized processed database.
     /// - Throws: Error upon failure to serialize.
+    @inlinable
     public func serialize() throws -> SerializedProcessedDatabase<Scheme> {
         try SerializedProcessedDatabase(
             plaintextMatrices: plaintextMatrices

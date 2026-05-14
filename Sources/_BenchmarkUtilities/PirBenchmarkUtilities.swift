@@ -487,3 +487,113 @@ public func keywordPirBenchmark<PirUtil: PirUtilProtocol>(
         // swiftlint:enable closure_parameter_position
     }
 }
+
+// MARK: - Serialization benchmarks
+
+@usableFromInline nonisolated(unsafe) let pirSerializationBenchmarkConfiguration = Benchmark.Configuration(
+    metrics: [.wallClock, .mallocCountTotal, .peakMemoryResident],
+    maxDuration: .seconds(3))
+
+/// Benchmarks `IndexPir` query/response `.proto()` and `.native()` conversions.
+public func indexPirProtoBenchmarks<PirUtil: PirUtilProtocol>(
+    _: PirUtil.Type,
+    // swiftlint:disable:next force_try
+    config: PirBenchmarkConfig<PirUtil.Scheme.Scalar> = try! .init()) -> () -> Void
+{
+    // swiftlint:disable:next closure_body_length
+    {
+        let suffix = [
+            String(describing: PirUtil.Scheme.self),
+            config.encryptionConfig.description,
+            formatEntryCountAndSize(
+                count: config.databaseConfig.entryCount,
+                size: config.databaseConfig.entrySizeInBytes),
+        ].joined(separator: "/")
+
+        let queryProtoName = "IndexPirQueryProto/\(suffix)"
+        // swiftlint:disable closure_parameter_position
+        Benchmark(queryProtoName, configuration: pirSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<PirUtil>, MulPirClient<PirUtil>>) in
+            let secretKey = try benchmarkContext.context.generateSecretKey()
+            let queryIndex = Int.random(in: 0..<benchmarkContext.server.parameter.entryCount)
+            let query = try benchmarkContext.client.generateQuery(at: [queryIndex], using: secretKey)
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(query.proto())
+            }
+        } setup: {
+            try await IndexPirBenchmarkContext(
+                server: MulPirServer<PirUtil>.self,
+                client: MulPirClient<PirUtil>.self,
+                pirConfig: config.indexPirConfig,
+                encryptionConfig: config.encryptionConfig)
+        }
+
+        let queryNativeName = "IndexPirQueryNative/\(suffix)"
+        Benchmark(queryNativeName, configuration: pirSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<PirUtil>, MulPirClient<PirUtil>>) in
+            let secretKey = try benchmarkContext.context.generateSecretKey()
+            let queryIndex = Int.random(in: 0..<benchmarkContext.server.parameter.entryCount)
+            let query = try benchmarkContext.client.generateQuery(at: [queryIndex], using: secretKey)
+            let proto = try query.proto()
+            let context = benchmarkContext.context
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = proto.native(context: context) as Query<PirUtil.Scheme>)
+            }
+        } setup: {
+            try await IndexPirBenchmarkContext(
+                server: MulPirServer<PirUtil>.self,
+                client: MulPirClient<PirUtil>.self,
+                pirConfig: config.indexPirConfig,
+                encryptionConfig: config.encryptionConfig)
+        }
+
+        let responseProtoName = "IndexPirResponseProto/\(suffix)"
+        Benchmark(responseProtoName, configuration: pirSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<PirUtil>, MulPirClient<PirUtil>>) in
+            let secretKey = try benchmarkContext.context.generateSecretKey()
+            let evaluationKey = try benchmarkContext.client.generateEvaluationKey(using: secretKey)
+            let queryIndex = Int.random(in: 0..<benchmarkContext.server.parameter.entryCount)
+            let query = try benchmarkContext.client.generateQuery(at: [queryIndex], using: secretKey)
+            let response = try await benchmarkContext.server.computeResponse(to: query, using: evaluationKey)
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(response.proto())
+            }
+        } setup: {
+            try await IndexPirBenchmarkContext(
+                server: MulPirServer<PirUtil>.self,
+                client: MulPirClient<PirUtil>.self,
+                pirConfig: config.indexPirConfig,
+                encryptionConfig: config.encryptionConfig)
+        }
+
+        let responseNativeName = "IndexPirResponseNative/\(suffix)"
+        Benchmark(responseNativeName, configuration: pirSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: IndexPirBenchmarkContext<MulPirServer<PirUtil>, MulPirClient<PirUtil>>) in
+            let secretKey = try benchmarkContext.context.generateSecretKey()
+            let evaluationKey = try benchmarkContext.client.generateEvaluationKey(using: secretKey)
+            let queryIndex = Int.random(in: 0..<benchmarkContext.server.parameter.entryCount)
+            let query = try benchmarkContext.client.generateQuery(at: [queryIndex], using: secretKey)
+            let response = try await benchmarkContext.server.computeResponse(to: query, using: evaluationKey)
+            let proto = try response.proto()
+            let context = benchmarkContext.context
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = proto.native(context: context) as Response<PirUtil.Scheme>)
+            }
+        } setup: {
+            try await IndexPirBenchmarkContext(
+                server: MulPirServer<PirUtil>.self,
+                client: MulPirClient<PirUtil>.self,
+                pirConfig: config.indexPirConfig,
+                encryptionConfig: config.encryptionConfig)
+        }
+        // swiftlint:enable closure_parameter_position
+    }
+}

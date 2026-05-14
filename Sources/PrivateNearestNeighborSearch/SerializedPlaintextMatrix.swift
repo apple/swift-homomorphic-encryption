@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,6 +60,7 @@ extension PlaintextMatrix where Format == Coeff {
     ///   - serialized: Serialized plaintext matrix.
     ///   - context: Context to associate with the plaintext matrix.
     /// - Throws: Error upon failure to deserialize.
+    @inlinable
     init(deserialize serialized: SerializedPlaintextMatrix, context: Scheme.Context) throws {
         let plaintexts = try serialized.plaintexts.map { serializedPlaintext in
             try Plaintext<Scheme, Format>(deserialize: serializedPlaintext, context: context)
@@ -76,6 +77,7 @@ extension PlaintextMatrix where Format == Eval {
     ///   - moduliCount: Optional number of moduli to associate with each plaintext. If not set, each plaintext will
     /// have the top-level ciphertext context with all the moduli.
     /// - Throws: Error upon failure to deserialize.
+    @inlinable
     init(
         deserialize serialized: SerializedPlaintextMatrix,
         context: Scheme.Context,

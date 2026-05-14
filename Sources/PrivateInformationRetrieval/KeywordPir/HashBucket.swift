@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ public struct HashBucket: Equatable {
         ///   - offset: The offset in the buffer where the entry should start from. After successful deserialization,
         /// the offset will be updated to the next entry.
         /// - Throws: Error upon invalid buffer.
+        @inlinable
         init(deserialize buffer: UnsafeRawBufferPointer, offset: inout Int) throws {
             guard buffer.count >= offset + MemoryLayout<KeywordHash>.size + MemoryLayout<UInt16>.size else {
                 throw PirError
@@ -113,6 +114,7 @@ public struct HashBucket: Equatable {
     /// Deserializes a HashBucket.
     /// - Parameter rawBucket: Serialized ``HashBucket`` buffer.
     /// - Throws: Error upon invalid buffer.
+    @inlinable
     init(deserialize rawBucket: [UInt8]) throws {
         guard !rawBucket.isEmpty else {
             throw PirError.corruptedData("Serialized HashBucket shouldn't be empty.")

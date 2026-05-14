@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public import Foundation
 public import HomomorphicEncryption
-import Foundation
+public import SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native() throws -> ErrorStdDev {
         switch self {
         case .stddev32:
@@ -32,6 +34,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev {
 extension ErrorStdDev {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev {
         switch self {
         case .stdDev32:
@@ -43,6 +46,7 @@ extension ErrorStdDev {
 extension Apple_SwiftHomomorphicEncryption_V1_SerializedPlaintext {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
+    @inlinable
     public func native() -> SerializedPlaintext {
         SerializedPlaintext(poly: Array(poly))
     }
@@ -51,6 +55,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedPlaintext {
 extension SerializedPlaintext {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_V1_SerializedPlaintext {
         Apple_SwiftHomomorphicEncryption_V1_SerializedPlaintext.with { $0.poly = Data(poly) }
     }
@@ -60,6 +65,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertextVec {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<T: ScalarType>() throws -> [SerializedCiphertext<T>] {
         try ciphertexts.map { try $0.native() }
     }
@@ -68,6 +74,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertextVec {
 extension Sequence {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto<T: ScalarType>() -> Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertextVec
         where Element == SerializedCiphertext<T>
     {
@@ -79,6 +86,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertext {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<T: ScalarType>() throws -> SerializedCiphertext<T> {
         guard let serializedCiphertextType else {
             throw ConversionError.unsetOneof(oneof: Self.self, field: \Self.serializedCiphertextType)
@@ -98,6 +106,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertext {
 extension SerializedCiphertext {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_V1_SerializedCiphertext {
         switch self {
         case let .full(polys: polys, skipLSBs: skipLSBs, correctionFactor: correctionFactor):
@@ -124,6 +133,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedKeySwitchKey {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<T: ScalarType>() throws -> [SerializedCiphertext<T>] {
         try keySwitchKey.native()
     }
@@ -132,6 +142,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedKeySwitchKey {
 extension Sequence {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto<T: ScalarType>() -> Apple_SwiftHomomorphicEncryption_V1_SerializedKeySwitchKey
         where Element == SerializedCiphertext<T>
     {
@@ -143,6 +154,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedGaloisKey {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<T: ScalarType>() throws -> SerializedGaloisKey<T> {
         var nativeKeySwitchKeys: [Int: [SerializedCiphertext<T>]] = [:]
         for (key, value) in keySwitchKeys {
@@ -155,6 +167,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedGaloisKey {
 extension SerializedGaloisKey {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_V1_SerializedGaloisKey {
         var protoKeySwitchKeys: [UInt64: Apple_SwiftHomomorphicEncryption_V1_SerializedKeySwitchKey] = [:]
         for (key, value) in galoisKey {
@@ -170,6 +183,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedRelinKey {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<T: ScalarType>() throws -> SerializedRelinearizationKey<T> {
         try SerializedRelinearizationKey(relinKey: relinKey.native())
     }
@@ -178,6 +192,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedRelinKey {
 extension SerializedRelinearizationKey {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_V1_SerializedRelinKey {
         Apple_SwiftHomomorphicEncryption_V1_SerializedRelinKey.with { relinKey in
             relinKey.relinKey = self.relinKey.proto()
@@ -189,6 +204,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedSecretKey {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native() throws -> SerializedSecretKey {
         SerializedSecretKey(polys: Array(polys))
     }
@@ -197,6 +213,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedSecretKey {
 extension SerializedSecretKey {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_V1_SerializedSecretKey {
         Apple_SwiftHomomorphicEncryption_V1_SerializedSecretKey.with { secretKey in
             secretKey.polys = Data(polys)
@@ -208,6 +225,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedEvaluationKey {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<T: ScalarType>() throws -> SerializedEvaluationKey<T> {
         try SerializedEvaluationKey(galoisKey: galoisKey.native(), relinearizationKey: relinKey.native())
     }
@@ -216,6 +234,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedEvaluationKey {
     /// - Parameter context: Context to associate with the native object.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<Scheme: HeScheme>(context: Scheme.Context) throws -> EvaluationKey<Scheme> {
         let serialized: SerializedEvaluationKey<Scheme.Scalar> = try native()
         return try EvaluationKey(deserialize: serialized, context: context)
@@ -225,6 +244,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SerializedEvaluationKey {
 extension SerializedEvaluationKey {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_V1_SerializedEvaluationKey {
         Apple_SwiftHomomorphicEncryption_V1_SerializedEvaluationKey.with { evalKey in
             if let galoisKey {
@@ -240,6 +260,7 @@ extension SerializedEvaluationKey {
 extension Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
+    @inlinable
     public func native() -> EvaluationKeyConfig {
         .init(galoisElements: galoisElements.map(Int.init), hasRelinearizationKey: hasRelinKey_p)
     }
@@ -252,6 +273,7 @@ extension EvaluationKeyConfig {
     ///   - scheme: HE scheme to associate with the protobuf object.
     /// - Throws: Error upon unsupported encryption parameters.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto(encryptionParameters: EncryptionParameters<some ScalarType>, scheme: (some HeScheme).Type) throws
         -> Apple_SwiftHomomorphicEncryption_V1_EvaluationKeyConfig
     {
@@ -267,6 +289,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SecurityLevel {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native() throws -> SecurityLevel {
         switch self {
         case .unspecified:
@@ -282,6 +305,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_SecurityLevel {
 extension SecurityLevel {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_V1_SecurityLevel {
         switch self {
         case .quantum128:
@@ -296,6 +320,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_HeScheme {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native() throws -> any HeScheme.Type {
         switch self {
         case .unspecified:
@@ -314,6 +339,7 @@ extension HeScheme {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public static func proto() throws -> Apple_SwiftHomomorphicEncryption_V1_HeScheme {
         if cryptosystem == .bfv {
             return .bfv
@@ -328,6 +354,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
     ///   - scheme: HE scheme to associate with the encryption parameters.
     ///   - schemeType: `HeScheme` type to associate with the encryption parameters.
     /// - Throws: Error upon invalid encryption parameters.
+    @inlinable
     public func validate(scheme: Apple_SwiftHomomorphicEncryption_V1_HeScheme,
                          schemeType: (some HeScheme).Type) throws
     {
@@ -350,6 +377,7 @@ extension Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon invalid object.
+    @inlinable
     public func native<Scalar: ScalarType>() throws -> EncryptionParameters<Scalar> {
         guard plaintextModulus < Scalar.max, coefficientModuli.allSatisfy({ $0 < Scalar.max }) else {
             throw ConversionError.invalidScheme
@@ -367,6 +395,7 @@ extension EncryptionParameters {
     /// - Parameter scheme: The HE scheme to use.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto(scheme: (some HeScheme).Type) throws -> Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters {
         try Apple_SwiftHomomorphicEncryption_V1_EncryptionParameters.with { encParams in
             encParams.polynomialDegree = UInt64(polyDegree)

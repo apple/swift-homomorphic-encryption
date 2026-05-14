@@ -323,6 +323,19 @@ if enableBenchmarking {
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
             ]),
+        .executableTarget(
+            name: "SerializationBenchmark",
+            dependencies: [
+                .product(name: "Benchmark", package: "package-benchmark"),
+                "HomomorphicEncryption",
+                "PrivateInformationRetrieval",
+                "_BenchmarkUtilities",
+            ],
+            path: "Benchmarks/SerializationBenchmark",
+            swiftSettings: benchmarkSettings,
+            plugins: [
+                .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+            ]),
     ]
 }
 

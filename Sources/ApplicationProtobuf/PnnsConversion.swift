@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public import Foundation
 public import HomomorphicEncryption
+public import HomomorphicEncryptionProtobuf
 public import PrivateNearestNeighborSearch
-import Foundation
+public import SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native() throws -> DistanceMetric {
         switch self {
         case .cosineSimilarity:
@@ -33,6 +36,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric {
 extension DistanceMetric {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_Pnns_V1_DistanceMetric {
         switch self {
         case .cosineSimilarity:
@@ -45,6 +49,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_BabyStepGiantStep {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native() -> BabyStepGiantStep {
         BabyStepGiantStep(
             vectorDimension: Int(vectorDimension),
@@ -56,6 +61,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_BabyStepGiantStep {
 extension BabyStepGiantStep {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_Pnns_V1_BabyStepGiantStep {
         Apple_SwiftHomomorphicEncryption_Pnns_V1_BabyStepGiantStep.with { babyStepGiantStep in
             babyStepGiantStep.vectorDimension = UInt32(vectorDimension)
@@ -69,6 +75,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native() throws -> MatrixPacking {
         guard let matrixPackingType else {
             throw ConversionError.unsetOneof(oneof: Self.self, field: \Self.matrixPackingType)
@@ -92,6 +99,7 @@ extension MatrixPacking {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking {
         Apple_SwiftHomomorphicEncryption_Pnns_V1_MatrixPacking.with { packing in
             switch self {
@@ -115,6 +123,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native<Scheme: HeScheme>() throws -> ClientConfig<Scheme> {
         guard hasEncryptionParameters else {
             throw ConversionError.unsetField(\Self.encryptionParameters, in: Self.self)
@@ -134,6 +143,7 @@ extension ClientConfig {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig {
         try Apple_SwiftHomomorphicEncryption_Pnns_V1_ClientConfig.with { config in
             config.encryptionParameters = try encryptionParameters[0].proto(scheme: Scheme.self)
@@ -151,6 +161,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_ServerConfig {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native<Scheme: HeScheme>() throws -> ServerConfig<Scheme> {
         guard hasClientConfig else {
             throw ConversionError.unsetField(\Self.clientConfig, in: Self.self)
@@ -165,6 +176,7 @@ extension ServerConfig {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_ServerConfig {
         try Apple_SwiftHomomorphicEncryption_Pnns_V1_ServerConfig
             .with { config in
@@ -177,6 +189,7 @@ extension ServerConfig {
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
+    @inlinable
     public func native() -> DatabaseRow {
         DatabaseRow(
             entryId: entryID,
@@ -188,6 +201,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow {
 extension DatabaseRow {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow {
         Apple_SwiftHomomorphicEncryption_Pnns_V1_DatabaseRow.with { row in
             row.entryID = entryId
@@ -200,6 +214,7 @@ extension DatabaseRow {
 extension Apple_SwiftHomomorphicEncryption_Pnns_V1_Database {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
+    @inlinable
     public func native() -> Database {
         Database(rows: rows.map { row in row.native() })
     }
@@ -208,6 +223,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_Database {
 extension Database {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto() -> Apple_SwiftHomomorphicEncryption_Pnns_V1_Database {
         Apple_SwiftHomomorphicEncryption_Pnns_V1_Database.with { database in
             database.rows = rows.map { row in row.proto() }
@@ -219,6 +235,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedPlaintextMatrix {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native() throws -> SerializedPlaintextMatrix {
         let dimensions = try MatrixDimensions(
             rowCount: Int(numRows),
@@ -234,6 +251,7 @@ extension SerializedPlaintextMatrix {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedPlaintextMatrix {
         try Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedPlaintextMatrix.with { protoMatrix in
             protoMatrix.numRows = UInt32(dimensions.rowCount)
@@ -248,6 +266,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<T: ScalarType>() throws -> SerializedCiphertextMatrix<T> {
         let dimensions = try MatrixDimensions(
             rowCount: Int(numRows),
@@ -263,6 +282,7 @@ extension SerializedCiphertextMatrix {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix {
         try Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix.with { protoMatrix in
             protoMatrix.numRows = UInt32(dimensions.rowCount)
@@ -277,6 +297,7 @@ extension Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase {
     /// Converts the protobuf object to a native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon upon invalid object.
+    @inlinable
     public func native<Scheme: HeScheme>() throws -> SerializedProcessedDatabase<Scheme> {
         try SerializedProcessedDatabase(
             plaintextMatrices: plaintextMatrices.map { matrix in try matrix.native() },
@@ -290,6 +311,7 @@ extension SerializedProcessedDatabase {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase {
         try Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedProcessedDatabase
             .with { protoDatabase in
@@ -305,6 +327,7 @@ extension Query {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] {
         try ciphertextMatrices.map { matrix in try matrix.serialize().proto() }
     }
@@ -314,6 +337,7 @@ extension [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] 
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func native<Scheme: HeScheme>(context: Scheme.Context) throws -> Query<Scheme> {
         let matrices: [CiphertextMatrix<Scheme, Coeff>] = try map { matrix in
             let native: SerializedCiphertextMatrix<Scheme.Scalar> = try matrix.native()
@@ -324,12 +348,14 @@ extension [Apple_SwiftHomomorphicEncryption_Pnns_V1_SerializedCiphertextMatrix] 
 }
 
 extension Query {
+    @inlinable
     package func size() throws -> Int {
         try proto().map { matrix in try matrix.serializedData().count }.sum()
     }
 }
 
 extension Response {
+    @inlinable
     package func size() throws -> Int {
         try proto().serializedData().count
     }

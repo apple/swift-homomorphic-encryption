@@ -2,7 +2,7 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 // Remember to update CI if changing
 
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -317,6 +317,19 @@ if enableBenchmarking {
                 "_BenchmarkUtilities",
             ],
             path: "Benchmarks/PrivateNearestNeighborSearchBenchmark",
+            swiftSettings: benchmarkSettings,
+            plugins: [
+                .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),
+            ]),
+        .executableTarget(
+            name: "SerializationBenchmark",
+            dependencies: [
+                .product(name: "Benchmark", package: "package-benchmark"),
+                "HomomorphicEncryption",
+                "PrivateInformationRetrieval",
+                "_BenchmarkUtilities",
+            ],
+            path: "Benchmarks/SerializationBenchmark",
             swiftSettings: benchmarkSettings,
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark"),

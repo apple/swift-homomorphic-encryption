@@ -1,4 +1,4 @@
-// Copyright 2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2025-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Benchmark
-import Foundation
-import HomomorphicEncryption
-import HomomorphicEncryptionProtobuf
-import PrivateNearestNeighborSearch
-import PrivateNearestNeighborSearchProtobuf
+public import Benchmark
+public import Foundation
+public import HomomorphicEncryption
+public import HomomorphicEncryptionProtobuf
+public import PrivateNearestNeighborSearch
+public import PrivateNearestNeighborSearchProtobuf
 
 @usableFromInline nonisolated(unsafe) let PnnsBenchmarkConfiguration = Benchmark.Configuration(
     metrics: [
@@ -334,5 +334,96 @@ struct PnnsBenchmarkContext<Scheme: HeScheme> {
         self.responseCiphertextCount = response.ciphertextMatrices
             .map { matrix in matrix.ciphertexts.count }.sum()
         self.noiseBudget = try response.scaledNoiseBudget(using: secretKey)
+    }
+}
+
+// MARK: - Serialization benchmarks
+
+@usableFromInline nonisolated(unsafe) let pnnsSerializationBenchmarkConfiguration = Benchmark.Configuration(
+    metrics: [.wallClock, .mallocCountTotal, .peakMemoryResident],
+    maxDuration: .seconds(3))
+
+/// Benchmarks PNNS `Query` / `Response` `.proto()` and `.native()` conversions.
+public func pnnsProtoBenchmarks<Scheme: HeScheme>(_: Scheme.Type) -> () -> Void {
+    let databaseConfig = DatabaseConfig(rowCount: 4096, vectorDimension: 128)
+    let encryptionConfig = PnnsEncryptionParametersConfig(
+        polyDegree: 4096,
+        plaintextModulusBits: [17],
+        coefficientModulusBits: [27, 28, 28])
+    let suffix = [
+        String(describing: Scheme.self),
+        "rowCount=\(databaseConfig.rowCount)",
+        "vectorDimension=\(databaseConfig.vectorDimension)",
+    ].joined(separator: "/")
+
+    // swiftlint:disable:next closure_body_length
+    return {
+        // swiftlint:disable closure_parameter_position
+        Benchmark("PnnsQueryProto/\(suffix)", configuration: pnnsSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(benchmarkContext.query.proto())
+            }
+        } setup: {
+            try await PnnsBenchmarkContext<Scheme>(
+                databaseConfig: databaseConfig,
+                parameterConfig: encryptionConfig,
+                queryCount: 1)
+        }
+
+        Benchmark("PnnsQueryNative/\(suffix)", configuration: pnnsSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            let proto = try benchmarkContext.query.proto()
+            let context = try Context<Scheme>(encryptionParameters: .init(from: encryptionConfig))
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = proto.native(context: context) as Query<Scheme>)
+            }
+        } setup: {
+            try await PnnsBenchmarkContext<Scheme>(
+                databaseConfig: databaseConfig,
+                parameterConfig: encryptionConfig,
+                queryCount: 1)
+        }
+
+        Benchmark("PnnsResponseProto/\(suffix)", configuration: pnnsSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            let response = try benchmarkContext.server.computeResponse(
+                to: benchmarkContext.query,
+                using: benchmarkContext.evaluationKey)
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(response.proto())
+            }
+        } setup: {
+            try await PnnsBenchmarkContext<Scheme>(
+                databaseConfig: databaseConfig,
+                parameterConfig: encryptionConfig,
+                queryCount: 1)
+        }
+
+        Benchmark("PnnsResponseNative/\(suffix)", configuration: pnnsSerializationBenchmarkConfiguration) { (
+            benchmark,
+            benchmarkContext: PnnsBenchmarkContext<Scheme>) in
+            let response = try benchmarkContext.server.computeResponse(
+                to: benchmarkContext.query,
+                using: benchmarkContext.evaluationKey)
+            let proto = try response.proto()
+            let contexts = try [Context<Scheme>(encryptionParameters: .init(from: encryptionConfig))]
+            benchmark.startMeasurement()
+            for _ in benchmark.scaledIterations {
+                try blackHole(_ = proto.native(contexts: contexts) as Response<Scheme>)
+            }
+        } setup: {
+            try await PnnsBenchmarkContext<Scheme>(
+                databaseConfig: databaseConfig,
+                parameterConfig: encryptionConfig,
+                queryCount: 1)
+        }
+        // swiftlint:enable closure_parameter_position
     }
 }

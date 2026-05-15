@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,14 @@
 import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import PrivateInformationRetrieval
+import SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse {
     /// Converts the protobuf object to a native type.
     /// - Parameter context: Context to associate with the native type.
     /// - Returns: The converted native type.
     /// - Throws: Error upon invalid protobuf object.
+    @inlinable
     public func native<Scheme: HeScheme>(context: Context<Scheme>) throws -> Response<Scheme> {
         let ciphertexts: [[Scheme.CoeffCiphertext]] = try replies.map { reply in
             let serializedCiphertexts: [SerializedCiphertext<Scheme.Scalar>] = try reply.native()
@@ -36,6 +38,7 @@ extension Response {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse {
         try Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRResponse.with { pirResponse in
             pirResponse.replies = try ciphertexts.map { reply in
@@ -51,6 +54,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig {
     ///   - batchSize: Number of queries in a batch.
     ///   - evaluationKeyConfig: Evaluation key configuration
     /// - Returns: The converted native type.
+    @inlinable
     public func native(batchSize: Int, evaluationKeyConfig: EvaluationKeyConfig) -> IndexPirParameter {
         IndexPirParameter(
             entryCount: Int(numEntries),
@@ -65,6 +69,7 @@ extension IndexPirParameter {
     /// Converts the native object into a protobuf object.
     /// - Parameter shardID: Optional identifier to associate with the shard
     /// - Returns: The converted protobuf object.
+    @inlinable
     public func proto(shardID: String = "") -> Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig {
         Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRShardConfig.with { shardConfig in
             shardConfig.numEntries = UInt64(entryCount)

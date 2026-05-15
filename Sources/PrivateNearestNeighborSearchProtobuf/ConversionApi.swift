@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,16 +13,17 @@
 // limitations under the License.
 
 import Foundation
-
 import HomomorphicEncryption
 import HomomorphicEncryptionProtobuf
 import PrivateNearestNeighborSearch
+import SwiftProtobuf
 
 extension Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse {
     /// Converts the protobuf object to a native type.
     /// - Parameter contexts: Contexts to associate with the native type; one context per plaintext modulus.
     /// - Returns: The converted native type.
     /// - Throws: Error upon invalid protobuf object.
+    @inlinable
     public func native<Scheme: HeScheme>(contexts: [Context<Scheme>]) throws -> Response<Scheme> {
         precondition(contexts.count == reply.count)
         let matrices: [CiphertextMatrix<Scheme, Coeff>] = try zip(reply, contexts).map { matrix, context in
@@ -40,6 +41,7 @@ extension Response {
     /// Converts the native object into a protobuf object.
     /// - Returns: The converted protobuf object.
     /// - Throws: Error upon unsupported object.
+    @inlinable
     public func proto() throws -> Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse {
         try Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSShardResponse.with { pnnsResponse in
             pnnsResponse.reply = try ciphertextMatrices.map { matrix in

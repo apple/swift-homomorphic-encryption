@@ -314,6 +314,8 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     /// - seealso: ``HeScheme/noiseBudget(of:using:variableTime:)`` for an alternative API.
     @inlinable
     public func noiseBudget(using secretKey: SecretKey<Scheme>, variableTime: Bool) throws -> Double {

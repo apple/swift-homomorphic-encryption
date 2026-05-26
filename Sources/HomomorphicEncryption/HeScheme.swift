@@ -644,6 +644,8 @@ public protocol HeScheme {
     /// - Warning: The noise budget depends on the encrypted message, which is impractical to know apriori. So this
     /// function should be treated only as a rough proxy for correct decryption, rather than a source of truth.
     ///   See Section 2 of <https://eprint.iacr.org/2016/510.pdf> for more details.
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)`` for an alternative API.
     static func noiseBudgetCoeff(of ciphertext: CoeffCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
         -> Double
@@ -662,6 +664,8 @@ public protocol HeScheme {
     /// - Warning: The noise budget depends on the encrypted message, which is impractical to know apriori. So this
     /// function should be treated only as a rough proxy for correct decryption, rather than a source of truth.
     ///   See Section 2 of <https://eprint.iacr.org/2016/510.pdf> for more details.
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)`` for an alternative API.
     static func noiseBudgetEval(of ciphertext: EvalCiphertext, using secretKey: SecretKey, variableTime: Bool) throws
         -> Double
@@ -851,6 +855,8 @@ extension HeScheme {
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     /// - seealso: ``Ciphertext/noiseBudget(using:variableTime:)`` for an alternative API.
     @inlinable
     public static func noiseBudget<Format: PolyFormat>(

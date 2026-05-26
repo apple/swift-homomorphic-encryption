@@ -1,7 +1,7 @@
 // Example for noise budget: ``Ciphertext/noiseBudget(using:variableTime:)``.
 
 // snippet.hide
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,10 +63,13 @@ var ciphertext = try plaintext.encrypt(using: secretKey)
 // thereby decreasing the noise budget. Different operations increase the noise
 // by different amounts. The initial noise budget is determined by the ratio
 // log2(q) / log2(t) in the encryption parameters. Larger q or smaller t yields
-// a larger noise budget. We use `variableTime` to indicate this operation's
+// a larger noise budget.
+// WARNING: We use `variableTime` to indicate this operation's
 // runtime may depend on the secret key, presenting a possible side-channel
 // attack. To avoid this side channel, simply avoid calling the noiseBudget
 // function.
+// WARNING: The noise budget value must not be forwarded to any other party.
+// Sharing it acts as an oracle that can be used to recover the secret key.
 var noiseBudget = try ciphertext.noiseBudget(
     using: secretKey,
     variableTime: true)

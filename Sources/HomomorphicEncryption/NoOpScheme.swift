@@ -322,12 +322,16 @@ public enum NoOpScheme: HeScheme {
 
     public static func relinearize(_: inout CanonicalCiphertext, using _: EvaluationKey<Self>) throws {}
 
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     public static func noiseBudgetCoeff(of _: CoeffCiphertext, using _: SecretKey<Self>,
                                         variableTime _: Bool) throws -> Double
     {
         minNoiseBudget
     }
 
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     public static func noiseBudgetEval(of _: EvalCiphertext, using _: SecretKey<Self>,
                                        variableTime _: Bool) throws -> Double
     {

@@ -117,7 +117,7 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
             }
             let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
             guard noiseBudget >= Scheme.minNoiseBudget else {
-                throw PnnsError.validationError("Insufficient noise budget \(noiseBudget)")
+                throw PnnsError.validationError("Insufficient noise budget")
             }
             let trialDatabaseDistances = try client.decrypt(response: response, using: secretKey)
 

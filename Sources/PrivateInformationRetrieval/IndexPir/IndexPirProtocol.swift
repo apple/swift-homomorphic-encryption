@@ -459,7 +459,7 @@ public struct ProcessedDatabaseWithParameters<Scheme: HeScheme>: Equatable, Send
             guard decryptedResponse == row.value else {
                 let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
                 guard noiseBudget >= PirUtil.Scheme.minNoiseBudget else {
-                    throw PirError.validationError("Insufficient noise budget \(noiseBudget)")
+                    throw PirError.validationError("Insufficient noise budget")
                 }
                 throw PirError.validationError("Incorrect PIR response")
             }

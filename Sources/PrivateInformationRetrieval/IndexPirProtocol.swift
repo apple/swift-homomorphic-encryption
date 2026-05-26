@@ -527,6 +527,8 @@ extension IndexPirClient {
 }
 
 extension Response {
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     @inlinable
     package func noiseBudget(using secretKey: Scheme.SecretKey, variableTime: Bool) throws -> Double {
         try ciphertexts.flatMap { ciphertexts in

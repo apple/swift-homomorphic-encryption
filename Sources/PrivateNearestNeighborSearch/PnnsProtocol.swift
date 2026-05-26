@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -92,6 +92,8 @@ extension Response {
     /// - Warning: The noise budget depends on the encrypted message, which is impractical to know apriori. So this
     /// function should be treated only as a rough proxy for correct decryption, rather than a source of truth.
     ///   See Section 2 of <https://eprint.iacr.org/2016/510.pdf> for more details.
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     @inlinable
     public func noiseBudget(using secretKey: Scheme.SecretKey, variableTime: Bool) throws -> Double {
         try ciphertextMatrices.map { ciphertextMatrix in

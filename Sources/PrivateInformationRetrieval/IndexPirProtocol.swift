@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,9 +101,14 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     public let evaluationKeyConfig: EvaluationKeyConfig
 
     /// The number of dimensions in the database.
-    @usableFromInline var dimensionCount: Int { dimensions.count }
+    @usableFromInline var dimensionCount: Int {
+        dimensions.count
+    }
+
     /// The number of ciphertexts in each query after server-side expansion.
-    @usableFromInline var expandedQueryCount: Int { dimensions.sum() }
+    @usableFromInline var expandedQueryCount: Int {
+        dimensions.sum()
+    }
 
     /// Initializes an ``IndexPirParameter``.
     /// - Parameters:
@@ -150,10 +155,14 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     public let plaintexts: [Plaintext<Scheme, Eval>?]
 
     /// Number of plaintexts in the database, including padding plaintexts.
-    public var count: Int { plaintexts.count }
+    public var count: Int {
+        plaintexts.count
+    }
 
     /// Whether or not the database is empty.
-    public var isEmpty: Bool { plaintexts.isEmpty }
+    public var isEmpty: Bool {
+        plaintexts.isEmpty
+    }
 
     /// Initializes a ``ProcessedDatabase`` from plaintexts.
     /// - Parameter plaintexts: Plaintexts.
@@ -522,6 +531,8 @@ extension IndexPirClient {
 }
 
 extension Response {
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     @inlinable
     package func noiseBudget(using secretKey: Scheme.SecretKey, variableTime: Bool) throws -> Double {
         try ciphertexts.flatMap { ciphertexts in

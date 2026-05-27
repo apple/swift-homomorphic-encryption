@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -189,9 +189,13 @@ extension KeywordDatabaseShard: Collection {
     public typealias Index = [KeywordValuePair.Keyword: KeywordValuePair.Value].Index
     public typealias Element = KeywordValuePair
 
-    public var startIndex: Index { rows.startIndex }
+    public var startIndex: Index {
+        rows.startIndex
+    }
 
-    public var endIndex: Index { rows.endIndex }
+    public var endIndex: Index {
+        rows.endIndex
+    }
 
     public func index(after i: Index) -> Index {
         rows.index(after: i)
@@ -447,7 +451,7 @@ public enum ProcessKeywordDatabase {
             guard decryptedResponse == row.value else {
                 let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
                 guard noiseBudget >= Scheme.minNoiseBudget else {
-                    throw PirError.validationError("Insufficient noise budget \(noiseBudget)")
+                    throw PirError.validationError("Insufficient noise budget")
                 }
                 throw PirError.validationError("Incorrect PIR response")
             }

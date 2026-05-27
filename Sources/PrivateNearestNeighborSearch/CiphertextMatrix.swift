@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,19 +35,29 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
     }
 
     /// Number of rows in SIMD-encoded plaintext.
-    @usableFromInline var simdRowCount: Int { simdDimensions.rowCount }
+    @usableFromInline var simdRowCount: Int {
+        simdDimensions.rowCount
+    }
 
     /// Number of columns SIMD-encoded plaintext.
-    @usableFromInline var simdColumnCount: Int { simdDimensions.columnCount }
+    @usableFromInline var simdColumnCount: Int {
+        simdDimensions.columnCount
+    }
 
     /// Number of data values stored in the ciphertexts matrix.
-    @usableFromInline var count: Int { dimensions.count }
+    @usableFromInline var count: Int {
+        dimensions.count
+    }
 
     /// Number of rows in the stored data.
-    @usableFromInline var rowCount: Int { dimensions.rowCount }
+    @usableFromInline var rowCount: Int {
+        dimensions.rowCount
+    }
 
     /// Number of columns in the stored data.
-    @usableFromInline var columnCount: Int { dimensions.columnCount }
+    @usableFromInline var columnCount: Int {
+        dimensions.columnCount
+    }
 
     /// Creates a new ciphertexts matrix.
     /// - Parameters:
@@ -217,6 +227,7 @@ extension CiphertextMatrix {
         // [[3, 4, 3, 4, 3, 4, 3, 4], [3, 4, 3, 4, 3, 4, 3, 4]]
 
         //  Returns the SIMD slot indices for the `rowIndex`'th row of the ciphertext matrix.
+
         func simdSlotIndices(rowIndex: Int) -> Range<Int> {
             precondition((0..<dimensions.rowCount).contains(rowIndex))
             let ciphertextRowIndex = rowIndex % rowsPerCiphertext
@@ -323,6 +334,8 @@ extension CiphertextMatrix {
     /// - Warning: The noise budget depends on the encrypted message, which is impractical to know apriori. So this
     /// function should be treated only as a rough proxy for correct decryption, rather than a source of truth.
     ///   See Section 2 of <https://eprint.iacr.org/2016/510.pdf> for more details.
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     @inlinable
     func noiseBudget(using secretKey: Scheme.SecretKey, variableTime: Bool) throws -> Double {
         try ciphertexts.map { ciphertext in

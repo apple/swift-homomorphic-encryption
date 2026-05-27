@@ -43,9 +43,13 @@ This scheme can be configured to support post-quantum 128-bit security.
 
 > [!WARNING]
 > BFV does not provide IND-CCA security, nor does it provide IND-CPA<sup>D</sup> security when there is a non-negligible decryption error probability. BFV should be used accordingly.
-> In particular, no information about each decrypted ciphertext should be sent back to the server. To protect against a malicious server, the client should also validate the decrypted content is in the expected format.
+> Therefore, no information about each decrypted ciphertext should be sent back to the server.
+> In particular, the noise budget of a ciphertext (computed via `noiseBudget`) **must not** be forwarded to any other party.
+> Sharing the decrypted ciphertext or noise budget acts as an oracle that can be used to recover the secret key.
+> To protect against a malicious server, the client should also validate the decrypted content is in the expected format.
 >
 > Consult a cryptography expert when developing and deploying homomorphic encryption applications.
+
 
 ### Private Information Retrieval (PIR)
 Private information retrieval (PIR) is one application of HE.

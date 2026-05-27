@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -314,6 +314,8 @@ public struct Ciphertext<Scheme: HeScheme, Format: PolyFormat>: Equatable, Senda
     /// - Returns: The noise budget.
     /// - Throws: Error upon failure to compute the noise budget.
     /// - Warning: Leaks `secretKey` through timing. Should be used for testing only.
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     /// - seealso: ``HeScheme/noiseBudget(of:using:variableTime:)`` for an alternative API.
     @inlinable
     public func noiseBudget(using secretKey: SecretKey<Scheme>, variableTime: Bool) throws -> Double {

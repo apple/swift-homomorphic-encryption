@@ -35,19 +35,29 @@ public struct CiphertextMatrix<Scheme: HeScheme, Format: PolyFormat>: Equatable,
     }
 
     /// Number of rows in SIMD-encoded plaintext.
-    @usableFromInline var simdRowCount: Int { simdDimensions.rowCount }
+    @usableFromInline var simdRowCount: Int {
+        simdDimensions.rowCount
+    }
 
     /// Number of columns SIMD-encoded plaintext.
-    @usableFromInline var simdColumnCount: Int { simdDimensions.columnCount }
+    @usableFromInline var simdColumnCount: Int {
+        simdDimensions.columnCount
+    }
 
     /// Number of data values stored in the ciphertexts matrix.
-    @usableFromInline var count: Int { dimensions.count }
+    @usableFromInline var count: Int {
+        dimensions.count
+    }
 
     /// Number of rows in the stored data.
-    @usableFromInline var rowCount: Int { dimensions.rowCount }
+    @usableFromInline var rowCount: Int {
+        dimensions.rowCount
+    }
 
     /// Number of columns in the stored data.
-    @usableFromInline var columnCount: Int { dimensions.columnCount }
+    @usableFromInline var columnCount: Int {
+        dimensions.columnCount
+    }
 
     /// Creates a new ciphertexts matrix.
     /// - Parameters:
@@ -217,6 +227,7 @@ extension CiphertextMatrix {
         // [[3, 4, 3, 4, 3, 4, 3, 4], [3, 4, 3, 4, 3, 4, 3, 4]]
 
         //  Returns the SIMD slot indices for the `rowIndex`'th row of the ciphertext matrix.
+
         func simdSlotIndices(rowIndex: Int) -> Range<Int> {
             precondition((0..<dimensions.rowCount).contains(rowIndex))
             let ciphertextRowIndex = rowIndex % rowsPerCiphertext

@@ -101,9 +101,14 @@ public struct IndexPirParameter: Hashable, Codable, Sendable {
     public let evaluationKeyConfig: EvaluationKeyConfig
 
     /// The number of dimensions in the database.
-    @usableFromInline var dimensionCount: Int { dimensions.count }
+    @usableFromInline var dimensionCount: Int {
+        dimensions.count
+    }
+
     /// The number of ciphertexts in each query after server-side expansion.
-    @usableFromInline var expandedQueryCount: Int { dimensions.sum() }
+    @usableFromInline var expandedQueryCount: Int {
+        dimensions.sum()
+    }
 
     /// Initializes an ``IndexPirParameter``.
     /// - Parameters:
@@ -150,10 +155,14 @@ public struct ProcessedDatabase<Scheme: HeScheme>: Equatable, Sendable {
     public let plaintexts: [Plaintext<Scheme, Eval>?]
 
     /// Number of plaintexts in the database, including padding plaintexts.
-    public var count: Int { plaintexts.count }
+    public var count: Int {
+        plaintexts.count
+    }
 
     /// Whether or not the database is empty.
-    public var isEmpty: Bool { plaintexts.isEmpty }
+    public var isEmpty: Bool {
+        plaintexts.isEmpty
+    }
 
     /// Initializes a ``ProcessedDatabase`` from plaintexts.
     /// - Parameter plaintexts: Plaintexts.

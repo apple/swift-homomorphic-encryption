@@ -189,9 +189,13 @@ extension KeywordDatabaseShard: Collection {
     public typealias Index = [KeywordValuePair.Keyword: KeywordValuePair.Value].Index
     public typealias Element = KeywordValuePair
 
-    public var startIndex: Index { rows.startIndex }
+    public var startIndex: Index {
+        rows.startIndex
+    }
 
-    public var endIndex: Index { rows.endIndex }
+    public var endIndex: Index {
+        rows.endIndex
+    }
 
     public func index(after i: Index) -> Index {
         rows.index(after: i)

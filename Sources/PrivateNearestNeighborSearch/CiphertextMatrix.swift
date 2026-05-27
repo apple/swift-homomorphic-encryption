@@ -227,7 +227,8 @@ extension CiphertextMatrix {
         // Suppose ciphertextRowIndex == 1, i.e., we want to return an encryption of
         // [[3, 4, 3, 4, 3, 4, 3, 4], [3, 4, 3, 4, 3, 4, 3, 4]]
 
-        ///  Returns the SIMD slot indices for the `rowIndex`'th row of the ciphertext matrix.
+        //  Returns the SIMD slot indices for the `rowIndex`'th row of the ciphertext matrix.
+
         func simdSlotIndices(rowIndex: Int) -> Range<Int> {
             precondition((0..<dimensions.rowCount).contains(rowIndex))
             let ciphertextRowIndex = rowIndex % rowsPerCiphertext

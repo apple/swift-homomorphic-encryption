@@ -1,7 +1,7 @@
 // Choosing encryption parameters.
 
 // snippet.hide
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,6 +93,8 @@ func summarize<Scheme: HeScheme>(
         format: .coefficient)
     let secretKey = try context.generateSecretKey()
     let ciphertext = try plaintext.encrypt(using: secretKey)
+    // WARNING: The noise budget value must not be forwarded to any other party.
+    // Sharing it acts as an oracle that can be used to recover the secret key.
     let noiseBudget = try ciphertext.noiseBudget(
         using: secretKey,
         variableTime: true)

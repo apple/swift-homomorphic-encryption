@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -553,7 +553,7 @@ public enum ProcessKeywordDatabase {
             guard decryptedResponse == row.value else {
                 let noiseBudget = try response.noiseBudget(using: secretKey, variableTime: true)
                 guard noiseBudget >= Scheme.minNoiseBudget else {
-                    throw PirError.validationError("Insufficient noise budget \(noiseBudget)")
+                    throw PirError.validationError("Insufficient noise budget")
                 }
                 throw PirError.validationError("Incorrect PIR response")
             }

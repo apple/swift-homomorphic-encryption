@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -291,12 +291,16 @@ public enum NoOpScheme: HeScheme {
 
     public static func relinearize(_: inout CanonicalCiphertext, using _: EvaluationKey<Self>) throws {}
 
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     public static func noiseBudgetCoeff(of _: CoeffCiphertext, using _: SecretKey<Self>,
                                         variableTime _: Bool) throws -> Double
     {
         minNoiseBudget
     }
 
+    /// - Warning: The noise budget value **must not** be forwarded to any other party. Sharing it acts as an oracle
+    /// that can be used to recover the secret key.
     public static func noiseBudgetEval(of _: EvalCiphertext, using _: SecretKey<Self>,
                                        variableTime _: Bool) throws -> Double
     {

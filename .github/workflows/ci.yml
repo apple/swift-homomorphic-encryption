@@ -95,7 +95,7 @@ jobs:
         uses: actions/checkout@v7
       - name: Cache SwiftLint
         id: cache-swiftlint
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /tmp/swiftlint/SwiftLint/.build/release/swiftlint
           key: ${{ runner.os }}-swiftlint-${{ env.SWIFTLINT_VERSION }}
@@ -113,7 +113,7 @@ jobs:
         uses: actions/checkout@v7
       - name: Cache SwiftFormat
         id: cache-swiftformat
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat
           key: ${{ runner.os }}-swiftformat-${{ env.SWIFTFORMAT_VERSION }}

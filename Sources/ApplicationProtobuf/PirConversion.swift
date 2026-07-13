@@ -376,3 +376,143 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse {
         try OprfResponse(rawRepresentation: evaluatedElement + proof)
     }
 }
+
+extension Array2d where T: ScalarType {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRMatrix {
+        .with { matrix in
+            matrix.rowCount = UInt32(rowCount)
+            matrix.colCount = UInt32(columnCount)
+            matrix.data = data.map(UInt64.init)
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRMatrix {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    public func native<Scalar: ScalarType>() throws -> Array2d<Scalar> {
+        .init(
+            data: data.map { Scalar($0) },
+            rowCount: Int(rowCount),
+            columnCount: Int(colCount))
+    }
+}
+
+extension SimplePirEncryptionParams {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIREncryptionParams {
+        .with { params in
+            params.latticeDimension = UInt32(self.latticeDimension)
+            params.errorStdDev = self.errorStdDev.toDouble
+            params.plaintextBits = UInt32(self.plaintextModulusBits)
+            params.ciphertextBits = UInt32(self.ciphertextModulusBits)
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIREncryptionParams {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    /// - Throws: Error upon invalid encryption parameters.
+    public func native() throws -> SimplePirEncryptionParams {
+        guard let errorStdDevEnum = ErrorStdDev.allCases.first(where: { $0.toDouble == errorStdDev }) else {
+            throw HeError.invalidEncryptionParameters(
+                "Unsupported errorStdDev=\(errorStdDev), must be one of \(ErrorStdDev.allCases.map(\.toDouble))")
+        }
+        return try .init(
+            plaintextModulusBits: Int(plaintextBits),
+            ciphertextModulusBits: Int(ciphertextBits),
+            latticeDimension: Int(latticeDimension),
+            errorStdDev: errorStdDevEnum)
+    }
+}
+
+extension SimplePirParameters {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRParameters {
+        .with { params in
+            params.encryptionParams = self.encryptionParams.proto()
+            params.aSeed = Data(self.seed)
+            params.entrySizeInBytes = UInt32(self.entrySizeInBytes)
+            params.entriesPerColumn = UInt32(self.entriesPerColumn)
+            params.chunksPerEntry = UInt32(self.chunksPerEntry)
+            params.databaseColumns = UInt32(self.databaseColumns)
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRParameters {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    public func native() throws -> SimplePirParameters {
+        try .init(
+            encryptionParams: encryptionParams.native(),
+            entrySizeInBytes: Int(entrySizeInBytes),
+            entriesPerColumn: Int(entriesPerColumn),
+            chunksPerEntry: Int(chunksPerEntry),
+            databaseColumns: Int(databaseColumns),
+            seed: Array(aSeed))
+    }
+}
+
+extension DatabaseMap {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping {
+        .with { mapping in
+            mapping.entries = self.entries.map { $0.proto() }
+            mapping.chunkSize = UInt32(self.chunkSize)
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    public func native() -> DatabaseMap {
+        .init(entries: entries.map { $0.native() }, chunkSize: Int(chunkSize))
+    }
+}
+
+extension DatabaseMap.Entry {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping.Entry {
+        .with { entry in
+            entry.originalIndex = UInt64(self.originalIndex)
+            entry.size = UInt32(self.size)
+            entry.chunks = self.chunks.map { $0.proto() }
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping.Entry {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    public func native() -> DatabaseMap.Entry {
+        .init(originalIndex: Int(originalIndex), size: Int(size), chunks: chunks.map { $0.native() })
+    }
+}
+
+extension DatabaseMap.ChunkLocation {
+    /// Converts the native object into a protobuf object.
+    /// - Returns: The converted protobuf object.
+    public func proto() -> Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping.ChunkLocation {
+        .with { chunkLocation in
+            chunkLocation.shardIndex = UInt32(self.shardIndex)
+            chunkLocation.index = UInt32(self.index)
+        }
+    }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping.ChunkLocation {
+    /// Converts the protobuf object to a native type.
+    /// - Returns: The converted native type.
+    public func native() -> DatabaseMap.ChunkLocation {
+        .init(shardIndex: Int(shardIndex), index: Int(index))
+    }
+}

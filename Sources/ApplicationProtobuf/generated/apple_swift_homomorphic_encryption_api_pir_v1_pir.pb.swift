@@ -357,6 +357,87 @@ public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: Sendable
   public init() {}
 }
 
+/// Simple PIR config, includes the hint.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRConfig: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Database mapping.
+  public var databaseMapping: Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping {
+    get {return _databaseMapping ?? Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping()}
+    set {_databaseMapping = newValue}
+  }
+  /// Returns true if `databaseMapping` has been explicitly set.
+  public var hasDatabaseMapping: Bool {return self._databaseMapping != nil}
+  /// Clears the value of `databaseMapping`. Subsequent reads from it will return its default value.
+  public mutating func clearDatabaseMapping() {self._databaseMapping = nil}
+
+  /// Simple PIR parameters for each shard.
+  public var params: [Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRParameters] = []
+
+  /// List of identifiers (e.g. SHA256 hash) of hint files for each shard.
+  public var hintIdentifiers: [Data] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _databaseMapping: Apple_SwiftHomomorphicEncryption_Pir_V1_DatabaseMapping? = nil
+}
+
+/// Simple PIR request.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Simple PIR request.
+  public var request: Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRMatrix {
+    get {return _request ?? Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRMatrix()}
+    set {_request = newValue}
+  }
+  /// Returns true if `request` has been explicitly set.
+  public var hasRequest: Bool {return self._request != nil}
+  /// Clears the value of `request`. Subsequent reads from it will return its default value.
+  public mutating func clearRequest() {self._request = nil}
+
+  /// Shard index.
+  public var shardIndex: UInt32 = 0
+
+  /// Hash of the `SimplePIRConfig` used to construct the query.
+  public var configurationHash: Data = Data()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _request: Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRMatrix? = nil
+}
+
+/// Simple PIR response.
+public struct Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Simple PIR response.
+  public var response: Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRMatrix {
+    get {return _response ?? Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRMatrix()}
+    set {_response = newValue}
+  }
+  /// Returns true if `response` has been explicitly set.
+  public var hasResponse: Bool {return self._response != nil}
+  /// Clears the value of `response`. Subsequent reads from it will return its default value.
+  public mutating func clearResponse() {self._response = nil}
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _response: Apple_SwiftHomomorphicEncryption_Pir_V1_SimplePIRMatrix? = nil
+}
+
 /// Stash of entries.
 ///
 /// Stash is meant to be used as temporary storage until we can update the processed database.
@@ -821,6 +902,128 @@ extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse: SwiftProtobu
   public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse) -> Bool {
     if lhs.evaluatedElement != rhs.evaluatedElement {return false}
     if lhs.proof != rhs.proof {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRConfig: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".SimplePIRConfig"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}database_mapping\0\u{1}params\0\u{3}hint_identifiers\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._databaseMapping) }()
+      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.params) }()
+      case 3: try { try decoder.decodeRepeatedBytesField(value: &self.hintIdentifiers) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._databaseMapping {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.params.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.params, fieldNumber: 2)
+    }
+    if !self.hintIdentifiers.isEmpty {
+      try visitor.visitRepeatedBytesField(value: self.hintIdentifiers, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRConfig, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRConfig) -> Bool {
+    if lhs._databaseMapping != rhs._databaseMapping {return false}
+    if lhs.params != rhs.params {return false}
+    if lhs.hintIdentifiers != rhs.hintIdentifiers {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".SimplePIRRequest"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}request\0\u{3}shard_index\0\u{3}configuration_hash\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._request) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.shardIndex) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.configurationHash) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._request {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if self.shardIndex != 0 {
+      try visitor.visitSingularUInt32Field(value: self.shardIndex, fieldNumber: 2)
+    }
+    if !self.configurationHash.isEmpty {
+      try visitor.visitSingularBytesField(value: self.configurationHash, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRRequest, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRRequest) -> Bool {
+    if lhs._request != rhs._request {return false}
+    if lhs.shardIndex != rhs.shardIndex {return false}
+    if lhs.configurationHash != rhs.configurationHash {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".SimplePIRResponse"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}response\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._response) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._response {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRResponse, rhs: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRResponse) -> Bool {
+    if lhs._response != rhs._response {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

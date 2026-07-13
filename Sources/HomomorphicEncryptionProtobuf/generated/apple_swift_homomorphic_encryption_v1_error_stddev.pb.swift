@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,12 @@ public enum Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev: SwiftProtobuf.Enum,
   /// In practice, since we sample using a centered binomial distribution,
   /// the sampled standard deviation may exceed the target standard deviation.
   case stddev32 // = 0
+
+  /// 16 / sqrt(2 pi) ~= 6.4.
+  /// Note: this is the target standard deviation.
+  /// In practice, since we sample using a centered binomial distribution,
+  /// the sampled standard deviation may exceed the target standard deviation.
+  case stddev64 // = 1
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -52,6 +58,7 @@ public enum Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev: SwiftProtobuf.Enum,
   public init?(rawValue: Int) {
     switch rawValue {
     case 0: self = .stddev32
+    case 1: self = .stddev64
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -59,6 +66,7 @@ public enum Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev: SwiftProtobuf.Enum,
   public var rawValue: Int {
     switch self {
     case .stddev32: return 0
+    case .stddev64: return 1
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -66,6 +74,7 @@ public enum Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev: SwiftProtobuf.Enum,
   // The compiler won't synthesize support with the UNRECOGNIZED case.
   public static let allCases: [Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev] = [
     .stddev32,
+    .stddev64,
   ]
 
 }
@@ -73,5 +82,5 @@ public enum Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev: SwiftProtobuf.Enum,
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ERROR_STD_DEV_STDDEV32\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ERROR_STD_DEV_STDDEV32\0\u{1}ERROR_STD_DEV_STDDEV64\0")
 }

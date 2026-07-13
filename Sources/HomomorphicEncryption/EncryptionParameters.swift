@@ -16,12 +16,17 @@ import Foundation
 import ModularArithmetic
 
 /// Standard deviation for error polynomial in RLWE samples.
-public enum ErrorStdDev: Hashable, Codable, Sendable {
+public enum ErrorStdDev: Hashable, Codable, Sendable, CaseIterable {
     /// Target Standard deviation `8 / sqrt(2 pi) ~= 3.2`.
     ///
     /// In practice, since we sample using a centered binomial distribution,
     /// the sampled standard deviation may exceed the target standard deviation.
     case stdDev32
+    /// Target Standard deviation `16 / sqrt(2 pi) ~= 6.4`.
+    ///
+    /// In practice, since we sample using a centered binomial distribution,
+    /// the sampled standard deviation may exceed the target standard deviation.
+    case stdDev64
 }
 
 extension ErrorStdDev {
@@ -29,6 +34,7 @@ extension ErrorStdDev {
     public var toDouble: Double {
         switch self {
         case .stdDev32: 3.2
+        case .stdDev64: 6.4
         }
     }
 }
@@ -179,13 +185,17 @@ public struct EncryptionParameters<Scalar: ScalarType>: Hashable, Codable, Senda
     /// - Parameters:
     ///   - degree: Degree of the RLWE polynomial.
     ///   - securityLevel: desired security level.
+    ///   - errorStdDev: The error standard deviation.
     /// - Returns: The maximum coefficient modulus.
     /// - Throws: Error upon invalid `degree`.
     /// - Warning: ``SecurityLevel/unchecked`` does not enforce any security.
-    public static func maxLog2CoefficientModulus(degree: Int, securityLevel: SecurityLevel) throws -> Int {
-        switch securityLevel {
-        case .unchecked: Int.max
-        case .quantum128:
+    public static func maxLog2CoefficientModulus(
+        degree: Int,
+        securityLevel: SecurityLevel,
+        errorStdDev: ErrorStdDev = .stdDev32) throws -> Int
+    {
+        switch (securityLevel, errorStdDev) {
+        case (.quantum128, .stdDev32):
             switch degree {
             case 1024: 21
             case 2048: 41
@@ -196,6 +206,15 @@ public struct EncryptionParameters<Scalar: ScalarType>: Hashable, Codable, Senda
             default:
                 throw HeError.invalidDegree(degree)
             }
+        case (.quantum128, .stdDev64):
+            switch degree {
+            case 2048: 42
+            default:
+                throw HeError.invalidEncryptionParameters(
+                    "errorStdDev=.stdDev64 is only supported for degree=2048, got degree=\(degree)")
+            }
+        case (.unchecked, _):
+            Int.max
         }
     }
 

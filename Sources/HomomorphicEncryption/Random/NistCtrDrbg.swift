@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ extension NistCtrDrbg: PseudoRandomNumberGenerator {
 
 extension [UInt8] {
     @inlinable
-    init(randomByteCount: Int) {
+    package init(randomByteCount: Int) {
         self = .init(repeating: 0, count: randomByteCount)
         var rng = SystemRandomNumberGenerator()
         rng.fill(&self)

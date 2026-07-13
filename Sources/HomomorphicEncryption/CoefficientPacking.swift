@@ -31,8 +31,8 @@ extension CoefficientPacking {
     }
 
     @inlinable
-    static func bytesToCoefficientsCoeffCount(byteCount: Int, bitsPerCoeff: Int, decode: Bool,
-                                              skipLSBs: Int = 0) -> Int
+    package static func bytesToCoefficientsCoeffCount(byteCount: Int, bitsPerCoeff: Int, decode: Bool,
+                                                      skipLSBs: Int = 0) -> Int
     {
         let bitsPerByte = UInt8.bitWidth
         let serializedBitsPerCoeff = bitsPerCoeff - skipLSBs
@@ -72,7 +72,7 @@ extension CoefficientPacking {
 
     ///  Converts an sequence of bytes into coefficients, unused bits in the last coefficient will be set to zero.
     @inlinable
-    static func bytesToCoefficientsInplace<C: MutableCollection, T: ScalarType, B: Collection>(
+    package static func bytesToCoefficientsInplace<C: MutableCollection, T: ScalarType, B: Collection>(
         bytes: B,
         coeffs coeffsCollection: inout C,
         bitsPerCoeff: Int,

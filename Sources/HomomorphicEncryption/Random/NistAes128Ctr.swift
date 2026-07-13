@@ -1,4 +1,4 @@
-// Copyright 2024 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package typealias NistAes128Ctr = BufferedRng<NistCtrDrbg>
 
 extension NistAes128Ctr {
     /// Number of bytes in the AES-128 seed.
-    @usableFromInline static let SeedCount: Int = NistCtrDrbg.SeedCount
+    @usableFromInline package static let SeedCount: Int = NistCtrDrbg.SeedCount
 
     /// Initializes a ``NistAes128Ctr``.
     @inlinable
@@ -34,7 +34,7 @@ extension NistAes128Ctr {
     /// - Parameter seed: Seed for the random number generator. Must have ``SeedCount`` bytes.
     /// - Throws: Error upon failure to initialize the random number generator.
     @inlinable
-    convenience init(seed: [UInt8]) throws {
+    package convenience init(seed: [UInt8]) throws {
         try self.init(rng: NistCtrDrbg(entropy: seed), bufferCount: 4096)
     }
 }

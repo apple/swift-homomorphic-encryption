@@ -38,7 +38,7 @@ jobs:
         swift test --configuration release;
         for filename in $(find Snippets -name \*.swift); do
             basename=$(basename "$filename" .swift)
-              swift run -Xlinker -rpath -Xlinker $DEVELOPER_DIR/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/ --configuration release ${basename}
+              swift run -Xlinker -rpath -Xlinker $DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/Library/Frameworks/ --configuration release ${basename}
         done
         # Test the PIR executables
         export PATH="/Users/runner/.swiftpm/bin:$PATH"

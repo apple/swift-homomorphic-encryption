@@ -27,7 +27,7 @@ jobs:
   tests:
     name: swifttests
     # Note: this commit is used in soundness & swifttests workflows, so they should be kept in sync
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@07936268efedce0a6650c75a00150b820f53f384  # 0.0.12
+    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@b4f8b6a963bcf21bf80a1a2581bb7093b18aa106  # 0.0.13
     with:
       enable_windows_checks: false
       enable_macos_checks: true
@@ -38,7 +38,7 @@ jobs:
         swift test --configuration release;
         for filename in $(find Snippets -name \*.swift); do
             basename=$(basename "$filename" .swift)
-              swift run -Xlinker -rpath -Xlinker $DEVELOPER_DIR/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/ --configuration release ${basename}
+              swift run -Xlinker -rpath -Xlinker $DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/Library/Frameworks/ --configuration release ${basename}
         done
         # Test the PIR executables
         export PATH="/Users/runner/.swiftpm/bin:$PATH"

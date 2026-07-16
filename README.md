@@ -137,6 +137,7 @@ swift run -c release EncryptionParametersSnippet
 > To fix on macOS, try one of the below workarounds, replacing `/Applications/Xcode.app` as needed.
 > * `DYLD_INSERT_LIBRARIES=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/Testing.framework/Versions/A/Testing swift run -c release EncryptionParametersSnippet`
 > * `swift run -Xlinker -rpath -Xlinker /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/ -c release EncryptionParametersSnippet`
+> * `swift run -Xlinker -rpath -Xlinker /Applications/Xcode.app/Platforms/MacOSX.platform/Developer/Library/Frameworks/ --configuration release EncryptionParametersSnippet`
 
 ### Supported Platforms
 Swift Homomorphic Encryption aims to support all of the platforms where Swift is supported.

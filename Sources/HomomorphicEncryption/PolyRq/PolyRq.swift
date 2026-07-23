@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -419,6 +419,15 @@ extension PolyRq where F == Coeff {
                 data[rowIndex, columnIndex] = data[rowIndex, columnIndex].negateMod(modulus: modulus)
             }
         }
+    }
+
+    @inlinable
+    package func negacyclicMatrix() throws -> [Self] {
+        var rows = Array(repeating: self, count: degree)
+        for i in rows.indices {
+            try rows[i].multiplyPowerOfX(i - degree << 1)
+        }
+        return rows
     }
 }
 

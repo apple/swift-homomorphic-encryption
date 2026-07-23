@@ -8,7 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,6 +80,15 @@ public struct Apple_SwiftHomomorphicEncryption_Api_V1_Config: Sendable {
     set {config = .pnnsConfig(newValue)}
   }
 
+  /// Configuration for a SimplePIR usecase.
+  public var simplePirConfig: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRConfig {
+    get {
+      if case .simplePirConfig(let v)? = config {return v}
+      return Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRConfig()
+    }
+    set {config = .simplePirConfig(newValue)}
+  }
+
   /// Unique identifier for the configuration.
   public var configID: Data = Data()
 
@@ -94,6 +103,8 @@ public struct Apple_SwiftHomomorphicEncryption_Api_V1_Config: Sendable {
     case pirConfig(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_PIRConfig)
     /// Configuration for a PNNS usecase.
     case pnnsConfig(Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSConfig)
+    /// Configuration for a SimplePIR usecase.
+    case simplePirConfig(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRConfig)
 
   }
 
@@ -184,6 +195,15 @@ public struct Apple_SwiftHomomorphicEncryption_Api_V1_Request: Sendable {
     set {request = .oprfRequest(newValue)}
   }
 
+  /// SimplePIR request.
+  public var simplePirRequest: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRRequest {
+    get {
+      if case .simplePirRequest(let v)? = request {return v}
+      return Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRRequest()
+    }
+    set {request = .simplePirRequest(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Generic request.
@@ -194,6 +214,8 @@ public struct Apple_SwiftHomomorphicEncryption_Api_V1_Request: Sendable {
     case pnnsRequest(Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSRequest)
     /// OPRF request.
     case oprfRequest(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFRequest)
+    /// SimplePIR request.
+    case simplePirRequest(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRRequest)
 
   }
 
@@ -236,6 +258,15 @@ public struct Apple_SwiftHomomorphicEncryption_Api_V1_Response: Sendable {
     set {response = .oprfResponse(newValue)}
   }
 
+  /// Response to `SimplePIRRequest`.
+  public var simplePirResponse: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRResponse {
+    get {
+      if case .simplePirResponse(let v)? = response {return v}
+      return Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRResponse()
+    }
+    set {response = .simplePirResponse(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Generic response.
@@ -246,6 +277,8 @@ public struct Apple_SwiftHomomorphicEncryption_Api_V1_Response: Sendable {
     case pnnsResponse(Apple_SwiftHomomorphicEncryption_Api_Pnns_V1_PNNSResponse)
     /// Response to `OPRFRequest`.
     case oprfResponse(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_OPRFResponse)
+    /// Response to `SimplePIRRequest`.
+    case simplePirResponse(Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRResponse)
 
   }
 
@@ -417,7 +450,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_ConfigRequest: SwiftProtobuf.M
 
 extension Apple_SwiftHomomorphicEncryption_Api_V1_Config: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Config"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}pir_config\0\u{3}pnns_config\0\u{3}config_id\0\u{3}reuse_existing_config\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}pir_config\0\u{3}pnns_config\0\u{3}config_id\0\u{3}reuse_existing_config\0\u{3}simple_pir_config\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -453,6 +486,19 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Config: SwiftProtobuf.Message,
       }()
       case 3: try { try decoder.decodeSingularBytesField(value: &self.configID) }()
       case 4: try { try decoder.decodeSingularBoolField(value: &self.reuseExistingConfig) }()
+      case 5: try {
+        var v: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRConfig?
+        var hadOneofValue = false
+        if let current = self.config {
+          hadOneofValue = true
+          if case .simplePirConfig(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.config = .simplePirConfig(v)
+        }
+      }()
       default: break
       }
     }
@@ -472,7 +518,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Config: SwiftProtobuf.Message,
       guard case .pnnsConfig(let v)? = self.config else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     }()
-    case nil: break
+    default: break
     }
     if !self.configID.isEmpty {
       try visitor.visitSingularBytesField(value: self.configID, fieldNumber: 3)
@@ -480,6 +526,9 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Config: SwiftProtobuf.Message,
     if self.reuseExistingConfig != false {
       try visitor.visitSingularBoolField(value: self.reuseExistingConfig, fieldNumber: 4)
     }
+    try { if case .simplePirConfig(let v)? = self.config {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -589,7 +638,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Responses: SwiftProtobuf.Messa
 
 extension Apple_SwiftHomomorphicEncryption_Api_V1_Request: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Request"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}usecase\0\u{3}pir_request\0\u{3}pnns_request\0\u{3}oprf_request\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}usecase\0\u{3}pir_request\0\u{3}pnns_request\0\u{3}oprf_request\0\u{3}simple_pir_request\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -637,6 +686,19 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Request: SwiftProtobuf.Message
           self.request = .oprfRequest(v)
         }
       }()
+      case 5: try {
+        var v: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRRequest?
+        var hadOneofValue = false
+        if let current = self.request {
+          hadOneofValue = true
+          if case .simplePirRequest(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.request = .simplePirRequest(v)
+        }
+      }()
       default: break
       }
     }
@@ -663,6 +725,10 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Request: SwiftProtobuf.Message
       guard case .oprfRequest(let v)? = self.request else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     }()
+    case .simplePirRequest?: try {
+      guard case .simplePirRequest(let v)? = self.request else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    }()
     case nil: break
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -678,7 +744,7 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Request: SwiftProtobuf.Message
 
 extension Apple_SwiftHomomorphicEncryption_Api_V1_Response: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Response"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}pir_response\0\u{3}pnns_response\0\u{3}oprf_response\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}pir_response\0\u{3}pnns_response\0\u{3}oprf_response\0\u{3}simple_pir_response\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -725,6 +791,19 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Response: SwiftProtobuf.Messag
           self.response = .oprfResponse(v)
         }
       }()
+      case 4: try {
+        var v: Apple_SwiftHomomorphicEncryption_Api_Pir_V1_SimplePIRResponse?
+        var hadOneofValue = false
+        if let current = self.response {
+          hadOneofValue = true
+          if case .simplePirResponse(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.response = .simplePirResponse(v)
+        }
+      }()
       default: break
       }
     }
@@ -747,6 +826,10 @@ extension Apple_SwiftHomomorphicEncryption_Api_V1_Response: SwiftProtobuf.Messag
     case .oprfResponse?: try {
       guard case .oprfResponse(let v)? = self.response else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }()
+    case .simplePirResponse?: try {
+      guard case .simplePirResponse(let v)? = self.response else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     }()
     case nil: break
     }

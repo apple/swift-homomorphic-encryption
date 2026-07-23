@@ -1,4 +1,4 @@
-// Copyright 2024-2025 Apple Inc. and the Swift Homomorphic Encryption project authors
+// Copyright 2024-2026 Apple Inc. and the Swift Homomorphic Encryption project authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ public enum PirError: Error, Hashable, Codable {
     case corruptedData(_ description: String)
     case emptyDatabase
     case failedToConstructCuckooTable(_ description: String)
+    case failedToCreateFile(_ path: String)
     case failedToLoadOPRFKey(underlyingError: String, filePath: String)
     case invalidBatchSize(queryCount: Int, databaseCount: Int)
     case invalidCuckooConfig(config: CuckooTableConfig)
@@ -65,6 +66,8 @@ extension PirError: LocalizedError {
             "Empty database"
         case let .failedToConstructCuckooTable(description):
             "Failed to construct Cuckoo table: \(description)"
+        case let .failedToCreateFile(path):
+            "Failed to create \(path)"
         case let .failedToLoadOPRFKey(underlyingError, filePath):
             "Failed to load OPRF key from the file path \(filePath), with underlying error: \(underlyingError)"
         case let .invalidBatchSize(queryCount, databaseCount):

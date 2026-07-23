@@ -69,13 +69,16 @@ let package = Package(
         .library(
             name: "PrivateNearestNeighborSearch",
             targets: ["PrivateNearestNeighborSearch"]),
+        .library(name: "MemoryMapping", targets: ["MemoryMapping"]),
         .library(name: "ApplicationProtobuf", targets: ["ApplicationProtobuf"]),
         .library(name: "_TestUtilities", targets: ["_TestUtilities"]),
+        .executable(name: "MMapTool", targets: ["MMapTool"]),
         .executable(name: "PIRGenerateDatabase", targets: ["PIRGenerateDatabase"]),
         .executable(name: "PIRProcessDatabase", targets: ["PIRProcessDatabase"]),
         .executable(name: "PIRShardDatabase", targets: ["PIRShardDatabase"]),
         .executable(name: "PNNSGenerateDatabase", targets: ["PNNSGenerateDatabase"]),
         .executable(name: "PNNSProcessDatabase", targets: ["PNNSProcessDatabase"]),
+        .executable(name: "SimplePIRProcessDatabase", targets: ["SimplePIRProcessDatabase"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.2.0"),
@@ -126,6 +129,7 @@ let package = Package(
             dependencies: ["HomomorphicEncryption",
                            .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                            .product(name: "Collections", package: "swift-collections"),
+                           .product(name: "DequeModule", package: "swift-collections"),
                            .product(name: "Numerics", package: "swift-numerics")],
             swiftSettings: librarySettings),
         .target(
@@ -136,6 +140,10 @@ let package = Package(
                 "HomomorphicEncryption",
                 "_HomomorphicEncryptionExtras",
             ],
+            swiftSettings: librarySettings),
+        .target(
+            name: "MemoryMapping",
+            dependencies: [],
             swiftSettings: librarySettings),
         .target(
             name: "ApplicationProtobuf",
@@ -155,6 +163,14 @@ let package = Package(
                 .product(name: "Numerics", package: "swift-numerics"),
             ],
             swiftSettings: librarySettings),
+        .executableTarget(
+            name: "MMapTool",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "MemoryMapping",
+                "ApplicationProtobuf",
+            ],
+            swiftSettings: executableSettings),
         .executableTarget(
             name: "PIRGenerateDatabase",
             dependencies: [
@@ -199,6 +215,15 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
             ],
             swiftSettings: executableSettings),
+        .executableTarget(
+            name: "SimplePIRProcessDatabase",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "ApplicationProtobuf",
+                "PrivateInformationRetrieval",
+                .product(name: "Logging", package: "swift-log"),
+            ],
+            swiftSettings: executableSettings),
         .testTarget(
             name: "HomomorphicEncryptionTests",
             dependencies: [
@@ -237,6 +262,19 @@ let package = Package(
             name: "PrivateNearestNeighborSearchTests",
             dependencies: [
                 "PrivateNearestNeighborSearch", "HomomorphicEncryption", "_TestUtilities",
+            ], swiftSettings: executableSettings),
+        .testTarget(
+            name: "SimplePIRProcessDatabaseTests",
+            dependencies: [
+                "SimplePIRProcessDatabase",
+                "PrivateInformationRetrieval",
+                "ApplicationProtobuf",
+                "_TestUtilities",
+            ], swiftSettings: executableSettings),
+        .testTarget(
+            name: "MemoryMappingTests",
+            dependencies: [
+                "MemoryMapping",
             ], swiftSettings: executableSettings),
         .testTarget(
             name: "ApplicationProtobufTests",

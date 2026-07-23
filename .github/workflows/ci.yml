@@ -122,7 +122,7 @@ jobs:
         run: |
           ci/install-lockwood-swiftformat.sh
       - name: Run SwiftFormat
-        run: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat --strict .
+        run: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat --strict --lint .
   check-doc-comments:
     timeout-minutes: 5
     runs-on: ubuntu-22.04

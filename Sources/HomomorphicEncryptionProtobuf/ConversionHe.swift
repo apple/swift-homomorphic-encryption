@@ -25,6 +25,8 @@ extension Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev {
         switch self {
         case .stddev32:
             .stdDev32
+        case .stddev64:
+            .stdDev64
         case let .UNRECOGNIZED(value):
             throw ConversionError.unrecognizedEnumValue(enum: Self.self, value: value)
         }
@@ -39,6 +41,8 @@ extension ErrorStdDev {
         switch self {
         case .stdDev32:
             Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev.stddev32
+        case .stdDev64:
+            Apple_SwiftHomomorphicEncryption_V1_ErrorStdDev.stddev64
         }
     }
 }

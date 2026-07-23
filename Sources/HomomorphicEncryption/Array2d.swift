@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+public import ModularArithmetic
+import Foundation
+
 /// Stores values in a 2 dimensional array.
 public struct Array2d<T: Equatable & AdditiveArithmetic & Sendable>: Equatable, Sendable {
     /// Values stored in row-major order.
@@ -249,7 +252,7 @@ extension Array2d {
 
     /// Sets all the data to zero. This is useful for clearing sensitive data.
     @inlinable
-    mutating func zeroize() {
+    package mutating func zeroize() {
         let zeroizeSize = data.count * MemoryLayout<T>.size
         data.withUnsafeMutableBytes { dataPointer in
             // swiftlint:disable:next force_unwrapping
@@ -267,5 +270,286 @@ extension Array2d {
             data: data.map { value in transform(value) },
             rowCount: rowCount,
             columnCount: columnCount)
+    }
+}
+
+extension UnsafePointer: @unchecked @retroactive Sendable {}
+extension UnsafeMutablePointer: @unchecked @retroactive Sendable {}
+
+extension Array2d where T: FixedWidthInteger {
+    @inlinable
+    static func >>= (lhs: inout Array2d<T>, _ shiftingBits: Int) {
+        lhs.data.indices.forEach { lhs.data[$0] >>= shiftingBits }
+    }
+
+    @inlinable
+    package static func += (_ lhs: inout Array2d<T>, _ rhs: Array2d<T>) {
+        lhs.data.indices.forEach { lhs.data[$0] &+= rhs.data[$0] }
+    }
+
+    @inlinable
+    package static func &= (_ lhs: inout Self, _ rhs: T) {
+        lhs.data.indices.forEach { lhs.data[$0] &= rhs }
+    }
+
+    @inlinable
+    package func transposed() async -> Array2d<T> {
+        var transposed: Array2d<T> = .zero(rowCount: columnCount, columnCount: rowCount)
+        await withTaskGroup(of: Void.self) { group in
+            transposed.data.withUnsafeMutableBufferPointer { buffer in
+                // swiftlint:disable:next force_unwrapping
+                let bufferPointer = buffer.baseAddress!
+                let sourceData = self.data
+                let sourceColumnCount = self.columnCount
+                let sourceRowCount = self.rowCount
+                for rowIndex in 0..<rowCount {
+                    group.addTask { @Sendable in
+                        let offset = rowIndex &* sourceColumnCount
+                        for columnIndex in 0..<sourceColumnCount {
+                            bufferPointer[columnIndex &* sourceRowCount &+ rowIndex] = sourceData[offset &+ columnIndex]
+                        }
+                    }
+                }
+            }
+        }
+        return transposed
+    }
+
+    @inlinable
+    func multiply(_ other: Array2d<T>) -> Array2d<T> {
+        precondition(columnCount == other.rowCount, "Matrix multiplication shapes: \(shape) x \(other.shape)")
+
+        var result: Array2d = .zero(rowCount: rowCount, columnCount: other.columnCount)
+
+        for i in 0..<rowCount {
+            for j in 0..<other.columnCount {
+                for k in 0..<columnCount {
+                    result[i, j] &+= self[i, k] &* other[k, j]
+                }
+            }
+        }
+        return result
+    }
+
+    @inlinable
+    package func multiply(_ other: Array2d<T>) async -> Array2d<T> {
+        precondition(columnCount == other.rowCount, "Matrix multiplication shapes: \(shape) x \(other.shape)")
+
+        var result: Array2d = .zero(rowCount: rowCount, columnCount: other.columnCount)
+
+        // Transposing first will greatly improve memory access pattern
+        let transposedOther = await other.transposed()
+
+        await withTaskGroup(of: Void.self) { group in
+            result.data.withUnsafeMutableBufferPointer { resultBuf in
+                // swiftlint:disable:next force_unwrapping
+                let resultPtr = resultBuf.baseAddress!
+                self.data.withUnsafeBufferPointer { selfBuf in
+                    // swiftlint:disable:next force_unwrapping
+                    let selfPtr = selfBuf.baseAddress!
+                    transposedOther.data.withUnsafeBufferPointer { otherBuf in
+                        // swiftlint:disable:next force_unwrapping
+                        let otherPtr = otherBuf.baseAddress!
+                        let selfColumnCount = self.columnCount
+                        let otherColumnCount = other.columnCount
+                        let otherRowCount = other.rowCount
+                        for rowIndex in 0..<rowCount {
+                            group.addTask { @Sendable in
+                                let aRowOffset = rowIndex &* selfColumnCount
+                                let cRowOffset = rowIndex &* otherColumnCount
+                                for j in 0..<otherColumnCount {
+                                    var sum: T = 0
+                                    let bRowOffset = j &* otherRowCount
+                                    for k in 0..<otherRowCount {
+                                        let aVal = selfPtr[aRowOffset &+ k]
+                                        let bVal = otherPtr[bRowOffset &+ k]
+                                        sum &+= aVal &* bVal
+                                    }
+                                    resultPtr[cRowOffset &+ j] = sum
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result
+    }
+}
+
+extension Array2d where T: ScalarType {
+    @inlinable
+    package mutating func randomCenteredBinomialDistribution(
+        standardDeviation: Double,
+        mod moduli: [T],
+        using rng: inout some PseudoRandomNumberGenerator)
+    {
+        precondition(moduli.count == rowCount)
+        // figure out n based on the noise std dev.
+        // variance = npq, p = q = 0.5
+        // n = variance / pq
+        // n = 4 * variance
+        // let k = n / 2
+        // k = 2 * variance
+        let variance = standardDeviation * standardDeviation
+        let k = Int((2 * variance).rounded(.up))
+        let numberOfUint64sPerTrial = 2 * k.dividingCeil(UInt64.bitWidth, variableTime: true)
+        var trialBits = [UInt64](repeating: 0, count: numberOfUint64sPerTrial)
+
+        let half = numberOfUint64sPerTrial >> 1
+        let mask = if !k.isMultiple(of: UInt64.bitWidth) {
+            (UInt64(1) << (k % UInt64.bitWidth)) - 1
+        } else {
+            // do not mask any bits, if 64 divides k
+            UInt64.max
+        }
+        for columnIndex in 0..<columnCount {
+            // fill trial bits
+            trialBits.indices.forEach { trialBits[$0] = rng.next() }
+            // mask off unneeded bits
+            trialBits[half - 1] &= mask
+            trialBits[numberOfUint64sPerTrial - 1] &= mask
+
+            // count positive bits
+            let positiveCount = trialBits[..<half].reduce(0) { partialResult, trial in
+                partialResult + trial.nonzeroBitCount
+            }
+
+            // count negative bits
+            let negativeCount = trialBits[half...].reduce(0) { partialResult, trial in
+                partialResult + trial.nonzeroBitCount
+            }
+
+            let pos = T(positiveCount)
+            let neg = T(negativeCount)
+            for (index, modulus) in zip(columnIndices(column: columnIndex), moduli) {
+                data[index] = pos.subtractMod(neg, modulus: modulus)
+            }
+        }
+    }
+}
+
+extension Array2d where T: ScalarType {
+    @inlinable
+    package func multiply(_ other: Array2d<T>, modulus: T) async -> Array2d<T> {
+        precondition(columnCount == other.rowCount, "Matrix multiplication shapes: \(shape) x \(other.shape)")
+
+        let reductionModulus = ReduceModulus(modulus: modulus, bound: .DoubleWord, variableTime: true)
+        var result: Array2d = .zero(rowCount: rowCount, columnCount: other.columnCount)
+
+        // Transposing first will greatly improve memory access pattern
+        let transposedOther = await other.transposed()
+
+        await withTaskGroup(of: Void.self) { group in
+            result.data.withUnsafeMutableBufferPointer { resultBuf in
+                self.data.withUnsafeBufferPointer { selfBuf in
+                    transposedOther.data.withUnsafeBufferPointer { otherBuf in
+                        // swiftlint:disable force_unwrapping
+                        let resultPtr = resultBuf.baseAddress!
+                        let selfPtr = selfBuf.baseAddress!
+                        let otherPtr = otherBuf.baseAddress!
+                        // swiftlint:enable force_unwrapping
+                        let selfColumnCount = self.columnCount
+                        let otherColumnCount = other.columnCount
+                        let otherRowCount = other.rowCount
+                        for rowIndex in 0..<rowCount {
+                            group.addTask { @Sendable in
+                                let aRowOffset = rowIndex &* selfColumnCount
+                                let cRowOffset = rowIndex &* otherColumnCount
+                                for j in 0..<otherColumnCount {
+                                    var sum: T.DoubleWidth = 0
+                                    let bRowOffset = j &* otherRowCount
+                                    for k in 0..<otherRowCount {
+                                        let aVal = selfPtr[aRowOffset &+ k]
+                                        let bVal = otherPtr[bRowOffset &+ k]
+                                        sum &+= T.DoubleWidth(aVal.multipliedFullWidth(by: bVal))
+                                    }
+                                    resultPtr[cRowOffset &+ j] = reductionModulus.reduce(sum)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    /// Performs modulus switching with rounding from `initialMod` to `newMod`.
+    ///
+    /// For each element `x`, computes: `floor((x * newMod + initialMod/2) / initialMod) mod newMod`
+    ///
+    /// This implementation uses constant-time division to avoid timing side-channels.
+    ///
+    /// - Parameters:
+    ///   - initialMod: The current modulus. Must be greater than 0.
+    ///   - newMod: The new modulus. Must be greater than 0.
+    /// - Throws: Error if modulus parameters are invalid.
+    /// - Warning: The moduli themselves may be leaked through timing, but the data values are protected.
+    public mutating func divideAndRound(initialMod: T, newMod: T) throws {
+        // Use DoubleWidth arithmetic to avoid overflow during multiplication
+        let initialModDiv2 = T.DoubleWidth(initialMod >> 1)
+        let newModDW = T.DoubleWidth(newMod)
+
+        // Use ReduceModulus for efficient constant-time reduction modulo newMod
+        let reduceMod = ReduceModulus(modulus: newMod, bound: .DoubleWord, variableTime: true)
+
+        // Create a DivisionModulus for constant-time division by initialMod
+        let divisionMod = DivisionModulus(modulus: initialMod)
+
+        for i in data.indices {
+            // Convert value to DoubleWidth to prevent overflow
+            let value = T.DoubleWidth(data[i])
+
+            // Compute: (value * newMod + initialMod/2)
+            let product = value * newModDW
+            let sum = product + initialModDiv2
+
+            // Perform constant-time division by initialMod
+            let divided = divisionMod.dividingFloor(dividend: sum)
+
+            // Reduce the result modulo newMod
+            data[i] = reduceMod.reduce(divided)
+        }
+    }
+}
+
+extension Array2d {
+    /// The size in bytes of the serialized representation of this array.
+    ///
+    /// Matches the format used by the `save(to:)` and `init(from:)` methods.
+    public var serializationSize: Int {
+        MemoryLayout<UInt32>.size + // rowCount
+            MemoryLayout<UInt32>.size + // columnCount
+            data.count * MemoryLayout<T>.size // data
+    }
+}
+
+extension Sequence {
+    /// Collects elements from a sequence of polynomials into an Array2d.
+    ///
+    /// Each polynomial contributes a row to the resulting Array2d. The polynomials must all have the same context
+    /// and degree.
+    /// - Returns: An Array2d where each row contains the polynomial data from one element in the sequence.
+    @inlinable
+    public func collect<Scalar: ScalarType>() -> Array2d<Scalar> where Element == PolyRq<Scalar, Coeff> {
+        let polys = Array(self)
+        guard let first = polys.first else {
+            return Array2d<Scalar>(data: [], rowCount: 0, columnCount: 0)
+        }
+
+        // Each polynomial has data in Array2d format with shape (rnsCount, degree)
+        // We want to collect all polynomial data row by row
+        let totalRows = polys.count * first.data.rowCount
+        let columnCount = first.data.columnCount
+
+        var allData: [Scalar] = []
+        allData.reserveCapacity(totalRows * columnCount)
+
+        for poly in polys {
+            allData.append(contentsOf: poly.data.data)
+        }
+
+        return Array2d<Scalar>(data: allData, rowCount: totalRows, columnCount: columnCount)
     }
 }

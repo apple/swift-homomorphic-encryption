@@ -27,7 +27,7 @@ jobs:
   tests:
     name: swifttests
     # Note: this commit is used in soundness & swifttests workflows, so they should be kept in sync
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@b4f8b6a963bcf21bf80a1a2581bb7093b18aa106  # 0.0.13
+    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@152252f6e4b45fa96d48f1cbefaa351a7389fc2c  # 0.0.14
     with:
       enable_windows_checks: false
       enable_macos_checks: true

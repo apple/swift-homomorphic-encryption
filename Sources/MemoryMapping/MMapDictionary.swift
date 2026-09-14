@@ -138,8 +138,6 @@ public final class MMapDictionary: @unchecked Sendable {
     /// - Throws: `MMapDictionaryError` if the file format is invalid or cannot be opened.
     public init(path: String) throws {
         let buffer = try MemoryMapping.openFile(path: path)
-        self.buffer = buffer
-
         guard buffer.count >= Self.headerSize else {
             MemoryMapping.unmap(buffer)
             throw MMapDictionaryError.invalidFormat("File too small")
@@ -158,8 +156,7 @@ public final class MMapDictionary: @unchecked Sendable {
             throw MMapDictionaryError.invalidFormat("Invalid magic number")
         }
 
-        self.offsetType = offsetType
-        self.bucketCount = Int(headerSpan.unsafeLoadUnaligned(
+        let bucketCount = Int(headerSpan.unsafeLoadUnaligned(
             fromByteOffset: MemoryLayout<UInt32>.size,
             as: UInt32.self))
 
@@ -167,6 +164,10 @@ public final class MMapDictionary: @unchecked Sendable {
             MemoryMapping.unmap(buffer)
             throw MMapDictionaryError.invalidFormat("Invalid bucket count")
         }
+
+        self.buffer = buffer
+        self.offsetType = offsetType
+        self.bucketCount = bucketCount
     }
 
     static func bucketEntrySize(offsetType: OffsetType) -> Int {

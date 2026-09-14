@@ -137,7 +137,8 @@ public final class MMapDictionary: @unchecked Sendable {
     /// - Parameter path: The file path to the memory-mapped dictionary file.
     /// - Throws: `MMapDictionaryError` if the file format is invalid or cannot be opened.
     public init(path: String) throws {
-        self.buffer = try MemoryMapping.openFile(path: path)
+        let buffer = try MemoryMapping.openFile(path: path)
+        self.buffer = buffer
 
         guard buffer.count >= Self.headerSize else {
             MemoryMapping.unmap(buffer)

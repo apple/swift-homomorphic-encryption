@@ -377,10 +377,12 @@ struct KeywordPirBenchmarkContext<IndexServer: IndexPirServer, IndexClient: Inde
                 print("Finished expanding cuckoo table \(summary)")
             case let .cuckooTableEvent(.insertedKeywordValuePair(index, _)):
                 let reportingPercentage = 10
-                let shardFraction = entryCount / reportingPercentage
-                if (index + 1).isMultiple(of: shardFraction) {
-                    let percentage = Float(reportingPercentage * (index + 1)) / Float(shardFraction)
-                    print("Inserted \(index + 1) / \(entryCount) keywords \(percentage)%")
+                let insertedCount = index + 1
+                let previousPercentageBucket = index * reportingPercentage / entryCount
+                let currentPercentageBucket = insertedCount * reportingPercentage / entryCount
+                if currentPercentageBucket > previousPercentageBucket {
+                    let percentage = 100 * insertedCount / entryCount
+                    print("Inserted \(insertedCount) / \(entryCount) keywords \(percentage)%")
                 }
             }
         }

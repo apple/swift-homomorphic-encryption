@@ -632,10 +632,12 @@ struct ProcessDatabase: AsyncParsableCommand {
                 logger.info("Finished expanding cuckoo table \(summary)")
             case let .cuckooTableEvent(.insertedKeywordValuePair(index, _)):
                 let reportingPercentage = 10
-                let shardFraction = shard.rows.count / reportingPercentage
-                if (index + 1).isMultiple(of: shardFraction) {
-                    let percentage = Float(reportingPercentage * (index + 1)) / Float(shardFraction)
-                    logger.info("Inserted \(index + 1) / \(shard.rows.count) keywords \(percentage)%")
+                let insertedCount = index + 1
+                let previousPercentageBucket = index * reportingPercentage / shard.rows.count
+                let currentPercentageBucket = insertedCount * reportingPercentage / shard.rows.count
+                if currentPercentageBucket > previousPercentageBucket {
+                    let percentage = 100 * insertedCount / shard.rows.count
+                    logger.info("Inserted \(insertedCount) / \(shard.rows.count) keywords \(percentage)%")
                 }
             }
         }

@@ -394,66 +394,65 @@ public struct CuckooTable {
                 because the resulting hashbucket would be larger than 'maxSerializedBucketSize'.
                 """)
         }
-        try insertLoop(keywordValuePair: keywordValuePair, remainingEvictionCount: config.maxEvictionCount)
+        guard let keywordValuePair = insertLoop(
+            keywordValuePair: keywordValuePair,
+            remainingEvictionCount: config.maxEvictionCount)
+        else {
+            return
+        }
+        try expand(inserting: keywordValuePair)
     }
 
+    /// Iterates rather than recursing, and never expands the table, so the work per call is bounded by
+    /// `remainingEvictionCount` regardless of how often the table has expanded. Returns the pair left without a
+    /// bucket, which is no longer in the table, or `nil` on success.
     @inlinable
-    mutating func insertLoop(keywordValuePair: KeywordValuePair, remainingEvictionCount: Int) throws {
-        if remainingEvictionCount == 0 {
-            switch config.bucketCount {
-            case .allowExpansion:
-                try expand()
-                try insert(keywordValuePair)
-            default:
-                throw PirError
-                    .failedToConstructCuckooTable(
-                        """
-                        Unable to insert value with keyword \(keywordValuePair.keyword) \
-                        into table with \(entryCount) entries. \
-                        Consider setting `allowExpansion` or increasing `bucketCount`.
-                        """)
+    mutating func insertLoop(keywordValuePair: KeywordValuePair, remainingEvictionCount: Int) -> KeywordValuePair? {
+        var keywordValuePair = keywordValuePair
+        var remainingEvictionCount = remainingEvictionCount
+        while true {
+            let keywordHashIndices = HashKeyword.hashIndices(
+                keyword: keywordValuePair.keyword,
+                bucketCount: bucketsPerTable,
+                hashFunctionCount: config.hashFunctionCount).enumerated()
+
+            // return if the keyword already exists
+            for (tableIndex, hashIndex) in keywordHashIndices
+                where buckets[index(tableIndex: tableIndex, index: hashIndex)]
+                .contains(where: { existingPair in existingPair.keyword == keywordValuePair.keyword })
+            {
+                return nil
             }
-        }
-        let keywordHashIndices = HashKeyword.hashIndices(
-            keyword: keywordValuePair.keyword,
-            bucketCount: bucketsPerTable,
-            hashFunctionCount: config.hashFunctionCount).enumerated()
 
-        // return if the keyword already exists
-        for (tableIndex, hashIndex) in keywordHashIndices
-            where buckets[index(tableIndex: tableIndex, index: hashIndex)]
-            .contains(where: { existingPair in existingPair.keyword == keywordValuePair.keyword })
-        {
-            return
-        }
+            let cuckooBucketEntry = CuckooBucketEntry(keywordValuePair: keywordValuePair)
+            // try to insert if there is an empty slot
+            for (tableIndex, hashIndex) in keywordHashIndices
+                where buckets[index(tableIndex: tableIndex, index: hashIndex)].canInsert(
+                    value: keywordValuePair.value,
+                    with: config)
+            {
+                buckets[index(tableIndex: tableIndex, index: hashIndex)].append(cuckooBucketEntry)
+                return nil
+            }
 
-        let cuckooBucketEntry = CuckooBucketEntry(keywordValuePair: keywordValuePair)
-        // try to insert if there is an empty slot
-        for (tableIndex, hashIndex) in keywordHashIndices
-            where buckets[index(tableIndex: tableIndex, index: hashIndex)].canInsert(
-                value: keywordValuePair.value,
-                with: config)
-        {
-            buckets[index(tableIndex: tableIndex, index: hashIndex)].append(cuckooBucketEntry)
-            return
-        }
-
-        // try to evict if it's full
-        let evictIndices = keywordHashIndices.flatMap { tableIndex, bucketIndex in
-            let actualIndex = index(tableIndex: tableIndex, index: bucketIndex)
-            return buckets[actualIndex].swapIndices(newValue: keywordValuePair.value, with: config)
-                .map { evictIndexInBucket in
-                    EvictIndex(bucketIndex: actualIndex, evictIndexInBucket: evictIndexInBucket)
-                }
-        }
-        if let evictIndex = evictIndices.randomElement(using: &rng) {
+            guard remainingEvictionCount > 0 else {
+                return keywordValuePair
+            }
+            // try to evict if it's full
+            let evictIndices = keywordHashIndices.flatMap { tableIndex, bucketIndex in
+                let actualIndex = index(tableIndex: tableIndex, index: bucketIndex)
+                return buckets[actualIndex].swapIndices(newValue: keywordValuePair.value, with: config)
+                    .map { evictIndexInBucket in
+                        EvictIndex(bucketIndex: actualIndex, evictIndexInBucket: evictIndexInBucket)
+                    }
+            }
+            guard let evictIndex = evictIndices.randomElement(using: &rng) else {
+                return keywordValuePair
+            }
             let evictedKeywordValuePair = buckets[evictIndex.bucketIndex][evictIndex.evictIndexInBucket]
             buckets[evictIndex.bucketIndex][evictIndex.evictIndexInBucket] = cuckooBucketEntry
-            try insertLoop(
-                keywordValuePair: evictedKeywordValuePair.keywordValuePair,
-                remainingEvictionCount: remainingEvictionCount - 1)
-        } else {
-            try expand()
+            keywordValuePair = evictedKeywordValuePair.keywordValuePair
+            remainingEvictionCount -= 1
         }
     }
 
@@ -462,30 +461,34 @@ public struct CuckooTable {
         tableCount == 1 ? index : tableIndex * bucketsPerTable + index
     }
 
+    /// Each attempt rebuilds the table from scratch using only bounded evictions. If any pair is left without a
+    /// bucket, the table grows again and the rebuild restarts, so expansions never nest.
     @inlinable
-    mutating func expand() throws {
-        switch config.bucketCount {
-        case let .allowExpansion(expansionFactor: expansionFactor, _):
-            try onEvent(Event.expandingTable(self))
-            let oldTable = buckets
-            let bucketCount = Int(ceil(Double(buckets.count) * expansionFactor)).nextMultiple(
-                of: tableCount,
-                variableTime: true)
-            buckets = Array(repeating: CuckooBucket(), count: bucketCount)
-            for bucket in oldTable {
-                for entry in bucket {
-                    do {
-                        try insert(entry.keywordValuePair)
-                    } catch {
-                        throw PirError.failedToConstructCuckooTable("Expanding Cuckoo table failed")
-                    }
-                }
-            }
-            try onEvent(Event.finishedExpandingTable(self))
-        default:
+    mutating func expand(inserting keywordValuePair: KeywordValuePair) throws {
+        guard case let .allowExpansion(expansionFactor: expansionFactor, _) = config.bucketCount else {
             throw PirError
                 .failedToConstructCuckooTable(
-                    "Needed to expand a Cuckoo table that doesn't allow expansion")
+                    """
+                    Unable to insert value with keyword \(keywordValuePair.keyword) \
+                    into table with \(entryCount) entries. \
+                    Consider setting `allowExpansion` or increasing `bucketCount`.
+                    """)
+        }
+        try onEvent(Event.expandingTable(self))
+        let keywordValuePairs = buckets.flatMap { bucket in bucket.map(\.keywordValuePair) } + [keywordValuePair]
+        var bucketCount = buckets.count
+        repeat {
+            bucketCount = Int(ceil(Double(bucketCount) * expansionFactor))
+                .nextMultiple(of: tableCount, variableTime: true)
+        } while !rebuild(bucketCount: bucketCount, inserting: keywordValuePairs)
+        try onEvent(Event.finishedExpandingTable(self))
+    }
+
+    @inlinable
+    mutating func rebuild(bucketCount: Int, inserting keywordValuePairs: [KeywordValuePair]) -> Bool {
+        buckets = Array(repeating: CuckooBucket(), count: bucketCount)
+        return keywordValuePairs.allSatisfy { keywordValuePair in
+            insertLoop(keywordValuePair: keywordValuePair, remainingEvictionCount: config.maxEvictionCount) == nil
         }
     }
 

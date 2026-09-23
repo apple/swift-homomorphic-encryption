@@ -93,12 +93,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+      - name: Determine Swift version
+        id: swift-version
+        run: echo "hash=$(swift --version | shasum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
       - name: Cache SwiftLint
         id: cache-swiftlint
         uses: actions/cache@v6
         with:
           path: /tmp/swiftlint/SwiftLint/.build/release/swiftlint
-          key: ${{ runner.os }}-swiftlint-${{ env.SWIFTLINT_VERSION }}
+          key: ${{ runner.os }}-swiftlint-${{ env.SWIFTLINT_VERSION }}-${{ steps.swift-version.outputs.hash }}
       - name: Install SwiftLint
         if: steps.cache-swiftlint.outputs.cache-hit != 'true'
         run: |
@@ -111,12 +114,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+      - name: Determine Swift version
+        id: swift-version
+        run: echo "hash=$(swift --version | shasum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
       - name: Cache SwiftFormat
         id: cache-swiftformat
         uses: actions/cache@v6
         with:
           path: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat
-          key: ${{ runner.os }}-swiftformat-${{ env.SWIFTFORMAT_VERSION }}
+          key: ${{ runner.os }}-swiftformat-${{ env.SWIFTFORMAT_VERSION }}-${{ steps.swift-version.outputs.hash }}
       - name: Install Lockwood SwiftFormat
         if: steps.cache-swiftformat.outputs.cache-hit != 'true'
         run: |

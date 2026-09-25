@@ -84,7 +84,7 @@ struct CuckooTableTests {
         let summary = CuckooTable.CuckooTableInformation(
             entryCount: 100,
             bucketCount: 80,
-            emptyBucketCount: 19,
+            emptyBucketCount: 18,
             loadFactor: 0.52)
         #expect(try cuckooTable.summarize() == summary)
     }
@@ -152,5 +152,79 @@ struct CuckooTableTests {
         for bucket in cuckooTable.buckets {
             #expect(bucket.slots.count <= slotCount)
         }
+    }
+
+    /// Small values crowd out large ones, so some large values can't be placed by swapping out a single entry;
+    /// those must still end up in the table after expansion rather than being dropped.
+    @Test(arguments: 0..<10)
+    func mixedValueSizesKeepEveryEntry(seed: UInt64) throws {
+        var rng = TestRng(counter: seed)
+        let smallValueSize = 1
+        let largeValueSize = 21
+        let database = PirTestUtils.randomKeywordPirDatabase(rowCount: 300, valueSize: smallValueSize, using: &rng)
+            + PirTestUtils.randomKeywordPirDatabase(rowCount: 30, valueSize: largeValueSize, using: &rng)
+        let config = try CuckooTableConfig(
+            hashFunctionCount: 2,
+            maxEvictionCount: 100,
+            maxSerializedBucketSize: HashBucket.serializedSize(singleValueSize: largeValueSize),
+            bucketCount: .allowExpansion(expansionFactor: 1.1, targetLoadFactor: 0.9))
+
+        let cuckooTable = try CuckooTable(config: config, database: database, using: rng)
+        #expect(cuckooTable.entryCount == database.count, "every inserted pair is stored")
+        for pair in database {
+            #expect(cuckooTable[pair.keyword] == pair.value, "every inserted keyword is retrievable")
+        }
+    }
+
+    /// Insertion is bounded by `maxEvictionCount` rather than recursing once per eviction,
+    /// so a large eviction budget can't exhaust the stack.
+    @Test
+    func largeMaxEvictionCountDoesNotExhaustStack() throws {
+        let valueSize = 10
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 100, valueSize: valueSize)
+        let config = try CuckooTableConfig(
+            hashFunctionCount: 2,
+            maxEvictionCount: 100_000,
+            maxSerializedBucketSize: HashBucket.serializedSize(singleValueSize: valueSize),
+            bucketCount: .fixedSize(bucketCount: 10))
+
+        #expect(throws: PirError.self) {
+            try CuckooTable(config: config, database: testDatabase)
+        }
+    }
+
+    /// Each expansion is reported as one `expandingTable`/`finishedExpandingTable` pair;
+    /// re-inserting entries during an expansion never starts a nested expansion.
+    @Test(arguments: 0..<10)
+    func expansionsDoNotNest(seed: UInt64) throws {
+        var rng = TestRng(counter: seed)
+        let valueSize = 10
+        let testDatabase = PirTestUtils.randomKeywordPirDatabase(rowCount: 500, valueSize: valueSize, using: &rng)
+        let config = try CuckooTableConfig(
+            hashFunctionCount: 2,
+            maxEvictionCount: 5,
+            maxSerializedBucketSize: HashBucket.serializedSize(values: testDatabase.prefix(2).map(\.value)),
+            bucketCount: .allowExpansion(expansionFactor: 1.01, targetLoadFactor: 0.99))
+
+        var expansionDepth = 0
+        var maxExpansionDepth = 0
+        var expansionCount = 0
+        let cuckooTable = try CuckooTable(config: config, database: testDatabase, onEvent: { event in
+            switch event {
+            case .expandingTable:
+                expansionDepth += 1
+                expansionCount += 1
+                maxExpansionDepth = max(maxExpansionDepth, expansionDepth)
+            case .finishedExpandingTable:
+                expansionDepth -= 1
+            default:
+                break
+            }
+        }, using: rng)
+
+        #expect(expansionCount > 0, "the test configuration forces at least one expansion")
+        #expect(maxExpansionDepth == 1, "expansions never nest")
+        #expect(expansionDepth == 0, "every expansion finishes")
+        #expect(cuckooTable.entryCount == testDatabase.count, "every inserted pair is stored")
     }
 }

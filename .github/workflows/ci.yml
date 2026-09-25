@@ -61,7 +61,7 @@ jobs:
         ./ci/check-pir-process-db.sh
   pre-commit:
     timeout-minutes: 1
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -75,7 +75,7 @@ jobs:
           pre-commit run --all-files
   insert-license:
     timeout-minutes: 1
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -89,7 +89,7 @@ jobs:
         run: pre-commit run insert-license --files $(git diff --name-only HEAD~1)
   lint:
     timeout-minutes: 15
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -110,7 +110,7 @@ jobs:
         run: /tmp/swiftlint/SwiftLint/.build/release/swiftlint lint --strict .
   lockwood-swiftformat:
     timeout-minutes: 5
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -131,7 +131,7 @@ jobs:
         run: /tmp/swiftformat/SwiftFormat/.build/release/swiftformat --strict --lint .
   check-doc-comments:
     timeout-minutes: 5
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7

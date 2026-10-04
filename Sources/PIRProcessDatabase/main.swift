@@ -49,6 +49,11 @@ struct SymmetricPirArguments: Codable, Hashable {
     /// Exactly one of ``outputDatabaseEncryptionKeyFilePath`` or ``databaseEncryptionKeyFilePath`` should be present.
     let outputDatabaseEncryptionKeyFilePath: String?
 
+    /// Config type for Symmetric PIR, with the default applied.
+    var resolvedConfigType: SymmetricPirConfigType {
+        configType ?? .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128
+    }
+
     /// Returns a parsed `SymmetricPirConfig` for given parameters.
     /// - Returns: Symmetric PIR config.
     func resolve() throws -> SymmetricPirConfig {
@@ -59,7 +64,7 @@ struct SymmetricPirArguments: Codable, Hashable {
                 can not be present in `symmetricPirArguments`.
                 """)
         }
-        let configType = configType ?? .OPRF_P384_AES_GCM_192_NONCE_96_TAG_128
+        let configType = resolvedConfigType
         if let databaseEncryptionKeyFilePath {
             do {
                 let secretKeyString = try String(contentsOfFile: databaseEncryptionKeyFilePath, encoding: .utf8)
@@ -262,7 +267,9 @@ struct Arguments: Codable, Equatable, Hashable {
                                                      scheme _: Scheme.Type) throws -> ResolvedArguments
     {
         let cuckooTableArguments = cuckooTableArguments ?? CuckooTableArguments()
-        let maxValueSize = database.map { row in row.value.count }.max() ?? 0
+        // Symmetric PIR appends an encryption tag to each value.
+        let tagSize = symmetricPirArguments?.resolvedConfigType.tagSize ?? 0
+        let maxValueSize = (database.map { row in row.value.count }.max() ?? 0) + tagSize
         let maxSerializedBucketSize = try cuckooTableArguments.maxSerializedBucketSize ?? {
             let bytesPerPlaintext = try EncryptionParameters<Scheme.Scalar>(from:
                 rlweParameters).bytesPerPlaintext

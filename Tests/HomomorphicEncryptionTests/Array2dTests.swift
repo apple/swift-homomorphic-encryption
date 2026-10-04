@@ -208,4 +208,36 @@ struct Array2dTests {
         }
         #expect(array.data == [Int](1..<33))
     }
+
+    @Test
+    func multiply() async {
+        func runTest<T: ScalarType>(_: T.Type) async {
+            // Largest supported modulus. Since `(modulus - 1)^2 = 1 mod modulus`, each product contributes 1 to the
+            // result, while the sum of more than 16 products exceeds `T.DoubleWidth.max`.
+            let modulus = (T(1) << (T.bitWidth - 2)) - 1
+            for count in [16, 17, 64] {
+                let data = [T](repeating: modulus - 1, count: count)
+                let lhs = Array2d(data: data, rowCount: 1, columnCount: count)
+                let rhs = Array2d(data: data, rowCount: count, columnCount: 1)
+                let product = await lhs.multiply(rhs, modulus: modulus)
+                #expect(product == Array2d(data: [T(count)], rowCount: 1, columnCount: 1))
+            }
+        }
+
+        await runTest(UInt32.self)
+        await runTest(UInt64.self)
+    }
+
+    @Test
+    func maxLazyProductAccumulationCount() {
+        func runTest<T: ScalarType>(_: T.Type) {
+            let maxModulus = (T(1) << (T.bitWidth - 2)) - 1
+            #expect(Array2d<T>.maxLazyProductAccumulationCount(lhsMax: 0, rhsMax: T.max) == Int.max)
+            #expect(Array2d<T>.maxLazyProductAccumulationCount(lhsMax: maxModulus - 1, rhsMax: maxModulus - 1) == 16)
+            #expect(Array2d<T>.maxLazyProductAccumulationCount(lhsMax: T.max, rhsMax: T.max) == 1)
+        }
+
+        runTest(UInt32.self)
+        runTest(UInt64.self)
+    }
 }

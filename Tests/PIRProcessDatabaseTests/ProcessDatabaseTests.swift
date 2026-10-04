@@ -141,4 +141,28 @@ struct ProcessDatabaseTests {
         let noField = try JSONDecoder().decode(Arguments.self, from: Data(json.utf8))
         #expect(noField.unevenDimensions == nil)
     }
+
+    @Test
+    func indexDatabaseShardID() throws {
+        func validate(_ outputDatabase: String, _ outputPirParameters: String, shardCount: Int?) throws {
+            try Arguments(
+                inputDatabase: "input.txtpb",
+                outputDatabase: outputDatabase,
+                outputPirParameters: outputPirParameters,
+                rlweParameters: .n_4096_logq_27_28_28_logt_5,
+                databaseType: .index,
+                outputEvaluationKeyConfig: nil,
+                sharding: shardCount.map { try Sharding(shardCount: $0) }).validateForIndexDatabase()
+        }
+
+        // Valid: a single shard needs no 'SHARD_ID'
+        #expect(throws: Never.self) { try validate("output.bin", "params.txtpb", shardCount: nil) }
+        #expect(throws: Never.self) { try validate("output.bin", "params.txtpb", shardCount: 1) }
+        // Valid: 'SHARD_ID' in both outputs
+        #expect(throws: Never.self) { try validate("output-SHARD_ID.bin", "params-SHARD_ID.txtpb", shardCount: 4) }
+
+        // Invalid: without 'SHARD_ID', every shard is written to the same file
+        #expect(throws: (any Error).self) { try validate("output.bin", "params-SHARD_ID.txtpb", shardCount: 4) }
+        #expect(throws: (any Error).self) { try validate("output-SHARD_ID.bin", "params.txtpb", shardCount: 4) }
+    }
 }

@@ -297,6 +297,18 @@ struct Arguments: Codable, Equatable, Hashable {
             symmetricPirConfig: symmetricPirArguments?.resolve(),
             trialsPerShard: trialsPerShard ?? 1)
     }
+
+    /// Performs the validation of the arguments for an index database.
+    func validateForIndexDatabase() throws {
+        let singleShard = try Sharding(shardCount: 1)
+        let resolvedSharding = sharding ?? singleShard
+        guard resolvedSharding == singleShard || outputPirParameters.contains("SHARD_ID") else {
+            throw ValidationError("'outputPirParameters' must contain 'SHARD_ID', found \(outputPirParameters)")
+        }
+        guard resolvedSharding == singleShard || outputDatabase.contains("SHARD_ID") else {
+            throw ValidationError("'outputDatabase' must contain 'SHARD_ID', found \(outputDatabase)")
+        }
+    }
 }
 
 /// The resolved arguments for the database processing.
@@ -477,6 +489,7 @@ struct ProcessDatabase: AsyncParsableCommand {
                                                                  pirUtil: PirUtil.Type) async throws
     {
         typealias Scalar = PirUtil.Scheme.Scalar
+        try config.validateForIndexDatabase()
         let databaseRows: [[UInt8]] =
             try Apple_SwiftHomomorphicEncryption_Pir_V1_IndexPirDatabase(from: config
                 .inputDatabase).rows.map { Array($0.value) }

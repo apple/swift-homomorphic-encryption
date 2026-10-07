@@ -565,6 +565,12 @@ public enum HeAPITestHelpers {
         let data1 = testEnv.data1
         let data2 = testEnv.data2
 
+        func checkSerialization(_ innerProduct: Scheme.EvalCiphertext, expected: [Scheme.Scalar]) throws {
+            // The inner product must not keep the seed of a fresh input ciphertext
+            let deserialized = try Scheme.EvalCiphertext(deserialize: innerProduct.serialize(), context: context)
+            try testEnv.checkDecryptsDecodes(ciphertext: deserialized, format: .simd, expected: expected)
+        }
+
         func syncTest(
             ciphertexts: [Scheme.EvalCiphertext],
             plaintexts: [Scheme.EvalPlaintext?],
@@ -572,6 +578,7 @@ public enum HeAPITestHelpers {
         {
             let innerProduct = try ciphertexts.innerProduct(plaintexts: plaintexts)
             try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: expected)
+            try checkSerialization(innerProduct, expected: expected)
         }
 
         func asyncTest(
@@ -581,6 +588,12 @@ public enum HeAPITestHelpers {
         {
             let innerProduct = try await ciphertexts.innerProduct(plaintexts: plaintexts)
             try testEnv.checkDecryptsDecodes(ciphertext: innerProduct, format: .simd, expected: expected)
+            try checkSerialization(innerProduct, expected: expected)
+            let concurrentInnerProduct = try await Scheme.innerProduct(
+                ciphertexts: ciphertexts,
+                plaintexts: plaintexts,
+                maxConcurrentTasks: 2)
+            try checkSerialization(concurrentInnerProduct, expected: expected)
         }
 
         for count in [4, 1257] {

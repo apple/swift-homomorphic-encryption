@@ -152,6 +152,9 @@ extension Array2d where T: ScalarType {
                         let otherPtr = otherBuf.baseAddress!
                         let columnCount = columnCount
                         let otherRowCount = other.rowCount
+                        let maxProductCount = Self.maxLazyProductAccumulationCount(
+                            lhsMax: selfBuf.max() ?? 0,
+                            rhsMax: otherBuf.max() ?? 0)
                         for cpuIndex in 0..<cpuCount {
                             group.addTask { @Sendable in
                                 let startRowIndex = cpuIndex &* perThreadRowCount
@@ -164,16 +167,13 @@ extension Array2d where T: ScalarType {
                                     var offset1 = otherRowIndex
                                     var offset2 = 0
                                     for _ in 0..<rowCount {
-                                        var sum: T.DoubleWidth = 0
-                                        for index in 0..<columnCount {
-                                            let a = selfPtr[offset2 &+ index]
-                                            let b = otherPtr[offset3 &+ index]
-                                            sum &+= T.DoubleWidth(a.multipliedFullWidth(by: b))
-                                        }
-                                        if hasOffset {
-                                            sum &+= T.DoubleWidth(offset.data[offset1])
-                                        }
-                                        resultPtr[offset1] = reductionModulus.reduce(sum)
+                                        resultPtr[offset1] = Self.innerProduct(
+                                            selfPtr + offset2,
+                                            otherPtr + offset3,
+                                            count: columnCount,
+                                            maxProductCount: maxProductCount,
+                                            modulus: reductionModulus,
+                                            initialValue: hasOffset ? offset.data[offset1] : 0)
                                         offset1 &+= otherRowCount
                                         offset2 &+= columnCount
                                     }

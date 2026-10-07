@@ -221,4 +221,25 @@ struct SimplePirTests {
         try await noiselessSampleHelper(params: multipleBoth, UInt32.self)
         try await noiselessSampleHelper(params: multipleBoth, UInt64.self)
     }
+
+    @Test
+    func multiplyTransposing() async throws {
+        func runTest<T: ScalarType>(_: T.Type) async throws {
+            // Largest supported modulus. Since `(modulus - 1)^2 = 1 mod modulus`, each product contributes 1 to the
+            // result, while the sum of more than 16 products exceeds `T.DoubleWidth.max`.
+            let modulus = (T(1) << (T.bitWidth - 2)) - 1
+            for count in [16, 17, 64] {
+                let row = Array2d(data: [T](repeating: modulus - 1, count: count), rowCount: 1, columnCount: count)
+                let product = try await row.multiply(transposing: row, modulus: modulus)
+                #expect(product == Array2d(data: [T(count)], rowCount: 1, columnCount: 1))
+
+                let offset = Array2d(data: [modulus - 1], rowCount: 1, columnCount: 1)
+                let productWithOffset = try await row.multiply(transposing: row, modulus: modulus, offset: offset)
+                #expect(productWithOffset == Array2d(data: [T(count - 1)], rowCount: 1, columnCount: 1))
+            }
+        }
+
+        try await runTest(UInt32.self)
+        try await runTest(UInt64.self)
+    }
 }

@@ -177,7 +177,7 @@ struct ProcessDatabaseTests {
 
     @Test
     func indexDatabaseShardID() throws {
-        func validate(_ outputDatabase: String, _ outputPirParameters: String, shardCount: Int?) throws {
+        func validate(_ outputDatabase: String, _ outputPirParameters: String, sharding: Sharding?) throws {
             try Arguments(
                 inputDatabase: "input.txtpb",
                 outputDatabase: outputDatabase,
@@ -185,7 +185,10 @@ struct ProcessDatabaseTests {
                 rlweParameters: .n_4096_logq_27_28_28_logt_5,
                 databaseType: .index,
                 outputEvaluationKeyConfig: nil,
-                sharding: shardCount.map { try Sharding(shardCount: $0) }).validateForIndexDatabase()
+                sharding: sharding).validateForIndexDatabase()
+        }
+        func validate(_ outputDatabase: String, _ outputPirParameters: String, shardCount: Int?) throws {
+            try validate(outputDatabase, outputPirParameters, sharding: shardCount.map { try Sharding(shardCount: $0) })
         }
 
         // Valid: a single shard needs no 'SHARD_ID'
@@ -197,5 +200,23 @@ struct ProcessDatabaseTests {
         // Invalid: without 'SHARD_ID', every shard is written to the same file
         #expect(throws: (any Error).self) { try validate("output.bin", "params-SHARD_ID.txtpb", shardCount: 4) }
         #expect(throws: (any Error).self) { try validate("output-SHARD_ID.bin", "params.txtpb", shardCount: 4) }
+
+        // The other sharding options don't change whether 'SHARD_ID' is needed
+        #expect(throws: Never.self) {
+            try validate("output.bin", "params.txtpb", sharding: Sharding(
+                shardCount: 1,
+                maxShardCount: 16,
+                requirePowerOfTwoShardCount: true))
+        }
+        #expect(throws: (any Error).self) {
+            try validate("output.bin", "params.txtpb", sharding: Sharding(
+                shardCount: 4,
+                maxShardCount: 16,
+                requirePowerOfTwoShardCount: true))
+        }
+        // The shard count for 'entryCountPerShard' is only known once the database is read
+        #expect(throws: (any Error).self) {
+            try validate("output.bin", "params.txtpb", sharding: Sharding(entryCountPerShard: 10))
+        }
     }
 }

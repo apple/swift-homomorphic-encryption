@@ -307,12 +307,14 @@ struct Arguments: Codable, Equatable, Hashable {
 
     /// Performs the validation of the arguments for an index database.
     func validateForIndexDatabase() throws {
-        let singleShard = try Sharding(shardCount: 1)
-        let resolvedSharding = sharding ?? singleShard
-        guard resolvedSharding == singleShard || outputPirParameters.contains("SHARD_ID") else {
+        // Only the strategy matters: `maxShardCount` and `requirePowerOfTwoShardCount` can't change a shard count of 1
+        guard let sharding, sharding.strategy != .shardCount(1) else {
+            return
+        }
+        guard outputPirParameters.contains("SHARD_ID") else {
             throw ValidationError("'outputPirParameters' must contain 'SHARD_ID', found \(outputPirParameters)")
         }
-        guard resolvedSharding == singleShard || outputDatabase.contains("SHARD_ID") else {
+        guard outputDatabase.contains("SHARD_ID") else {
             throw ValidationError("'outputDatabase' must contain 'SHARD_ID', found \(outputDatabase)")
         }
     }

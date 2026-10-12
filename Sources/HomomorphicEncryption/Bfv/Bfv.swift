@@ -391,6 +391,7 @@ public enum Bfv<T: ScalarType>: HeScheme {
                 }
             }
         }
+        result.clearSeed()
     }
 
     /// Computes accumulator += ciphertext * plaintext

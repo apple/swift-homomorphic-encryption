@@ -141,4 +141,37 @@ struct ProcessDatabaseTests {
         let noField = try JSONDecoder().decode(Arguments.self, from: Data(json.utf8))
         #expect(noField.unevenDimensions == nil)
     }
+
+    @Test
+    func symmetricPirMaxSerializedBucketSize() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+        let keyFile = tempDir.appendingPathComponent("test_symmetric_pir_key_\(UUID().uuidString).txt").path
+        defer {
+            try? FileManager.default.removeItem(atPath: keyFile)
+        }
+        let arguments = Arguments(
+            inputDatabase: "input.txtpb",
+            outputDatabase: "output-SHARD_ID.bin",
+            outputPirParameters: "params-SHARD_ID.txtpb",
+            rlweParameters: .n_4096_logq_27_28_28_logt_5,
+            databaseType: .keyword,
+            outputEvaluationKeyConfig: nil,
+            symmetricPirArguments: SymmetricPirArguments(
+                databaseEncryptionKeyFilePath: nil,
+                configType: nil,
+                outputDatabaseEncryptionKeyFilePath: keyFile))
+
+        // With 2048 bytes per plaintext, the encryption tag makes values of 998...1012 and 2022...2037 bytes
+        // outgrow a bucket sized for the unencrypted value. Test both ends of each range and their neighbors.
+        for valueSize in [997, 998, 1012, 1013, 2021, 2022, 2037, 2038] {
+            let rows = [KeywordValuePair(keyword: [1, 2, 3], value: [UInt8](repeating: 0, count: valueSize))]
+            let resolved = try arguments.resolveForKeywordDatabase(for: rows, scheme: Bfv<UInt64>.self)
+            let encryptedRows = try KeywordDatabase.symmetricPIRProcess(
+                database: rows,
+                config: #require(resolved.symmetricPirConfig))
+            #expect(throws: Never.self, "value size \(valueSize)") {
+                try CuckooTable(config: resolved.cuckooTableConfig, database: encryptedRows)
+            }
+        }
+    }
 }

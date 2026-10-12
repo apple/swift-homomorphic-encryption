@@ -59,6 +59,8 @@ jobs:
         swift package experimental-install --configuration release --product PIRGenerateDatabase
         swift package experimental-install --configuration release --product PIRProcessDatabase
         ./ci/check-pir-process-db.sh
+      enable_android_sdk_build: true
+      enable_android_sdk_checks: true
   pre-commit:
     timeout-minutes: 1
     runs-on: ubuntu-latest

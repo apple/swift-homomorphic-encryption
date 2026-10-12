@@ -232,9 +232,9 @@ struct Array2dTests {
     func maxLazyProductAccumulationCount() {
         func runTest<T: ScalarType>(_: T.Type) {
             let maxModulus = (T(1) << (T.bitWidth - 2)) - 1
-            #expect(Array2d<T>.maxLazyProductAccumulationCount(lhsMax: 0, rhsMax: T.max) == Int.max)
-            #expect(Array2d<T>.maxLazyProductAccumulationCount(lhsMax: maxModulus - 1, rhsMax: maxModulus - 1) == 16)
-            #expect(Array2d<T>.maxLazyProductAccumulationCount(lhsMax: T.max, rhsMax: T.max) == 1)
+            #expect(Array2d<T>.maxLazyProductAccumulationCount(modulus: 1) == Int.max)
+            #expect(Array2d<T>.maxLazyProductAccumulationCount(modulus: maxModulus) == 16)
+            #expect(Array2d<T>.maxLazyProductAccumulationCount(modulus: 2) == Int.max)
         }
 
         runTest(UInt32.self)

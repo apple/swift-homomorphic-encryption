@@ -152,9 +152,9 @@ extension Array2d where T: ScalarType {
                         let otherPtr = otherBuf.baseAddress!
                         let columnCount = columnCount
                         let otherRowCount = other.rowCount
-                        let maxProductCount = Self.maxLazyProductAccumulationCount(
-                            lhsMax: selfBuf.max() ?? 0,
-                            rhsMax: otherBuf.max() ?? 0)
+                        assert(selfBuf.allSatisfy { $0 < modulus })
+                        assert(otherBuf.allSatisfy { $0 < modulus })
+                        let maxProductCount = Self.maxLazyProductAccumulationCount(modulus: modulus)
                         for cpuIndex in 0..<cpuCount {
                             group.addTask { @Sendable in
                                 let startRowIndex = cpuIndex &* perThreadRowCount

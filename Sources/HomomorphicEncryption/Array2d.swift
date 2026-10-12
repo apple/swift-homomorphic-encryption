@@ -433,20 +433,20 @@ extension Array2d where T: ScalarType {
     /// Returns the maximum number of times a lazy product can be accumulated.
     ///
     /// Specifically, returns the maximum `L` such that `z + \sum_{i=0}^{L-1} x_i * y_i <= T.DoubleWidth.max` for
-    /// `x_i` in `[0, lhsMax]`, `y_i` in `[0, rhsMax]`, and `z` in `[0, T.max]`.
+    /// `x_i, y_i` in `[0, modulus - 1]`, and `z` in `[0, T.max]`.
     @inlinable
-    package static func maxLazyProductAccumulationCount(lhsMax: T, rhsMax: T) -> Int {
-        let maxProduct = T.DoubleWidth(lhsMax.multipliedFullWidth(by: rhsMax))
+    package static func maxLazyProductAccumulationCount(modulus: T) -> Int {
+        let maxProduct = T.DoubleWidth((modulus - 1).multipliedFullWidth(by: modulus - 1))
         return Int(clamping: (T.DoubleWidth.max - T.DoubleWidth(T.max)) / max(maxProduct, 1))
     }
 
     /// Computes `(initialValue + \sum_{i=0}^{count-1} lhs[i] * rhs[i]) mod modulus`.
     /// - Parameters:
-    ///   - lhs: Pointer to `count` values.
-    ///   - rhs: Pointer to `count` values.
+    ///   - lhs: Pointer to `count` values in `[0, modulus - 1]`.
+    ///   - rhs: Pointer to `count` values in `[0, modulus - 1]`.
     ///   - count: Number of products to sum.
     ///   - maxProductCount: Number of products to accumulate before reducing. Must be positive, and at most
-    /// ``maxLazyProductAccumulationCount(lhsMax:rhsMax:)`` for the values in `lhs` and `rhs`.
+    /// ``maxLazyProductAccumulationCount(modulus:)``.
     ///   - modulus: Modulus, with `DoubleWord` input bound.
     ///   - initialValue: Value to add to the sum of products.
     /// - Returns: The inner product, in `[0, modulus)`.
@@ -496,9 +496,7 @@ extension Array2d where T: ScalarType {
                         let selfColumnCount = self.columnCount
                         let otherColumnCount = other.columnCount
                         let otherRowCount = other.rowCount
-                        let maxProductCount = Self.maxLazyProductAccumulationCount(
-                            lhsMax: selfBuf.max() ?? 0,
-                            rhsMax: otherBuf.max() ?? 0)
+                        let maxProductCount = Self.maxLazyProductAccumulationCount(modulus: modulus)
                         for rowIndex in 0..<rowCount {
                             group.addTask { @Sendable in
                                 let aRowOffset = rowIndex &* selfColumnCount

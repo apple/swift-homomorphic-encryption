@@ -17,6 +17,10 @@ public import Foundation
 public import HomomorphicEncryption
 public import ModularArithmetic
 
+#if canImport(Android)
+public import Android
+#endif
+
 extension Array2d where T == Float {
     /// A mapping from vectors to non-negative real numbers.
     @usableFromInline

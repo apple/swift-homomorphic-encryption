@@ -14,6 +14,10 @@
 
 import Foundation
 
+#if canImport(Android)
+import Android
+#endif
+
 /// Errors that can occur during memory mapping operations.
 public enum MemoryMappingError: Error {
     /// The file being mapped is empty.
@@ -69,11 +73,19 @@ public enum MemoryMapping {
         guard fileSize > 0 else {
             throw MemoryMappingError.emptyFile
         }
+        #if canImport(Android)
+        let addr = mmap(nil, fileSize, PROT_READ, MAP_SHARED, fd, 0)
+        if addr == UnsafeMutableRawPointer(bitPattern: -1)
+        {
+            throw MemoryMappingError.catchSystemErrno()
+        }
+        #else
         guard let addr = mmap(nil, fileSize, PROT_READ, MAP_SHARED, fd, 0),
               addr != MAP_FAILED
         else {
             throw MemoryMappingError.catchSystemErrno()
         }
+        #endif
         return UnsafeMutableRawBufferPointer(start: addr, count: fileSize)
     }
 
@@ -84,7 +96,7 @@ public enum MemoryMapping {
     ///
     /// - Parameter buffer: The buffer representing the mapped memory region to unmap.
     public static func unmap(_ buffer: UnsafeMutableRawBufferPointer) {
-        munmap(buffer.baseAddress, buffer.count)
+        munmap(buffer.baseAddress!, buffer.count)
     }
 
     /// Executes a closure with a memory-mapped file, automatically managing the mapping lifecycle.

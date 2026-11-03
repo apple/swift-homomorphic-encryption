@@ -15,6 +15,10 @@
 import Foundation
 import ModularArithmetic
 
+#if canImport(Android)
+import Android
+#endif
+
 /// Standard deviation for error polynomial in RLWE samples.
 public enum ErrorStdDev: Hashable, Codable, Sendable, CaseIterable {
     /// Target Standard deviation `8 / sqrt(2 pi) ~= 3.2`.

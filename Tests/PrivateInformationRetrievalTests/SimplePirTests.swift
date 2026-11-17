@@ -242,4 +242,45 @@ struct SimplePirTests {
         try await runTest(UInt32.self)
         try await runTest(UInt64.self)
     }
+
+    @Test
+    func multiplyTransposingParallel() async throws {
+        let modulus: UInt32 = 65537
+        let mask: UInt32 = (1 << 20) - 1
+        // Both shapes exercise the row- and column-partitioned branches.
+        for (rowCount, shared, otherRowCount) in [(100, 30, 7), (7, 30, 100)] {
+            let selfData = (0..<(rowCount * shared)).map { _ in UInt32.random(in: 0..<modulus) }
+            let otherData = (0..<(otherRowCount * shared)).map { _ in UInt32.random(in: 0..<modulus) }
+            let offsetData = (0..<(rowCount * otherRowCount)).map { _ in UInt32.random(in: 0..<modulus) }
+            let lhs = Array2d(data: selfData, rowCount: rowCount, columnCount: shared)
+            let other = Array2d(data: otherData, rowCount: otherRowCount, columnCount: shared)
+            let offset = Array2d(data: offsetData, rowCount: rowCount, columnCount: otherRowCount)
+
+            var expectedModular: [UInt32] = []
+            var expectedMasked: [UInt32] = []
+            for row in 0..<rowCount {
+                for otherRow in 0..<otherRowCount {
+                    var sum: UInt64 = UInt64(offsetData[row * otherRowCount + otherRow])
+                    var wrappingSum: UInt32 = offsetData[row * otherRowCount + otherRow]
+                    for k in 0..<shared {
+                        let a = selfData[row * shared + k]
+                        let b = otherData[otherRow * shared + k]
+                        sum += UInt64(a) * UInt64(b)
+                        wrappingSum &+= a &* b
+                    }
+                    expectedModular.append(UInt32(sum % UInt64(modulus)))
+                    expectedMasked.append(wrappingSum & mask)
+                }
+            }
+
+            for maxConcurrentTasks in [1, 2, 3] {
+                let modular = try await lhs.multiply(
+                    transposing: other, modulus: modulus, offset: offset, maxConcurrentTasks: maxConcurrentTasks)
+                #expect(modular == Array2d(data: expectedModular, rowCount: rowCount, columnCount: otherRowCount))
+                let masked = try await lhs.multiply(
+                    transposing: other, mask: mask, offset: offset, maxConcurrentTasks: maxConcurrentTasks)
+                #expect(masked == Array2d(data: expectedMasked, rowCount: rowCount, columnCount: otherRowCount))
+            }
+        }
+    }
 }

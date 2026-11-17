@@ -45,13 +45,30 @@ extension Array2d: MatrixBufferProtocol {
 }
 
 extension Array2d where T: ScalarType {
+    /// Returns the elements of `buffer` as an array, avoiding a copy when `buffer` is already an ``Array2d``.
+    @inlinable
+    static func data<Other: MatrixBufferProtocol>(of buffer: Other) throws -> [T] where Other.Element == T {
+        if let array = buffer as? Array2d<T> {
+            return array.data
+        }
+        return try buffer.withUnsafeBufferPointer { Array($0) }
+    }
+
     /// Perform matrix multiplication after trasponsing the rhs.
     ///
     /// A mask will be applied to results after an optional offset is applied.
+    /// - Parameters:
+    ///   - other: Matrix to multiply with, before transposing.
+    ///   - mask: Mask applied to each result entry.
+    ///   - offset: Optional offset added to the result before masking.
+    ///   - maxConcurrentTasks: Maximum number of concurrent tasks to use. When `<= 1`, computes serially.
+    /// - Returns: `(self * other^T + offset) & mask`.
     public func multiply<Other: MatrixBufferProtocol>(
         transposing other: Other,
         mask: T,
-        offset: Array2d<T>? = nil) async throws -> Array2d<T> where Other.Element == T
+        offset: Array2d<T>? = nil,
+        maxConcurrentTasks: Int = CallOptions.multiThreaded.maxConcurrentTasks) async throws -> Array2d<T>
+        where Other.Element == T
     {
         // We are transposing `other` before matmul. Thus we are checking columnCount = other.columnCount, instead of
         // rowCount.
@@ -64,53 +81,36 @@ extension Array2d where T: ScalarType {
             precondition(rowCount == offset.rowCount)
             precondition(other.rowCount == offset.columnCount)
         }
-        var result: Array2d = .zero(rowCount: rowCount, columnCount: other.rowCount)
-        let cpuCount = ProcessInfo.processInfo.processorCount
-        let perThreadRowCount = other.rowCount.dividingCeil(cpuCount, variableTime: true)
+        let columnCount = columnCount
+        let otherRowCount = other.rowCount
+        let selfData = data
+        let otherData = try Self.data(of: other)
+        let offsetData = offset.data
 
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            try result.data.withUnsafeMutableBufferPointer { resultBuf in
-                try self.data.withUnsafeBufferPointer { selfBuf in
-                    try other.withUnsafeBufferPointer { otherBuf in
-                        // swiftlint:disable force_unwrapping
-                        let resultPtr = resultBuf.baseAddress!
-                        let selfPtr = selfBuf.baseAddress!
-                        let otherPtr = otherBuf.baseAddress!
-                        // swiftlint:enable force_unwrapping
-                        let columnCount = columnCount
-                        let otherRowCount = other.rowCount
-                        for cpuIndex in 0..<cpuCount {
-                            group.addTask { @Sendable in
-                                let startRowIndex = cpuIndex &* perThreadRowCount
-                                let endRowIndex = min(startRowIndex &+ perThreadRowCount, other.rowCount)
-                                if startRowIndex >= endRowIndex {
-                                    return
-                                }
-                                for otherRowIndex in startRowIndex..<endRowIndex {
-                                    let offset3 = otherRowIndex &* columnCount
-                                    var offset1 = otherRowIndex
-                                    var offset2 = 0
-                                    for _ in 0..<rowCount {
-                                        for index in 0..<columnCount {
-                                            let a = selfPtr[offset2 &+ index]
-                                            let b = otherPtr[offset3 &+ index]
-                                            resultPtr[offset1] &+= a &* b
-                                        }
-                                        if hasOffset {
-                                            resultPtr[offset1] &+= offset.data[offset1]
-                                        }
-                                        resultPtr[offset1] &= mask
-                                        offset1 &+= otherRowCount
-                                        offset2 &+= columnCount
-                                    }
-                                }
-                            }
-                        }
+        return await Array2d.computeInParallel(
+            rowCount: rowCount,
+            columnCount: otherRowCount,
+            maxConcurrentTasks: maxConcurrentTasks)
+        { rows, otherRows in
+            var result = [T](repeating: .zero, count: rows.count &* otherRows.count)
+            var resultIndex = 0
+            for row in rows {
+                let selfRowOffset = row &* columnCount
+                for otherRow in otherRows {
+                    let otherRowOffset = otherRow &* columnCount
+                    var sum: T = 0
+                    for index in 0..<columnCount {
+                        sum &+= selfData[selfRowOffset &+ index] &* otherData[otherRowOffset &+ index]
                     }
+                    if hasOffset {
+                        sum &+= offsetData[row &* otherRowCount &+ otherRow]
+                    }
+                    result[resultIndex] = sum & mask
+                    resultIndex &+= 1
                 }
             }
+            return result
         }
-        return result
     }
 
     /// Perform a modular matrix multiplication after trasponsing the rhs.
@@ -118,11 +118,14 @@ extension Array2d where T: ScalarType {
     ///   - other: other matrix to multiply with.
     ///   - modulus: The modulus to use.
     ///   - offset: Optional offset that gets added to the result.
+    ///   - maxConcurrentTasks: Maximum number of concurrent tasks to use. When `<= 1`, computes serially.
     /// - Returns: `self * other^T + offset`.
     public func multiply<Other: MatrixBufferProtocol>(
         transposing other: Other,
         modulus: T,
-        offset: Array2d<T>? = nil) async throws -> Array2d<T> where Other.Element == T
+        offset: Array2d<T>? = nil,
+        maxConcurrentTasks: Int = CallOptions.multiThreaded.maxConcurrentTasks) async throws -> Array2d<T>
+        where Other.Element == T
     {
         // We are transposing `other` before matmul. Thus we are checking columnCount = other.columnCount, instead of
         // rowCount.
@@ -136,55 +139,45 @@ extension Array2d where T: ScalarType {
             precondition(other.rowCount == offset.columnCount)
         }
         let reductionModulus = ReduceModulus(modulus: modulus, bound: .DoubleWord, variableTime: true)
-        var result: Array2d = .zero(rowCount: rowCount, columnCount: other.rowCount)
-        let cpuCount = ProcessInfo.processInfo.processorCount
-        let perThreadRowCount = other.rowCount.dividingCeil(cpuCount, variableTime: true)
+        let maxProductCount = Self.maxLazyProductAccumulationCount(modulus: modulus)
+        let columnCount = columnCount
+        let otherRowCount = other.rowCount
+        let selfData = data
+        let otherData = try Self.data(of: other)
+        let offsetData = offset.data
+        assert(selfData.allSatisfy { $0 < modulus })
+        assert(otherData.allSatisfy { $0 < modulus })
 
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            try result.data.withUnsafeMutableBufferPointer { resultBuf in
-                // swiftlint:disable:next force_unwrapping
-                let resultPtr = resultBuf.baseAddress!
-                try self.data.withUnsafeBufferPointer { selfBuf in
-                    // swiftlint:disable:next force_unwrapping
+        return await Array2d.computeInParallel(
+            rowCount: rowCount,
+            columnCount: otherRowCount,
+            maxConcurrentTasks: maxConcurrentTasks)
+        { rows, otherRows in
+            var result = [T](repeating: .zero, count: rows.count &* otherRows.count)
+            selfData.withUnsafeBufferPointer { selfBuf in
+                otherData.withUnsafeBufferPointer { otherBuf in
+                    // swiftlint:disable force_unwrapping
                     let selfPtr = selfBuf.baseAddress!
-                    try other.withUnsafeBufferPointer { otherBuf in
-                        // swiftlint:disable:next force_unwrapping
-                        let otherPtr = otherBuf.baseAddress!
-                        let columnCount = columnCount
-                        let otherRowCount = other.rowCount
-                        assert(selfBuf.allSatisfy { $0 < modulus })
-                        assert(otherBuf.allSatisfy { $0 < modulus })
-                        let maxProductCount = Self.maxLazyProductAccumulationCount(modulus: modulus)
-                        for cpuIndex in 0..<cpuCount {
-                            group.addTask { @Sendable in
-                                let startRowIndex = cpuIndex &* perThreadRowCount
-                                let endRowIndex = min(startRowIndex &+ perThreadRowCount, other.rowCount)
-                                if startRowIndex >= endRowIndex {
-                                    return
-                                }
-                                for otherRowIndex in startRowIndex..<endRowIndex {
-                                    let offset3 = otherRowIndex &* columnCount
-                                    var offset1 = otherRowIndex
-                                    var offset2 = 0
-                                    for _ in 0..<rowCount {
-                                        resultPtr[offset1] = Self.innerProduct(
-                                            selfPtr + offset2,
-                                            otherPtr + offset3,
-                                            count: columnCount,
-                                            maxProductCount: maxProductCount,
-                                            modulus: reductionModulus,
-                                            initialValue: hasOffset ? offset.data[offset1] : 0)
-                                        offset1 &+= otherRowCount
-                                        offset2 &+= columnCount
-                                    }
-                                }
-                            }
+                    let otherPtr = otherBuf.baseAddress!
+                    // swiftlint:enable force_unwrapping
+                    var resultIndex = 0
+                    for row in rows {
+                        let selfRowOffset = row &* columnCount
+                        for otherRow in otherRows {
+                            result[resultIndex] = Self.innerProduct(
+                                selfPtr + selfRowOffset,
+                                otherPtr + otherRow &* columnCount,
+                                count: columnCount,
+                                maxProductCount: maxProductCount,
+                                modulus: reductionModulus,
+                                initialValue: hasOffset ? offsetData[row &* otherRowCount &+ otherRow] : 0)
+                            resultIndex &+= 1
                         }
                     }
                 }
             }
+            return result
         }
-        return result
     }
 }
 

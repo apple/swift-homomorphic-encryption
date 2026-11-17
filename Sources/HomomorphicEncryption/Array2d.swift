@@ -273,8 +273,19 @@ extension Array2d {
     }
 }
 
-extension UnsafePointer: @unchecked @retroactive Sendable {}
-extension UnsafeMutablePointer: @unchecked @retroactive Sendable {}
+/// Wraps a value, such as an unsafe pointer, so it can be captured in a `@Sendable` closure.
+///
+/// The caller is responsible for ensuring that concurrent accesses through the wrapped value are safe, e.g., that
+/// tasks write to disjoint memory.
+@usableFromInline
+package struct UnsafeSendable<Value>: @unchecked Sendable {
+    @usableFromInline package let value: Value
+
+    @inlinable
+    package init(_ value: Value) {
+        self.value = value
+    }
+}
 
 extension Array2d where T: FixedWidthInteger {
     @inlinable
@@ -298,7 +309,7 @@ extension Array2d where T: FixedWidthInteger {
         await withTaskGroup(of: Void.self) { group in
             transposed.data.withUnsafeMutableBufferPointer { buffer in
                 // swiftlint:disable:next force_unwrapping
-                let bufferPointer = buffer.baseAddress!
+                let bufferPointer = UnsafeSendable(buffer.baseAddress!)
                 let sourceData = self.data
                 let sourceColumnCount = self.columnCount
                 let sourceRowCount = self.rowCount
@@ -306,7 +317,8 @@ extension Array2d where T: FixedWidthInteger {
                     group.addTask { @Sendable in
                         let offset = rowIndex &* sourceColumnCount
                         for columnIndex in 0..<sourceColumnCount {
-                            bufferPointer[columnIndex &* sourceRowCount &+ rowIndex] = sourceData[offset &+ columnIndex]
+                            bufferPointer
+                                .value[columnIndex &* sourceRowCount &+ rowIndex] = sourceData[offset &+ columnIndex]
                         }
                     }
                 }
@@ -343,13 +355,13 @@ extension Array2d where T: FixedWidthInteger {
         await withTaskGroup(of: Void.self) { group in
             result.data.withUnsafeMutableBufferPointer { resultBuf in
                 // swiftlint:disable:next force_unwrapping
-                let resultPtr = resultBuf.baseAddress!
+                let resultPtr = UnsafeSendable(resultBuf.baseAddress!)
                 self.data.withUnsafeBufferPointer { selfBuf in
                     // swiftlint:disable:next force_unwrapping
-                    let selfPtr = selfBuf.baseAddress!
+                    let selfPtr = UnsafeSendable(selfBuf.baseAddress!)
                     transposedOther.data.withUnsafeBufferPointer { otherBuf in
                         // swiftlint:disable:next force_unwrapping
-                        let otherPtr = otherBuf.baseAddress!
+                        let otherPtr = UnsafeSendable(otherBuf.baseAddress!)
                         let selfColumnCount = self.columnCount
                         let otherColumnCount = other.columnCount
                         let otherRowCount = other.rowCount
@@ -361,11 +373,11 @@ extension Array2d where T: FixedWidthInteger {
                                     var sum: T = 0
                                     let bRowOffset = j &* otherRowCount
                                     for k in 0..<otherRowCount {
-                                        let aVal = selfPtr[aRowOffset &+ k]
-                                        let bVal = otherPtr[bRowOffset &+ k]
+                                        let aVal = selfPtr.value[aRowOffset &+ k]
+                                        let bVal = otherPtr.value[bRowOffset &+ k]
                                         sum &+= aVal &* bVal
                                     }
-                                    resultPtr[cRowOffset &+ j] = sum
+                                    resultPtr.value[cRowOffset &+ j] = sum
                                 }
                             }
                         }
@@ -489,9 +501,9 @@ extension Array2d where T: ScalarType {
                 self.data.withUnsafeBufferPointer { selfBuf in
                     transposedOther.data.withUnsafeBufferPointer { otherBuf in
                         // swiftlint:disable force_unwrapping
-                        let resultPtr = resultBuf.baseAddress!
-                        let selfPtr = selfBuf.baseAddress!
-                        let otherPtr = otherBuf.baseAddress!
+                        let resultPtr = UnsafeSendable(resultBuf.baseAddress!)
+                        let selfPtr = UnsafeSendable(selfBuf.baseAddress!)
+                        let otherPtr = UnsafeSendable(otherBuf.baseAddress!)
                         // swiftlint:enable force_unwrapping
                         let selfColumnCount = self.columnCount
                         let otherColumnCount = other.columnCount
@@ -503,9 +515,9 @@ extension Array2d where T: ScalarType {
                                 let cRowOffset = rowIndex &* otherColumnCount
                                 for j in 0..<otherColumnCount {
                                     let bRowOffset = j &* otherRowCount
-                                    resultPtr[cRowOffset &+ j] = Self.innerProduct(
-                                        selfPtr + aRowOffset,
-                                        otherPtr + bRowOffset,
+                                    resultPtr.value[cRowOffset &+ j] = Self.innerProduct(
+                                        selfPtr.value + aRowOffset,
+                                        otherPtr.value + bRowOffset,
                                         count: otherRowCount,
                                         maxProductCount: maxProductCount,
                                         modulus: reductionModulus)

@@ -73,9 +73,9 @@ extension Array2d where T: ScalarType {
                 try self.data.withUnsafeBufferPointer { selfBuf in
                     try other.withUnsafeBufferPointer { otherBuf in
                         // swiftlint:disable force_unwrapping
-                        let resultPtr = resultBuf.baseAddress!
-                        let selfPtr = selfBuf.baseAddress!
-                        let otherPtr = otherBuf.baseAddress!
+                        let resultPtr = UnsafeSendable(resultBuf.baseAddress!)
+                        let selfPtr = UnsafeSendable(selfBuf.baseAddress!)
+                        let otherPtr = UnsafeSendable(otherBuf.baseAddress!)
                         // swiftlint:enable force_unwrapping
                         let columnCount = columnCount
                         let otherRowCount = other.rowCount
@@ -92,14 +92,14 @@ extension Array2d where T: ScalarType {
                                     var offset2 = 0
                                     for _ in 0..<rowCount {
                                         for index in 0..<columnCount {
-                                            let a = selfPtr[offset2 &+ index]
-                                            let b = otherPtr[offset3 &+ index]
-                                            resultPtr[offset1] &+= a &* b
+                                            let a = selfPtr.value[offset2 &+ index]
+                                            let b = otherPtr.value[offset3 &+ index]
+                                            resultPtr.value[offset1] &+= a &* b
                                         }
                                         if hasOffset {
-                                            resultPtr[offset1] &+= offset.data[offset1]
+                                            resultPtr.value[offset1] &+= offset.data[offset1]
                                         }
-                                        resultPtr[offset1] &= mask
+                                        resultPtr.value[offset1] &= mask
                                         offset1 &+= otherRowCount
                                         offset2 &+= columnCount
                                     }
@@ -143,13 +143,13 @@ extension Array2d where T: ScalarType {
         try await withThrowingTaskGroup(of: Void.self) { group in
             try result.data.withUnsafeMutableBufferPointer { resultBuf in
                 // swiftlint:disable:next force_unwrapping
-                let resultPtr = resultBuf.baseAddress!
+                let resultPtr = UnsafeSendable(resultBuf.baseAddress!)
                 try self.data.withUnsafeBufferPointer { selfBuf in
                     // swiftlint:disable:next force_unwrapping
-                    let selfPtr = selfBuf.baseAddress!
+                    let selfPtr = UnsafeSendable(selfBuf.baseAddress!)
                     try other.withUnsafeBufferPointer { otherBuf in
                         // swiftlint:disable:next force_unwrapping
-                        let otherPtr = otherBuf.baseAddress!
+                        let otherPtr = UnsafeSendable(otherBuf.baseAddress!)
                         let columnCount = columnCount
                         let otherRowCount = other.rowCount
                         assert(selfBuf.allSatisfy { $0 < modulus })
@@ -167,9 +167,9 @@ extension Array2d where T: ScalarType {
                                     var offset1 = otherRowIndex
                                     var offset2 = 0
                                     for _ in 0..<rowCount {
-                                        resultPtr[offset1] = Self.innerProduct(
-                                            selfPtr + offset2,
-                                            otherPtr + offset3,
+                                        resultPtr.value[offset1] = Self.innerProduct(
+                                            selfPtr.value + offset2,
+                                            otherPtr.value + offset3,
                                             count: columnCount,
                                             maxProductCount: maxProductCount,
                                             modulus: reductionModulus,

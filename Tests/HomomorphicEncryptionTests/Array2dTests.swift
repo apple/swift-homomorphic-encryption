@@ -16,6 +16,9 @@
 import Testing
 
 struct Array2dTests {
+    /// Both shapes of each test exercise the row- and column-partitioned branches of `computeInParallel`.
+    private static let parallelShapes = [(rows: 100, shared: 30, columns: 7), (rows: 7, shared: 30, columns: 100)]
+
     @Test
     func testInit() {
         func runTest<T: FixedWidthInteger & Sendable>(_: T.Type) {
@@ -219,7 +222,7 @@ struct Array2dTests {
                 let data = [T](repeating: modulus - 1, count: count)
                 let lhs = Array2d(data: data, rowCount: 1, columnCount: count)
                 let rhs = Array2d(data: data, rowCount: count, columnCount: 1)
-                let product = await lhs.multiply(rhs, modulus: modulus)
+                let product = await lhs.multiply(rhs, modulus: modulus, maxConcurrentTasks: 2)
                 #expect(product == Array2d(data: [T(count)], rowCount: 1, columnCount: 1))
             }
         }
@@ -239,5 +242,56 @@ struct Array2dTests {
 
         runTest(UInt32.self)
         runTest(UInt64.self)
+    }
+
+    @Test
+    func transposedParallel() async {
+        for (rowCount, _, columnCount) in Self.parallelShapes {
+            let array = Array2d(data: [Int](0..<(rowCount * columnCount)), rowCount: rowCount, columnCount: columnCount)
+            for maxConcurrentTasks in [1, 2, 3] {
+                let result = await array.transposed(maxConcurrentTasks: maxConcurrentTasks)
+                #expect(result == array.transposed())
+            }
+        }
+    }
+
+    @Test
+    func multiplyParallel() async {
+        for (rowCount, shared, columnCount) in Self.parallelShapes {
+            let lhs = Array2d(data: (0..<(rowCount * shared)).map { _ in Int.random(in: -1000..<1000) },
+                              rowCount: rowCount, columnCount: shared)
+            let rhs = Array2d(data: (0..<(shared * columnCount)).map { _ in Int.random(in: -1000..<1000) },
+                              rowCount: shared, columnCount: columnCount)
+            let expected = (lhs.multiply as (Array2d<Int>) -> Array2d<Int>)(rhs)
+            for maxConcurrentTasks in [1, 2, 3] {
+                let result = await lhs.multiply(rhs, maxConcurrentTasks: maxConcurrentTasks)
+                #expect(result == expected)
+            }
+        }
+    }
+
+    @Test
+    func multiplyModulusParallel() async {
+        let modulus: UInt32 = 65537
+        for (rowCount, shared, columnCount) in Self.parallelShapes {
+            let lhsData = (0..<(rowCount * shared)).map { _ in UInt32.random(in: 0..<modulus) }
+            let rhsData = (0..<(shared * columnCount)).map { _ in UInt32.random(in: 0..<modulus) }
+            let lhs = Array2d(data: lhsData, rowCount: rowCount, columnCount: shared)
+            let rhs = Array2d(data: rhsData, rowCount: shared, columnCount: columnCount)
+            let expectedData: [UInt32] = (0..<rowCount).flatMap { row in
+                (0..<columnCount).map { column in
+                    var sum: UInt64 = 0
+                    for k in 0..<shared {
+                        sum += UInt64(lhsData[row * shared + k]) * UInt64(rhsData[k * columnCount + column])
+                    }
+                    return UInt32(sum % UInt64(modulus))
+                }
+            }
+            let expected = Array2d(data: expectedData, rowCount: rowCount, columnCount: columnCount)
+            for maxConcurrentTasks in [1, 2, 3] {
+                let result = await lhs.multiply(rhs, modulus: modulus, maxConcurrentTasks: maxConcurrentTasks)
+                #expect(result == expected)
+            }
+        }
     }
 }

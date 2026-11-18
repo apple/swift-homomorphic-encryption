@@ -34,6 +34,6 @@ public struct SimplePirServer<Scalar: ScalarType>: SimplePirServerProtocol {
         // Compute response using multiply(transposing:) to avoid transposing the query client-side.
         // This produces (columnSize × chunksPerEntry), but client expects (chunksPerEntry × columnSize),
         // so we transpose the result.
-        return await result.transposed()
+        return await result.transposed(maxConcurrentTasks: ProcessInfo.processInfo.activeProcessorCount)
     }
 }

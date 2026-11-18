@@ -13,6 +13,7 @@
 // limitations under the License.
 
 public import ModularArithmetic
+import Algorithms
 import Foundation
 
 /// Stores values in a 2 dimensional array.
@@ -273,9 +274,6 @@ extension Array2d {
     }
 }
 
-extension UnsafePointer: @unchecked @retroactive Sendable {}
-extension UnsafeMutablePointer: @unchecked @retroactive Sendable {}
-
 extension Array2d where T: FixedWidthInteger {
     @inlinable
     static func >>= (lhs: inout Array2d<T>, _ shiftingBits: Int) {
@@ -292,27 +290,139 @@ extension Array2d where T: FixedWidthInteger {
         lhs.data.indices.forEach { lhs.data[$0] &= rhs }
     }
 
-    @inlinable
-    package func transposed() async -> Array2d<T> {
-        var transposed: Array2d<T> = .zero(rowCount: columnCount, columnCount: rowCount)
-        await withTaskGroup(of: Void.self) { group in
-            transposed.data.withUnsafeMutableBufferPointer { buffer in
-                // swiftlint:disable:next force_unwrapping
-                let bufferPointer = buffer.baseAddress!
-                let sourceData = self.data
-                let sourceColumnCount = self.columnCount
-                let sourceRowCount = self.rowCount
+    /// Computes a `rowCount x columnCount` result in parallel, partitioning work by row.
+    ///
+    /// `computeRowChunk` is given a contiguous row range and must return a row-major chunk of size
+    /// `(endRow - startRow) * columnCount`.
+    ///
+    /// When `maxConcurrentTasks <= 1`, runs `computeRowChunk` directly with no task group.
+    @usableFromInline
+    package static func computeRowPartitionedInParallel(
+        rowCount: Int,
+        columnCount: Int,
+        maxConcurrentTasks: Int,
+        computeRowChunk: @escaping @Sendable (_ startRow: Int, _ endRow: Int) -> [T]) async -> Array2d<T>
+    {
+        let taskCount = min(maxConcurrentTasks, rowCount)
+        guard taskCount > 1 else {
+            return Array2d(data: computeRowChunk(0, rowCount), rowCount: rowCount, columnCount: columnCount)
+        }
+        var resultData = [T](repeating: .zero, count: rowCount &* columnCount)
+        await withTaskGroup(of: (Int, [T]).self) { group in
+            for range in (0..<rowCount).evenlyChunked(in: taskCount) where !range.isEmpty {
+                group.addTask { @Sendable in
+                    (range.lowerBound, computeRowChunk(range.lowerBound, range.upperBound))
+                }
+            }
+            for await (startRow, chunk) in group {
+                let destOffset = startRow &* columnCount
+                resultData.replaceSubrange(destOffset..<(destOffset &+ chunk.count), with: chunk)
+            }
+        }
+        return Array2d(data: resultData, rowCount: rowCount, columnCount: columnCount)
+    }
+
+    /// Computes a `rowCount x columnCount` result in parallel, partitioning work by column.
+    ///
+    /// `computeColumnChunk` is given a contiguous column range and must return a row-major chunk of size
+    /// `rowCount * (endColumn - startColumn)`.
+    ///
+    /// When `maxConcurrentTasks <= 1`, runs `computeColumnChunk` directly with no task group.
+    @usableFromInline
+    package static func computeColumnPartitionedInParallel(
+        rowCount: Int,
+        columnCount: Int,
+        maxConcurrentTasks: Int,
+        computeColumnChunk: @escaping @Sendable (_ startColumn: Int, _ endColumn: Int) -> [T]) async -> Array2d<T>
+    {
+        let taskCount = min(maxConcurrentTasks, columnCount)
+        guard taskCount > 1 else {
+            return Array2d(data: computeColumnChunk(0, columnCount), rowCount: rowCount, columnCount: columnCount)
+        }
+        var resultData = [T](repeating: .zero, count: rowCount &* columnCount)
+        await withTaskGroup(of: (Int, Int, [T]).self) { group in
+            for range in (0..<columnCount).evenlyChunked(in: taskCount) where !range.isEmpty {
+                group.addTask { @Sendable in
+                    (range.lowerBound, range.upperBound, computeColumnChunk(range.lowerBound, range.upperBound))
+                }
+            }
+            for await (startColumn, endColumn, chunk) in group {
+                let chunkColumnCount = endColumn &- startColumn
                 for rowIndex in 0..<rowCount {
-                    group.addTask { @Sendable in
-                        let offset = rowIndex &* sourceColumnCount
-                        for columnIndex in 0..<sourceColumnCount {
-                            bufferPointer[columnIndex &* sourceRowCount &+ rowIndex] = sourceData[offset &+ columnIndex]
-                        }
-                    }
+                    let chunkRowBase = rowIndex &* chunkColumnCount
+                    let destRowBase = rowIndex &* columnCount
+                    resultData.replaceSubrange(
+                        (destRowBase &+ startColumn)..<(destRowBase &+ endColumn),
+                        with: chunk[chunkRowBase..<(chunkRowBase &+ chunkColumnCount)])
                 }
             }
         }
-        return transposed
+        return Array2d(data: resultData, rowCount: rowCount, columnCount: columnCount)
+    }
+
+    /// Computes a `rowCount x columnCount` result in parallel.
+    ///
+    /// Partitions along whichever of `rowCount`/`columnCount` is larger, so work is split into meaningfully-sized
+    /// chunks even when one axis is small.
+    /// - Parameters:
+    ///   - rowCount: Number of rows in the result.
+    ///   - columnCount: Number of columns in the result.
+    ///   - maxConcurrentTasks: Maximum number of concurrent tasks. When `<= 1`, computes serially.
+    ///   - computeChunk: Given a range of rows and a range of columns, returns the row-major sub-matrix for those
+    /// ranges.
+    /// - Returns: The computed matrix.
+    @inlinable
+    package static func computeInParallel(
+        rowCount: Int,
+        columnCount: Int,
+        maxConcurrentTasks: Int,
+        computeChunk: @escaping @Sendable (_ rows: Range<Int>, _ columns: Range<Int>) -> [T]) async -> Array2d<T>
+    {
+        if rowCount >= columnCount {
+            await computeRowPartitionedInParallel(
+                rowCount: rowCount,
+                columnCount: columnCount,
+                maxConcurrentTasks: maxConcurrentTasks)
+            { startRow, endRow in
+                computeChunk(startRow..<endRow, 0..<columnCount)
+            }
+        } else {
+            await computeColumnPartitionedInParallel(
+                rowCount: rowCount,
+                columnCount: columnCount,
+                maxConcurrentTasks: maxConcurrentTasks)
+            { startColumn, endColumn in
+                computeChunk(0..<rowCount, startColumn..<endColumn)
+            }
+        }
+    }
+
+    /// Transposes the values, computing in parallel when `maxConcurrentTasks > 1`.
+    /// - Parameter maxConcurrentTasks: Maximum number of concurrent tasks to use. When `<= 1`, runs the
+    /// synchronous ``transposed()`` directly.
+    /// - Returns: The transposed matrix.
+    @inlinable
+    package func transposed(maxConcurrentTasks: Int) async -> Array2d<T> {
+        guard maxConcurrentTasks > 1 else {
+            return (transposed as () -> Array2d<T>)()
+        }
+        let sourceData = data
+        let sourceColumnCount = columnCount
+        return await Array2d.computeInParallel(
+            rowCount: columnCount,
+            columnCount: rowCount,
+            maxConcurrentTasks: maxConcurrentTasks)
+        { rows, columns in
+            var result = [T](repeating: .zero, count: rows.count &* columns.count)
+            var resultIndex = 0
+            for row in rows {
+                for column in columns {
+                    result[resultIndex] = sourceData[column &* sourceColumnCount &+ row]
+                    resultIndex &+= 1
+                }
+            }
+            return result
+        }
     }
 
     @inlinable
@@ -331,49 +441,44 @@ extension Array2d where T: FixedWidthInteger {
         return result
     }
 
+    /// Multiplies with `other`, computing in parallel when `maxConcurrentTasks > 1`.
+    /// - Parameters:
+    ///   - other: Matrix to multiply with.
+    ///   - maxConcurrentTasks: Maximum number of concurrent tasks to use. When `<= 1`, runs the synchronous
+    /// ``multiply(_:)`` directly.
+    /// - Returns: `self * other`.
     @inlinable
-    package func multiply(_ other: Array2d<T>) async -> Array2d<T> {
+    package func multiply(_ other: Array2d<T>, maxConcurrentTasks: Int) async -> Array2d<T> {
         precondition(columnCount == other.rowCount, "Matrix multiplication shapes: \(shape) x \(other.shape)")
-
-        var result: Array2d = .zero(rowCount: rowCount, columnCount: other.columnCount)
+        guard maxConcurrentTasks > 1 else {
+            return (multiply as (Array2d<T>) -> Array2d<T>)(other)
+        }
 
         // Transposing first will greatly improve memory access pattern
-        let transposedOther = await other.transposed()
-
-        await withTaskGroup(of: Void.self) { group in
-            result.data.withUnsafeMutableBufferPointer { resultBuf in
-                // swiftlint:disable:next force_unwrapping
-                let resultPtr = resultBuf.baseAddress!
-                self.data.withUnsafeBufferPointer { selfBuf in
-                    // swiftlint:disable:next force_unwrapping
-                    let selfPtr = selfBuf.baseAddress!
-                    transposedOther.data.withUnsafeBufferPointer { otherBuf in
-                        // swiftlint:disable:next force_unwrapping
-                        let otherPtr = otherBuf.baseAddress!
-                        let selfColumnCount = self.columnCount
-                        let otherColumnCount = other.columnCount
-                        let otherRowCount = other.rowCount
-                        for rowIndex in 0..<rowCount {
-                            group.addTask { @Sendable in
-                                let aRowOffset = rowIndex &* selfColumnCount
-                                let cRowOffset = rowIndex &* otherColumnCount
-                                for j in 0..<otherColumnCount {
-                                    var sum: T = 0
-                                    let bRowOffset = j &* otherRowCount
-                                    for k in 0..<otherRowCount {
-                                        let aVal = selfPtr[aRowOffset &+ k]
-                                        let bVal = otherPtr[bRowOffset &+ k]
-                                        sum &+= aVal &* bVal
-                                    }
-                                    resultPtr[cRowOffset &+ j] = sum
-                                }
-                            }
-                        }
+        let otherData = await other.transposed(maxConcurrentTasks: maxConcurrentTasks).data
+        let selfData = data
+        let sharedDimension = columnCount
+        return await Array2d.computeInParallel(
+            rowCount: rowCount,
+            columnCount: other.columnCount,
+            maxConcurrentTasks: maxConcurrentTasks)
+        { rows, columns in
+            var result = [T](repeating: .zero, count: rows.count &* columns.count)
+            var resultIndex = 0
+            for row in rows {
+                let aRowOffset = row &* sharedDimension
+                for column in columns {
+                    let bRowOffset = column &* sharedDimension
+                    var sum: T = 0
+                    for k in 0..<sharedDimension {
+                        sum &+= selfData[aRowOffset &+ k] &* otherData[bRowOffset &+ k]
                     }
+                    result[resultIndex] = sum
+                    resultIndex &+= 1
                 }
             }
+            return result
         }
-        return result
     }
 }
 
@@ -474,49 +579,51 @@ extension Array2d where T: ScalarType {
         return result
     }
 
+    /// Multiplies with `other` modulo `modulus`, computing in parallel when `maxConcurrentTasks > 1`.
+    /// - Parameters:
+    ///   - other: Matrix to multiply with. Entries must be in `[0, modulus - 1]`.
+    ///   - modulus: The modulus to use.
+    ///   - maxConcurrentTasks: Maximum number of concurrent tasks to use. When `<= 1`, computes serially.
+    /// - Returns: `self * other mod modulus`.
     @inlinable
-    package func multiply(_ other: Array2d<T>, modulus: T) async -> Array2d<T> {
+    package func multiply(_ other: Array2d<T>, modulus: T, maxConcurrentTasks: Int) async -> Array2d<T> {
         precondition(columnCount == other.rowCount, "Matrix multiplication shapes: \(shape) x \(other.shape)")
 
         let reductionModulus = ReduceModulus(modulus: modulus, bound: .DoubleWord, variableTime: true)
-        var result: Array2d = .zero(rowCount: rowCount, columnCount: other.columnCount)
-
+        let maxProductCount = Self.maxLazyProductAccumulationCount(modulus: modulus)
         // Transposing first will greatly improve memory access pattern
-        let transposedOther = await other.transposed()
-
-        await withTaskGroup(of: Void.self) { group in
-            result.data.withUnsafeMutableBufferPointer { resultBuf in
-                self.data.withUnsafeBufferPointer { selfBuf in
-                    transposedOther.data.withUnsafeBufferPointer { otherBuf in
-                        // swiftlint:disable force_unwrapping
-                        let resultPtr = resultBuf.baseAddress!
-                        let selfPtr = selfBuf.baseAddress!
-                        let otherPtr = otherBuf.baseAddress!
-                        // swiftlint:enable force_unwrapping
-                        let selfColumnCount = self.columnCount
-                        let otherColumnCount = other.columnCount
-                        let otherRowCount = other.rowCount
-                        let maxProductCount = Self.maxLazyProductAccumulationCount(modulus: modulus)
-                        for rowIndex in 0..<rowCount {
-                            group.addTask { @Sendable in
-                                let aRowOffset = rowIndex &* selfColumnCount
-                                let cRowOffset = rowIndex &* otherColumnCount
-                                for j in 0..<otherColumnCount {
-                                    let bRowOffset = j &* otherRowCount
-                                    resultPtr[cRowOffset &+ j] = Self.innerProduct(
-                                        selfPtr + aRowOffset,
-                                        otherPtr + bRowOffset,
-                                        count: otherRowCount,
-                                        maxProductCount: maxProductCount,
-                                        modulus: reductionModulus)
-                                }
-                            }
+        let otherData = await other.transposed(maxConcurrentTasks: maxConcurrentTasks).data
+        let selfData = data
+        let sharedDimension = columnCount
+        return await Array2d.computeInParallel(
+            rowCount: rowCount,
+            columnCount: other.columnCount,
+            maxConcurrentTasks: maxConcurrentTasks)
+        { rows, columns in
+            var result = [T](repeating: .zero, count: rows.count &* columns.count)
+            selfData.withUnsafeBufferPointer { selfBuf in
+                otherData.withUnsafeBufferPointer { otherBuf in
+                    // swiftlint:disable force_unwrapping
+                    let selfPtr = selfBuf.baseAddress!
+                    let otherPtr = otherBuf.baseAddress!
+                    // swiftlint:enable force_unwrapping
+                    var resultIndex = 0
+                    for row in rows {
+                        let aRowOffset = row &* sharedDimension
+                        for column in columns {
+                            result[resultIndex] = Self.innerProduct(
+                                selfPtr + aRowOffset,
+                                otherPtr + column &* sharedDimension,
+                                count: sharedDimension,
+                                maxProductCount: maxProductCount,
+                                modulus: reductionModulus)
+                            resultIndex &+= 1
                         }
                     }
                 }
             }
+            return result
         }
-        return result
     }
 
     /// Performs modulus switching with rounding from `initialMod` to `newMod`.

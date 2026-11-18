@@ -277,11 +277,15 @@ extension SimplePirServerProtocol {
                     .data[entryIndex * paddedEntrySize..<entryIndex * paddedEntrySize + params.entrySizeInScalar],
                 bitsPerCoeff: encryptionParams.plaintextModulusBits)
         }
-        processedDatabase = await processedDatabase.transposed()
+        processedDatabase = await processedDatabase.transposed(
+            maxConcurrentTasks: ProcessInfo.processInfo.activeProcessorCount)
 
         let context: SimplePirContext<Scalar> = try .init(params: params)
         let matrixA: Array2d<Scalar> = try context.materializeAMatrix(aPolynomials: context.generateAPolynomials())
-        let hint = await processedDatabase.multiply(matrixA, modulus: context.nttFriendlyMod)
+        let hint = await processedDatabase.multiply(
+            matrixA,
+            modulus: context.nttFriendlyMod,
+            maxConcurrentTasks: ProcessInfo.processInfo.activeProcessorCount)
 
         return SimplePIRProcessDatabaseResults(
             database: SimplePirDatabase(database: processedDatabase),

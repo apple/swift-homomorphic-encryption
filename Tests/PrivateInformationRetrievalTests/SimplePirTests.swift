@@ -260,7 +260,7 @@ struct SimplePirTests {
             var expectedMasked: [UInt32] = []
             for row in 0..<rowCount {
                 for otherRow in 0..<otherRowCount {
-                    var sum: UInt64 = UInt64(offsetData[row * otherRowCount + otherRow])
+                    var sum = UInt64(offsetData[row * otherRowCount + otherRow])
                     var wrappingSum: UInt32 = offsetData[row * otherRowCount + otherRow]
                     for k in 0..<shared {
                         let a = selfData[row * shared + k]

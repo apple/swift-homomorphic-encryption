@@ -16,6 +16,9 @@
 import Testing
 
 struct Array2dTests {
+    /// Both shapes of each test exercise the row- and column-partitioned branches of `computeInParallel`.
+    private static let parallelShapes = [(rows: 100, shared: 30, columns: 7), (rows: 7, shared: 30, columns: 100)]
+
     @Test
     func testInit() {
         func runTest<T: FixedWidthInteger & Sendable>(_: T.Type) {
@@ -240,9 +243,6 @@ struct Array2dTests {
         runTest(UInt32.self)
         runTest(UInt64.self)
     }
-
-    /// Both shapes of each test exercise the row- and column-partitioned branches of `computeInParallel`.
-    private static let parallelShapes = [(rows: 100, shared: 30, columns: 7), (rows: 7, shared: 30, columns: 100)]
 
     @Test
     func transposedParallel() async {

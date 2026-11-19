@@ -101,7 +101,7 @@ swift test -c release
 
 #### Running CI
 
-CI runs automatically on pull requests. It executes unit tests, numerical correctness tests, and performance benchmarks on macOS and Linux runners.
+CI runs automatically on pull requests. It executes unit tests, numerical correctness tests, and performance benchmarks on macOS, Linux, and Android runners.
 
 ## Code of conduct
 
